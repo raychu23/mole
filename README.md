@@ -1,6 +1,6 @@
 # Mole
 
-New chat startup: open this repository folder, then follow `AGENTS.md` → `context/0 start.md` + `context/1 takeaways.md` → selected task. The detailed brief, research and long logs are on-demand evidence, not the default context. New decisions must be folded back into that short packet before handoff. Two fresh app chats scoped here read the condensed files and recalled decisions; the retest avoided long project documents/logs. Extra global startup reads remain. Evidence and exact test limits: `context/systems/startup-test.json`.
+New chat startup: open this repository folder, then follow `AGENTS.md` → `context/0 start.md` + `context/1 takeaways.md` → selected task. Detailed history is on demand. Tested: a writable chat updated both condensed files after a synthetic correction, and a separate fresh chat recovered the change and reason without the answer in its prompt. The latest reader skipped the full global preference inbox and long logs. This is agent-managed turn-end maintenance, not an independent background service or a cross-host guarantee. Evidence: `context/systems/decision-sync-test.json`; earlier checks: `context/systems/startup-test.json`.
 
 Visual codebase guidance and grounded, changing project knowledge. This is the actual Mole repository, linked to `https://github.com/raychu23/mole.git`. As of 2026-10-08 it contains organization and startup instructions; no application slice has been implemented here.
 
