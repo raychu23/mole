@@ -1,0 +1,8 @@
+# Local workspace context and evidence; export a reviewed packet for other hosts.
+.DS_Store
+.conductor/
+current data/
+training data/
+generated data/
+# Private local project context and cross-project source links, never publish.
+context
