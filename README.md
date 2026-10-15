@@ -1,6 +1,6 @@
 # Mole
 
-New chat startup: open this repository folder, then follow `AGENTS.md` → `context/0 start.md` + `context/1 takeaways.md` → selected task. The detailed brief, research and long logs are on-demand evidence, not the default context. New decisions must be folded back into that short packet before handoff. Local instructions are configured; fresh-chat compliance is not yet verified.
+New chat startup: open this repository folder, then follow `AGENTS.md` → `context/0 start.md` + `context/1 takeaways.md` → selected task. The detailed brief, research and long logs are on-demand evidence, not the default context. New decisions must be folded back into that short packet before handoff. Two fresh app chats scoped here read the condensed files and recalled decisions; the retest avoided long project documents/logs. Extra global startup reads remain. Evidence and exact test limits: `context/systems/startup-test.json`.
 
 Visual codebase guidance and grounded, changing project knowledge. This is the actual Mole repository, linked to `https://github.com/raychu23/mole.git`. As of 2026-10-08 it contains organization and startup instructions; no application slice has been implemented here.
 
