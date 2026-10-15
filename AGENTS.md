@@ -1,6 +1,12 @@
 # Mole project instructions
 
-Read README.md, then `context/0 start.md`, `context/1 takeaways.md` and the selected task. `context/4 log/0 coverage.md` indexes original chats and `context/reference/` exposes shared market/tool research without duplicate copies. After material updates, run `python3 context/systems/refresh.py` to validate source links and regenerate the readable page. Use `../sdlc/7-context/2-process.md` and `../sdlc/0-start.md` for the relevant stage when available. If local context routes are absent, say which context is missing and obtain a current packet before inferring product decisions. These paths are local workspace integration, not a remote synchronization service.
+Before the first substantive answer in a new or resumed Mole chat, read `context/0 start.md` and `context/1 takeaways.md` completely. These two condensed files are the required project startup packet; then read only the selected task's current packet. Resolve paths relative to this repository. In the first answer, briefly identify the packet read and the current priority or open choice relevant to the request, so a wrong boot is visible without Raymond re-explaining.
+
+Retrieve detail on demand: `context/1 project brief.md` for product-design reasoning; `context/reference/` for a specific research question; `context/4 log/0 coverage.md` and a targeted transcript excerpt only for missing, disputed or exact historical evidence. Do not preload full logs, the whole source catalog, historical snapshots or all research. Explicit user corrections outrank assistant proposals and recency; keep unapproved choices OPEN.
+
+Before ending a substantive turn, fold new accepted decisions, rejections, corrections and changed status into the two startup files, preserving source and supersession. Update the relevant detailed record and `context/systems/catalog.json` when affected; run `python3 context/systems/refresh.py` to validate routes and regenerate the page. Keep `0 start.md` at most 40 lines and move historical detail behind pointers rather than growing the default read. Refreshing the archive alone does not update accepted decisions.
+
+Use `../sdlc/7-context/2-process.md` and `../sdlc/0-start.md` for the relevant stage when available. If either startup file is missing, report the missing path and obtain the current packet before inferring product decisions. These local routes are not remote synchronization or proof a fresh chat complied.
 
 Keep Mole separate from the historical Documentation-Insights-System, the other PR/release tool, and the full-stack project. Do not move or modify those repositories as part of Mole by default.
 
