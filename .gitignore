@@ -6,3 +6,9 @@ training data/
 generated data/
 # Private local project context and cross-project source links, never publish.
 context
+
+# build
+node_modules/
+dist/
+*.tsbuildinfo
+.mole/cache/
