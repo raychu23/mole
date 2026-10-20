@@ -1,6 +1,6 @@
 # Start building Mole in a new chat
 
-> ON HOLD 2026-10-19: Raymond paused the handoff. The prototype/ demo is rejected and the UI is being redefined as more than a sidebar (context/1 takeaways §13). Do not start T2; T1 (engine) waits for his go.
+> 2026-10-19: T1 (engine, no UI) is GO. prototype/ is rejected; don't use it. The UI is an always-on ~half-screen split panel, not a sidebar; what else it covers is still open (context/1 takeaways §13), so T2 waits for T1 and for that answer.
 
 Paste this into a fresh agent (Hermes, Claude Code or Codex) opened on `/Users/a1/Desktop/CS Code/Project/Mole`:
 
@@ -23,7 +23,7 @@ Raymond may not be watching: make reasonable choices, state assumptions, stop on
 | task | milestone | state |
 |---|---|---|
 | T1-m0-engine-spike | M0 engine + indexer | ready |
-| T2-m1-per-file-map | M1 daemon + VS Code per-file map + mole_map | proposed (after T1) |
+| T2-m1-per-file-map | M1 daemon + wide map panel following the open file + mole_map | proposed (after T1) |
 | — | M1.5 learner + token go/no-go gate | create after T2 |
 | — | M2 anchors, bootstrap, layered canvas + drift, import diagrams | later |
 | — | M3 edit + propagate, explanations, badges | later |
