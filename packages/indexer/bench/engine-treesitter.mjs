@@ -114,7 +114,7 @@ export function extract(tree, relPath) {
 }
 
 /** Resolve a module specifier from a file: relative path or tsconfig `paths` alias -> repo-relative file in `known`. */
-export function makeResolver(root, known, paths) {
+export function makeResolver(root, known, paths, baseDir = '') {
   const tryFile = (base) => {
     const noJs = base.replace(/\.(?:js|jsx|mjs|cjs)$/, '');
     for (const c of [base, `${noJs}.ts`, `${noJs}.tsx`, `${base}.ts`, `${base}.tsx`, `${base}.d.ts`, `${noJs}/index.ts`, `${base}/index.ts`, `${base}/index.tsx`]) if (known.has(c)) return c;
@@ -127,7 +127,7 @@ export function makeResolver(root, known, paths) {
       const hit = star < 0 ? spec === pat : spec.startsWith(pat.slice(0, star)) && spec.endsWith(pat.slice(star + 1));
       if (!hit) continue;
       const mid = star < 0 ? '' : spec.slice(star, spec.length - (pat.length - star - 1));
-      for (const t of targets) { const r = tryFile(t.replace('*', mid)); if (r) return r; }
+      for (const t of targets) { const r = tryFile(join(baseDir, t.replace('*', mid)).split('\\').join('/')); if (r) return r; }
     }
     return undefined;
   };
@@ -169,7 +169,7 @@ export function resolveCalls(files, resolveSpec) {
   return edges;
 }
 
-export async function indexTreeSitter(root, files, paths) {
+export async function indexTreeSitter(root, files, paths, baseDir = '') {
   const { ts, tsx } = await loadParsers();
   const parser = new Parser();
   const known = new Set(files.map((f) => relTo(root, f)));
@@ -180,15 +180,15 @@ export async function indexTreeSitter(root, files, paths) {
     parsed.push(extract(tree, relTo(root, f)));
     tree.delete();
   }
-  const resolveSpec = makeResolver(root, known, paths);
+  const resolveSpec = makeResolver(root, known, paths, baseDir);
   return { parsed, resolveSpec, edges: resolveCalls(parsed, resolveSpec), parser, known };
 }
 
-export async function runTreeSitter(root, tsconfigPath, srcDir) {
+export async function runTreeSitter(root, tsconfigPath, filesOrDir, baseDir = '') {
   const cfg = JSON.parse(readFileSync(tsconfigPath, 'utf8'));
   const paths = cfg.compilerOptions?.paths ?? {};
-  const files = listSources(srcDir);
+  const files = Array.isArray(filesOrDir) ? filesOrDir : listSources(filesOrDir);
   const t0 = performance.now();
-  const r = await indexTreeSitter(root, files, paths);
+  const r = await indexTreeSitter(root, files, paths, baseDir);
   return { ...r, ms: performance.now() - t0, files };
 }
