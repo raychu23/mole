@@ -22,7 +22,13 @@ const COPY = process.env.BENCH_COPY ?? join(process.env.TMPDIR ?? tmpdir(), 'm0-
 const SCRATCH = join(process.env.TMPDIR ?? tmpdir(), 'm0-bench-out');
 const OUT = process.env.OUT ?? resolve(here, '../../../generated data/m0-engine-report.json');
 const PER = Number(process.env.SAMPLE_PER_STRATUM ?? 50);
-const TSCONFIG = 'tsconfig.build.json';
+const TSCONFIG = process.env.TSCONFIG ?? 'tsconfig.build.json';
+// SRC_MODE=dir: every .ts/.tsx under SRC_DIR (default 'src'); SRC_MODE=tsconfig: the file list the tsconfig itself selects.
+const SRC_MODE = process.env.SRC_MODE ?? 'dir';
+const SRC_DIR = process.env.SRC_DIR ?? 'src';
+const PROBE = process.env.PROBE ?? 'src/gatewayClient.ts';
+const SCIP_MODE = process.env.SCIP_MODE ?? 'rewrite'; // 'own' = index the fixture's tsconfig as is
+const DEFAULT_FIXTURE = !process.env.FIXTURE;
 mkdirSync(SCRATCH, { recursive: true });
 mkdirSync(dirname(OUT), { recursive: true });
 const log = (...a) => console.error('[m0]', ...a);
@@ -30,12 +36,20 @@ const r1 = (x) => Math.round(x);
 const nm = (...p) => join(here, 'node_modules', ...p);
 
 // ---- fixture + copy ----------------------------------------------------------------------------------
-const files = listSources(join(FIX, 'src'));
+const tsRequire = createRequire(join(here, '../../../package.json'));
+const tsLib = tsRequire('typescript');
+function tsconfigFiles(dir, cfgName) {
+  const cfgPath = join(dir, cfgName);
+  const cfg = tsLib.readConfigFile(cfgPath, tsLib.sys.readFile);
+  return tsLib.parseJsonConfigFileContent(cfg.config, tsLib.sys, dir, undefined, cfgPath).fileNames.map((f) => resolve(f)).filter((f) => /\.(?:ts|tsx|mts|cts)$/.test(f) && !f.includes('/node_modules/')).sort();
+}
+const filesIn = (dir) => (SRC_MODE === 'tsconfig' ? tsconfigFiles(dir, TSCONFIG) : listSources(join(dir, SRC_DIR)));
+const files = filesIn(FIX);
 const fixHead = execFileSync('git', ['-C', FIX, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 rmSync(COPY, { recursive: true, force: true });
 mkdirSync(COPY, { recursive: true });
-cpSync(join(FIX, 'src'), join(COPY, 'src'), { recursive: true });
-for (const f of ['tsconfig.json', 'tsconfig.build.json', 'package.json']) cpSync(join(FIX, f), join(COPY, f));
+for (const f of files) { mkdirSync(dirname(join(COPY, relTo(FIX, f))), { recursive: true }); cpSync(f, join(COPY, relTo(FIX, f))); }
+for (const f of ['tsconfig.json', 'tsconfig.build.json', 'package.json']) if (existsSync(join(FIX, f))) cpSync(join(FIX, f), join(COPY, f));
 log('fixture', FIX, files.length, 'files @', fixHead.slice(0, 9));
 
 // ---- truth + sample ----------------------------------------------------------------------------------
@@ -59,18 +73,21 @@ log('truth sites', sites.length, Object.fromEntries(Object.entries(byStratum).ma
 // ---- engines: accuracy ------------------------------------------------------------------------------
 const results = {};
 log('engine A: TS compiler API');
-const A = runTs(FIX, TSCONFIG, 'src');
+const tsSrcDir = SRC_MODE === 'tsconfig' ? undefined : SRC_DIR;
+const A = runTs(FIX, TSCONFIG, tsSrcDir);
 results.typescriptCompilerApi = { stats: A.stats, ...score(A.edges, sample, truthByLine) };
 
 log('engine B: tree-sitter');
-const cfgPaths = JSON.parse(readFileSync(join(FIX, TSCONFIG), 'utf8')).compilerOptions.paths ?? {};
-const B = await runTreeSitter(FIX, join(FIX, TSCONFIG), join(FIX, 'src'));
+const cfgOpts = tsLib.readConfigFile(join(FIX, TSCONFIG), tsLib.sys.readFile).config?.compilerOptions ?? {};
+const cfgPaths = cfgOpts.paths ?? {};
+const cfgBase = (root) => relTo(root, resolve(join(FIX, TSCONFIG), '..', cfgOpts.baseUrl ?? '.'));
+const B = await runTreeSitter(FIX, join(FIX, TSCONFIG), files, cfgBase(FIX));
 results.treeSitter = { ...score(B.edges.map((e) => e), sample, truthByLine) };
 
 log('engine C: scip-typescript');
 // SCIP indexes one tsconfig project. The fixture's tsconfig excludes src/__tests__ and keeps the `@hermes/ink`
 // alias only in tsconfig.build.json, so index a scratch copy whose tsconfig.json = base options + alias + all 362 files.
-{
+if (SCIP_MODE === 'rewrite') {
   const base = JSON.parse(readFileSync(join(FIX, 'tsconfig.json'), 'utf8'));
   const build = JSON.parse(readFileSync(join(FIX, 'tsconfig.build.json'), 'utf8'));
   writeFileSync(join(COPY, 'tsconfig.json'), JSON.stringify({ compilerOptions: { ...base.compilerOptions, ...build.compilerOptions }, include: ['src/**/*.d.ts', 'src/**/*.ts', 'src/**/*.tsx'], exclude: ['node_modules', 'dist'] }, null, 2));
@@ -90,27 +107,27 @@ results.codegraph = score(D, sample, truthByLine);
 log('timing full index');
 const full = { typescriptCompilerApi: [], treeSitter: [], scipTypescript: [], codegraph: [] };
 for (let i = 0; i < 3; i++) {
-  full.typescriptCompilerApi.push(r1(runTs(FIX, TSCONFIG, 'src').ms));
-  full.treeSitter.push(r1((await runTreeSitter(FIX, join(FIX, TSCONFIG), join(FIX, 'src'))).ms));
+  full.typescriptCompilerApi.push(r1(runTs(FIX, TSCONFIG, tsSrcDir).ms));
+  full.treeSitter.push(r1((await runTreeSitter(FIX, join(FIX, TSCONFIG), files, cfgBase(FIX))).ms));
   full.scipTypescript.push(r1(runScipCli(COPY, scipFile)));
   full.codegraph.push(r1(cgInit(COPY)));
 }
 
 // ---- timing: 1-file incremental update ------------------------------------------------------------
 log('timing 1-file incremental');
-const probe = 'src/gatewayClient.ts';
+const probe = PROBE;
 const probeAbs = join(COPY, probe);
 const original = readFileSync(probeAbs, 'utf8');
 const inc = { typescriptCompilerApi: [], treeSitter: [], codegraph: [] };
 const edit = (i) => writeFileSync(probeAbs, `${original}\nexport function __moleProbe${i}() {\n  return ${i};\n}\n`);
 {
-  const ix = runTs(COPY, TSCONFIG, 'src').ix;
+  const ix = runTs(COPY, TSCONFIG, tsSrcDir).ix;
   for (let i = 0; i < 5; i++) { edit(i); const t0 = performance.now(); ix.updateFile(probe); inc.typescriptCompilerApi.push(r1(performance.now() - t0)); }
   ix.close();
 }
 {
-  const copyFiles = listSources(join(COPY, 'src'));
-  const base = await indexTreeSitter(COPY, copyFiles, cfgPaths);
+  const copyFiles = filesIn(COPY);
+  const base = await indexTreeSitter(COPY, copyFiles, cfgPaths, cfgBase(COPY));
   const { ts, tsx } = await loadParsers();
   const parser = new Parser();
   for (let i = 0; i < 5; i++) {
@@ -152,7 +169,7 @@ const pkgJson = (p) => JSON.parse(readFileSync(nm(p, 'package.json'), 'utf8'));
 const engines = (p) => { const j = pkgJson(p); return { version: j.version, license: j.license, nodeEngines: j.engines?.node ?? 'unspecified' }; };
 const report = {
   generatedAt: new Date().toISOString(),
-  fixture: { path: FIX, tsFiles: files.length, commit: fixHead, tsconfig: TSCONFIG, note: 'read-only; CodeGraph and edit probes ran on a scratch copy' },
+  fixture: { path: FIX, srcMode: SRC_MODE, tsFiles: files.length, commit: fixHead, tsconfig: TSCONFIG, note: 'read-only; CodeGraph and edit probes ran on a scratch copy' },
   machine: { node: process.version, platform: `${process.platform}-${process.arch}` },
   groundTruth: 'TypeScript language service getDefinitionAtPosition at every call/new callee in all fixture files; only definitions that are in-project tracked declarations (top-level function/class/method/interface member/fn-typed property/variable) count',
   sampling: { seed: 20261019, perStratum: PER, sampledCallSites: sample.length, truthCallSites: sites.length, strata: Object.fromEntries(Object.entries(byStratum).map(([k, v]) => [k, { inFixture: v.length, sampled: sample.filter((s) => s.stratum === k).length }])), strataDefinition: { alias: 'callee bound by a non-relative import resolved through tsconfig paths', barrel: 'callee bound by an import whose module is not the defining file (>=1 re-export hop)', dynamic: 'element access, optional call, or call through an interface/type member', method: 'property-access callee (this.x(), obj.x(), new ns.X)', static: 'direct local or relative-import call' } },
@@ -169,7 +186,7 @@ const report = {
     'Incremental time = one probe file, edit at end of file, reuses parsed files by mtime; dependents are not re-resolved.',
     'Strata are decided from the call-site syntax and the language-service definition, so a few barrel/alias sites could fall into a neighbouring stratum.',
     'Matching key is call line + target file + target leaf name; two calls to the same name on one line count once.',
-    'Only 15 barrel call sites exist in the fixture (all sampled); alias sites are ~all calls into the ambient `declare module \'@hermes/ink\'` in src/types/hermes-ink.d.ts. Both strata are small/narrow, so per-stratum recall there is weak evidence.',
+    ...(DEFAULT_FIXTURE ? ['Only 15 barrel call sites exist in the fixture (all sampled); alias sites are ~all calls into the ambient `declare module \'@hermes/ink\'` in src/types/hermes-ink.d.ts. Both strata are small/narrow, so per-stratum recall there is weak evidence.'] : []),
     'recallStatic = every stratum except dynamic (alias + barrel + method + static); this is the figure the task stop row (<0.9) refers to.',
     'The tree-sitter engine is our own resolver (imports, re-exports, tsconfig paths, ambient modules, unique-method-name), not an off-the-shelf tool; a smarter resolver would score higher but would be reimplementing the type checker.',
     'Times are wall-clock on one Apple-silicon Mac, node ' + process.version + ', not a controlled benchmark.',
