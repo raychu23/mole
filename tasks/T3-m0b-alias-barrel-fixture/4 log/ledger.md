@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-10-20 00:04      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T3-m0b-alias-barrel-fixture → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-20 01:05      submitted → verified      reviewer subagent sa-0-d78c0d36 (independent) · findings: PASS with defects: missing fixture URL, wrong diagnosis of 7 dynamic misses (actual cause: this.x!() in object literal, checker vs contextual member), missing no-
     2026-10-20 01:05      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T3-m0b-alias-barrel-fixture → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-20 01:06      verified → integrated      merge merged to main 0e1fea5, npm run check 16 pass · combined checks exit 0
+    2026-10-20 01:06      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```

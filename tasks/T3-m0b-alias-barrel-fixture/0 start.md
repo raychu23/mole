@@ -1,22 +1,22 @@
 ---
-state: verified
+state: integrated
 owner: unclaimed
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t3-m0b-alias-barrel-fixture
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T3-m0b-alias-barrel-fixture
 base: 8dfe16a
 reviewer: subagent sa-0-d78c0d36 (independent)
-updated: 2026-10-20 01:05
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+updated: 2026-10-20 01:06
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-10-19 23:54
 ---
 ```notes
 T3-m0b-alias-barrel-fixture      ledger task (rules.md §3 code features)      project Mole
     goal                    Add a second M0 fixture with real tsconfig-paths aliases and barrel re-exports and re-run the engine benchmark on it, so alias/barrel evidence is not one ambient module + 15 sites
     done-when               1) a real permissively licensed TS repo with >=100 call sites via tsconfig paths aliases and >=100 via barrel index.ts re-exports is chosen and recorded (name, URL, commit, license) 2) packages/indexer/bench runs on it via FIXTURE/TSCONFIG env, no engine code change, read-only 3) generated data/m0b-engine-report.json has per-stratum recall for TS API, scip-typescript, tree-sitter (CodeGraph optional) with n>=100 in alias and barrel 4) plan.json P2 m0_result updated: confirm or change the recommendation
-    status                  2026-10-20 verified      reviewer subagent sa-0-d78c0d36 (independent) · findings: PASS with defects: missing fixture URL, wrong diagnosis of 7 d
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-10-20 integrated      merge merged to main 0e1fea5, npm run check 16 pass · combined checks exit 0
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    code
     boundary                packages/indexer/bench/** · generated data/m0b-* · plan.json P2 m0_result only · scratch clone outside the repo
