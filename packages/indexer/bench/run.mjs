@@ -169,7 +169,7 @@ const pkgJson = (p) => JSON.parse(readFileSync(nm(p, 'package.json'), 'utf8'));
 const engines = (p) => { const j = pkgJson(p); return { version: j.version, license: j.license, nodeEngines: j.engines?.node ?? 'unspecified' }; };
 const report = {
   generatedAt: new Date().toISOString(),
-  fixture: { path: FIX, srcMode: SRC_MODE, tsFiles: files.length, commit: fixHead, tsconfig: TSCONFIG, note: 'read-only; CodeGraph and edit probes ran on a scratch copy' },
+  fixture: { path: FIX, url: process.env.FIXTURE_URL ?? null, license: process.env.FIXTURE_LICENSE ?? null, srcMode: SRC_MODE, tsFiles: files.length, commit: fixHead, tsconfig: TSCONFIG, note: 'read-only; CodeGraph and edit probes ran on a scratch copy' },
   machine: { node: process.version, platform: `${process.platform}-${process.arch}` },
   groundTruth: 'TypeScript language service getDefinitionAtPosition at every call/new callee in all fixture files; only definitions that are in-project tracked declarations (top-level function/class/method/interface member/fn-typed property/variable) count',
   sampling: { seed: 20261019, perStratum: PER, sampledCallSites: sample.length, truthCallSites: sites.length, strata: Object.fromEntries(Object.entries(byStratum).map(([k, v]) => [k, { inFixture: v.length, sampled: sample.filter((s) => s.stratum === k).length }])), strataDefinition: { alias: 'callee bound by a non-relative import resolved through tsconfig paths', barrel: 'callee bound by an import whose module is not the defining file (>=1 re-export hop)', dynamic: 'element access, optional call, or call through an interface/type member', method: 'property-access callee (this.x(), obj.x(), new ns.X)', static: 'direct local or relative-import call' } },
@@ -184,6 +184,8 @@ const report = {
     'Matching key is call line + target; same-line same-target calls count once (slightly generous).',
     'SCIP call sites come from the tree-sitter extractor, so SCIP recall inherits its site detection.',
     'Incremental time = one probe file, edit at end of file, reuses parsed files by mtime; dependents are not re-resolved.',
+    ...(DEFAULT_FIXTURE ? [] : ['The fixture was cloned without node_modules: externals (react, vitest globals, lib-typed receivers) are unresolved, so some receivers are `any` and drop out of the language-service truth. This mostly shrinks the method and dynamic strata; alias and barrel sites resolve to in-project declarations and are least affected.', 'Barrel stratum = relative-import re-export hops (index.ts files); sites bound through a tsconfig path alias are classified alias first, and most of those also pass through a package index.ts barrel.']),
+    ...(process.env.FIXTURE_URL ? [`Fixture source: ${process.env.FIXTURE_URL} (${process.env.FIXTURE_LICENSE ?? 'license not recorded'})`] : []),
     'Strata are decided from the call-site syntax and the language-service definition, so a few barrel/alias sites could fall into a neighbouring stratum.',
     'Matching key is call line + target file + target leaf name; two calls to the same name on one line count once.',
     ...(DEFAULT_FIXTURE ? ['Only 15 barrel call sites exist in the fixture (all sampled); alias sites are ~all calls into the ambient `declare module \'@hermes/ink\'` in src/types/hermes-ink.d.ts. Both strata are small/narrow, so per-stratum recall there is weak evidence.'] : []),
