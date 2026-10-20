@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-10-19 18:29      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T1-m0-engine-spike → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-19 23:52      submitted → verified      reviewer subagent sa-0-3db232ad (independent, fresh context) · findings: PASS with defects on 8af8f81: dangling edges after updateFile, ambient-module/overload id collisions, partial status only on files row. All 3 fixed
     2026-10-19 23:52      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T1-m0-engine-spike → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-19 23:54      verified → integrated      merge 603966f merge of ledger/t1-m0-engine-spike into main, npm run check 16 tests pass · combined checks exit 0
+    2026-10-19 23:54      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
