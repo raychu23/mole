@@ -20,7 +20,7 @@ T1-m0-engine-spike      ledger task (rules.md §3 code features)      project ta
     mode                    code
     boundary                packages/indexer/** (new) · packages/core/** (schema additions only) · generated data/m0-* · root package.json + package-lock.json for MIT/Apache deps · context/product-plan/systems/plan.json P2 entry only
     checks                  npm run check
-    non-goals               no daemon, VS Code extension, UI, roadmap layer, LangGraph, MCP server; do not edit prototype/ (another chat's clickable demo: read prototype/indexer/index.mjs as a seed, copy ideas not files); never write into the ui-tui fixture repo; no GPL/noncommercial deps (GitNexus, Serena)
+    non-goals               no daemon, VS Code extension, UI, roadmap layer, LangGraph, MCP server; do not use or copy prototype/ (USER 2026-10-19: rejected, "horrible"); never write into the ui-tui fixture repo; no GPL/noncommercial deps (GitNexus, Serena)
     proof                   generated data/m0-engine-report.json + npm run check output (vitest incl. the 2 failure cases) + a 10-line summary in context/product-plan/0 start.md change log
     stop                    stop and report if best engine recall on static calls < 0.9, full index of the fixture > 5 min, or a needed dep is not MIT/Apache; ask Raymond before changing the core schema shape (fields other than additions); Raymond may not be watching: make reasonable choices and state assumptions
     came from               Project/Mole/context/product-plan (plan v3 + Sequence.html, chat 20261015_064949_38dbe5)
