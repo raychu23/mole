@@ -14,7 +14,7 @@ Use `../sdlc/7-context/2-process.md` and `../sdlc/0-start.md` for the relevant s
 
 Keep Mole separate from the historical Documentation-Insights-System, the other PR/release tool, and the full-stack project. Do not move or modify those repositories as part of Mole by default.
 
-No application stack or first acceptance scenario is finalized. Source repositories in the atlas are references, not dependencies. Establish actual setup/build/test commands when implementation begins; never report invented commands as passed.
+Stack: TypeScript npm workspaces (`packages/*`). Setup `npm install`; check `npm run check` (tsc build + vitest), verified passing 2026-10-19. Build work is tracked as ledger tasks in `tasks/` (start with `tasks/HANDOFF.md`); `prototype/` is a separate clickable demo, not the product. Source repositories in the atlas are references, not dependencies. Never report invented commands as passed.
 
 Each change needs a task goal, bounded scope and acceptance. Preserve pre-existing edits. Use explicit ownership for concurrent work; integrate and verify shared changes. Keep user corrections, source evidence, agent proposals and verified results distinct. Update the smallest current task/project record when a material outcome or correction changes it; do not silently edit Raymond's personal notes.
 
