@@ -178,6 +178,8 @@ export class TsIndexer {
     clearFile(this.db, relPath);
     const sf = this.program.getSourceFile(abs);
     if (exists && sf && this.inProject.has(abs)) this.extractFile(sf);
+    // Edges in other files may point at symbols this file no longer defines: drop them (still-valid targets keep their ids).
+    this.db.exec('DELETE FROM edges WHERE to_id NOT IN (SELECT id FROM nodes)');
     this.db.exec('COMMIT');
     return this.stats(performance.now() - t0);
   }
@@ -209,9 +211,15 @@ export class TsIndexer {
     if (!this.inProject.has(resolve(sf.fileName))) return undefined;
     const path = this.rel(sf.fileName);
     if (!path) return undefined;
-    const mk = (kind: NodeKind, qualified: string): Tracked => {
+    // Members of `declare module 'x' { ... }` are qualified by the module name so two blocks in one file cannot collide.
+    const modPrefix = (n: ts.Node): string => {
+      const p = n.parent;
+      return ts.isModuleBlock(p) && ts.isModuleDeclaration(p.parent) && ts.isStringLiteral(p.parent.name) ? `${p.parent.name.text}::` : '';
+    };
+    const mk = (kind: NodeKind, qualified: string, at: ts.Node = decl): Tracked => {
+      const q = (ts.isSourceFile(at.parent) || ts.isModuleBlock(at.parent) ? modPrefix(at) : modPrefix(at.parent)) + qualified;
       const name = qualified.slice(qualified.lastIndexOf('.') + 1);
-      return { id: `${kind}:${path}#${qualified}`, kind, name, qualified };
+      return { id: `${kind}:${path}#${q}`, kind, name, qualified: q };
     };
     const topLevel = (n: ts.Node): boolean => ts.isSourceFile(n.parent) || ts.isModuleBlock(n.parent);
     const owner = (m: ts.Node): string | undefined => {
@@ -245,7 +253,7 @@ export class TsIndexer {
       if (!ts.isVariableDeclarationList(list) || !ts.isVariableStatement(stmt) || !topLevel(stmt)) return undefined;
       const init = decl.initializer ? unwrap(decl.initializer) : undefined;
       const isFn = init && (ts.isArrowFunction(init) || ts.isFunctionExpression(init));
-      return mk(isFn ? 'function' : 'variable', decl.name.text);
+      return mk(isFn ? 'function' : 'variable', decl.name.text, stmt);
     }
     return undefined;
   }
@@ -278,21 +286,23 @@ export class TsIndexer {
       errors = 1;
     }
     let failed = false;
+    // Facts read from a file with syntax errors are best-effort: mark them 'inferred' so consumers can tell.
+    const factStatus = errors > 0 ? 'inferred' : 'observed';
     const line = (n: ts.Node): number => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
     const ev = (n: ts.Node): Evidence => ({ path, line: line(n), commit: this.commit });
     const fileId = `file:${path}#${path}`;
-    insertNode(this.db, { id: fileId, kind: 'file', name: path.slice(path.lastIndexOf('/') + 1), layer: 'current', status: 'observed', evidence: { path, line: 1, commit: this.commit } });
+    insertNode(this.db, { id: fileId, kind: 'file', name: path.slice(path.lastIndexOf('/') + 1), layer: 'current', status: factStatus, evidence: { path, line: 1, commit: this.commit } });
 
     const edge = (from: string, to: string, kind: EdgeKind, at: ts.Node): void => {
       if (from === to && kind !== 'calls') return;
-      insertEdge(this.db, { from, to, kind, layer: 'current', status: 'observed', evidence: ev(at) });
+      insertEdge(this.db, { from, to, kind, layer: 'current', status: factStatus, evidence: ev(at) });
     };
 
     const visit = (node: ts.Node, enclosing: string): void => {
       let cur = enclosing;
       const t = this.describe(node);
       if (t && this.describeIsNodeOf(node, sf)) {
-        insertNode(this.db, { id: t.id, kind: t.kind, name: t.name, layer: 'current', status: 'observed', evidence: ev(node) });
+        insertNode(this.db, { id: t.id, kind: t.kind, name: t.name, layer: 'current', status: factStatus, evidence: ev(node) });
         edge(enclosing, t.id, 'contains', node);
         cur = t.id;
       }

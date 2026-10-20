@@ -12,7 +12,7 @@ export function callEdgesFromDb(db) {
   for (const r of db.prepare("SELECT to_id, path, line FROM edges WHERE kind = 'calls'").all()) {
     const p = idParts(String(r.to_id));
     if (!p) continue;
-    const segs = p.qn.split('.');
+    const segs = p.qn.split('::').pop().split('.');
     out.push({ file: String(r.path), line: Number(r.line), tfile: p.path, tleaf: leaf(segs[segs.length - 1], segs[segs.length - 2]) });
   }
   return out;

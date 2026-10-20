@@ -35,7 +35,7 @@ export function clearFile(db: DatabaseSync, path: string): void {
 
 export function insertNode(db: DatabaseSync, n: GraphNode & { evidence: Evidence }): void {
   db.prepare(
-    'INSERT OR REPLACE INTO nodes (id, kind, name, layer, status, path, line, commit_sha) VALUES (?,?,?,?,?,?,?,?)',
+    'INSERT OR IGNORE INTO nodes (id, kind, name, layer, status, path, line, commit_sha) VALUES (?,?,?,?,?,?,?,?)',
   ).run(n.id, n.kind, n.name, n.layer, n.status, n.evidence.path, n.evidence.line, n.evidence.commit);
 }
 

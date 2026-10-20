@@ -120,3 +120,38 @@ describe('incremental update', () => {
     expect(st.files).toBe(2);
   });
 });
+
+describe('review fixes (T1 adversarial review)', () => {
+  it('updateFile drops edges that point at a symbol the file no longer defines', () => {
+    const root = repo({
+      'src/a.ts': 'export function a() {\n  return 1;\n}\n',
+      'src/b.ts': "import { a } from './a.js';\nexport function b() {\n  return a();\n}\n",
+    });
+    const { ix } = index(root);
+    writeFileSync(join(root, 'src/a.ts'), 'export const other = 1;\n');
+    ix.updateFile('src/a.ts');
+    const { nodes, edges } = readGraph(ix.db);
+    const ids = new Set(nodes.map((n) => n.id));
+    expect(edges.filter((e) => !ids.has(e.to))).toEqual([]);
+  });
+
+  it('two ambient modules in one file keep separate nodes with the same member name', () => {
+    const root = repo({ 'src/m.d.ts': "declare module 'x' {\n  export function g(): void;\n}\ndeclare module 'y' {\n  export function g(): void;\n}\n" });
+    const { nodes } = index(root);
+    expect(nodes.filter((n) => n.name === 'g').map((n) => n.id).sort()).toEqual(['function:src/m.d.ts#x::g', 'function:src/m.d.ts#y::g']);
+  });
+
+  it('overloads keep the first declaration line', () => {
+    const root = repo({ 'src/o.ts': 'export function f(a: string): void;\nexport function f(a: number): void;\nexport function f(a: any) {}\n' });
+    const { nodes } = index(root);
+    expect(nodes.find((n) => n.name === 'f')?.evidence?.line).toBe(1);
+  });
+
+  it('facts from a file with syntax errors are marked inferred, clean files observed', () => {
+    const root = repo({ 'src/bad.ts': 'export function bad( {\n', 'src/ok.ts': 'export function ok() {}\n' });
+    const { nodes } = index(root);
+    expect(nodes.filter((n) => n.evidence?.path === 'src/bad.ts').every((n) => n.status === 'inferred')).toBe(true);
+    expect(nodes.filter((n) => n.evidence?.path === 'src/ok.ts').every((n) => n.status === 'observed')).toBe(true);
+  });
+});
+

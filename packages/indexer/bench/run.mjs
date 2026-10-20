@@ -164,6 +164,9 @@ const report = {
   },
   caveats: [
     'Ground truth is the TS language service, so the Compiler API engine (same checker) is partly circular; SCIP also uses the TS checker. Tree-sitter and CodeGraph are the independent measurements.',
+    'Matching key is call line + target; same-line same-target calls count once (slightly generous).',
+    'SCIP call sites come from the tree-sitter extractor, so SCIP recall inherits its site detection.',
+    'Incremental time = one probe file, edit at end of file, reuses parsed files by mtime; dependents are not re-resolved.',
     'Strata are decided from the call-site syntax and the language-service definition, so a few barrel/alias sites could fall into a neighbouring stratum.',
     'Matching key is call line + target file + target leaf name; two calls to the same name on one line count once.',
     'Only 15 barrel call sites exist in the fixture (all sampled); alias sites are ~all calls into the ambient `declare module \'@hermes/ink\'` in src/types/hermes-ink.d.ts. Both strata are small/narrow, so per-stratum recall there is weak evidence.',
@@ -174,6 +177,12 @@ const report = {
   sample: sample.map((s) => ({ file: s.file, line: s.line, callee: s.callee, stratum: s.stratum, target: s.targets[0] })),
 };
 const E = report.engines;
+// Strata are sampled equally, real call volume is not: weight each stratum's recall by its share of all fixture call sites.
+for (const e of Object.values(E)) {
+  let num = 0, den = 0;
+  for (const [k, v] of Object.entries(e.recallByStratum)) if (k !== 'dynamic' && v.recall !== null) { const n = byStratum[k].length; num += v.recall * n; den += n; }
+  e.recallStaticVolumeWeighted = den ? +(num / den).toFixed(3) : null;
+}
 const pct = (x) => `${Math.round(x * 100)}%`;
 report.nodeRuntime = {
   indexerNeeds: 'Node >=22.5 for node:sqlite (flag-free from 22.13); typescript itself needs Node >=14.17',
@@ -187,6 +196,7 @@ report.recommendation = {
   why: [
     `Best accuracy: precision ${E.typescriptCompilerApi.precision}, recall ${E.typescriptCompilerApi.recallAll} on ${report.sampling.sampledCallSites} sampled call sites incl. dynamic ${pct(E.typescriptCompilerApi.recallByStratum.dynamic.recall)}. Circular by construction (ground truth is also TypeScript), so the independent evidence is SCIP ${E.scipTypescript.recallStatic} static recall and the tree-sitter/CodeGraph gaps.`,
     `Fast enough: full index ${E.typescriptCompilerApi.fullIndexMs.median} ms (limit 5 min); 1-file update ${E.typescriptCompilerApi.incrementalUpdateMs.median} ms vs ${E.scipTypescript.incrementalUpdateMs.median} ms for SCIP (no incremental mode) and ${E.codegraph.incrementalUpdateMs.median} ms for CodeGraph.`,
+    `Weighted by real call volume the gap on everyday calls is small (static recall ${E.typescriptCompilerApi.recallStaticVolumeWeighted} TS, ${E.scipTypescript.recallStaticVolumeWeighted} SCIP, ${E.treeSitter.recallStaticVolumeWeighted} tree-sitter, ${E.codegraph.recallStaticVolumeWeighted} CodeGraph, because ~90% of call sites are plain static). The type-checker advantage is in the rare hard cases: dynamic dispatch (tree-sitter 0%, CodeGraph 2%) and aliases/barrels (tree-sitter barrel 27%).`,
     `Small + licensed: ${E.typescriptCompilerApi.install.installMB} MB, Apache-2.0, no native code.`,
     'It is what tsc and VS Code use, which matches the USER criterion (popular, industry-standard, job-relevant).',
   ],
