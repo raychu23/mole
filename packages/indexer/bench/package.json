@@ -1,0 +1,12 @@
+{
+  "name": "@mole/m0-bench",
+  "private": true,
+  "type": "module",
+  "description": "M0 engine benchmark (not a workspace package). Candidate engines are devDeps here only.",
+  "devDependencies": {
+    "@sourcegraph/scip-typescript": "0.4.0",
+    "web-tree-sitter": "0.27.1",
+    "tree-sitter-typescript": "0.23.2",
+    "@colbymchenry/codegraph": "1.6.2"
+  }
+}
