@@ -155,3 +155,14 @@ describe('review fixes (T1 adversarial review)', () => {
   });
 });
 
+describe('contextual member calls', () => {
+  it('this.x!() inside an object literal passed to a typed parameter resolves to the interface member', () => {
+    const root = repo({
+      'src/types.ts': 'export interface Action {\n  name: string;\n  checked?: (n: number) => boolean;\n  perform: () => boolean;\n}\n',
+      'src/reg.ts': "import type { Action } from './types.js';\nexport const register = <T extends Action>(a: T) => a;\n",
+      'src/a.ts': "import { register } from './reg.js';\nexport const act = register({\n  name: 'a',\n  checked: () => true,\n  perform() {\n    return !this.checked!(1);\n  },\n});\n",
+    });
+    const { edges } = index(root);
+    expect(edges.some((e) => e.kind === 'calls' && e.to === 'method:src/types.ts#Action.checked')).toBe(true);
+  });
+});

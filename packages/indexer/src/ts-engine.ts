@@ -275,6 +275,48 @@ export class TsIndexer {
     return undefined;
   }
 
+  /**
+   * `this.checked!(x)` inside an object literal: the checker resolves the member to the literal's own property
+   * assignment (not a tracked node); the language service resolves it to the contextual interface member. Follow that.
+   */
+  private viaContextualType(sym: ts.Symbol): Tracked | undefined {
+    for (const d of sym.declarations ?? []) {
+      if (!ts.isPropertyAssignment(d) && !ts.isShorthandPropertyAssignment(d) && !ts.isMethodDeclaration(d)) continue;
+      const lit = d.parent;
+      if (!ts.isObjectLiteralExpression(lit)) continue;
+      for (const ty of this.declaredTypesFor(lit)) {
+        const t = this.targetOf(ty.getProperty(sym.name));
+        if (t) return t;
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Types the author declared for an object literal (not the literal's own inferred type): the parameter type when it
+   * is a call argument (looking through `<T extends Action>` to its constraint), or the annotation of its variable.
+   */
+  private declaredTypesFor(lit: ts.ObjectLiteralExpression): ts.Type[] {
+    const out: ts.Type[] = [];
+    const add = (node: ts.TypeNode | undefined): void => {
+      if (!node) return;
+      const t = this.checker.getTypeFromTypeNode(node);
+      out.push(t);
+      const base = this.checker.getBaseConstraintOfType(t);
+      if (base && base !== t) out.push(base);
+    };
+    let n: ts.Node = lit;
+    while (ts.isParenthesizedExpression(n.parent) || ts.isAsExpression(n.parent) || ts.isSatisfiesExpression(n.parent)) n = n.parent;
+    const p = n.parent;
+    if ((ts.isCallExpression(p) || ts.isNewExpression(p)) && p.arguments) {
+      const i = p.arguments.indexOf(n as ts.Expression);
+      const decl = i >= 0 ? this.checker.getResolvedSignature(p)?.declaration : undefined;
+      const params = decl && !ts.isJSDocSignature(decl) ? decl.parameters : undefined;
+      add(params?.[Math.min(i, params.length - 1)]?.type);
+    } else if (ts.isVariableDeclaration(p)) add(p.type);
+    return out;
+  }
+
   private extractFile(sf: ts.SourceFile): void {
     const path = this.rel(sf.fileName);
     if (!path) return;
@@ -338,6 +380,7 @@ export class TsIndexer {
         at = callee.argumentExpression;
       }
       let target = this.targetOf(sym);
+      if (!target && sym) target = this.viaContextualType(sym);
       if (!target) {
         const decl = this.checker.getResolvedSignature(node)?.declaration;
         if (decl) target = this.describe(decl);
