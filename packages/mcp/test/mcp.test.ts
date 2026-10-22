@@ -39,6 +39,7 @@ it('mole_map over stdio returns the same neighbourhood text as the CLI; a down d
   expect(text).toContain('called by: b');
   expect(text).toContain('!impact');
   await new MoleClient({ root, stateDir }).call('shutdown'); // the daemon the MCP server spawned
+  cleanups.push(() => new MoleClient({ root, stateDir }).call('shutdown').catch(() => undefined)); // the daemon the next call spawns
   const miss = await client.callTool({ name: 'mole_map', arguments: { target: 'src/none.ts' } });
   expect((miss.content as Array<{ text: string }>)[0]?.text).toMatch(/not-indexed|index-unavailable|indexing/);
 }, 60000);

@@ -193,7 +193,7 @@ export function neighborhood(db: DatabaseSync, target: string, opts: MapOptions 
     }
     for (const a of aggIn(db, [String(focusRow.id)], 'imports').filter((x) => x.other !== focusRow.id)) {
       const r = nodeById(db, a.other);
-      if (r) cands.push({ node: toNode(r, 'importer', Number(a.n)) });
+      if (r) cands.push({ node: toNode(r, 'importer', Number(a.n) * (TEST_PATH.test(String(r.path)) ? 0.2 : 1)) });
     }
   }
 
@@ -209,7 +209,14 @@ export function neighborhood(db: DatabaseSync, target: string, opts: MapOptions 
   const shown = new Set(nodes.map((x) => x.id));
 
   // edges between shown nodes (folded: inside-focus endpoints attach to the focus node itself)
-  const fold = (id: string): string => (ownIds.has(id) && !shown.has(id) ? String(focusRow.id) : id);
+  // an inside symbol that did not make the map is folded into its container (a method into its class) or the focus
+  const parentOf = new Map<string, string>();
+  for (const r of db.prepare(`SELECT from_id AS parent, to_id AS child FROM edges WHERE kind = 'contains' AND to_id IN (${focusIds.map(() => '?').join(',')})`).all(...focusIds) as unknown as Array<{ parent: string; child: string }>) parentOf.set(String(r.child), String(r.parent));
+  const fold = (id: string): string => {
+    let cur = id;
+    for (let i = 0; i < 4 && ownIds.has(cur) && !shown.has(cur); i++) cur = parentOf.get(cur) ?? String(focusRow.id);
+    return ownIds.has(cur) && !shown.has(cur) ? String(focusRow.id) : cur;
+  };
   const place = (aggs: EdgeAgg[], out: boolean, insideSources: Map<string, string[]>): void => {
     for (const a of aggs) {
       if (!shown.has(a.other)) continue;

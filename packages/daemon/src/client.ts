@@ -55,7 +55,9 @@ export class MoleClient {
     try {
       return await this.call<MapResult>(impact ? 'impact' : 'map', { path: target });
     } catch (e) {
-      return unavailable(`daemon not reachable: ${(e as Error).message}`);
+      const code = (e as NodeJS.ErrnoException).code;
+      const why = code === 'ENOENT' || code === 'ECONNREFUSED' ? 'the Mole daemon is not running' : (e as Error).message;
+      return unavailable(`daemon not reachable: ${why}`);
     }
   }
 

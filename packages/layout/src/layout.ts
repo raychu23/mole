@@ -18,12 +18,19 @@ export interface Layout {
   /** Bounding box of the nodes in world coordinates (y can be negative: rows grow both ways from the focus row 0). */
   bounds: { x: number; y: number; w: number; h: number };
 }
-/** Remembered positions of nodes drawn earlier (mutated by layoutNeighborhood). Bounded, so it cannot grow without limit. */
-export type Home = Map<string, { row: number; column: number }>;
+/**
+ * Remembered layout (mutated by layoutNeighborhood): the row of every node drawn recently (bounded) and the column widths,
+ * which only grow so a column never shifts sideways under you. A map that shares no node with the last one resets them.
+ */
+export interface Home {
+  rows: Map<string, { row: number; column: number }>;
+  colW: [number, number, number];
+}
+export const newHome = (): Home => ({ rows: new Map(), colW: [0, 0, 0] });
 
 export const ROW_H = 32;
 export const NODE_H = 26;
-const COL_GAP = 120;
+const COL_GAP = 48;
 const HOME_LIMIT = 400;
 const COLUMN: Record<NeighborRole, 0 | 1 | 2> = { caller: 0, importer: 0, container: 0, focus: 1, own: 1, callee: 2, imported: 2 };
 
@@ -32,31 +39,46 @@ export function labelOf(n: Pick<NeighborNode, 'kind' | 'name' | 'path'>): string
   return n.kind === 'file' ? n.path.slice(n.path.lastIndexOf('/') + 1) : n.name;
 }
 
+/** Node width from its label, capped so three columns still fit a half-screen panel at 100% scale. */
+export const MAX_NODE_W = 165;
+export const MAX_FOCUS_W = 190;
+export const CHAR_W = 7.2;
 export function widthOf(n: Pick<NeighborNode, 'kind' | 'name' | 'path' | 'role'>): number {
-  return Math.max(n.role === 'focus' ? 160 : 110, Math.min(260, Math.round((labelOf(n).length + 3) * 7.4 + 28)));
+  const cap = n.role === 'focus' ? MAX_FOCUS_W : MAX_NODE_W;
+  return Math.max(n.role === 'focus' ? 150 : 100, Math.min(cap, Math.round(labelOf(n).length * CHAR_W + 44)));
 }
 
+/** Longest label that fits a box of width w (room for the kind badge). */
+export const maxChars = (w: number): number => Math.max(6, Math.floor((w - 44) / CHAR_W));
+
 /** Free row nearest `center` (ties go below), skipping rows in `taken`. */
-function nearestFree(center: number, taken: Set<number>): number {
+function nearestFree(center: number, taken: Set<number>, downOnly = false): number {
   for (let d = 0; ; d++) {
-    for (const r of d === 0 ? [center] : [center + d, center - d]) if (!taken.has(r)) return r;
+    for (const r of d === 0 ? [center] : downOnly ? [center + d] : [center + d, center - d]) if (!taken.has(r)) return r;
   }
 }
 
-export function layoutNeighborhood(map: Neighborhood, home: Home = new Map()): Layout {
+export function layoutNeighborhood(map: Neighborhood, home: Home = newHome()): Layout {
   const nodes = map.nodes;
   if (!nodes.length) return { nodes: [], edges: [], bounds: { x: 0, y: 0, w: 0, h: 0 } };
+  if (!map.nodes.some((n) => home.rows.has(n.id))) {
+    home.rows.clear();
+    home.colW = [0, 0, 0];
+  }
   const cols: NeighborNode[][] = [[], [], []];
   for (const n of nodes) (cols[COLUMN[n.role]] as NeighborNode[]).push(n);
 
   const rows = new Map<string, number>(); // node id -> row, all columns
-  for (const [c, col] of cols.entries()) {
+  // middle column first: the focus sits on top with what it defines below; callers/callees centre on that list
+  let midRow = 0;
+  for (const c of [1, 0, 2]) {
+    const col = cols[c] as NeighborNode[];
     const taken = new Set<number>();
     const mine = new Map<string, number>(); // this column only
     // 1. nodes drawn before in this same column keep their row
     const fresh: NeighborNode[] = [];
     for (const n of col) {
-      const h = home.get(n.id);
+      const h = home.rows.get(n.id);
       if (n.role === 'focus') continue; // the focus is always row 0 of the middle column, placed below
       if (h && h.column === c && !taken.has(h.row)) {
         taken.add(h.row);
@@ -77,18 +99,19 @@ export function layoutNeighborhood(map: Neighborhood, home: Home = new Map()): L
       }
     }
     // 2. the rest take the free row nearest the middle of what is already placed (best score first)
-    const mid = mine.size ? Math.round([...mine.values()].reduce((a, b) => a + b, 0) / mine.size) : 0;
+    const mid = c === 1 ? 1 : mine.size ? Math.round([...mine.values()].reduce((a, b) => a + b, 0) / mine.size) : midRow;
     for (const n of fresh.sort((a, b) => b.score - a.score || a.id.localeCompare(b.id))) {
-      const r = nearestFree(c === 1 ? 1 : mid, taken);
+      const r = nearestFree(mid, taken, c === 1);
       taken.add(r);
       mine.set(n.id, r);
     }
     for (const [id, r] of mine) rows.set(id, r);
+    if (c === 1) midRow = Math.round(Math.max(0, ...mine.values()) / 2);
   }
 
-  const colW = cols.map((col) => col.reduce((m, n) => Math.max(m, widthOf(n)), 0));
-  const colX = [0, colW[0] === 0 ? 0 : (colW[0] as number) + COL_GAP, 0];
-  colX[1] = colW[0] === 0 ? 0 : (colW[0] as number) + COL_GAP;
+  const colW = cols.map((col, c) => Math.max(home.colW[c] as number, col.reduce((m, n) => Math.max(m, widthOf(n)), 0)));
+  home.colW = [colW[0] as number, colW[1] as number, colW[2] as number];
+  const colX = [0, (colW[0] as number) + COL_GAP, 0];
   colX[2] = (colX[1] as number) + (colW[1] as number) + COL_GAP;
   const placed: Placed[] = nodes.map((n) => {
     const column = COLUMN[n.role];
@@ -96,10 +119,10 @@ export function layoutNeighborhood(map: Neighborhood, home: Home = new Map()): L
   });
 
   for (const p of placed) {
-    home.delete(p.id);
-    home.set(p.id, { row: p.y / ROW_H, column: p.column });
+    home.rows.delete(p.id);
+    home.rows.set(p.id, { row: p.y / ROW_H, column: p.column });
   }
-  while (home.size > HOME_LIMIT) home.delete(home.keys().next().value as string);
+  while (home.rows.size > HOME_LIMIT) home.rows.delete(home.rows.keys().next().value as string);
 
   const minY = Math.min(...placed.map((p) => p.y));
   const maxY = Math.max(...placed.map((p) => p.y + p.h));

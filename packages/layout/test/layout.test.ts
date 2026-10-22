@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_MAP_NODES, type Neighborhood, type NeighborNode } from '@mole/core';
-import { layoutNeighborhood, ROW_H, type Home } from '../src/index.js';
+import { layoutNeighborhood, newHome, ROW_H } from '../src/index.js';
 
 const node = (id: string, role: NeighborNode['role'], score = 1): NeighborNode => ({
   id, kind: id.startsWith('file:') ? 'file' : 'function', name: id.replace(/^\w+:/, ''), role, path: 'src/x.ts', line: 1, score,
@@ -27,7 +27,7 @@ describe('layoutNeighborhood', () => {
   });
 
   it('a node drawn before keeps its row when the map changes around it', () => {
-    const home: Home = new Map();
+    const home = newHome();
     const a = layoutNeighborhood(map([node('file:f', 'focus'), node('o1', 'own', 9), node('o2', 'own', 8), node('o3', 'own', 7), node('c1', 'caller')]), home);
     const rowOf = (l: typeof a, id: string) => l.nodes.find((n) => n.id === id)!.y;
     // o1 vanishes, two new ones appear: o2 and o3 must not move
@@ -39,7 +39,7 @@ describe('layoutNeighborhood', () => {
   });
 
   it('a node whose role changes columns takes the nearest free row there, never overlapping', () => {
-    const home: Home = new Map();
+    const home = newHome();
     layoutNeighborhood(map([node('file:f', 'focus'), node('x', 'callee'), node('y', 'callee')]), home);
     const l = layoutNeighborhood(map([node('file:g', 'focus'), node('x', 'caller'), node('y', 'own'), node('file:f', 'importer')]), home);
     expect(overlaps(l)).toBeUndefined();
