@@ -1,0 +1,72 @@
+{
+  "name": "@mole/vscode",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "displayName": "Mole",
+  "description": "Mole: a map of the file you are looking at, beside the code",
+  "publisher": "mole",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "main": "./dist/extension.cjs",
+  "activationEvents": [
+    "onStartupFinished",
+    "onWebviewPanel:mole.map"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "mole.openMap",
+        "title": "Mole: Open map beside the code"
+      },
+      {
+        "command": "mole.toggleImpact",
+        "title": "Mole: Toggle impact view"
+      },
+      {
+        "command": "mole.reindex",
+        "title": "Mole: Re-index repository"
+      }
+    ],
+    "configuration": {
+      "title": "Mole",
+      "properties": {
+        "mole.autoOpen": {
+          "type": "boolean",
+          "default": true,
+          "description": "Open the map panel beside the editor on startup."
+        },
+        "mole.tsconfig": {
+          "type": "string",
+          "description": "tsconfig to index (default: auto)."
+        },
+        "mole.srcDir": {
+          "type": "string",
+          "description": "Source dir to index (default: src, or the tsconfig's files)."
+        },
+        "mole.stateDir": {
+          "type": "string",
+          "description": "Where the daemon keeps its lock and graph (default: .git/mole)."
+        },
+        "mole.daemonCli": {
+          "type": "string",
+          "description": "Path to the mole daemon cli.js (default: the one next to this extension in the repo)."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "bundle": "node esbuild.mjs"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0",
+    "esbuild": "^0.28.2"
+  },
+  "dependencies": {
+    "@mole/core": "*",
+    "@mole/daemon": "*",
+    "@mole/layout": "*"
+  }
+}

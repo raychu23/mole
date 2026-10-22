@@ -1,4 +1,5 @@
 export * from './schema.js';
+export * from './neighborhood.js';
 import type { Anchor, Evidence, GraphEdge, GraphNode } from './schema.js';
 
 /** Stable key for an anchor: same element → same key across re-indexes. */

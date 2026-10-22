@@ -157,9 +157,9 @@ export class TsIndexer {
   /** Full index of every file. */
   indexAll(): IndexStats {
     const t0 = performance.now();
-    this.db.exec('DELETE FROM nodes; DELETE FROM edges; DELETE FROM files;');
-    this.build();
+    this.build(); // the slow part, before the transaction: readers keep seeing the previous index until COMMIT
     this.db.exec('BEGIN');
+    this.db.exec('DELETE FROM nodes; DELETE FROM edges; DELETE FROM files;');
     for (const sf of this.program.getSourceFiles()) if (this.inProject.has(resolve(sf.fileName))) this.extractFile(sf);
     this.db.exec('COMMIT');
     this.setMeta();

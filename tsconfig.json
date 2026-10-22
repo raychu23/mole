@@ -6,6 +6,18 @@
     },
     {
       "path": "packages/indexer"
+    },
+    {
+      "path": "packages/daemon"
+    },
+    {
+      "path": "packages/mcp"
+    },
+    {
+      "path": "packages/layout"
+    },
+    {
+      "path": "apps/vscode"
     }
   ]
 }

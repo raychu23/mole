@@ -4,13 +4,15 @@
   "private": true,
   "description": "Mole: visual codebase map that follows the file you open, shared with your agents",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "type": "module",
   "scripts": {
     "build": "tsc -b",
     "test": "vitest run",
-    "check": "npm run build && npm test"
+    "check": "npm run build && npm test",
+    "bundle": "npm run bundle -w @mole/vscode"
   },
   "engines": {
     "node": ">=22.5"
