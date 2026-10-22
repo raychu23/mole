@@ -122,10 +122,11 @@ const report = {
   states: Object.fromEntries([...new Set(res.samples.map((s) => s.state))].map((k) => [k, res.samples.filter((s) => s.state === k).length])),
   editorGroups: res.layoutGroups,
   screenshots: { ok: shots.shot ? SHOT : null, indexUnavailable: shots.shot2 ? SHOT2 : null },
+  clickToOpen: res.openCheck ?? null,
   restoreAfterRelaunch: restored,
   failureCases: res.failures.map((f) => ({ file: f.file, state: f.state })),
   samples: res.samples,
 };
 mkdirSync(dirname(OUT), { recursive: true });
 writeFileSync(OUT, JSON.stringify(report, null, 2) + '\n');
-console.log(JSON.stringify({ switches: report.switches, totalMs: report.totalMs, withDebounceMs: report.withDebounceMs, rpcMs: report.rpcMs, layoutMs: report.layoutMs, states: report.states, passed: report.passed, screenshots: report.screenshots, failureCases: report.failureCases, restoreAfterRelaunch: report.restoreAfterRelaunch }, null, 1));
+console.log(JSON.stringify({ switches: report.switches, totalMs: report.totalMs, withDebounceMs: report.withDebounceMs, rpcMs: report.rpcMs, layoutMs: report.layoutMs, states: report.states, passed: report.passed, screenshots: report.screenshots, failureCases: report.failureCases, clickToOpen: report.clickToOpen, restoreAfterRelaunch: report.restoreAfterRelaunch }, null, 1));

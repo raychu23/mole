@@ -161,11 +161,8 @@ class MolePanel {
     } else if (m.type === 'painted') {
       this.painters.get(Number(m.seq))?.(Number(m.paintMs));
       this.painters.delete(Number(m.seq));
-    } else if (m.type === 'open' && this.root) {
-      const uri = vscode.Uri.file(join(this.root, String(m.path)));
-      const line = Math.max(0, Number(m.line) - 1);
-      const group = vscode.window.tabGroups.all.find((g) => !g.isActive && g.viewColumn !== this.panel?.viewColumn)?.viewColumn;
-      await vscode.window.showTextDocument(uri, { viewColumn: group ?? vscode.ViewColumn.One, selection: new vscode.Range(line, 0, line, 0), preserveFocus: false });
+    } else if (m.type === 'open') {
+      await this.openFile(String(m.path), Number(m.line));
     } else if (m.type === 'error') {
       output.appendLine(`webview error: ${String(m.message)}`);
     } else if (m.type === 'impact') {
@@ -174,6 +171,14 @@ class MolePanel {
     } else if (m.type === 'reindex') {
       await this.reindex();
     }
+  }
+
+  /** Click on a node: open `file:line` in an editor group other than the panel's. */
+  async openFile(path: string, line1: number): Promise<void> {
+    if (!this.root) return;
+    const line = Math.max(0, line1 - 1);
+    const group = vscode.window.tabGroups.all.find((g) => g.viewColumn !== this.panel?.viewColumn)?.viewColumn;
+    await vscode.window.showTextDocument(vscode.Uri.file(join(this.root, path)), { viewColumn: group ?? vscode.ViewColumn.One, selection: new vscode.Range(line, 0, line, 0), preserveFocus: false });
   }
 
   async toggleImpact(): Promise<void> {
@@ -259,6 +264,17 @@ async function selfTest(mole: MolePanel, cfgPath: string): Promise<void> {
       writeFileSync(`${cfg.shot}.ready`, 'ok');
       await new Promise((r) => setTimeout(r, 4000));
     }
+    // click-to-open: what the webview sends for a node (path + line from the map) must land on that line
+    const m = await new MoleClient({ root, stateDir: process.env.MOLE_STATE_DIR }).map(cfg.shotFile ?? cfg.files[0] ?? '');
+    const target = m.nodes.find((n) => n.role === 'callee' && n.kind !== 'file') ?? m.nodes.find((n) => n.role === 'own');
+    let openCheck: { path: string; line: number; landedPath?: string; landedLine?: number; ok: boolean } | undefined;
+    if (target) {
+      await mole.openFile(target.path, target.line);
+      const ed = vscode.window.activeTextEditor;
+      const landedPath = ed ? toRepoPath(root, ed.document.uri.fsPath) : undefined;
+      const landedLine = ed ? ed.selection.active.line + 1 : undefined;
+      openCheck = { path: target.path, line: target.line, landedPath, landedLine, ok: landedPath === target.path && landedLine === target.line };
+    }
     // failure cases in the real editor: a file outside the index, then the daemon going away
     const failures: Sample[] = [];
     const outside = await vscode.window.showTextDocument(vscode.Uri.file(join(root, 'package.json')), { viewColumn: group, preview: false });
@@ -274,7 +290,7 @@ async function selfTest(mole: MolePanel, cfgPath: string): Promise<void> {
       writeFileSync(`${cfg.shot2}.ready`, 'ok');
       await new Promise((r) => setTimeout(r, 4000));
     }
-    writeFileSync(cfg.out, JSON.stringify({ samples: out, failures, layoutGroups: vscode.window.tabGroups.all.map((g) => ({ col: g.viewColumn, locked: undefined, tabs: g.tabs.length })) }, null, 2));
+    writeFileSync(cfg.out, JSON.stringify({ samples: out, failures, openCheck, layoutGroups: vscode.window.tabGroups.all.map((g) => ({ col: g.viewColumn, locked: undefined, tabs: g.tabs.length })) }, null, 2));
   } catch (e) {
     writeFileSync(cfg.out, JSON.stringify({ error: (e as Error).message }));
   }
