@@ -6,6 +6,9 @@
     },
     {
       "path": "packages/indexer"
+    },
+    {
+      "path": "packages/daemon"
     }
   ]
 }
