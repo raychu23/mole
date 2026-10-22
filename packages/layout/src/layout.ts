@@ -19,14 +19,13 @@ export interface Layout {
   bounds: { x: number; y: number; w: number; h: number };
 }
 /**
- * Remembered layout (mutated by layoutNeighborhood): the row of every node drawn recently (bounded) and the column widths,
- * which only grow so a column never shifts sideways under you. A map that shares no node with the last one resets them.
+ * Remembered layout (mutated by layoutNeighborhood): the row of every node drawn recently (bounded, most recent last).
+ * A map that shares no node with the last one starts clean. Column widths are fixed, so only rows need remembering.
  */
 export interface Home {
   rows: Map<string, { row: number; column: number }>;
-  colW: [number, number, number];
 }
-export const newHome = (): Home => ({ rows: new Map(), colW: [0, 0, 0] });
+export const newHome = (): Home => ({ rows: new Map() });
 
 export const ROW_H = 32;
 export const NODE_H = 26;
@@ -63,24 +62,26 @@ export function layoutNeighborhood(map: Neighborhood, home: Home = newHome()): L
   if (!nodes.length) return { nodes: [], edges: [], bounds: { x: 0, y: 0, w: 0, h: 0 } };
   if (!map.nodes.some((n) => home.rows.has(n.id))) {
     home.rows.clear();
-    home.colW = [0, 0, 0];
   }
   const cols: NeighborNode[][] = [[], [], []];
   for (const n of nodes) (cols[COLUMN[n.role]] as NeighborNode[]).push(n);
 
   const rows = new Map<string, number>(); // node id -> row, all columns
+  const recencyOf = new Map([...home.rows.keys()].map((k, i) => [k, i] as const));
   // middle column first: the focus sits on top with what it defines below; callers/callees centre on that list
   let midRow = 0;
   for (const c of [1, 0, 2]) {
     const col = cols[c] as NeighborNode[];
     const taken = new Set<number>();
     const mine = new Map<string, number>(); // this column only
-    // 1. nodes drawn before in this same column keep their row
+    // 1. nodes drawn before in this same column keep their row; when two remember the same row the more recently drawn wins
     const fresh: NeighborNode[] = [];
-    for (const n of col) {
-      const h = home.rows.get(n.id);
-      if (n.role === 'focus') continue; // the focus is always row 0 of the middle column, placed below
-      if (h && h.column === c && !taken.has(h.row)) {
+    const recency = (id: string): number => recencyOf.get(id) ?? -1;
+    const kept = col.filter((n) => n.role !== 'focus' && home.rows.get(n.id)?.column === c).sort((a, b) => recency(b.id) - recency(a.id));
+    for (const n of col) if (n.role !== 'focus' && !kept.includes(n)) fresh.push(n); // the focus is always row 0 of the middle column
+    for (const n of kept) {
+      const h = home.rows.get(n.id) as { row: number; column: number };
+      if (!taken.has(h.row)) {
         taken.add(h.row);
         mine.set(n.id, h.row);
       } else fresh.push(n);
@@ -109,8 +110,8 @@ export function layoutNeighborhood(map: Neighborhood, home: Home = newHome()): L
     if (c === 1) midRow = Math.round(Math.max(0, ...mine.values()) / 2);
   }
 
-  const colW = cols.map((col, c) => Math.max(home.colW[c] as number, col.reduce((m, n) => Math.max(m, widthOf(n)), 0)));
-  home.colW = [colW[0] as number, colW[1] as number, colW[2] as number];
+  // fixed column widths: a column never changes size, so nothing shifts sideways when a long label appears or leaves
+  const colW = [MAX_NODE_W, MAX_FOCUS_W, MAX_NODE_W];
   const colX = [0, (colW[0] as number) + COL_GAP, 0];
   colX[2] = (colX[1] as number) + (colW[1] as number) + COL_GAP;
   const placed: Placed[] = nodes.map((n) => {
@@ -128,4 +129,15 @@ export function layoutNeighborhood(map: Neighborhood, home: Home = newHome()): L
   const maxY = Math.max(...placed.map((p) => p.y + p.h));
   const ids = new Set(nodes.map((n) => n.id));
   return { nodes: placed, edges: map.edges.filter((e) => ids.has(e.from) && ids.has(e.to)), bounds: { x: 0, y: minY, w: (colX[2] as number) + (colW[2] as number), h: maxY - minY } };
+}
+
+/**
+ * Where the viewport's top edge goes for the next map. It stays put while shared nodes are on screen; when the new map
+ * reaches above it, it extends upward with 3 rows of slack (a fresh start has the same slack) (so the next few maps do not shift again); a map with nothing
+ * in common, or one that now sits more than 12 rows below the top, snaps to itself.
+ */
+export function nextTop(prev: number | undefined, want: number, hadShared: boolean): number {
+  if (prev === undefined || !hadShared) return want - 3 * ROW_H;
+  if (want < prev) return want - 3 * ROW_H;
+  return want - prev > 12 * ROW_H ? want - 3 * ROW_H : prev;
 }

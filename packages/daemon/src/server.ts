@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, rmSync, watch, writeFileSync, type FSWatcher } from 'node:fs';
 import { createServer, type Server, type Socket } from 'node:net';
-import { dirname, join, relative, resolve, sep } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 import { Worker } from 'node:worker_threads';
@@ -42,12 +42,27 @@ const alive = (pid: number): boolean => {
   }
 };
 
-export function readLock(dir: string): LockInfo | undefined {
+export function readLock(dir: string, root: string): LockInfo | undefined {
   try {
-    return JSON.parse(readFileSync(lockPath(dir), 'utf8')) as LockInfo;
+    return JSON.parse(readFileSync(lockPath(dir, root), 'utf8')) as LockInfo;
   } catch {
     return undefined;
   }
+}
+
+/** `./src/a.ts`, `src\\a.ts` and absolute paths inside the repo all mean `src/a.ts`; bare symbol names pass through. */
+export function normalizeTarget(root: string, target: string): string {
+  let t = target.trim().replace(/\\/g, '/');
+  const hash = t.indexOf('#');
+  let path = hash < 0 ? t : t.slice(0, hash);
+  const sym = hash < 0 ? '' : t.slice(hash);
+  if (isAbsolute(path)) {
+    const rel = relative(root, path).split(sep).join('/');
+    if (rel && !rel.startsWith('..')) path = rel;
+  }
+  path = path.replace(/^(?:\.\/)+/, '');
+  t = path + sym;
+  return t;
 }
 
 /** Worker file: dist/worker.js next to this module, or (under vitest, which runs the .ts sources) the built copy. */
@@ -87,11 +102,18 @@ export class Daemon {
 
   /** Take the lock (failing if a live daemon owns it), start the writer, listen. Resolves once the socket accepts. */
   async start(): Promise<void> {
-    const prev = readLock(this.dir);
+    const prev = readLock(this.dir, this.root);
     if (prev && alive(prev.pid)) throw new AlreadyRunning(prev);
-    rmSync(lockPath(this.dir), { force: true });
+    rmSync(lockPath(this.dir, this.root), { force: true });
+    // the lock is taken BEFORE the socket is touched: a loser of the race must never unlink a live daemon's socket
+    try {
+      writeFileSync(lockPath(this.dir, this.root), JSON.stringify({ pid: process.pid, socket: this.socket, root: this.root, startedAt: Date.now() } satisfies LockInfo), { flag: 'wx' });
+    } catch (e) {
+      const other = readLock(this.dir, this.root);
+      if ((e as NodeJS.ErrnoException).code === 'EEXIST' && other) throw new AlreadyRunning(other);
+      throw e;
+    }
     if (process.platform !== 'win32') rmSync(this.socket, { force: true });
-    writeFileSync(lockPath(this.dir), JSON.stringify({ pid: process.pid, socket: this.socket, root: this.root, startedAt: Date.now() } satisfies LockInfo), { flag: 'wx' });
 
     await new Promise<void>((ok, fail) => {
       this.server = createServer((s) => this.onClient(s));
@@ -111,7 +133,7 @@ export class Daemon {
     this.server?.close();
     await this.worker?.terminate();
     this.db?.close();
-    rmSync(lockPath(this.dir), { force: true });
+    rmSync(lockPath(this.dir, this.root), { force: true });
     if (process.platform !== 'win32') rmSync(this.socket, { force: true });
     this.stopped?.();
   }
@@ -119,7 +141,7 @@ export class Daemon {
   // ---- writer ---------------------------------------------------------------------------------
 
   private spawnWorker(): void {
-    const cfg: WorkerConfig = { root: this.root, dbPath: dbPath(this.dir), tsconfig: this.opts.tsconfig, srcDir: this.opts.srcDir };
+    const cfg: WorkerConfig = { root: this.root, dbPath: dbPath(this.dir, this.root), tsconfig: this.opts.tsconfig, srcDir: this.opts.srcDir };
     const w = new Worker(workerFile(), { workerData: cfg, execArgv: [], env: process.env });
     this.worker = w;
     w.on('message', (m: FromWorker) => this.onWorker(m));
@@ -154,7 +176,7 @@ export class Daemon {
   private openReader(): void {
     try {
       this.db?.close();
-      this.db = new DatabaseSync(dbPath(this.dir), { readOnly: true });
+      this.db = new DatabaseSync(dbPath(this.dir, this.root), { readOnly: true });
     } catch (e) {
       this.fail(`cannot open graph: ${(e as Error).message}`);
     }
@@ -207,7 +229,7 @@ export class Daemon {
         return ok(this.status);
       case 'map':
       case 'impact': {
-        const target = String(p.path ?? p.symbol ?? p.target ?? '');
+        const target = normalizeTarget(this.root, String(p.path ?? p.symbol ?? p.target ?? ''));
         return ok(target ? this.query(req.method, target) : unavailable('missing path or symbol', 'not-indexed'));
       }
       case 'reindex':

@@ -21,7 +21,7 @@ export class MoleClient {
   }
 
   private path(): string {
-    return readLock(this.dir)?.socket ?? socketPath(this.opts.root, this.dir);
+    return readLock(this.dir, this.opts.root)?.socket ?? socketPath(this.opts.root, this.dir);
   }
 
   call<T>(method: string, params: Record<string, unknown> = {}): Promise<T> {

@@ -7,7 +7,7 @@ import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Daemon, MoleClient } from '../dist/index.js';
-import { layoutNeighborhood, newHome, ROW_H } from '../../layout/dist/index.js';
+import { layoutNeighborhood, newHome, nextTop, ROW_H } from '../../layout/dist/index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const FIX = process.env.FIXTURE ?? join(homedir(), '.hermes/hermes-agent/ui-tui');
@@ -35,32 +35,45 @@ for (const f of files.slice(0, 80)) {
   lat.push({ rpc: t1 - t0, server: m.ms ?? 0, layout: performance.now() - t1 });
 }
 
-// 2. a 10-switch walk: each next file is a neighbour of the current one (what a developer does: follow a call/import)
-const walkHome = newHome();
-let cur = 'src/gatewayClient.ts';
-const seen = new Set();
-const steps = [];
-let prev; // id -> { x, y, role }
-for (let i = 0; i < SWITCHES + 1; i++) {
-  const m = await c.map(cur);
-  const l = layoutNeighborhood(m, walkHome);
-  const now = new Map(l.nodes.map((n) => [n.id, { x: n.x, y: n.y, role: n.role }]));
-  const moved = { sameRole: [], roleChanged: [] };
-  if (prev) for (const [id, p] of now) {
-    const q = prev.get(id);
-    if (!q) continue;
-    const dist = Math.hypot(p.x - q.x, p.y - q.y);
-    (q.role === p.role || (q.role === 'own' && p.role === 'own') ? moved.sameRole : moved.roleChanged).push({ id, dist, from: q.role, to: p.role });
+// 2. walks of 10 switches (each next file is a neighbour of the current one: what a developer does when following a call/import)
+const WALKS = Number(process.env.WALKS ?? 20);
+async function walk(start) {
+  const home = newHome();
+  let cur = start;
+  const seen = new Set();
+  const steps = [];
+  let prev; // id -> { x, y, role }; y is ON-SCREEN (world y minus the viewport top the webview would use)
+  let top;
+  for (let i = 0; i < SWITCHES + 1; i++) {
+    const m = await c.map(cur);
+    if (m.state !== 'ok') break;
+    const hadShared = m.nodes.some((n) => home.rows.has(n.id));
+    const l = layoutNeighborhood(m, home);
+    top = nextTop(top, l.bounds.y - 16, hadShared);
+    const now = new Map(l.nodes.map((n) => [n.id, { x: n.x, y: n.y - top, role: n.role }]));
+    const sameRole = [];
+    const roleChanged = [];
+    if (prev) for (const [id, p] of now) {
+      const q = prev.get(id);
+      if (!q) continue;
+      (q.role === p.role ? sameRole : roleChanged).push(Math.hypot(p.x - q.x, p.y - q.y));
+    }
+    steps.push({ focus: cur, nodes: m.nodes.length, sameRole, roleChanged });
+    seen.add(cur);
+    prev = now;
+    const near = m.nodes.filter((n) => n.role !== 'focus' && !n.path.includes('__tests__')).map((n) => n.path);
+    const next = near.find((p) => !seen.has(p)) ?? m.nodes.map((n) => n.path).find((p) => !seen.has(p));
+    if (!next) break;
+    cur = next;
   }
-  steps.push({ focus: cur, nodes: m.nodes.length, shared: moved.sameRole.length + moved.roleChanged.length, sameRoleShared: moved.sameRole.length, sameRoleMaxPx: Math.max(0, ...moved.sameRole.map((x) => x.dist)), roleChanged: moved.roleChanged.length, roleChangedMaxPx: Math.max(0, ...moved.roleChanged.map((x) => x.dist)) });
-  seen.add(cur);
-  prev = now;
-  const next = m.nodes.filter((n) => n.role !== 'focus' && n.kind !== 'file' ? false : n.role === 'imported' || n.role === 'importer' || n.role === 'caller' || n.role === 'callee').map((n) => n.path).find((p) => !seen.has(p) && !p.includes('__tests__'))
-    ?? m.nodes.map((n) => n.path).find((p) => !seen.has(p));
-  if (!next) break;
-  cur = next;
+  return steps;
 }
-const same = steps.flatMap((s) => (s.sameRoleMaxPx !== undefined ? [s.sameRoleMaxPx] : []));
+const starts = [...new Set([first.focus.path, ...files])].slice(0, WALKS);
+const walks = [];
+for (const s of starts) walks.push({ start: s, steps: await walk(s) });
+const allSame = walks.flatMap((w) => w.steps.flatMap((s) => s.sameRole));
+const allChanged = walks.flatMap((w) => w.steps.flatMap((s) => s.roleChanged));
+const switchesTotal = walks.reduce((a, w) => a + Math.max(0, w.steps.length - 1), 0);
 const report = {
   generatedAt: new Date().toISOString(),
   fixture: FIX,
@@ -72,18 +85,18 @@ const report = {
     layoutMs: { p50: +pct(lat.map((x) => x.layout), 50).toFixed(3), p95: +pct(lat.map((x) => x.layout), 95).toFixed(3) },
   },
   stability: {
-    rule: 'a node that stays on the map in the same role must not move; a node that changes role (column) takes the nearest free row',
+    rule: 'on-screen distance (world y minus the webview viewport top, same column x) between two consecutive maps, for nodes on both. A node that keeps its role must not move more than the set distance. A node that changes role (callee -> caller) changes column by design and is reported separately, NOT hidden: it is most of the shared nodes.',
     setDistancePx: ROW_H,
-    switches: steps.length - 1,
-    sameRoleNodesChecked: steps.reduce((a, s) => a + s.sameRoleShared, 0),
-    sameRoleMaxMovePx: Math.max(0, ...same),
-    sameRoleWithinSetDistance: Math.max(0, ...same) <= ROW_H,
-    totalRoleChanges: steps.reduce((a, s) => a + s.roleChanged, 0),
-    steps,
+    walks: walks.length,
+    switches: switchesTotal,
+    sharedNodeObservations: allSame.length + allChanged.length,
+    sameRole: { n: allSame.length, maxPx: Math.round(Math.max(0, ...allSame)), over32px: allSame.filter((d) => d > ROW_H).length },
+    roleChanged: { n: allChanged.length, shareOfShared: +(allChanged.length / Math.max(1, allSame.length + allChanged.length)).toFixed(2), medianPx: Math.round([...allChanged].sort((x, y) => x - y)[Math.floor(allChanged.length / 2)] ?? 0), maxPx: Math.round(Math.max(0, ...allChanged)) },
+    sameRoleWithinSetDistance: allSame.every((d) => d <= ROW_H),
   },
 };
 mkdirSync(dirname(OUT), { recursive: true });
 writeFileSync(OUT, JSON.stringify(report, null, 2) + '\n');
-console.log(JSON.stringify({ latency: report.latency, stability: { ...report.stability, steps: undefined } }, null, 1));
+console.log(JSON.stringify({ latency: report.latency, stability: report.stability }, null, 1));
 await d.stop();
 rmSync(state, { recursive: true, force: true });

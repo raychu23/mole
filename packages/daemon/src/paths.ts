@@ -31,6 +31,8 @@ export function socketPath(root: string, dir: string): string {
   return process.platform === 'win32' ? `\\\\.\\pipe\\mole-${key}` : join(process.platform === 'darwin' || process.platform === 'linux' ? '/tmp' : tmpdir(), `mole-${key}.sock`);
 }
 
-export const lockPath = (dir: string): string => join(dir, 'daemon.lock');
-export const dbPath = (dir: string): string => join(dir, 'graph.sqlite');
-export const hasDb = (dir: string): boolean => existsSync(dbPath(dir));
+/** Worktrees of one repo share the state dir, but each worktree root has its own lock, daemon and graph. */
+export const rootKey = (root: string): string => createHash('sha1').update(resolve(root)).digest('hex').slice(0, 10);
+export const lockPath = (dir: string, root: string): string => join(dir, `daemon-${rootKey(root)}.lock`);
+export const dbPath = (dir: string, root: string): string => join(dir, `graph-${rootKey(root)}.sqlite`);
+export const hasDb = (dir: string, root: string): boolean => existsSync(dbPath(dir, root));

@@ -46,7 +46,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     vscode.commands.registerCommand('mole.openMap', () => mole.open()),
     vscode.commands.registerCommand('mole.toggleImpact', () => mole.toggleImpact()),
     vscode.commands.registerCommand('mole.reindex', () => mole.reindex()),
-    ...(process.env.MOLE_SELFTEST ? [] : [vscode.window.onDidChangeActiveTextEditor(debounce((e: vscode.TextEditor | undefined) => void mole.follow(e, performance.now() - SWITCH_DEBOUNCE_MS), SWITCH_DEBOUNCE_MS))]),
+    vscode.window.onDidChangeActiveTextEditor(debounce((e: vscode.TextEditor | undefined) => void mole.follow(e, performance.now()), SWITCH_DEBOUNCE_MS)),
   );
   if (!root) {
     output.appendLine('no workspace folder: Mole is idle');
@@ -217,7 +217,7 @@ class MolePanel {
       this.waiters.set(seq, ok);
       setTimeout(() => this.waiters.delete(seq), 5000);
     });
-    void panel.webview.postMessage({ type: 'map', map, seq });
+    void panel.webview.postMessage({ type: 'map', map, seq, impact: this.impact });
     clearTimeout(this.pollTimer);
     if (map.state === 'indexing') this.pollTimer = setTimeout(() => void this.send(target), 1000);
     const r = await Promise.race([rendered, new Promise<undefined>((ok) => setTimeout(ok, 5000))]);
@@ -236,7 +236,7 @@ class MolePanel {
  * optionally screenshot, then quit. Used by the T2 latency proof; never active in normal use.
  */
 async function selfTest(mole: MolePanel, cfgPath: string): Promise<void> {
-  const cfg = JSON.parse((await vscode.workspace.fs.readFile(vscode.Uri.file(cfgPath))).toString()) as { out: string; files: string[]; shot?: string; shotFile?: string; shot2?: string };
+  const cfg = JSON.parse((await vscode.workspace.fs.readFile(vscode.Uri.file(cfgPath))).toString()) as { out: string; files: string[]; shot?: string; shotFile?: string; shot2?: string; shot3?: string };
   const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
   try {
     await vscode.commands.executeCommand('workbench.action.closeAuxiliaryBar');
@@ -251,21 +251,40 @@ async function selfTest(mole: MolePanel, cfgPath: string): Promise<void> {
     }
     const out: Sample[] = [];
     const group = vscode.ViewColumn.One;
+    // Real path: showTextDocument fires onDidChangeActiveTextEditor, whose (leading-edge debounced) listener drives the map.
+    // The script only waits for the sample that listener produces. A pause between switches keeps each one a "lone" switch;
+    // switches closer than the 120 ms window are coalesced on purpose.
+    const switchTo = async (rel: string): Promise<Sample | undefined> => {
+      await new Promise((r) => setTimeout(r, 160));
+      const n0 = mole.samples.length;
+      await vscode.window.showTextDocument(vscode.Uri.file(join(root, rel)), { viewColumn: group, preview: false });
+      for (let i = 0; i < 120 && mole.samples.length <= n0; i++) await new Promise((r) => setTimeout(r, 50));
+      return mole.samples.length > n0 ? mole.samples[mole.samples.length - 1] : undefined;
+    };
     for (const f of cfg.files) {
-      const started = performance.now();
-      await vscode.window.showTextDocument(vscode.Uri.file(join(root, f)), { viewColumn: group, preview: false });
-      const s = await mole.follow(vscode.window.activeTextEditor, started);
+      const s = await switchTo(f);
       if (s) out.push(s);
     }
+    const shotFile = cfg.shotFile ?? cfg.files[0] ?? '';
     if (cfg.shot) {
-      await vscode.window.showTextDocument(vscode.Uri.file(join(root, cfg.shotFile ?? cfg.files[0] ?? '')), { viewColumn: group, preview: false });
-      await mole.follow(vscode.window.activeTextEditor, performance.now());
+      await switchTo(shotFile);
       await new Promise((r) => setTimeout(r, 1500));
       writeFileSync(`${cfg.shot}.ready`, 'ok');
       await new Promise((r) => setTimeout(r, 4000));
     }
+    // impact view in the real window: toggle it (palette command path), screenshot, record what the daemon says, toggle back
+    let impactCheck: { impactTotal?: number; impactedShown: number } | undefined;
+    if (cfg.shot3) {
+      await mole.toggleImpact();
+      const im = await new MoleClient({ root, stateDir: process.env.MOLE_STATE_DIR }).map(shotFile, true);
+      impactCheck = { impactTotal: im.impactTotal, impactedShown: im.nodes.filter((n) => n.impacted).length };
+      await new Promise((r) => setTimeout(r, 1500));
+      writeFileSync(`${cfg.shot3}.ready`, 'ok');
+      await new Promise((r) => setTimeout(r, 4000));
+      await mole.toggleImpact();
+    }
     // click-to-open: what the webview sends for a node (path + line from the map) must land on that line
-    const m = await new MoleClient({ root, stateDir: process.env.MOLE_STATE_DIR }).map(cfg.shotFile ?? cfg.files[0] ?? '');
+    const m = await new MoleClient({ root, stateDir: process.env.MOLE_STATE_DIR }).map(shotFile);
     const target = m.nodes.find((n) => n.role === 'callee' && n.kind !== 'file') ?? m.nodes.find((n) => n.role === 'own');
     let openCheck: { path: string; line: number; landedPath?: string; landedLine?: number; ok: boolean } | undefined;
     if (target) {
@@ -277,20 +296,18 @@ async function selfTest(mole: MolePanel, cfgPath: string): Promise<void> {
     }
     // failure cases in the real editor: a file outside the index, then the daemon going away
     const failures: Sample[] = [];
-    const outside = await vscode.window.showTextDocument(vscode.Uri.file(join(root, 'package.json')), { viewColumn: group, preview: false });
-    const s1 = await mole.follow(outside, performance.now());
+    const s1 = await switchTo('package.json');
     if (s1) failures.push(s1);
     await c.call('shutdown').catch(() => undefined);
     await new Promise((r) => setTimeout(r, 500));
-    await vscode.window.showTextDocument(vscode.Uri.file(join(root, cfg.shotFile ?? cfg.files[0] ?? '')), { viewColumn: group, preview: false });
-    const s2 = await mole.follow(vscode.window.activeTextEditor, performance.now());
+    const s2 = await switchTo(shotFile);
     if (s2) failures.push(s2);
     if (cfg.shot2) {
       await new Promise((r) => setTimeout(r, 1000));
       writeFileSync(`${cfg.shot2}.ready`, 'ok');
       await new Promise((r) => setTimeout(r, 4000));
     }
-    writeFileSync(cfg.out, JSON.stringify({ samples: out, failures, openCheck, layoutGroups: vscode.window.tabGroups.all.map((g) => ({ col: g.viewColumn, locked: undefined, tabs: g.tabs.length })) }, null, 2));
+    writeFileSync(cfg.out, JSON.stringify({ samples: out, failures, openCheck, impactCheck, layoutGroups: vscode.window.tabGroups.all.map((g) => ({ col: g.viewColumn, locked: undefined, tabs: g.tabs.length })) }, null, 2));
   } catch (e) {
     writeFileSync(cfg.out, JSON.stringify({ error: (e as Error).message }));
   }

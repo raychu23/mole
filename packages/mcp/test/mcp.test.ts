@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { afterEach, expect, it } from 'vitest';
+import { execFileSync } from 'node:child_process';
 import { MoleClient } from '@mole/daemon';
 
 const cleanups: Array<() => Promise<void> | void> = [];
@@ -38,6 +39,12 @@ it('mole_map over stdio returns the same neighbourhood text as the CLI; a down d
   expect(text).toContain('file src/a.ts');
   expect(text).toContain('called by: b');
   expect(text).toContain('!impact');
+  // the CLI prints the same neighbourhood (ms and indexed-time vary per call, so normalise them)
+  const cli = join(dirname(fileURLToPath(import.meta.url)), '../../daemon/dist/cli.js');
+  const norm = (s: string) => s.replace(/, indexed [^\]]+/g, '').replace(/, \d+ ms\)/g, ')').trim();
+  const viaCli = execFileSync(process.execPath, ['--no-warnings', cli, 'map', 'src/a.ts', '--root', root, '--state-dir', stateDir, '--no-start'], { encoding: 'utf8' });
+  const viaMcp = (await client.callTool({ name: 'mole_map', arguments: { target: 'src/a.ts' } })).content as Array<{ text: string }>;
+  expect(norm(viaMcp[0]?.text ?? '')).toBe(norm(viaCli));
   await new MoleClient({ root, stateDir }).call('shutdown'); // the daemon the MCP server spawned
   cleanups.push(() => new MoleClient({ root, stateDir }).call('shutdown').catch(() => undefined)); // the daemon the next call spawns
   const miss = await client.callTool({ name: 'mole_map', arguments: { target: 'src/none.ts' } });

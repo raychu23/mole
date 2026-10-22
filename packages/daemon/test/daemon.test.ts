@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { formatNeighborhood, MAX_MAP_NODES } from '@mole/core';
 import { TsIndexer } from '@mole/indexer';
-import { AlreadyRunning, Daemon, MoleClient, neighborhood } from '../src/index.js';
+import { AlreadyRunning, Daemon, lockPath, MoleClient, neighborhood, normalizeTarget } from '../src/index.js';
 
 const cleanups: Array<() => Promise<void> | void> = [];
 afterEach(async () => {
@@ -90,6 +90,49 @@ describe('neighborhood (pure query)', () => {
   });
 });
 
+describe('review fixes (T2 adversarial review)', () => {
+  const CHAIN = {
+    'src/util.ts': 'export function clamp(n: number) {\n  return n;\n}\nexport function rec(n: number): number {\n  return n ? rec(n - 1) : 0;\n}\nexport function helper() {\n  return 1;\n}\nexport function useHelper() {\n  return helper();\n}\n',
+    'src/a.ts': "import { clamp } from './util.js';\nexport function mid() {\n  return clamp(1);\n}\n",
+    'src/b.ts': "import { mid } from './a.js';\nexport function top() {\n  return mid();\n}\nexport function top2() {\n  return mid();\n}\n",
+  };
+
+  it('impact reports transitive callers (not just the ones on the map) and a self-call is not "impacted"', () => {
+    const db = indexed(CHAIN);
+    const n = neighborhood(db, 'src/util.ts', { impact: true });
+    expect(n.impactTotal).toBe(3); // mid (direct) + top + top2 (via mid)
+    const flag = (name: string) => n.nodes.find((x) => x.name === name)?.impacted === true;
+    expect(flag('clamp')).toBe(true); // called from another file
+    expect(flag('rec')).toBe(false); // only calls itself
+    expect(flag('helper')).toBe(false); // only called by useHelper in the same file
+    expect(formatNeighborhood(n)).toContain('impact: 3 callers');
+  });
+
+  it('a "%" or "_" in a symbol target is literal, not a LIKE wildcard', () => {
+    const db = indexed(CHAIN);
+    expect(neighborhood(db, 'src/util.ts#%').state).toBe('not-indexed');
+    expect(neighborhood(db, 'src/util.ts#cl_mp').state).toBe('not-indexed');
+    expect(neighborhood(db, "src/util.ts#clamp' OR '1'='1").state).toBe('not-indexed');
+    expect(neighborhood(db, 'src/util.ts#clamp').state).toBe('ok');
+  });
+
+  it('a bare name that matches several symbols names the others', () => {
+    const db = indexed({ 'src/x.ts': 'export function dup() {\n  return 1;\n}\n', 'src/y.ts': 'export function dup() {\n  return 2;\n}\n' });
+    const n = neighborhood(db, 'dup');
+    expect(n.state).toBe('ok');
+    expect(n.alternatives?.length).toBe(1);
+    expect(formatNeighborhood(n)).toContain('also matches');
+  });
+
+  it('normalizeTarget: ./, backslashes and absolute paths inside the repo all mean the repo-relative path', () => {
+    expect(normalizeTarget('/repo', './src/a.ts')).toBe('src/a.ts');
+    expect(normalizeTarget('/repo', 'src\\a.ts')).toBe('src/a.ts');
+    expect(normalizeTarget('/repo', '/repo/src/a.ts#Svc.find')).toBe('src/a.ts#Svc.find');
+    expect(normalizeTarget('/repo', '/elsewhere/a.ts')).toBe('/elsewhere/a.ts');
+    expect(normalizeTarget('/repo', 'clamp')).toBe('clamp');
+  });
+});
+
 async function until<T>(fn: () => Promise<T>, ok: (v: T) => boolean, ms = 20000): Promise<T> {
   const end = Date.now() + ms;
   for (;;) {
@@ -126,7 +169,7 @@ describe('daemon', () => {
     cleanups.push(() => d.stop());
     await expect(new Daemon({ root, stateDir }).start()).rejects.toBeInstanceOf(AlreadyRunning);
     await d.stop();
-    writeFileSync(join(stateDir, 'daemon.lock'), JSON.stringify({ pid: 2 ** 22 + 12345, socket: '/tmp/none.sock', root, startedAt: 0 }));
+    writeFileSync(lockPath(stateDir, root), JSON.stringify({ pid: 2 ** 22 + 12345, socket: '/tmp/none.sock', root, startedAt: 0 }));
     const d2 = new Daemon({ root, stateDir });
     await d2.start(); // pid not alive → lock replaced
     cleanups.push(() => d2.stop());
@@ -149,5 +192,52 @@ describe('daemon', () => {
     const c = new MoleClient({ root, stateDir });
     await until(() => c.status(), (s) => s.state === 'ready');
     expect((await c.map('docs/readme.md')).state).toBe('not-indexed');
+  }, 60000);
+});
+
+describe('daemon robustness (T2 review)', () => {
+  it('worktrees sharing a state dir get separate daemons and indexes', async () => {
+    const a = repo(SMALL);
+    const b = repo({ ...SMALL, 'src/only-in-b.ts': 'export function onlyB() {\n  return 1;\n}\n' });
+    const stateDir = join(a, '.state'); // shared, like a git common dir
+    const da = new Daemon({ root: a, stateDir });
+    const db_ = new Daemon({ root: b, stateDir });
+    await da.start();
+    await db_.start(); // would throw AlreadyRunning if the lock ignored the root
+    cleanups.push(() => da.stop(), () => db_.stop());
+    const ca = new MoleClient({ root: a, stateDir });
+    const cb = new MoleClient({ root: b, stateDir });
+    await until(() => cb.map('src/only-in-b.ts'), (x) => x.state === 'ok');
+    expect((await cb.map('src/only-in-b.ts')).state).toBe('ok');
+    expect((await ca.map('src/only-in-b.ts')).state).toBe('not-indexed'); // A's index never answers for B
+  }, 60000);
+
+  it('simultaneous starts for one repo: exactly one wins, the rest get AlreadyRunning (never a raw EEXIST)', async () => {
+    const root = repo(SMALL);
+    const stateDir = join(root, '.state');
+    const ds = Array.from({ length: 6 }, () => new Daemon({ root, stateDir }));
+    const res = await Promise.allSettled(ds.map((d) => d.start()));
+    cleanups.push(...ds.map((d) => () => d.stop()));
+    expect(res.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    for (const r of res) if (r.status === 'rejected') expect(r.reason).toBeInstanceOf(AlreadyRunning);
+  }, 60000);
+
+  it('a full re-index never makes an indexed file look "not-indexed"', async () => {
+    const root = repo(SMALL);
+    const stateDir = join(root, '.state');
+    const d = new Daemon({ root, stateDir, watch: false });
+    await d.start();
+    cleanups.push(() => d.stop());
+    const c = new MoleClient({ root, stateDir });
+    await until(() => c.map('src/svc.ts'), (x) => x.state === 'ok');
+    await c.call('reindex');
+    const states: string[] = [];
+    const end = Date.now() + 4000;
+    while (Date.now() < end) {
+      states.push((await c.map('src/svc.ts')).state);
+      await new Promise((r) => setTimeout(r, 15));
+    }
+    expect(states.length).toBeGreaterThan(20);
+    expect(states.filter((s) => s !== 'ok')).toEqual([]);
   }, 60000);
 });

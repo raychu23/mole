@@ -15,6 +15,7 @@ const SCRATCH = process.env.SCRATCH ?? join(process.env.TMPDIR ?? tmpdir(), 'mol
 const OUT = process.env.OUT ?? resolve(ext, '../../generated data/m1-latency.json');
 const SHOT = process.env.SHOT ?? resolve(ext, '../../generated data/m1-panel.png');
 const RESTORE_SHOT = process.env.RESTORE_SHOT ?? resolve(ext, '../../generated data/m1-panel-restored.png');
+const SHOT3 = process.env.SHOT3 ?? resolve(ext, '../../generated data/m1-panel-impact.png');
 const SHOT2 = process.env.SHOT2 ?? resolve(ext, '../../generated data/m1-panel-unavailable.png');
 const N = Number(process.env.FILES ?? 40);
 const SHOT_FILE = process.env.SHOT_FILE ?? 'src/gatewayClient.ts';
@@ -38,7 +39,7 @@ all.sort();
 const step = Math.max(1, Math.floor(all.length / N));
 const files = all.filter((_, i) => i % step === 0).slice(0, N);
 
-const cfg = { out: join(SCRATCH, 'out.json'), files, shot: join(SCRATCH, 'shot'), shot2: join(SCRATCH, 'shot2'), shotFile: SHOT_FILE };
+const cfg = { out: join(SCRATCH, 'out.json'), files, shot: join(SCRATCH, 'shot'), shot2: join(SCRATCH, 'shot2'), shot3: join(SCRATCH, 'shot3'), shotFile: SHOT_FILE };
 writeFileSync(join(SCRATCH, 'selftest.json'), JSON.stringify(cfg));
 const env = { ...process.env, MOLE_SELFTEST: join(SCRATCH, 'selftest.json'), MOLE_STATE_DIR: join(SCRATCH, 'state'), MOLE_TSCONFIG: 'tsconfig.build.json', MOLE_SRC_DIR: 'src' };
 try { execFileSync('osascript', ['-e', 'tell application "Code" to activate']); } catch {}
@@ -46,7 +47,7 @@ const child = spawn(CODE, ['--new-window', '--user-data-dir', join(SCRATCH, 'ud'
 child.unref();
 
 const deadline = Date.now() + 240_000;
-const shots = { shot: false, shot2: false };
+const shots = { shot: false, shot2: false, shot3: false };
 const take = async (key, dest) => {
   if (shots[key] || !existsSync(`${cfg[key]}.ready`)) return;
   shots[key] = true;
@@ -63,6 +64,7 @@ const take = async (key, dest) => {
 };
 while (!existsSync(cfg.out) && Date.now() < deadline) {
   await take('shot', SHOT);
+  await take('shot3', SHOT3);
   await take('shot2', SHOT2);
   await new Promise((r) => setTimeout(r, 300));
 }
@@ -117,16 +119,22 @@ const report = {
   drawMs: stat('drawMs'),
   paintMs: stat('paintMs'),
   recordedOfAttempted: `${res.samples.length}/${files.length}`,
-  target: 'p95 totalMs <= 150',
-  passed: pct(warm.map((s) => s.totalMs), 95) <= 150,
+  target: 'p95 <= 150 ms, judged on withDebounceMs (editor switch -> DOM written; the debounce is leading-edge so a lone switch waits 0 ms)',
+  passed: pct(warm.map((s) => s.withDebounceMs), 95) <= 150,
   states: Object.fromEntries([...new Set(res.samples.map((s) => s.state))].map((k) => [k, res.samples.filter((s) => s.state === k).length])),
   editorGroups: res.layoutGroups,
-  screenshots: { ok: shots.shot ? SHOT : null, indexUnavailable: shots.shot2 ? SHOT2 : null },
+  screenshots: { ok: shots.shot ? SHOT : null, impact: shots.shot3 ? SHOT3 : null, indexUnavailable: shots.shot2 ? SHOT2 : null },
   clickToOpen: res.openCheck ?? null,
+  impactView: res.impactCheck ?? null,
   restoreAfterRelaunch: restored,
   failureCases: res.failures.map((f) => ({ file: f.file, state: f.state })),
   samples: res.samples,
 };
 mkdirSync(dirname(OUT), { recursive: true });
 writeFileSync(OUT, JSON.stringify(report, null, 2) + '\n');
-console.log(JSON.stringify({ switches: report.switches, totalMs: report.totalMs, withDebounceMs: report.withDebounceMs, rpcMs: report.rpcMs, layoutMs: report.layoutMs, states: report.states, passed: report.passed, screenshots: report.screenshots, failureCases: report.failureCases, clickToOpen: report.clickToOpen, restoreAfterRelaunch: report.restoreAfterRelaunch }, null, 1));
+// every run is kept: a loaded machine moves p95 by tens of ms, so quote the range, not one run
+const RUNS = join(dirname(OUT), 'm1-latency-runs.json');
+const runs = existsSync(RUNS) ? JSON.parse(readFileSync(RUNS, 'utf8')) : [];
+runs.push({ at: report.generatedAt, switches: report.switches, totalMsP95: report.totalMs?.p95, withDebounceMsP95: report.withDebounceMs?.p95, rpcMsP95: report.rpcMs?.p95, passed: report.passed });
+writeFileSync(RUNS, JSON.stringify(runs, null, 2) + '\n');
+console.log(JSON.stringify({ switches: report.switches, totalMs: report.totalMs, withDebounceMs: report.withDebounceMs, rpcMs: report.rpcMs, layoutMs: report.layoutMs, states: report.states, passed: report.passed, screenshots: report.screenshots, failureCases: report.failureCases, clickToOpen: report.clickToOpen, impactView: report.impactView, restoreAfterRelaunch: report.restoreAfterRelaunch }, null, 1));

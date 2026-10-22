@@ -60,7 +60,7 @@ export function renderSvg(map: Neighborhood, layout: Layout, top: number, opts: 
     const b = byId.get(e.to);
     if (!a || !b) continue;
     const w = Math.min(4.5, 1.2 + Math.log2(1 + e.count));
-    const imp = nodeById.get(e.from)?.impacted || nodeById.get(e.to)?.impacted ? ' impacted' : '';
+    const imp = nodeById.get(e.to)?.impacted ? ' impacted' : ''; // calls INTO an impacted node
     edges += `<path class="edge ${e.kind}${imp}" data-from="${esc(e.from)}" data-to="${esc(e.to)}" d="${edgePath(a, b)}" stroke-width="${w.toFixed(1)}" marker-end="url(#arrow-${e.kind})"><title>${esc(e.kind)} ×${e.count} (first at line ${e.line})</title></path>`;
   }
 
@@ -112,7 +112,7 @@ export function renderHeader(map: Neighborhood, opts: RenderOptions, now = Date.
   const f = map.focus;
   const title = f ? (f.kind === 'file' ? f.path : `${f.path}#${f.name}`) : 'Mole';
   const STATE_NAME: Record<string, string> = { indexing: 'Indexing…', 'not-indexed': 'Not indexed', 'index-unavailable': 'Index unavailable' };
-  const sub = f ? [f.kind, map.commit ? `@${map.commit.slice(0, 9)}` : '', map.indexedAt ? `indexed ${ago(now - map.indexedAt)}` : '', `${map.nodes.length} nodes`].filter(Boolean).join(' · ') : (STATE_NAME[map.state] ?? map.state);
+  const sub = f ? [f.kind, map.commit ? `@${map.commit.slice(0, 9)}` : '', map.indexedAt ? `indexed ${ago(now - map.indexedAt)}` : '', `${map.nodes.length} nodes`, map.impactTotal !== undefined ? `${map.impactTotal} callers reach this` : ''].filter(Boolean).join(' · ') : (STATE_NAME[map.state] ?? map.state);
   return `<div class="head"><div class="titles"><div class="title" title="${esc(title)}">${esc(title)}</div><div class="sub">${esc(sub)}</div></div>` +
     `<button class="chip${opts.impact ? ' on' : ''}" data-act="impact" title="Highlight everything that calls into this file">Impact</button>` +
     `<button class="chip" data-act="reindex" title="Re-index the repository">⟳</button></div>` +

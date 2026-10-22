@@ -42,6 +42,10 @@ export interface Neighborhood {
   nodes: NeighborNode[]; // <= MAX_MAP_NODES, focus first
   edges: NeighborEdge[];
   more: MoreGroup[];
+  /** impact view: how many callers (transitively, depth 3) reach the focus; the map shows only the best-ranked of them */
+  impactTotal?: number;
+  /** a bare symbol name matched several declarations: the others (path#qualified), best first */
+  alternatives?: string[];
   commit?: string; // commit the facts were read at
   indexedAt?: number; // epoch ms of the last index run
   ms?: number; // server-side query time
@@ -78,6 +82,8 @@ export function formatNeighborhood(n: Neighborhood): string {
     if (more) items.push(`+${more} more`);
     lines.push(`${ROLE_LABEL[role]}: ${items.join(' · ')}`);
   }
+  if (n.impactTotal !== undefined) lines.push(`impact: ${n.impactTotal} callers reach this (depth 3), ${n.nodes.filter((x) => x.impacted).length} shown`);
+  if (n.alternatives?.length) lines.push(`also matches: ${n.alternatives.join(' · ')}`);
   const calls = n.edges.filter((e) => e.kind === 'calls').length;
   lines.push(`(${n.nodes.length} nodes, ${calls} call edges${n.ms !== undefined ? `, ${n.ms.toFixed(0)} ms` : ''})`);
   return lines.join('\n');

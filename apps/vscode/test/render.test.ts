@@ -64,6 +64,7 @@ describe('empty states and header', () => {
     expect(h).toContain('src/f.ts');
     expect(h).toContain('@abcdef123');
     expect(h).toContain('4 nodes');
+    expect(renderHeader({ ...map, impactTotal: 7 }, { impact: true }, 61_000)).toContain('7 callers reach this');
     expect(h).toContain('chip on');
     expect(ago(30_000)).toBe('30s ago');
   });
@@ -77,13 +78,16 @@ describe('extension helpers', () => {
     expect(toRepoPath('/repo', '/repo/../etc/passwd')).toBeUndefined();
   });
 
-  it('debounce keeps only the last call in the window', async () => {
+  it('debounce: the first call runs at once, a burst collapses to one trailing call with the last args', async () => {
     const seen: number[] = [];
     const d = debounce((n: number) => seen.push(n), 30);
     d(1);
+    expect(seen).toEqual([1]); // leading edge: no waiting for a lone switch
     d(2);
     d(3);
     await new Promise((r) => setTimeout(r, 80));
-    expect(seen).toEqual([3]);
+    expect(seen).toEqual([1, 3]);
+    d(4); // quiet again: immediate
+    expect(seen).toEqual([1, 3, 4]);
   });
 });

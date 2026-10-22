@@ -66,19 +66,21 @@ function fileId(path: string): string {
   return `file:${path}#${path}`;
 }
 
-/** Resolve a user target: `src/a.ts`, `src/a.ts#Cls.method`, or a bare symbol name. */
-export function resolveTarget(db: DatabaseSync, target: string): Row | undefined {
+/** Resolve a user target: `src/a.ts`, `src/a.ts#Cls.method`, or a bare symbol name (alternatives listed when ambiguous). */
+export function resolveTarget(db: DatabaseSync, target: string): { row: Row; alternatives: string[] } | undefined {
   const t = target.trim();
   const hash = t.indexOf('#');
   if (hash < 0) {
     const f = db.prepare(`SELECT ${NODE_COLS} FROM nodes WHERE id = ?`).get(fileId(t)) as unknown as Row | undefined;
-    if (f) return f;
-    const byName = db.prepare(`SELECT ${NODE_COLS} FROM nodes WHERE name = ? AND kind != 'file' ORDER BY (SELECT COUNT(*) FROM edges WHERE to_id = nodes.id) DESC, id LIMIT 1`).get(t) as unknown as Row | undefined;
-    return byName;
+    if (f) return { row: f, alternatives: [] };
+    const all = db.prepare(`SELECT ${NODE_COLS} FROM nodes WHERE name = ? AND kind != 'file' ORDER BY (SELECT COUNT(*) FROM edges WHERE to_id = nodes.id) DESC, id LIMIT 6`).all(t) as unknown as Row[];
+    const [best, ...rest] = all;
+    return best ? { row: best, alternatives: rest.map((r) => `${r.path}#${String(r.id).slice(String(r.id).indexOf('#') + 1)}`) } : undefined;
   }
   const path = t.slice(0, hash);
-  const qn = t.slice(hash + 1);
-  return db.prepare(`SELECT ${NODE_COLS} FROM nodes WHERE path = ? AND id LIKE ? AND kind != 'file' LIMIT 1`).get(path, `%#${qn}`) as unknown as Row | undefined;
+  const qn = t.slice(hash + 1).replace(/[\\%_]/g, '\\$&'); // `%` / `_` are literal in a symbol name
+  const row = db.prepare(`SELECT ${NODE_COLS} FROM nodes WHERE path = ? AND id LIKE ? ESCAPE '\\' AND kind != 'file' LIMIT 1`).get(path, `%#${qn}`) as unknown as Row | undefined;
+  return row ? { row, alternatives: [] } : undefined;
 }
 
 interface EdgeAgg {
@@ -121,7 +123,8 @@ export interface MapOptions {
 /** The ranked per-file / per-symbol neighbourhood. `target` is a repo-relative path or symbol (see resolveTarget). */
 export function neighborhood(db: DatabaseSync, target: string, opts: MapOptions = {}): Neighborhood {
   const t0 = performance.now();
-  const focusRow = resolveTarget(db, target);
+  const resolved = resolveTarget(db, target);
+  const focusRow = resolved?.row;
   if (!focusRow) return { state: 'not-indexed', message: `${target} is not in the index (outside the indexed sources, or not a symbol)`, nodes: [], edges: [], more: [] };
   const meta = db.prepare("SELECT key, value FROM meta WHERE key IN ('commit')").all() as unknown as Array<{ key: string; value: string }>;
   const commit = meta.find((m) => m.key === 'commit')?.value;
@@ -253,11 +256,19 @@ export function neighborhood(db: DatabaseSync, target: string, opts: MapOptions 
     }
   }
 
+  let impactTotal: number | undefined;
   if (opts.impact) {
     const imp = impactSet(db, focusIds);
+    impactTotal = imp.size;
     for (const n of nodes) if (imp.has(n.id)) n.impacted = true;
-    // an own symbol is "impacted" when anything outside calls it
-    for (const n of nodes) if (n.role === 'own' && (inCalls.find((r) => String(r.id) === n.id)?.n ?? 0) > 0) n.impacted = true;
+    // an own symbol is impacted when something OUTSIDE the focus calls it (calls among a file's own symbols do not count)
+    const external = new Set<string>();
+    if (insideIds.length) {
+      for (const r of db.prepare(`SELECT to_id AS id, from_id AS other FROM edges WHERE kind = 'calls' AND to_id IN (${insideIds.map(() => '?').join(',')}) GROUP BY to_id, from_id`).all(...insideIds) as unknown as Array<{ id: string; other: string }>) {
+        if (!ownIds.has(String(r.other))) external.add(String(r.id));
+      }
+    }
+    for (const n of nodes) if (n.role === 'own' && external.has(n.id)) n.impacted = true;
   }
 
   const idx = db.prepare("SELECT value FROM meta WHERE key = 'indexedAt'").get() as unknown as { value: string } | undefined;
@@ -267,6 +278,8 @@ export function neighborhood(db: DatabaseSync, target: string, opts: MapOptions 
     nodes,
     edges: [...edges.values()].filter((e) => shown.has(e.from) && shown.has(e.to)),
     more,
+    impactTotal,
+    alternatives: resolved?.alternatives.length ? resolved.alternatives : undefined,
     commit,
     indexedAt: idx ? Number(idx.value) : undefined,
     ms: performance.now() - t0,
