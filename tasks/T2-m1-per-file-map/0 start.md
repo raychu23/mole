@@ -1,5 +1,5 @@
 ---
-state: verified
+state: integrated
 owner: unclaimed
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t2-m1-per-file-map
@@ -7,8 +7,8 @@ worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T2-m1-per-file-map
 base: 997892f
 reviewer: subagent sa-0-e71c7358 (independent, fresh context)
 updated: 2026-10-22 13:39
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-10-22 12:41
 ---
 ```notes
@@ -16,8 +16,8 @@ T2-m1-per-file-map      ledger task (rules.md §3 code features)      project ta
     goal                    First user-visible Mole: a VS Code map panel (always-on split beside the code, ~half screen) that follows the open file, served by a single-writer daemon (plan M1, offerings F0.2 F1.1 F1.3 F1.9). Starts after T1 lands
     done-when               1) packages/daemon: one process per repo (lock in git common dir), JSON-RPC over a local socket, only writer of the SQLite graph from T1, fails open. 2) apps/vscode: webview panel opened with ViewColumn.Beside, ~50% width via vscode.setEditorLayout, its group locked (workbench.action.lockGroup) so opened files don't replace it, restored on reload; onDidChangeActiveTextEditor debounced ~120 ms, ignores non-file schemes; shows the ranked neighbourhood (<=25 nodes, rest grouped '+N more'); click node opens file:line; impact view highlights callers. 3) CLI + MCP mole_map(path|symbol) return the same neighbourhood as compact text. 4) measured on the ui-tui fixture: warm file switch -> render p95 <=150 ms, no LLM call; a shared node moves less than a set distance over 10 switches. FAILURE CASES: daemon down -> sidebar shows 'index unavailable', no crash; file outside the index -> 'not indexed' state
     ui                      USER 2026-10-19: main surface = always-on split editor panel beside the code, ~half the screen, follows the open file (not a sidebar) · what else 'much more' adds is OPEN: ask before building extra surfaces
-    status                  2026-10-22 verified      reviewer subagent sa-0-e71c7358 (independent, fresh context) · findings: Verdict not-ready on 5 defects + claim wording.
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-10-22 integrated      merge 5ff6bf2 merge of ledger/t2-m1-per-file-map into main, npm run check 49 tests pass · combined checks exit 0
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    code
     boundary                packages/daemon/** · packages/mcp/** · apps/vscode/** · packages/core/** (additions) · root workspace config
