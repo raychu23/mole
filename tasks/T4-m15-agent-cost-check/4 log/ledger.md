@@ -5,4 +5,6 @@ ledger (newest last, nothing deleted)
     2026-10-22 17:04      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T4-m15-agent-cost-check · branch ledger/t4-m15-agent-cost-check · base 7d478ac
     2026-10-22 17:16      running → submitted      report: 78 runs graded, data generated data/m15-agent-cost.json, finding: no measurable agent-cost benefit on ui-tui, signal only on impact tickets, commit bbd0a3a, npm run check 49 passed · checks exit 0
     2026-10-22 17:16      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T4-m15-agent-cost-check → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-22 17:22      submitted → verified      reviewer subagent sa-0-9a319c86 · findings: 5 fixes: lenient T06/T07 + 11-ticket subset in grade.mjs, NO-GO softened to not-demonstrated, 2 tickets x 2 reps + sign test p~0.125, isolation/cap limits disclosed, change-log
+    2026-10-22 17:22      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T4-m15-agent-cost-check → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
