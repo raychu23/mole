@@ -1,0 +1,528 @@
+[
+ {
+  "participant": "S1",
+  "arm": "mole",
+  "task": "T05",
+  "answer": [
+   "src/components/activeSessionSwitcher.tsx",
+   "src/components/connectorsOverlay.tsx",
+   "src/components/modelPicker.tsx",
+   "src/components/petPicker.tsx",
+   "src/components/pluginsHub.tsx",
+   "src/components/skillsHub.tsx"
+  ],
+  "seconds": 100
+ },
+ {
+  "participant": "S1",
+  "arm": "mole",
+  "task": "T06",
+  "answer": [
+   "src/app/createGatewayEventHandler.ts",
+   "src/app/turnController.ts",
+   "src/app/useMainApp.ts",
+   "src/components/thinking.tsx",
+   "src/domain/messages.ts",
+   "src/lib/text.ts",
+   "src/components/messageLine.tsx"
+  ],
+  "seconds": 100
+ },
+ {
+  "participant": "S1",
+  "arm": "mole",
+  "task": "T11",
+  "answer": [
+   "src/app/useMainApp.ts",
+   "src/components/appLayout.tsx",
+   "src/components/messageLine.tsx",
+   "src/components/streamingAssistant.tsx"
+  ],
+  "seconds": 100
+ },
+ {
+  "participant": "S1",
+  "arm": "mole",
+  "task": "T13",
+  "answer": [
+   "startFailureLine",
+   "t",
+   "translateFrom",
+   "resolvePath"
+  ],
+  "seconds": 100
+ },
+ {
+  "participant": "S1",
+  "arm": "none",
+  "task": "T04",
+  "answer": [
+   "src/components/agentsOverlay.tsx",
+   "src/components/appChrome.tsx"
+  ],
+  "seconds": 180
+ },
+ {
+  "participant": "S1",
+  "arm": "none",
+  "task": "T07",
+  "answer": [
+   "src/app.tsx",
+   "src/app/createGatewayEventHandler.ts",
+   "src/app/turnController.ts",
+   "src/app/turnStore.ts",
+   "src/app/useConfigSync.ts",
+   "src/app/useInputHandlers.ts",
+   "src/app/useLongRunToolCharms.ts",
+   "src/app/useMainApp.ts",
+   "src/app/useSessionLifecycle.ts",
+   "src/app/useSubmission.ts"
+  ],
+  "seconds": 180
+ },
+ {
+  "participant": "S1",
+  "arm": "none",
+  "task": "T12",
+  "answer": [
+   "src/app/createSlashHandler.ts",
+   "src/app/slash/commands/core.ts",
+   "src/app/slash/commands/debug.ts",
+   "src/app/slash/commands/ops.ts",
+   "src/app/slash/commands/session.ts",
+   "src/app/slash/commands/setup.ts",
+   "src/app/slash/commands/subscription.ts",
+   "src/app/slash/commands/topup.ts",
+   "src/app/slash/commands/wake.ts"
+  ],
+  "seconds": 180
+ },
+ {
+  "participant": "S1",
+  "arm": "none",
+  "task": "T02",
+  "answer": [
+   "src/app/agentRoster.ts",
+   "src/app/useLongRunToolCharms.ts",
+   "src/app/useMainApp.ts",
+   "src/components/appChrome.tsx"
+  ],
+  "seconds": 180
+ },
+ {
+  "participant": "S1",
+  "arm": "transfer-after-mole",
+  "task": "T01",
+  "answer": [
+   "src/app/slash/commands/session.ts",
+   "src/app/useMainApp.ts",
+   "src/components/activeSessionSwitcher.tsx"
+  ],
+  "seconds": 90
+ },
+ {
+  "participant": "S1",
+  "arm": "transfer-after-none",
+  "task": "TX1",
+  "answer": [
+   "src/app/useInputHandlers.ts",
+   "src/app/useMainApp.ts",
+   "src/app/usePet.ts"
+  ],
+  "seconds": 90
+ },
+ {
+  "participant": "S2",
+  "arm": "none",
+  "task": "T05",
+  "answer": [
+   "src/components/activeSessionSwitcher.tsx",
+   "src/components/connectorsOverlay.tsx",
+   "src/components/modelPicker.tsx",
+   "src/components/petPicker.tsx",
+   "src/components/pluginsHub.tsx"
+  ],
+  "seconds": 180
+ },
+ {
+  "participant": "S2",
+  "arm": "none",
+  "task": "T06",
+  "answer": [
+   "src/app/createGatewayEventHandler.ts",
+   "src/app/turnController.ts",
+   "src/app/useMainApp.ts",
+   "src/components/thinking.tsx",
+   "src/domain/messages.ts",
+   "src/lib/text.ts"
+  ],
+  "seconds": 180
+ },
+ {
+  "participant": "S2",
+  "arm": "none",
+  "task": "T11",
+  "answer": [
+   "src/app/useMainApp.ts",
+   "src/components/appLayout.tsx",
+   "src/components/messageLine.tsx"
+  ],
+  "seconds": 180
+ },
+ {
+  "participant": "S2",
+  "arm": "none",
+  "task": "T13",
+  "answer": [
+   "startFailureLine",
+   "t"
+  ],
+  "seconds": 180
+ },
+ {
+  "participant": "S2",
+  "arm": "mole",
+  "task": "T04",
+  "answer": [
+   "src/components/agentsOverlay.tsx",
+   "src/components/appChrome.tsx",
+   "src/components/thinking.tsx"
+  ],
+  "seconds": 100
+ },
+ {
+  "participant": "S2",
+  "arm": "mole",
+  "task": "T07",
+  "answer": [
+   "src/app.tsx",
+   "src/app/createGatewayEventHandler.ts",
+   "src/app/turnController.ts",
+   "src/app/turnStore.ts",
+   "src/app/useConfigSync.ts",
+   "src/app/useInputHandlers.ts",
+   "src/app/useLongRunToolCharms.ts",
+   "src/app/useMainApp.ts",
+   "src/app/useSessionLifecycle.ts",
+   "src/app/useSubmission.ts",
+   "src/components/streamingAssistant.tsx"
+  ],
+  "seconds": 100
+ },
+ {
+  "participant": "S2",
+  "arm": "mole",
+  "task": "T12",
+  "answer": [
+   "src/app/createSlashHandler.ts",
+   "src/app/slash/commands/core.ts",
+   "src/app/slash/commands/debug.ts",
+   "src/app/slash/commands/ops.ts",
+   "src/app/slash/commands/session.ts",
+   "src/app/slash/commands/setup.ts",
+   "src/app/slash/commands/subscription.ts",
+   "src/app/slash/commands/topup.ts",
+   "src/app/slash/commands/wake.ts",
+   "src/app/slash/registry.ts"
+  ],
+  "seconds": 100
+ },
+ {
+  "participant": "S2",
+  "arm": "mole",
+  "task": "T02",
+  "answer": [
+   "src/app/agentRoster.ts",
+   "src/app/useLongRunToolCharms.ts",
+   "src/app/useMainApp.ts",
+   "src/components/appChrome.tsx",
+   "src/components/streamingAssistant.tsx"
+  ],
+  "seconds": 100
+ },
+ {
+  "participant": "S2",
+  "arm": "transfer-after-none",
+  "task": "T01",
+  "answer": [
+   "src/app/slash/commands/session.ts",
+   "src/app/useMainApp.ts",
+   "src/components/activeSessionSwitcher.tsx"
+  ],
+  "seconds": 90
+ },
+ {
+  "participant": "S2",
+  "arm": "transfer-after-mole",
+  "task": "TX1",
+  "answer": [
+   "src/app/useInputHandlers.ts",
+   "src/app/useMainApp.ts",
+   "src/app/usePet.ts"
+  ],
+  "seconds": 90
+ },
+ {
+  "participant": "S3",
+  "arm": "mole",
+  "task": "T04",
+  "answer": [
+   "src/components/agentsOverlay.tsx",
+   "src/components/appChrome.tsx",
+   "src/components/thinking.tsx"
+  ],
+  "seconds": 100
+ },
+ {
+  "participant": "S3",
+  "arm": "mole",
+  "task": "T07",
+  "answer": [
+   "src/app.tsx",
+   "src/app/createGatewayEventHandler.ts",
+   "src/app/turnController.ts",
+   "src/app/turnStore.ts",
+   "src/app/useConfigSync.ts",
+   "src/app/useInputHandlers.ts",
+   "src/app/useLongRunToolCharms.ts",
+   "src/app/useMainApp.ts",
+   "src/app/useSessionLifecycle.ts",
+   "src/app/useSubmission.ts",
+   "src/components/streamingAssistant.tsx"
+  ],
+  "seconds": 100
+ },
+ {
+  "participant": "S3",
+  "arm": "mole",
+  "task": "T12",
+  "answer": [
+   "src/app/createSlashHandler.ts",
+   "src/app/slash/commands/core.ts",
+   "src/app/slash/commands/debug.ts",
+   "src/app/slash/commands/ops.ts",
+   "src/app/slash/commands/session.ts",
+   "src/app/slash/commands/setup.ts",
+   "src/app/slash/commands/subscription.ts",
+   "src/app/slash/commands/topup.ts",
+   "src/app/slash/commands/wake.ts",
+   "src/app/slash/registry.ts"
+  ],
+  "seconds": 100
+ },
+ {
+  "participant": "S3",
+  "arm": "mole",
+  "task": "T02",
+  "answer": [
+   "src/app/agentRoster.ts",
+   "src/app/useLongRunToolCharms.ts",
+   "src/app/useMainApp.ts",
+   "src/components/appChrome.tsx",
+   "src/components/streamingAssistant.tsx"
+  ],
+  "seconds": 100
+ },
+ {
+  "participant": "S3",
+  "arm": "none",
+  "task": "T05",
+  "answer": [
+   "src/components/activeSessionSwitcher.tsx",
+   "src/components/connectorsOverlay.tsx",
+   "src/components/modelPicker.tsx",
+   "src/components/petPicker.tsx",
+   "src/components/pluginsHub.tsx"
+  ],
+  "seconds": 180
+ },
+ {
+  "participant": "S3",
+  "arm": "none",
+  "task": "T06",
+  "answer": [
+   "src/app/createGatewayEventHandler.ts",
+   "src/app/turnController.ts",
+   "src/app/useMainApp.ts",
+   "src/components/thinking.tsx",
+   "src/domain/messages.ts",
+   "src/lib/text.ts"
+  ],
+  "seconds": 180
+ },
+ {
+  "participant": "S3",
+  "arm": "none",
+  "task": "T11",
+  "answer": [
+   "src/app/useMainApp.ts",
+   "src/components/appLayout.tsx",
+   "src/components/messageLine.tsx"
+  ],
+  "seconds": 180
+ },
+ {
+  "participant": "S3",
+  "arm": "none",
+  "task": "T13",
+  "answer": [
+   "startFailureLine",
+   "t"
+  ],
+  "seconds": 180
+ },
+ {
+  "participant": "S3",
+  "arm": "transfer-after-mole",
+  "task": "TX1",
+  "answer": [
+   "src/app/useInputHandlers.ts",
+   "src/app/useMainApp.ts",
+   "src/app/usePet.ts"
+  ],
+  "seconds": 90
+ },
+ {
+  "participant": "S3",
+  "arm": "transfer-after-none",
+  "task": "T01",
+  "answer": [
+   "src/app/slash/commands/session.ts",
+   "src/app/useMainApp.ts",
+   "src/components/activeSessionSwitcher.tsx"
+  ],
+  "seconds": 90
+ },
+ {
+  "participant": "S4",
+  "arm": "none",
+  "task": "T04",
+  "answer": [
+   "src/components/agentsOverlay.tsx",
+   "src/components/appChrome.tsx"
+  ],
+  "seconds": 180
+ },
+ {
+  "participant": "S4",
+  "arm": "none",
+  "task": "T07",
+  "answer": [
+   "src/app.tsx",
+   "src/app/createGatewayEventHandler.ts",
+   "src/app/turnController.ts",
+   "src/app/turnStore.ts",
+   "src/app/useConfigSync.ts",
+   "src/app/useInputHandlers.ts",
+   "src/app/useLongRunToolCharms.ts",
+   "src/app/useMainApp.ts",
+   "src/app/useSessionLifecycle.ts",
+   "src/app/useSubmission.ts"
+  ],
+  "seconds": 180
+ },
+ {
+  "participant": "S4",
+  "arm": "none",
+  "task": "T12",
+  "answer": [
+   "src/app/createSlashHandler.ts",
+   "src/app/slash/commands/core.ts",
+   "src/app/slash/commands/debug.ts",
+   "src/app/slash/commands/ops.ts",
+   "src/app/slash/commands/session.ts",
+   "src/app/slash/commands/setup.ts",
+   "src/app/slash/commands/subscription.ts",
+   "src/app/slash/commands/topup.ts",
+   "src/app/slash/commands/wake.ts"
+  ],
+  "seconds": 180
+ },
+ {
+  "participant": "S4",
+  "arm": "none",
+  "task": "T02",
+  "answer": [
+   "src/app/agentRoster.ts",
+   "src/app/useLongRunToolCharms.ts",
+   "src/app/useMainApp.ts",
+   "src/components/appChrome.tsx"
+  ],
+  "seconds": 180
+ },
+ {
+  "participant": "S4",
+  "arm": "mole",
+  "task": "T05",
+  "answer": [
+   "src/components/activeSessionSwitcher.tsx",
+   "src/components/connectorsOverlay.tsx",
+   "src/components/modelPicker.tsx",
+   "src/components/petPicker.tsx",
+   "src/components/pluginsHub.tsx",
+   "src/components/skillsHub.tsx"
+  ],
+  "seconds": 100
+ },
+ {
+  "participant": "S4",
+  "arm": "mole",
+  "task": "T06",
+  "answer": [
+   "src/app/createGatewayEventHandler.ts",
+   "src/app/turnController.ts",
+   "src/app/useMainApp.ts",
+   "src/components/thinking.tsx",
+   "src/domain/messages.ts",
+   "src/lib/text.ts",
+   "src/components/messageLine.tsx"
+  ],
+  "seconds": 100
+ },
+ {
+  "participant": "S4",
+  "arm": "mole",
+  "task": "T11",
+  "answer": [
+   "src/app/useMainApp.ts",
+   "src/components/appLayout.tsx",
+   "src/components/messageLine.tsx",
+   "src/components/streamingAssistant.tsx"
+  ],
+  "seconds": 100
+ },
+ {
+  "participant": "S4",
+  "arm": "mole",
+  "task": "T13",
+  "answer": [
+   "startFailureLine",
+   "t",
+   "translateFrom",
+   "resolvePath"
+  ],
+  "seconds": 100
+ },
+ {
+  "participant": "S4",
+  "arm": "transfer-after-none",
+  "task": "TX1",
+  "answer": [
+   "src/app/useInputHandlers.ts",
+   "src/app/useMainApp.ts",
+   "src/app/usePet.ts"
+  ],
+  "seconds": 90
+ },
+ {
+  "participant": "S4",
+  "arm": "transfer-after-mole",
+  "task": "T01",
+  "answer": [
+   "src/app/slash/commands/session.ts",
+   "src/app/useMainApp.ts",
+   "src/components/activeSessionSwitcher.tsx"
+  ],
+  "seconds": 90
+ }
+]

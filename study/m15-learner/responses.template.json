@@ -1,0 +1,6 @@
+[
+  { "participant": "P1", "arm": "mole", "task": "T05", "answer": ["src/components/example.tsx"], "seconds": 240 },
+  { "participant": "P1", "arm": "transfer-after-mole", "task": "T01", "answer": ["src/app/example.ts"], "seconds": 150 },
+  { "participant": "P1", "arm": "none", "task": "T04", "answer": ["src/components/example.tsx"], "seconds": 200 },
+  { "participant": "P1", "arm": "transfer-after-none", "task": "TX1", "answer": ["src/app/example.ts"], "seconds": 160 }
+]

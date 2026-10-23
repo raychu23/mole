@@ -209,6 +209,7 @@ describe('daemon robustness (T2 review)', () => {
     const cb = new MoleClient({ root: b, stateDir });
     await until(() => cb.map('src/only-in-b.ts'), (x) => x.state === 'ok');
     expect((await cb.map('src/only-in-b.ts')).state).toBe('ok');
+    await until(() => ca.map('src/svc.ts'), (x) => x.state === 'ok'); // A must have finished its own index, else it answers 'indexing' (race seen in the T5 review)
     expect((await ca.map('src/only-in-b.ts')).state).toBe('not-indexed'); // A's index never answers for B
   }, 60000);
 
