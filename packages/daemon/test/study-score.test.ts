@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error plain .mjs without types
-import { scoreOne, summarise } from '../../../study/m15-learner/score.mjs';
+import { scoreOne, summarise, validate } from '../../../study/m15-learner/score.mjs';
 
 const keys = {
   callGraph: { a: ['b'], b: ['c'], c: ['d'] },
@@ -20,6 +20,21 @@ describe('study scorer', () => {
     expect(scoreOne('T13', ['a', 'b', 'c', 'd'], keys)).toBe(1);
     expect(scoreOne('T13', ['a', 'c', 'b', 'd'], keys)).toBe(0);
     expect(scoreOne('T13', ['a', 'b', 'd'], keys)).toBe(0);
+  });
+  it('rejects duplicate rows, unknown arms and missing keys, naming the row', () => {
+    const base = { participant: 'P1', arm: 'mole', task: 'T05', answer: ['src/a.ts'], seconds: 10 };
+    expect(() => validate([base, base], keys)).toThrow(/duplicate row/);
+    expect(() => validate([{ ...base, arm: 'Mole' }], keys)).toThrow(/arm must be one of/);
+    expect(() => validate([{ ...base, task: 'T99' }], keys)).toThrow(/T99/);
+    expect(() => validate([{ ...base, seconds: -3 }], keys)).toThrow(/seconds/);
+    expect(validate([{ ...base, answer: ['src/example.ts'] }], keys)[0]).toMatch(/placeholder/);
+  });
+  it('ignores missing or null seconds instead of treating them as 0, and counts only paired participants in the caution', () => {
+    const mk = (participant: string, arm: string, seconds?: number | null) => ({ participant, arm, task: 'T05', answer: ['src/a.ts'], seconds });
+    const s = summarise([mk('P1', 'mole', null), mk('P1', 'none', 200), mk('P2', 'mole', 50)], keys);
+    expect(s.comparisons['mole - none (during tasks)'].medianSecondsDiff).toBeNull();
+    expect(s.pairedParticipants).toBe(1);
+    expect(s.caution).toMatch(/1 participants have both arms \(2 total\)/);
   });
   it('pairs by participant, reports differences and warns when n is small', () => {
     const rows = [
