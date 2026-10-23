@@ -1,0 +1,2262 @@
+{
+  "generatedFrom": "e06df9c2eae6901f4c88f464e0ae6e753c0428b8",
+  "callGraph": {
+    "TextInput": [
+      "applyPrintableInsert",
+      "colorizeEcho",
+      "colorizeHint",
+      "cutSelection",
+      "decideRightClickAction",
+      "deleteWordForward",
+      "fastAppendEffect",
+      "fastBackspaceEffect",
+      "fgSeq",
+      "highlightMask",
+      "hintCursorCell",
+      "isActionMod",
+      "isLineKillModifier",
+      "isMacActionFallback",
+      "killToLineEnd",
+      "killToLineStart",
+      "lineNav",
+      "nextPos",
+      "offsetFromPosition",
+      "paintHighlights",
+      "prevPos",
+      "readClipboardText",
+      "renderWithCursor",
+      "renderWithSelection",
+      "resolveCursorLayout",
+      "setInputSelection",
+      "shouldInsertNewlineOnReturn",
+      "shouldPassThroughToGlobalHandler",
+      "shouldRouteMultiCharInputAsPaste",
+      "useFwdDelete",
+      "valueForReturnSubmit",
+      "wordLeft",
+      "wordRight",
+      "writeClipboardText"
+    ],
+    "useInputHandlers": [
+      "applyCompletion",
+      "composerHasDraft",
+      "computePrecisionWheelStep",
+      "computeWheelStep",
+      "dispatchWidgetInput",
+      "getInputSelection",
+      "getUiState",
+      "handleIdleHotkeyExit",
+      "handleInputSelectionClipboard",
+      "hasSensitivePrompt",
+      "initPrecisionWheel",
+      "initWheelAccelForHost",
+      "isAction",
+      "isCopyShortcut",
+      "isMacActionFallback",
+      "isVoiceToggleKey",
+      "patchOverlayState",
+      "resolveCtrlCComposerAction",
+      "resolveDoubleEscAction",
+      "shouldFallThroughForScroll",
+      "t"
+    ],
+    "useMainApp": [
+      "appendTranscriptMessage",
+      "applyAgentSnapshot",
+      "applyGoalSnapshot",
+      "applyProcessSnapshot",
+      "asRpcResult",
+      "buildToolTrailLine",
+      "capTranscriptHistory",
+      "clarifyAnswerText",
+      "clarifyQuestionCountLabel",
+      "composeTabTitle",
+      "composerPromptWidth",
+      "createGatewayEventHandler",
+      "createResizeCoalescer",
+      "createServerRequestHandler",
+      "createSlashHandler",
+      "estimatedMsgHeight",
+      "fmtProjectCwdBranch",
+      "formatAbandonedClarify",
+      "getInputSelection",
+      "getUiState",
+      "hasLeadGap",
+      "hasSensitivePrompt",
+      "messageHeightKey",
+      "onUserWidgets",
+      "patchOverlayState",
+      "patchTurnState",
+      "patchUiState",
+      "prevRenderedMsg",
+      "pruneVirtualHeightCache",
+      "respondToServerRequest",
+      "rpcErrorMessage",
+      "sameToolTrailGroup",
+      "scrollWithSelectionBy",
+      "sectionMode",
+      "shortCwd",
+      "shouldDetachEditedHistoryInput",
+      "startPromptLiveSession",
+      "statusColorOf",
+      "t",
+      "terminalParityHints",
+      "toolTrailLabel",
+      "useBatteryPoll",
+      "useComposerState",
+      "useConfigSync",
+      "useGitBranch",
+      "useInputHandlers",
+      "useLongRunToolCharms",
+      "useSessionLifecycle",
+      "useSubmission",
+      "useT",
+      "useTurnSelector",
+      "useVirtualHistory"
+    ],
+    "splitComposerHighlights": [
+      "atRe",
+      "matchSpans",
+      "slashRe",
+      "tokenRe"
+    ],
+    "highlightMask": [
+      "splitComposerHighlights"
+    ],
+    "highlightsStable": [
+      "highlightMask"
+    ],
+    "useComposerState": [
+      "droppedTokens",
+      "getUiState",
+      "imageToken",
+      "insertAtCursor",
+      "isRemoteShellSession",
+      "isUsableClipboardText",
+      "looksLikeDroppedPath",
+      "nextImageIndex",
+      "pasteTokenLabel",
+      "readClipboardText",
+      "readOsc52Clipboard",
+      "resolveEditor",
+      "stripTrailingPasteNewlines",
+      "trimTokens",
+      "useCompletion",
+      "useInputHistory",
+      "useQueue"
+    ],
+    "readClipboardText": [
+      "readClipboardCommands"
+    ],
+    "writeClipboardText": [
+      "_powershellWriteScript",
+      "writeClipboardCommands"
+    ],
+    "graphemes": [],
+    "widthBetween": [
+      "graphemes"
+    ],
+    "offsetFromPosition": [
+      "graphemes",
+      "visualLines"
+    ],
+    "cursorLayout": [
+      "visualLines",
+      "widthBetween"
+    ],
+    "inputVisualHeight": [
+      "cursorLayout"
+    ],
+    "resolveCursorLayout": [
+      "cursorLayout"
+    ],
+    "canFastBackspaceShape": [
+      "cursorLayout",
+      "prevPos"
+    ],
+    "transcriptGutterWidth": [
+      "composerPromptWidth"
+    ],
+    "transcriptBodyWidth": [
+      "transcriptGutterWidth"
+    ],
+    "estimatedMsgHeight": [
+      "transcriptBodyWidth",
+      "wrappedLines"
+    ],
+    "isAction": [
+      "isActionMod"
+    ],
+    "shouldInsertNewlineOnReturn": [
+      "isActionMod",
+      "shouldPreserveCtrlJNewline"
+    ],
+    "isCopyShortcut": [
+      "isAction",
+      "isRemoteShell"
+    ],
+    "hotkeys": [
+      "isRemoteShell",
+      "messages"
+    ],
+    "isVoiceToggleKey": [
+      "_isDefaultVoiceKey",
+      "_matchesNamedKey"
+    ],
+    "_voiceRecordKeyFromConfig": [
+      "parseVoiceRecordKey"
+    ],
+    "shouldPassThroughToGlobalHandler": [
+      "isVoiceToggleKey"
+    ],
+    "isTermuxTuiMode": [
+      "isTermuxEnv"
+    ],
+    "supportsFastEchoTerminal": [
+      "isTermuxTuiMode"
+    ],
+    "renderWithCursor": [
+      "invert",
+      "paintHighlights"
+    ],
+    "renderWithSelection": [
+      "invert",
+      "paintHighlights"
+    ],
+    "hintCursorCell": [
+      "hintHex",
+      "hintRgb"
+    ],
+    "colorizeHint": [
+      "hintHex"
+    ],
+    "colorizeEcho": [
+      "fgSeq"
+    ],
+    "graphemeStops": [],
+    "paintHighlights": [],
+    "snapPos": [
+      "graphemeStops"
+    ],
+    "prevPos": [
+      "graphemeStops",
+      "snapPos"
+    ],
+    "nextPos": [
+      "graphemeStops",
+      "snapPos"
+    ],
+    "wordLeft": [
+      "snapPos"
+    ],
+    "wordRight": [
+      "snapPos"
+    ],
+    "lineNav": [
+      "snapPos"
+    ],
+    "valueForReturnSubmit": [
+      "applyPrintableInsert"
+    ],
+    "fastBackspaceEffect": [
+      "prevPos"
+    ],
+    "deleteWordForward": [
+      "wordRight"
+    ],
+    "mergeTranslations": [
+      "isRecord"
+    ],
+    "resolvePath": [
+      "isRecord"
+    ],
+    "nestPack": [
+      "formatPositional",
+      "isRecord",
+      "resolvePath"
+    ],
+    "flattenKeys": [
+      "isRecord"
+    ],
+    "catalogFromPack": [
+      "mergeTranslations",
+      "nestPack"
+    ],
+    "translateFrom": [
+      "render",
+      "resolvePath"
+    ],
+    "t": [
+      "translateFrom"
+    ],
+    "applyLocale": [
+      "catalogFromPack"
+    ],
+    "resetLocale": [
+      "applyLocale"
+    ],
+    "syncTuiLocale": [
+      "applyLocale",
+      "fetchCatalogPack",
+      "getLocale",
+      "normalizeLanguageId"
+    ],
+    "turnCopyFor": [
+      "messages"
+    ],
+    "promptTimeoutNotice": [
+      "messages"
+    ],
+    "toolVerbs": [
+      "messages"
+    ],
+    "setupRequiredTitle": [
+      "messages"
+    ],
+    "buildSetupRequiredSections": [
+      "messages"
+    ],
+    "fortunes": [
+      "messages"
+    ],
+    "legendaryFortunes": [
+      "messages"
+    ],
+    "faces": [
+      "messages"
+    ],
+    "kaomojiFrameWidth": [
+      "messages"
+    ],
+    "displayStatus": [
+      "messages"
+    ],
+    "StatusRule": [
+      "batteryColor",
+      "batteryLabel",
+      "busyIndicatorWidth",
+      "ctxBar",
+      "ctxBarColor",
+      "displayStatus",
+      "messages",
+      "modelLabel",
+      "noticeColor",
+      "statusBarSegments",
+      "statusRuleWidths",
+      "statusSessionCountLabel"
+    ],
+    "placeholders": [
+      "messages"
+    ],
+    "sendAgentSteer": [
+      "asRpcResult",
+      "messages"
+    ],
+    "AgentLiveTail": [
+      "messages",
+      "useT"
+    ],
+    "processSummary": [
+      "messages"
+    ],
+    "sortLabel": [
+      "messages"
+    ],
+    "filterLabel": [
+      "messages"
+    ],
+    "AgentsOverlay": [
+      "applyDelegationStatus",
+      "asRpcResult",
+      "buildSubagentTree",
+      "cycle",
+      "filterLabel",
+      "formatSummary",
+      "messages",
+      "peakHotness",
+      "prepareRows",
+      "rosterViewport",
+      "sortLabel",
+      "treeTotals",
+      "useAgentRoster",
+      "useProcessRows",
+      "useT",
+      "widthByDepth"
+    ],
+    "reasoningPickerRows": [
+      "messages"
+    ],
+    "ModelPicker": [
+      "asRpcResult",
+      "chipRowProps",
+      "clampOverlayWidth",
+      "messages",
+      "modelPickerCommand",
+      "pickerOffersReasoning",
+      "providerDisplayNames",
+      "providerIndexAfterClearingFilter",
+      "reasoningPickerRows",
+      "rpcErrorMessage",
+      "useOverlayKeys",
+      "useT",
+      "windowItems"
+    ],
+    "sessionStatusLabel": [
+      "messages"
+    ],
+    "shortModel": [
+      "messages"
+    ],
+    "activeSessionCountLabel": [
+      "messages"
+    ],
+    "sessionsCountLabel": [
+      "messages"
+    ],
+    "relativeSessionAge": [
+      "messages"
+    ],
+    "resumeRowContextHintSegments": [
+      "messages"
+    ],
+    "orchestratorContextHintSegments": [
+      "messages"
+    ],
+    "orchestratorGlobalHotkeyHintSegments": [
+      "messages"
+    ],
+    "draftModelDisplayLabel": [
+      "draftModelNameFromArg",
+      "messages",
+      "shortModel"
+    ],
+    "ActiveSessionSwitcher": [
+      "asRpcResult",
+      "clampOverlayWidth",
+      "closeFallbackAfterClose",
+      "currentSessionSelectionIndex",
+      "draftModelArgFromPickerValue",
+      "draftModelDisplayLabel",
+      "draftTitleFromPrompt",
+      "fixedSessionColumnStyle",
+      "messages",
+      "newSessionMarkerColor",
+      "orchestratorContextHintSegments",
+      "orchestratorGlobalHotkeyHintSegments",
+      "relativeSessionAge",
+      "resumableHistory",
+      "resumeRowContextHintSegments",
+      "rpcErrorMessage",
+      "selectedSessionRowStyle",
+      "sessionRowKindAt",
+      "sessionStatusLabel",
+      "sessionsCountLabel",
+      "shortModel",
+      "useT",
+      "windowOffset"
+    ],
+    "approvalLabels": [
+      "messages"
+    ],
+    "shortDate": [
+      "messages"
+    ],
+    "errorResult": [
+      "messages"
+    ],
+    "upgradeResult": [
+      "errorResult",
+      "messages"
+    ],
+    "stepUpDenialResult": [
+      "messages"
+    ],
+    "scopeStillDeniedResult": [
+      "messages"
+    ],
+    "previewAndRoute": [
+      "errorResult",
+      "isScopeDenial",
+      "messages",
+      "scopeStillDeniedResult"
+    ],
+    "applyPendingAndRoute": [
+      "isScopeDenial",
+      "messages",
+      "mutationResult",
+      "upgradeResult"
+    ],
+    "resumeAndRoute": [
+      "isScopeDenial",
+      "messages",
+      "mutationResult",
+      "scopeStillDeniedResult"
+    ],
+    "pendingTransition": [
+      "messages",
+      "shortDate"
+    ],
+    "dumpNotice": [
+      "formatBytes",
+      "messages"
+    ],
+    "buildUiState": [
+      "t"
+    ],
+    "detailLine": [
+      "t"
+    ],
+    "backendRestarting": [
+      "t"
+    ],
+    "backendRestartingActivity": [
+      "t"
+    ],
+    "connectionLost": [
+      "t"
+    ],
+    "connectionLostActivity": [
+      "t"
+    ],
+    "backendGaveUp": [
+      "detailLine",
+      "t"
+    ],
+    "backendGaveUpActivity": [
+      "t"
+    ],
+    "backendReconnecting": [
+      "t"
+    ],
+    "backendSlowStart": [
+      "t"
+    ],
+    "backendSlowStartStatus": [
+      "t"
+    ],
+    "stderrProblemActivity": [
+      "t"
+    ],
+    "versionSkewMessage": [
+      "t"
+    ],
+    "describeRpcError": [
+      "isVersionSkewError",
+      "logReplacedWireText",
+      "rpcShape",
+      "t",
+      "versionSkewMessage"
+    ],
+    "describeSlashExecError": [
+      "describeRpcError",
+      "detailLine",
+      "rpcShape",
+      "t"
+    ],
+    "describeTurnFailure": [
+      "detailLine",
+      "t",
+      "turnCopyFor"
+    ],
+    "describeCredentialWarning": [
+      "t"
+    ],
+    "noSkillsInstalled": [
+      "t"
+    ],
+    "rpcErrorMessage": [
+      "describeRpcError",
+      "t"
+    ],
+    "configureTerminalKeybindings": [
+      "backupFile",
+      "bindingsConflict",
+      "getVSCodeStyleConfigDir",
+      "isKeybinding",
+      "isRemoteShellSession",
+      "migrateLegacyBindings",
+      "sameBinding",
+      "stripJsonComments",
+      "t",
+      "targetBindings"
+    ],
+    "configureDetectedTerminalKeybindings": [
+      "configureTerminalKeybindings",
+      "detectVSCodeLikeTerminal",
+      "t"
+    ],
+    "terminalParityHints": [
+      "detectMacTerminalContext",
+      "shouldPromptForTerminalSetup",
+      "t"
+    ],
+    "pasteTokenLabel": [
+      "edgePreview",
+      "t"
+    ],
+    "boundedLiveRenderText": [
+      "boundedRenderText",
+      "t"
+    ],
+    "boundedRenderText": [
+      "countNewlines",
+      "t"
+    ],
+    "verboseToolTrailLine": [
+      "t",
+      "verboseToolBlock"
+    ],
+    "formatAbandonedClarify": [
+      "clarifyAnswerText",
+      "t"
+    ],
+    "billingDialogCopy": [
+      "t"
+    ],
+    "formatSummary": [
+      "fmtTokens",
+      "t"
+    ],
+    "settledLines": [
+      "outcomeWord",
+      "t"
+    ],
+    "createBillingVerificationPresenter": [
+      "t"
+    ],
+    "createGatewayEventHandler": [
+      "applyConnectionRequest",
+      "applyConnectionUpdate",
+      "applyGoalSnapshot",
+      "applySkin",
+      "backendReconnecting",
+      "backendSlowStart",
+      "backendSlowStartStatus",
+      "billingDialogCopy",
+      "buildSetupRequiredSections",
+      "createBillingVerificationPresenter",
+      "createFreeTierChallengePresenter",
+      "describeRpcError",
+      "describeTurnFailure",
+      "dropBgTask",
+      "flashGoodVibes",
+      "flashPet",
+      "forgetServerRequest",
+      "formatToolCall",
+      "getDelegationState",
+      "getTurnState",
+      "getUiState",
+      "handleVoiceCapture",
+      "isBareErrorText",
+      "isNoticeLevel",
+      "isTodoDone",
+      "markNextSubmitVoice",
+      "mergeUsageStable",
+      "normalizeVoiceSubmitMode",
+      "openExternalUrl",
+      "patchOverlayState",
+      "patchUiState",
+      "promptTimeoutNotice",
+      "rpcErrorMessage",
+      "setupRequiredTitle",
+      "statusFromBusy",
+      "stderrLooksLikeProblem",
+      "stderrProblemActivity",
+      "syncThemeToTerminalBackground",
+      "t",
+      "topLevelSubagents"
+    ],
+    "createServerRequestHandler": [
+      "patchOverlayState",
+      "str",
+      "strList",
+      "t"
+    ],
+    "userDisplay": [
+      "t"
+    ],
+    "toTranscriptMessages": [
+      "buildToolTrailLine",
+      "t"
+    ],
+    "statusSessionCountLabel": [
+      "t"
+    ],
+    "SpawnHud": [
+      "buildSubagentTree",
+      "t",
+      "treeTotals",
+      "useTurnSelector",
+      "widthByDepth"
+    ],
+    "modelLabel": [
+      "effortLabel",
+      "shortModelLabel",
+      "t"
+    ],
+    "runExternalSetup": [
+      "patchUiState",
+      "t"
+    ],
+    "buildSubscriptionCtx": [
+      "buildManageUrl",
+      "openExternalUrl",
+      "t"
+    ],
+    "retrySuffix": [
+      "t"
+    ],
+    "renderBillingError": [
+      "patchOverlayState",
+      "retrySuffix",
+      "t"
+    ],
+    "renderChargeFailed": [
+      "t"
+    ],
+    "validateAmount": [
+      "t"
+    ],
+    "buildOverlayCtx": [
+      "openExternalUrl",
+      "pollCharge",
+      "renderBillingError",
+      "requestRemoteSpending",
+      "t",
+      "validateAmount"
+    ],
+    "withHint": [
+      "t"
+    ],
+    "startFailureLine": [
+      "t",
+      "withHint"
+    ],
+    "detailSuffix": [
+      "t"
+    ],
+    "runOn": [
+      "detailSuffix",
+      "setWakeUserDisabled",
+      "startFailureLine",
+      "t"
+    ],
+    "runOff": [
+      "setWakeUserDisabled",
+      "t"
+    ],
+    "imageToken": [
+      "t"
+    ],
+    "useCompletion": [
+      "asRpcResult",
+      "completionRequestForInput",
+      "getUiState",
+      "mergeWidgetAppItems",
+      "t"
+    ],
+    "useConfigSync": [
+      "hydrateFullConfig",
+      "quietRpc",
+      "syncMcpReload",
+      "t"
+    ],
+    "handleIdleHotkeyExit": [
+      "shouldAllowIdleHotkeyExit",
+      "t"
+    ],
+    "applyVoiceRecordResponse": [
+      "t"
+    ],
+    "statusFromLiveSession": [
+      "t"
+    ],
+    "useSessionLifecycle": [
+      "applyConnectionRequest",
+      "asRpcResult",
+      "buildSetupRequiredSections",
+      "clearConnectionOperation",
+      "describeCredentialWarning",
+      "getUiState",
+      "hydrateLiveSessionInflight",
+      "introMsg",
+      "liveSessionInflightMessages",
+      "patchOverlayState",
+      "patchTurnState",
+      "patchUiState",
+      "scheduleResumeScrollToBottom",
+      "setupRequiredTitle",
+      "signalFreshSessionBoundary",
+      "statusFromLiveSession",
+      "t",
+      "toTranscriptMessages",
+      "usageFrom",
+      "writeActiveSessionFile"
+    ],
+    "clarifyQuestionCountLabel": [
+      "t"
+    ],
+    "startPromptLiveSession": [
+      "sessionScopedModelArg",
+      "t"
+    ],
+    "buildAgentRows": [
+      "dropCoveredBatches",
+      "liveElapsed",
+      "shortAgentId",
+      "t"
+    ],
+    "loadUserWidgets": [
+      "listWidgetApps",
+      "recordParentLifecycle",
+      "removeWidgetApp",
+      "widgetsDir"
+    ],
+    "parseToggle": [
+      "falsy"
+    ],
+    "grayOf": [
+      "clampChannel"
+    ],
+    "adaptColorsToBackground": [
+      "liftForContrast"
+    ],
+    "listRowStyle": [
+      "liftForContrast"
+    ],
+    "desaturate": [
+      "grayOf"
+    ],
+    "deriveTones": [
+      "desaturate",
+      "grayOf"
+    ],
+    "retone": [
+      "fromHsl",
+      "toHsl"
+    ],
+    "boostSaturation": [
+      "fromHsl",
+      "toHsl"
+    ],
+    "fromHsl": [
+      "hueChannel"
+    ],
+    "bestReadableAnsiColor": [
+      "circularDistance",
+      "rgbLuminance",
+      "richEightBitColorNumber",
+      "xtermEightBitRgb"
+    ],
+    "normalizeAnsiForeground": [
+      "bestReadableAnsiColor",
+      "rgbLuminance",
+      "richEightBitColorNumber",
+      "xtermEightBitRgb"
+    ],
+    "themeToneHex": [
+      "xtermEightBitRgb"
+    ],
+    "richEightBitColorNumber": [],
+    "normalizeThemeForAnsiLightTerminal": [
+      "detectLightMode",
+      "normalizeAnsiForeground",
+      "shouldNormalizeAnsiLightTheme"
+    ],
+    "paintTerminalDefaults": [
+      "isPaintableHex",
+      "themeToneHex"
+    ],
+    "fromSkin": [
+      "adaptColorsToBackground",
+      "authoredBackground",
+      "buildPalette",
+      "cleanPromptSymbol",
+      "normalizeThemeForAnsiLightTerminal",
+      "referenceBackground",
+      "shouldNormalizeAnsiLightTheme",
+      "skinIsLight"
+    ],
+    "buildPalette": [
+      "deriveTones"
+    ],
+    "referenceBackground": [
+      "backgroundLuminance"
+    ],
+    "detectLightMode": [
+      "backgroundLuminance"
+    ],
+    "authoredBackground": [
+      "backgroundLuminance"
+    ],
+    "skinIsLight": [
+      "backgroundLuminance",
+      "detectLightMode"
+    ],
+    "shouldNormalizeAnsiLightTheme": [
+      "detectLightMode"
+    ],
+    "defaultThemeForCurrentBackground": [
+      "detectLightMode",
+      "normalizeThemeForAnsiLightTerminal"
+    ],
+    "reapplyTheme": [
+      "commitTheme",
+      "defaultThemeForCurrentBackground",
+      "paintTerminalDefaults",
+      "themeForSkin"
+    ],
+    "themeForSkin": [
+      "fromSkin",
+      "skinIsLight"
+    ],
+    "readBootTheme": [
+      "bootFilePath",
+      "isTestRun",
+      "looksLikeTheme"
+    ],
+    "writeBootTheme": [
+      "bootFilePath",
+      "isTestRun"
+    ],
+    "commitTheme": [
+      "getUiState",
+      "patchUiState",
+      "themesEqual",
+      "writeBootTheme"
+    ],
+    "syncThemeToTerminalBackground": [
+      "invalidateBootBackground",
+      "polarityBackgroundFromForeground",
+      "reapplyTheme"
+    ],
+    "resetUiState": [
+      "buildUiState"
+    ],
+    "useQueue": [
+      "getUiState",
+      "prependQueueItem",
+      "queueItem",
+      "takeQueueItem"
+    ],
+    "submitPrompt": [
+      "getUiState",
+      "markSubmitting"
+    ],
+    "statusFromBusy": [
+      "getUiState"
+    ],
+    "useLongRunToolCharms": [
+      "getUiState",
+      "useTurnSelector"
+    ],
+    "useSubmission": [
+      "asRpcResult",
+      "completionToApplyOnSubmit",
+      "expandTokens",
+      "findSlashCommand",
+      "getUiState",
+      "hasInterpolation",
+      "patchUiState",
+      "prepareSlashSubmission",
+      "prepareSubmission",
+      "queueItem",
+      "queueItemFromSlash",
+      "reportSlashCommand",
+      "shouldInterpolateSubmission",
+      "spliceMatches",
+      "submitPrompt"
+    ],
+    "markSubmitting": [
+      "patchUiState"
+    ],
+    "dropBgTask": [
+      "patchUiState"
+    ],
+    "useBatteryPoll": [
+      "patchUiState"
+    ],
+    "applyDisplay": [
+      "_pasteCollapseCharsFromConfig",
+      "_pasteCollapseLinesFromConfig",
+      "_voiceRecordKeyFromConfig",
+      "applyConfiguredTuiTheme",
+      "normalizeBusyInputMode",
+      "normalizeIndicatorStyle",
+      "normalizeMouseTracking",
+      "normalizeStatusBar",
+      "normalizeStatusBarFields",
+      "patchUiState",
+      "resolveDetailsMode",
+      "resolveSections"
+    ],
+    "queueItemFromSlash": [
+      "queueItem",
+      "slashArgument"
+    ],
+    "isVersionSkewError": [
+      "rpcShape"
+    ],
+    "shouldFallbackToDispatch": [
+      "rpcShape"
+    ],
+    "SkillsHub": [
+      "chipRowProps",
+      "clampOverlayWidth",
+      "noSkillsInstalled",
+      "rpcErrorMessage",
+      "useOverlayKeys",
+      "useT",
+      "windowItems",
+      "windowOffset"
+    ],
+    "requestPetUpdate": [
+      "asRpcResult"
+    ],
+    "fetchCatalogPack": [
+      "asRpcResult"
+    ],
+    "quietRpc": [
+      "asRpcResult"
+    ],
+    "errorText": [
+      "rpcErrorMessage"
+    ],
+    "PetPicker": [
+      "chipRowProps",
+      "clampOverlayWidth",
+      "rpcErrorMessage",
+      "useT",
+      "windowItems"
+    ],
+    "Journey": [
+      "buildTree",
+      "deriveStarmapPalette",
+      "fadeHex",
+      "fadeInk",
+      "rowText",
+      "rpcErrorMessage",
+      "useT",
+      "windowStart"
+    ],
+    "usePet": [
+      "createPetSingleFlight",
+      "requestPetUpdate",
+      "useGateway"
+    ],
+    "ConnectionSetupOverlay": [
+      "dismissConnectionOperation",
+      "handleNavKey",
+      "initialDraft",
+      "isSending",
+      "phaseOf",
+      "useGateway",
+      "useT"
+    ],
+    "FloatingOverlays": [
+      "hasFloatingPanel",
+      "listRowStyle",
+      "patchOverlayState",
+      "useGateway"
+    ],
+    "parseDetailsMode": [
+      "norm"
+    ],
+    "resolveDetailsMode": [
+      "norm",
+      "parseDetailsMode"
+    ],
+    "resolveSections": [
+      "isSectionName",
+      "parseDetailsMode"
+    ],
+    "trailAllHidden": [
+      "sectionMode"
+    ],
+    "hasLeadGap": [
+      "messageGroup"
+    ],
+    "blockRenders": [
+      "trailAllHidden"
+    ],
+    "prevRenderedMsg": [
+      "blockRenders"
+    ],
+    "fmtCwdBranch": [
+      "shortCwd"
+    ],
+    "fmtProjectCwdBranch": [
+      "fmtCwdBranch",
+      "shortProject"
+    ],
+    "modelValueForConfigSet": [
+      "sessionScopedModelArg"
+    ],
+    "draftModelArgFromPickerValue": [
+      "sessionScopedModelArg"
+    ],
+    "completionRequestForInput": [
+      "inlineSlashTrigger"
+    ],
+    "completionToApplyOnSubmit": [
+      "applyCompletion"
+    ],
+    "fetchBranch": [
+      "resolveBranch"
+    ],
+    "pruneVirtualHeightCache": [
+      "validVirtualItemHeight"
+    ],
+    "ensureVirtualItemHeight": [
+      "validVirtualItemHeight"
+    ],
+    "useVirtualHistory": [
+      "ensureVirtualItemHeight",
+      "safeSignedGeometry",
+      "safeUnsignedGeometry",
+      "shouldSetVirtualClamp",
+      "validVirtualItemHeight",
+      "virtualHistorySnapshotKey"
+    ],
+    "virtualHistorySnapshotKey": [
+      "safeSignedGeometry",
+      "safeUnsignedGeometry"
+    ],
+    "AgentSteerForm": [
+      "useT"
+    ],
+    "AgentsPanelView": [
+      "compactPreview",
+      "processSummary",
+      "useT"
+    ],
+    "GanttStrip": [
+      "displayElapsedSeconds",
+      "fmtElapsedLabel",
+      "formatRowId",
+      "useT"
+    ],
+    "ProcessesSection": [
+      "buildProcessBlock",
+      "processSummary",
+      "useT"
+    ],
+    "DiffPane": [
+      "formatSummary",
+      "topLevelSubagents",
+      "useT"
+    ],
+    "DiffView": [
+      "buildSubagentTree",
+      "diffMetricLine",
+      "treeTotals",
+      "useT"
+    ],
+    "BuyScreen": [
+      "footer",
+      "useT"
+    ],
+    "AutoReloadScreen": [
+      "footer",
+      "useT"
+    ],
+    "LimitScreen": [
+      "footer",
+      "useMenu",
+      "useT"
+    ],
+    "Header": [
+      "titleOf",
+      "useT"
+    ],
+    "FieldRow": [
+      "fieldLabel",
+      "useT"
+    ],
+    "Selector": [
+      "useT"
+    ],
+    "FinishingPhase": [
+      "useT"
+    ],
+    "AuthorizedPhase": [
+      "useT"
+    ],
+    "BrowserPhase": [
+      "useT"
+    ],
+    "WorkingPhase": [
+      "useT"
+    ],
+    "RetryPhase": [
+      "failureLine",
+      "useT"
+    ],
+    "FormPhase": [
+      "failureLine",
+      "fieldLabel",
+      "hasFailed",
+      "useT",
+      "verbOf"
+    ],
+    "ConnectorsOverlay": [
+      "accountName",
+      "accountRowText",
+      "accountView",
+      "chipRowProps",
+      "clampOverlayWidth",
+      "hasPromptOpen",
+      "isRetired",
+      "linkFields",
+      "offersReconnect",
+      "useT",
+      "windowItems"
+    ],
+    "AppPicker": [
+      "chipRowProps",
+      "useT",
+      "windowItems"
+    ],
+    "LinkView": [
+      "useT"
+    ],
+    "SudoPrompt": [
+      "useT"
+    ],
+    "SecretPrompt": [
+      "useT"
+    ],
+    "VaultUnlockPrompt": [
+      "useT"
+    ],
+    "VaultSaveLoginPrompt": [
+      "useT"
+    ],
+    "VaultCodePrompt": [
+      "useT"
+    ],
+    "PluginsHub": [
+      "chipRowProps",
+      "clampOverlayWidth",
+      "useOverlayKeys",
+      "useT",
+      "windowItems",
+      "windowOffset"
+    ],
+    "ApprovalPrompt": [
+      "approvalAction",
+      "approvalLabels",
+      "approvalOptions",
+      "chipRowProps",
+      "useT"
+    ],
+    "ClarifyPrompt": [
+      "chipRowProps",
+      "clarifyAnswerText",
+      "useT"
+    ],
+    "ConfirmPrompt": [
+      "useT"
+    ],
+    "PickerScreen": [
+      "footer",
+      "useMenu",
+      "useT"
+    ],
+    "ResultScreen": [
+      "footer",
+      "useMenu",
+      "useT"
+    ],
+    "TeamContextScreen": [
+      "footer",
+      "useT"
+    ],
+    "CompactBanner": [
+      "centerIn",
+      "ruleIn",
+      "useT"
+    ],
+    "Banner": [
+      "artWidth",
+      "logo",
+      "useT"
+    ],
+    "SessionPanel": [
+      "artWidth",
+      "caduceus",
+      "flat",
+      "useT"
+    ],
+    "HelpHint": [
+      "hotkeys",
+      "useT"
+    ],
+    "TreeLine": [
+      "fadeHex",
+      "fadeInk",
+      "sliceMeta",
+      "useT"
+    ],
+    "Shell": [
+      "useT"
+    ],
+    "StatusLines": [
+      "useT"
+    ],
+    "SubagentAccordion": [
+      "compactPreview",
+      "fmtElapsed",
+      "fmtTokens",
+      "heatColor",
+      "useT"
+    ],
+    "QueuedMessages": [
+      "compactPreview",
+      "getQueueWindow",
+      "useT"
+    ],
+    "archiveTodosAtTurnEnd": [
+      "isTodoDone",
+      "patchTurnState"
+    ],
+    "appendToolShelfMessage": [
+      "canHoldToolShelf",
+      "isBarrierMessage",
+      "isToolCarryingTrail",
+      "isToolShelfMessage",
+      "mergeToolShelfInto"
+    ],
+    "appendTranscriptMessage": [
+      "appendToolShelfMessage"
+    ],
+    "groupedSegments": [
+      "appendToolShelfMessage"
+    ],
+    "shouldPromptForTerminalSetup": [
+      "detectVSCodeLikeTerminal",
+      "getVSCodeStyleConfigDir",
+      "isKeybinding",
+      "isRemoteShellSession",
+      "sameBinding",
+      "stripJsonComments",
+      "targetBindings"
+    ],
+    "detectMacTerminalContext": [
+      "detectVSCodeLikeTerminal",
+      "isRemoteShellSession"
+    ],
+    "migrateLegacyBindings": [
+      "isKeybinding"
+    ],
+    "bindingsConflict": [
+      "sameBinding",
+      "whensOverlap"
+    ],
+    "whensOverlap": [
+      "parseWhenRequirements",
+      "requirementsContradict"
+    ],
+    "toolVerb": [
+      "toolVerbs"
+    ],
+    "estimateRows": [
+      "renderEstimateLine"
+    ],
+    "thinkingPreview": [
+      "cleanThinkingText",
+      "compactPreview"
+    ],
+    "formatToolCall": [
+      "compactPreview",
+      "toolTrailLabel"
+    ],
+    "formatToolLabel": [
+      "compactPreview"
+    ],
+    "toolTrailLine": [
+      "compactPreview"
+    ],
+    "ProcessRowLine": [
+      "compactPreview",
+      "processGlyph"
+    ],
+    "GoalBarView": [
+      "compactPreview"
+    ],
+    "verboseToolBlock": [
+      "boundedLiveRenderText"
+    ],
+    "buildToolTrailLine": [
+      "formatToolCall",
+      "toolTrailLine"
+    ],
+    "buildVerboseToolTrailLine": [
+      "formatToolCall",
+      "verboseToolTrailLine"
+    ],
+    "toolTrailLines": [
+      "formatToolCall",
+      "toolTrailLine",
+      "verboseToolTrailLine"
+    ],
+    "formatToolLabels": [
+      "formatToolLabel"
+    ],
+    "parseToolTrailResultLine": [
+      "isToolTrailResultLine"
+    ],
+    "lastCotTrailIndex": [
+      "isToolTrailResultLine"
+    ],
+    "clarifyRevisitState": [
+      "clarifyAnswerItems"
+    ],
+    "clarifyAnswerText": [
+      "clarifyAnswerItems"
+    ],
+    "placeholder": [
+      "pick",
+      "placeholders"
+    ],
+    "Spinner": [
+      "pick"
+    ],
+    "messageHeightKey": [
+      "hashText"
+    ],
+    "Shimmer": [
+      "shimmerSegments"
+    ],
+    "useShimmerPhase": [
+      "subscribeShimmerClock"
+    ],
+    "ShimmerRows": [
+      "useShimmerPhase"
+    ],
+    "Overlay": [
+      "zoneFlex"
+    ],
+    "columnCountForWidth": [],
+    "itemSpan": [],
+    "itemColStart": [],
+    "layoutWidgetGrid": [
+      "buildColumnWidths",
+      "columnCountForWidth",
+      "firstFreeCol",
+      "itemColStart",
+      "itemSpan",
+      "occupyRange",
+      "rangeIsFree",
+      "resolveGridTracks",
+      "sortRow",
+      "spanWidth"
+    ],
+    "placeGridItems": [
+      "areaIsFree",
+      "occupyArea"
+    ],
+    "buildColumnWidths": [
+      "resolveGridTracks"
+    ],
+    "spanWidth": [],
+    "trackMin": [],
+    "resolveGridTracks": [
+      "distributeByWeight",
+      "trackFr",
+      "trackMin"
+    ],
+    "normalizeTracks": [],
+    "layoutGridAreas": [
+      "normalizeTracks",
+      "placeGridItems",
+      "resolveGridTracks",
+      "spanSize",
+      "trackOffsets"
+    ],
+    "firstFreeCol": [
+      "rangeIsFree"
+    ],
+    "areaIsFree": [
+      "ensureOccupancyRows"
+    ],
+    "occupyArea": [
+      "ensureOccupancyRows"
+    ],
+    "inferredGap": [
+      "columnCountHint"
+    ],
+    "sparkRows": [
+      "normalize"
+    ],
+    "Chart": [],
+    "SparkStream": [
+      "sparkRows",
+      "useHistory",
+      "useTick"
+    ],
+    "resetOverlayState": [
+      "buildOverlayState"
+    ],
+    "resetFlowOverlays": [
+      "buildOverlayState"
+    ],
+    "isAwaitingInput": [
+      "getOverlayState",
+      "hasSensitivePrompt"
+    ],
+    "place": [
+      "isAmbient",
+      "patchOverlayState",
+      "withoutApp"
+    ],
+    "launchWidget": [
+      "getWidgetApp",
+      "isAmbient",
+      "patchOverlayState",
+      "place",
+      "withoutApp"
+    ],
+    "closeWidget": [
+      "patchOverlayState"
+    ],
+    "updateWidget": [
+      "isAmbient",
+      "patchOverlayState"
+    ],
+    "dispatchWidgetInput": [
+      "closeWidget",
+      "getWidgetApp",
+      "patchOverlayState"
+    ],
+    "applyConnectionRequest": [
+      "isDismissedOperation",
+      "isSettledOperation",
+      "patchOverlayState"
+    ],
+    "applyConnectionUpdate": [
+      "clearConnectionOperation",
+      "isDismissedOperation",
+      "patchOverlayState",
+      "remember"
+    ],
+    "clearConnectionOperation": [
+      "patchOverlayState"
+    ],
+    "dismissSensitivePrompt": [
+      "dismissedNotice",
+      "patchOverlayState",
+      "respondToServerRequest"
+    ],
+    "closeAgentsOverlay": [
+      "patchOverlayState"
+    ],
+    "openAgentsOverlay": [
+      "patchOverlayState"
+    ],
+    "zoneOf": [
+      "getWidgetApp"
+    ],
+    "renderApp": [
+      "getWidgetApp"
+    ],
+    "ambientRailWidth": [
+      "getWidgetApp",
+      "railApps"
+    ],
+    "mergeWidgetAppItems": [
+      "listWidgetApps",
+      "rankSlashItems"
+    ],
+    "AmbientDock": [
+      "renderApp",
+      "useRenderCtx",
+      "zoneOf"
+    ],
+    "railApps": [
+      "railSide",
+      "zoneOf"
+    ],
+    "AmbientRail": [
+      "ambientRailWidth",
+      "railApps",
+      "useRenderCtx",
+      "zoneOf"
+    ],
+    "openWidget": [
+      "place"
+    ],
+    "ActiveWidgetSlot": [
+      "renderApp",
+      "useRenderCtx"
+    ],
+    "CardStack": [
+      "renderApp"
+    ],
+    "useAmbientRailWidth": [
+      "ambientRailWidth"
+    ],
+    "watchUserWidgets": [
+      "loadUserWidgets",
+      "widgetsDir"
+    ],
+    "resetTurnState": [
+      "buildTurnState"
+    ],
+    "useAgentRoster": [
+      "mergeAgentRoster",
+      "useTurnSelector"
+    ],
+    "toggleTodoCollapsed": [
+      "patchTurnState"
+    ],
+    "archiveDoneTodos": [
+      "archiveTodosAtTurnEnd"
+    ],
+    "LiveAgentsPanel": [
+      "buildAgentRows",
+      "buildProcessBlock",
+      "dockRowLimit",
+      "splitDockBudget",
+      "useAgentRoster",
+      "useProcessRows"
+    ],
+    "openExternalUrl": [
+      "openCommand",
+      "parseSafeUrl"
+    ],
+    "prepareRows": [
+      "flattenTree"
+    ],
+    "aggregate": [
+      "isRunning"
+    ],
+    "fmtDur": [],
+    "fmtElapsedLabel": [],
+    "heatColor": [
+      "hotnessBucket"
+    ],
+    "dismissConnectionOperation": [
+      "clearConnectionOperation",
+      "remember"
+    ],
+    "mayAnswer": [
+      "isSettledOperation"
+    ],
+    "resetConnectionOperationsForTests": [
+      "clearConnectionOperation"
+    ],
+    "resetDelegationState": [
+      "buildState"
+    ],
+    "applyDelegationStatus": [
+      "patchDelegationState"
+    ],
+    "OverlaySection": [
+      "toggleOverlaySection"
+    ],
+    "goalLine": [
+      "clock"
+    ],
+    "useGoalLine": [
+      "goalLine"
+    ],
+    "GoalBar": [
+      "useGoalLine"
+    ],
+    "normaliseSubagent": [],
+    "pushSnapshot": [
+      "summarizeLabel"
+    ],
+    "parseTodos": [
+      "isTodoStatus"
+    ],
+    "finalTail": [
+      "textSegments"
+    ],
+    "lateInterruptedReply": [
+      "interruptedText"
+    ],
+    "mergeUsageStable": [
+      "usageChanged"
+    ],
+    "applySkin": [
+      "commitTheme",
+      "paintTerminalDefaults",
+      "themeForSkin"
+    ],
+    "applyConfiguredTuiTheme": [
+      "reapplyTheme"
+    ],
+    "scoreSlashMenuItem": [
+      "scoreFields",
+      "tokenizeSearchText"
+    ],
+    "rankSlashItems": [
+      "normalizeSlashSearchQuery",
+      "scoreSlashMenuItem"
+    ],
+    "fromScore": [
+      "fortunes",
+      "legendaryFortunes"
+    ],
+    "dailyFortune": [
+      "fromScore",
+      "hash"
+    ],
+    "randomFortune": [
+      "fromScore"
+    ],
+    "buildOsc52ClipboardQuery": [
+      "wrapForMultiplexer"
+    ],
+    "writeOsc52Clipboard": [
+      "wrapForMultiplexer"
+    ],
+    "readOsc52Clipboard": [
+      "buildOsc52ClipboardQuery",
+      "parseOsc52ClipboardData"
+    ],
+    "renderIndicator": [
+      "faces"
+    ],
+    "stickyPromptFromViewport": [
+      "userDisplay"
+    ],
+    "liveSessionInflightMessages": [
+      "toTranscriptMessages"
+    ],
+    "FaceTicker": [
+      "padVerb",
+      "renderIndicator"
+    ],
+    "SessionDuration": [],
+    "IdleSince": [],
+    "StickyPromptTracker": [
+      "stickyPromptFromViewport",
+      "useViewportSnapshot"
+    ],
+    "useViewportSnapshot": [
+      "getViewportSnapshot",
+      "viewportSnapshotKey"
+    ],
+    "useScrollbarSnapshot": [
+      "getScrollbarSnapshot",
+      "scrollbarSnapshotKey"
+    ],
+    "TranscriptScrollbar": [
+      "scrollbarColors",
+      "useScrollbarSnapshot"
+    ],
+    "OverlayScrollbar": [
+      "scrollbarColors"
+    ],
+    "chipRowProps": [
+      "listRowStyle"
+    ],
+    "MenuRow": [
+      "listRowStyle"
+    ],
+    "selectedSessionRowStyle": [
+      "listRowStyle"
+    ],
+    "UsageBars": [
+      "barCells"
+    ],
+    "usageBarsText": [
+      "barCells"
+    ],
+    "busyIndicatorWidth": [
+      "indicatorFrameWidth",
+      "renderIndicator"
+    ],
+    "indicatorFrameWidth": [
+      "kaomojiFrameWidth"
+    ],
+    "TokenStream": [
+      "useTick"
+    ],
+    "ToolTicker": [
+      "useTick"
+    ],
+    "MetaPanel": [
+      "useTick"
+    ],
+    "GridTestOverlay": [
+      "showsNestedPreview"
+    ],
+    "GridCell": [
+      "childCellWidgets"
+    ],
+    "ZoomedGridCell": [
+      "childCellWidgets"
+    ],
+    "clampSize": [],
+    "keepCursorInBounds": [],
+    "parseSize": [
+      "clampSize"
+    ],
+    "update": [
+      "keepCursorInBounds"
+    ],
+    "reduceStreams": [
+      "initialState",
+      "update"
+    ],
+    "ReadyBody": [
+      "artColor",
+      "artFor"
+    ],
+    "fetchReport": [
+      "geocodeLocation",
+      "geolocateByIp"
+    ],
+    "performHeapDump": [
+      "captureMemoryDiagnostics",
+      "pruneHeapdumps"
+    ],
+    "captureMemoryDiagnostics": [
+      "swallow"
+    ],
+    "launchHermesCommand": [
+      "resolveHermesBin"
+    ],
+    "runStatus": [],
+    "buildProcessRows": [
+      "lastOutputLine",
+      "processStatus",
+      "processVerdict"
+    ],
+    "useProcessRows": [
+      "buildProcessRows"
+    ],
+    "scrollWithSelectionBy": [
+      "scrollBoundsForDelta"
+    ],
+    "toBatteryInfo": [
+      "normalizeCategory"
+    ],
+    "expandPasteTokens": [
+      "expandTokens"
+    ],
+    "prepareSubmission": [
+      "expandTokens"
+    ],
+    "useInputHistory": [],
+    "append": [],
+    "openInEditor": [
+      "resolveEditor"
+    ],
+    "hydrateFullConfig": [
+      "applyDisplay",
+      "quietRpc",
+      "syncTuiLocale"
+    ],
+    "normalizeMouseTracking": [
+      "hasOwn"
+    ],
+    "syncMcpReload": [
+      "quietRpc"
+    ],
+    "initWheelAccelForHost": [
+      "initWheelAccel",
+      "readScrollSpeedBase"
+    ],
+    "computeWheelStep": [
+      "nativeStep",
+      "xtermJsStep"
+    ],
+    "scheduleResumeScrollToBottom": [
+      "refreshSessionView"
+    ],
+    "shouldInterpolateSubmission": [
+      "hasInterpolation"
+    ],
+    "prepareSlashSubmission": [
+      "expandPasteTokens"
+    ],
+    "App": [
+      "useMainApp"
+    ],
+    "composerHint": [
+      "placeholder"
+    ],
+    "onRender": [
+      "round2",
+      "writeRow"
+    ],
+    "windowItems": [
+      "windowOffset"
+    ],
+    "orchestratorVisibleRowIndexes": [
+      "clampOrchestratorSelection",
+      "windowOffset"
+    ],
+    "orchestratorContextHint": [
+      "hintText",
+      "orchestratorContextHintSegments"
+    ],
+    "orchestratorGlobalHotkeyHint": [
+      "hintText",
+      "orchestratorGlobalHotkeyHintSegments"
+    ],
+    "OrchestratorHintSegments": [
+      "orchestratorHintSegmentColor"
+    ],
+    "OrchestratorHintText": [
+      "orchestratorHintSegmentColor"
+    ],
+    "newSessionMarkerColor": [
+      "selectedSessionRowStyle"
+    ],
+    "isNewSessionRow": [
+      "newSessionRowIndex"
+    ],
+    "clampOrchestratorSelection": [
+      "newSessionRowIndex"
+    ],
+    "canTypeOrchestratorPrompt": [
+      "isNewSessionRow"
+    ],
+    "orchestratorRowClickAction": [
+      "isNewSessionRow"
+    ],
+    "draftModelNameFromArg": [
+      "draftModelArgFromPickerValue"
+    ],
+    "titleOf": [
+      "verbOf"
+    ],
+    "nameProblem": [
+      "isRetired",
+      "isValidAccountName"
+    ],
+    "needsRepair": [
+      "isRetired"
+    ],
+    "reconnectRefusal": [
+      "isRetired",
+      "needsRepair"
+    ],
+    "accountView": [
+      "isRetired"
+    ],
+    "offersReconnect": [
+      "needsRepair"
+    ],
+    "byAppThenName": [
+      "accountName"
+    ],
+    "mutationResult": [
+      "errorResult"
+    ],
+    "logo": [
+      "colorize",
+      "parseRichMarkup"
+    ],
+    "caduceus": [
+      "colorize",
+      "parseRichMarkup"
+    ],
+    "ArtLines": [
+      "artWidth"
+    ],
+    "centerIn": [
+      "clip"
+    ],
+    "ruleIn": [
+      "clip"
+    ],
+    "FpsOverlayInner": [
+      "fpsColor"
+    ],
+    "deriveStarmapPalette": [
+      "complementaryInk",
+      "hexToRgb",
+      "luminance",
+      "mix"
+    ],
+    "fadeHex": [
+      "hexToRgb",
+      "mix",
+      "rgbToHex"
+    ],
+    "fadeInk": [
+      "mix",
+      "rgbToHex"
+    ],
+    "complementaryInk": [
+      "hslToRgb"
+    ],
+    "ChartRow": [
+      "fadeHex",
+      "fadeInk"
+    ],
+    "sliceMeta": [
+      "countLabel"
+    ],
+    "MdImpl": [
+      "cacheBucket",
+      "cacheGet",
+      "cacheSet",
+      "ensureEmojiPresentation",
+      "highlightLine",
+      "indentDepth",
+      "isHighlightable",
+      "isTableDivider",
+      "renderMath",
+      "renderTable",
+      "splitRow",
+      "texToUnicode"
+    ],
+    "parseUrl": [
+      "normalizeExternalUrl"
+    ],
+    "titleCacheKey": [
+      "normalizeExternalUrl",
+      "parseUrl"
+    ],
+    "fetchLinkTitle": [
+      "cacheTitle",
+      "fetchHtmlTitle",
+      "isTitleFetchable",
+      "normalizeExternalUrl",
+      "titleCacheKey"
+    ],
+    "useLinkTitle": [
+      "fetchLinkTitle",
+      "isTitleFetchable",
+      "normalizeExternalUrl",
+      "titleCacheKey"
+    ],
+    "renderLink": [
+      "authoredLabel",
+      "normalizeExternalUrl",
+      "urlAsText"
+    ],
+    "hostPathLabel": [
+      "parseUrl"
+    ],
+    "urlSlugTitleLabel": [
+      "cleanSlug",
+      "hostPathLabel",
+      "parseUrl"
+    ],
+    "isTitleFetchable": [
+      "isPrivateOrLocalHost",
+      "parseUrl"
+    ],
+    "isPrivateIpv4": [
+      "parseIpv4Octets"
+    ],
+    "isPrivateIpv6": [
+      "isPrivateIpv4"
+    ],
+    "isPrivateOrLocalHost": [
+      "isPrivateIpv4",
+      "isPrivateIpv6",
+      "normalizeHostname"
+    ],
+    "parseHtmlTitle": [
+      "decodeHtmlEntities"
+    ],
+    "fetchHtmlTitle": [
+      "parseHtmlTitle",
+      "readResponseSnippet"
+    ],
+    "texToUnicode": [
+      "convertScript",
+      "replaceBracedCommand",
+      "replaceFracs"
+    ],
+    "replaceBracedCommand": [
+      "readBraced"
+    ],
+    "replaceFracs": [
+      "readBraced",
+      "wrapForFrac"
+    ],
+    "MdInline": [
+      "autolinkUrl",
+      "renderLink",
+      "renderMath",
+      "texToUnicode"
+    ],
+    "isHighlightable": [
+      "resolve"
+    ],
+    "highlightLine": [
+      "resolve"
+    ],
+    "isTableDivider": [
+      "splitRow"
+    ],
+    "renderTable": [
+      "stripInlineMarkup"
+    ],
+    "findStableBoundary": [
+      "advanceScan",
+      "createScanState"
+    ],
+    "advanceScan": [
+      "applyLine"
+    ],
+    "TreeNode": [
+      "nextTreeRails"
+    ],
+    "TreeRow": [
+      "treeLead"
+    ],
+    "rowColor": [
+      "todoTone"
+    ],
+    "shouldDowngradeAppleTerminalTruecolor": [
+      "isAdvertisedTruecolor",
+      "isAppleTerminal",
+      "shouldForceTruecolor"
+    ],
+    "setupGracefulExit": [
+      "shouldExitForSignal"
+    ],
+    "startMemoryMonitor": [
+      "resolveThresholds"
+    ]
+  },
+  "tasks": {
+    "T05": {
+      "type": "callers",
+      "key": {
+        "kind": "set",
+        "items": [
+          "src/components/activeSessionSwitcher.tsx",
+          "src/components/connectorsOverlay.tsx",
+          "src/components/modelPicker.tsx",
+          "src/components/petPicker.tsx",
+          "src/components/pluginsHub.tsx",
+          "src/components/skillsHub.tsx"
+        ]
+      }
+    },
+    "T06": {
+      "type": "impact",
+      "key": {
+        "kind": "set",
+        "items": [
+          "src/app/createGatewayEventHandler.ts",
+          "src/app/turnController.ts",
+          "src/app/useMainApp.ts",
+          "src/components/thinking.tsx",
+          "src/domain/messages.ts",
+          "src/lib/text.ts",
+          "src/components/messageLine.tsx"
+        ]
+      }
+    },
+    "T11": {
+      "type": "importers",
+      "key": {
+        "kind": "set",
+        "items": [
+          "src/app/useMainApp.ts",
+          "src/components/appLayout.tsx",
+          "src/components/messageLine.tsx",
+          "src/components/streamingAssistant.tsx"
+        ]
+      }
+    },
+    "T13": {
+      "type": "call-path",
+      "key": {
+        "kind": "path",
+        "start": "startFailureLine",
+        "end": "resolvePath",
+        "length": 4
+      }
+    },
+    "T04": {
+      "type": "callers",
+      "key": {
+        "kind": "set",
+        "items": [
+          "src/components/agentsOverlay.tsx",
+          "src/components/appChrome.tsx",
+          "src/components/thinking.tsx"
+        ]
+      }
+    },
+    "T07": {
+      "type": "impact",
+      "key": {
+        "kind": "set",
+        "items": [
+          "src/app.tsx",
+          "src/app/createGatewayEventHandler.ts",
+          "src/app/turnController.ts",
+          "src/app/turnStore.ts",
+          "src/app/useConfigSync.ts",
+          "src/app/useInputHandlers.ts",
+          "src/app/useLongRunToolCharms.ts",
+          "src/app/useMainApp.ts",
+          "src/app/useSessionLifecycle.ts",
+          "src/app/useSubmission.ts",
+          "src/components/streamingAssistant.tsx"
+        ]
+      }
+    },
+    "T12": {
+      "type": "importers",
+      "key": {
+        "kind": "set",
+        "items": [
+          "src/app/createSlashHandler.ts",
+          "src/app/slash/commands/core.ts",
+          "src/app/slash/commands/debug.ts",
+          "src/app/slash/commands/ops.ts",
+          "src/app/slash/commands/session.ts",
+          "src/app/slash/commands/setup.ts",
+          "src/app/slash/commands/subscription.ts",
+          "src/app/slash/commands/topup.ts",
+          "src/app/slash/commands/wake.ts",
+          "src/app/slash/registry.ts"
+        ]
+      }
+    },
+    "T02": {
+      "type": "callers",
+      "key": {
+        "kind": "set",
+        "items": [
+          "src/app/agentRoster.ts",
+          "src/app/useLongRunToolCharms.ts",
+          "src/app/useMainApp.ts",
+          "src/components/appChrome.tsx",
+          "src/components/streamingAssistant.tsx"
+        ]
+      }
+    },
+    "T01": {
+      "type": "callers",
+      "key": {
+        "kind": "set",
+        "items": [
+          "src/app/slash/commands/session.ts",
+          "src/app/useMainApp.ts",
+          "src/components/activeSessionSwitcher.tsx"
+        ]
+      }
+    },
+    "T03": {
+      "type": "callers",
+      "key": {
+        "kind": "set",
+        "items": [
+          "src/app/turnController.ts",
+          "src/app/turnStore.ts",
+          "src/app/useInputHandlers.ts",
+          "src/app/useMainApp.ts",
+          "src/app/useSessionLifecycle.ts"
+        ]
+      }
+    }
+  }
+}

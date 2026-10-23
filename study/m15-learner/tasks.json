@@ -1,0 +1,84 @@
+{
+  "repo": "ui-tui (hermes-agent), src/ only",
+  "commit": "e06df9c2eae6901f4c88f464e0ae6e753c0428b8",
+  "sets": {
+    "X": [
+      {
+        "id": "T05",
+        "type": "callers",
+        "minutes": 4,
+        "prompt": "In the code under src/, which files contain a direct call to the function `clampOverlayWidth` defined in `src/components/overlayPrimitives.tsx`? Count real calls, not imports or comments.",
+        "answerFormat": "json array of repo-relative file paths, e.g. [\"src/a.ts\",\"src/b.tsx\"]"
+      },
+      {
+        "id": "T06",
+        "type": "impact",
+        "minutes": 8,
+        "prompt": "If the behaviour of the function `formatToolCall` (defined in `src/lib/text.ts`) changed, which production files under src/ could be affected? Count files that call it directly AND files that call a function that calls it directly (two levels of callers).",
+        "answerFormat": "json array of repo-relative file paths"
+      },
+      {
+        "id": "T11",
+        "type": "importers",
+        "minutes": 4,
+        "prompt": "Which production files under src/ import the module `src/domain/blockLayout.ts`? Count static import and re-export statements; the specifier may be relative.",
+        "answerFormat": "json array of repo-relative file paths"
+      },
+      {
+        "id": "T13",
+        "type": "call-path",
+        "minutes": 6,
+        "prompt": "Give a chain of direct calls from the function `startFailureLine` (in `src/app/slash/commands/wake.ts`) to the function `resolvePath` (in `src/i18n/runtime.ts`) through exactly 2 intermediate production functions: A calls B, B calls C, C calls D. All four are top-level functions under src/.",
+        "answerFormat": "json array of the four function names in call order"
+      }
+    ],
+    "Y": [
+      {
+        "id": "T04",
+        "type": "callers",
+        "minutes": 4,
+        "prompt": "In the code under src/, which files contain a direct call to the function `buildSubagentTree` defined in `src/lib/subagentTree.ts`? Count real calls, not imports or comments.",
+        "answerFormat": "json array of repo-relative file paths, e.g. [\"src/a.ts\",\"src/b.tsx\"]"
+      },
+      {
+        "id": "T07",
+        "type": "impact",
+        "minutes": 8,
+        "prompt": "If the behaviour of the function `patchTurnState` (defined in `src/app/turnStore.ts`) changed, which production files under src/ could be affected? Count files that call it directly AND files that call a function that calls it directly (two levels of callers).",
+        "answerFormat": "json array of repo-relative file paths"
+      },
+      {
+        "id": "T12",
+        "type": "importers",
+        "minutes": 4,
+        "prompt": "Which production files under src/ import the module `src/app/slash/types.ts`? Count static import and re-export statements; the specifier may be relative.",
+        "answerFormat": "json array of repo-relative file paths"
+      },
+      {
+        "id": "T02",
+        "type": "callers",
+        "minutes": 4,
+        "prompt": "In the code under src/, which files contain a direct call to the function `useTurnSelector` defined in `src/app/turnStore.ts`? Count real calls, not imports or comments.",
+        "answerFormat": "json array of repo-relative file paths, e.g. [\"src/a.ts\",\"src/b.tsx\"]"
+      }
+    ],
+    "TA": [
+      {
+        "id": "T01",
+        "type": "callers",
+        "minutes": 4,
+        "prompt": "In the code under src/, which files contain a direct call to the function `sessionScopedModelArg` defined in `src/domain/slash.ts`? Count real calls, not imports or comments.",
+        "answerFormat": "json array of repo-relative file paths, e.g. [\"src/a.ts\",\"src/b.tsx\"]"
+      }
+    ],
+    "TB": [
+      {
+        "id": "T03",
+        "type": "callers",
+        "minutes": 4,
+        "prompt": "In the code under src/, which files contain a direct call to the function `patchTurnState` defined in `src/app/turnStore.ts`? Count real calls, not imports or comments.",
+        "answerFormat": "json array of repo-relative file paths, e.g. [\"src/a.ts\",\"src/b.tsx\"]"
+      }
+    ]
+  }
+}
