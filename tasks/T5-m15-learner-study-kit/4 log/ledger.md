@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-10-23 04:12      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T5-m15-learner-study-kit → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-23 04:25      submitted → verified      reviewer subagent sa-0-808009dc · findings: 2 validity defects fixed (ignore-tests clause vs test files in copy, transfer task T03 = T07 function and confounded with set), 5 README ambiguities, 6 scorer gaps, plus unrela
     2026-10-23 04:25      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T5-m15-learner-study-kit → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-23 04:26      verified → integrated      merge 2f982dd merge of ledger/t5-m15-learner-study-kit into main · combined checks exit 0
+    2026-10-23 04:26      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
