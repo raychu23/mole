@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-10-22 17:16      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T4-m15-agent-cost-check → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-22 17:22      submitted → verified      reviewer subagent sa-0-9a319c86 · findings: 5 fixes: lenient T06/T07 + 11-ticket subset in grade.mjs, NO-GO softened to not-demonstrated, 2 tickets x 2 reps + sign test p~0.125, isolation/cap limits disclosed, change-log
     2026-10-22 17:22      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T4-m15-agent-cost-check → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-22 17:22      verified → integrated      merge ac6ab19 Merge branch ledger/t4-m15-agent-cost-check into main · combined checks exit 0
+    2026-10-22 17:22      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
