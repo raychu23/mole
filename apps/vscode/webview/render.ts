@@ -1,6 +1,12 @@
 // Pure rendering of a laid-out Neighborhood to HTML/SVG strings (no DOM), so it is unit-testable and cheap to redraw.
-import type { MoreGroup, NeighborEdge, NeighborRole, Neighborhood, NodeKind } from '@mole/core';
+import type { MoreGroup, NeighborEdge, NeighborNode, NeighborRole, Neighborhood, NodeKind } from '@mole/core';
 import { labelOf, maxChars, NODE_H, type Layout, type Placed } from '@mole/layout';
+
+/** Callers and importers connect to the focus at a call/import site; clicking should land there, not on the neighbour's declaration. */
+const clickLine = (n: NeighborNode): number => (n.site && (n.role === 'caller' || n.role === 'importer') ? n.site.line : n.line);
+const siteNote = (n: NeighborNode): string =>
+  n.site && (n.role === 'caller' || n.role === 'importer') ? `\n${n.role === 'caller' ? 'call' : 'import'} at line ${n.site.line}${n.site.count > 1 ? ` (x${n.site.count})` : ''}` : '';
+
 
 export const esc = (s: string): string => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
 
@@ -80,10 +86,10 @@ export function renderSvg(map: Neighborhood, layout: Layout, top: number, opts: 
     const cls = `node role-${n.role} kind-${n.kind}${n.impacted ? ' impacted' : ''}`;
     const label = labelOf(n);
     const badge = KIND_BADGE[n.kind];
-    nodes += `<g class="${cls}" data-id="${esc(n.id)}" data-path="${esc(n.path)}" data-line="${n.line}" transform="translate(${p.x} ${p.y})">` +
+    nodes += `<g class="${cls}" data-id="${esc(n.id)}" data-path="${esc(n.path)}" data-line="${clickLine(n)}" transform="translate(${p.x} ${p.y})">` +
       `<rect width="${p.w}" height="${p.h}" rx="5"/><text class="label" x="9" y="${NODE_H / 2 + 4.5}">${esc(label.length > maxChars(p.w) ? `${label.slice(0, maxChars(p.w) - 1)}…` : label)}</text>` +
       `<text class="badge" x="${p.w - 8}" y="${NODE_H / 2 + 3.5}" text-anchor="end">${badge}</text>` +
-      `<title>${esc(`${labelOf(n)}\n${n.kind} ${n.path}:${n.line}\nscore ${n.score.toFixed(1)} · read at ${n.evidence.commit.slice(0, 9)}`)}</title></g>`;
+      `<title>${esc(`${labelOf(n)}\n${n.kind} ${n.path}:${n.line}${siteNote(n)}\nscore ${n.score.toFixed(1)} · read at ${n.evidence.commit.slice(0, 9)}`)}</title></g>`;
   }
 
   return `<svg class="map${opts.impact ? ' impact-mode' : ''}" xmlns="http://www.w3.org/2000/svg" viewBox="${layout.bounds.x - pad} ${top} ${vbW} ${vbH}" width="${vbW}" height="${vbH}">` +

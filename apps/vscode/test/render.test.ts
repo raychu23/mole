@@ -43,6 +43,14 @@ describe('renderSvg', () => {
     expect(on).toContain('impacted');
   });
 
+  it('a caller or importer opens at its call/import site, not at its declaration', () => {
+    const m2: Neighborhood = { ...map, nodes: [node('file:f', 'focus'), node('own1', 'own'), node('callerA', 'caller', { line: 3, site: { path: 'src/callerA.ts', line: 42, count: 2 } })], edges: [{ from: 'callerA', to: 'own1', kind: 'calls', count: 2, line: 42 }], more: [] };
+    const l2 = layoutNeighborhood(m2, newHome());
+    const out = renderSvg(m2, l2, 0, { impact: false });
+    expect(out).toMatch(/data-path="src\/callerA\.ts" data-line="42"/);
+    expect(out).toContain('call at line 42 (x2)');
+  });
+
   it('every node carries file:line for click-to-open', () => {
     expect(svg).toMatch(/data-path="src\/own1\.ts" data-line="3"/);
   });

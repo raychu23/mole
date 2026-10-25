@@ -35,6 +35,42 @@ function indexed(files: Record<string, string>) {
   return ix.db;
 }
 
+describe('call-site lines (T7)', () => {
+  // doIt is declared on line 4 of user.ts and calls target() on lines 6 and 8
+  const FILES = {
+    'src/lib.ts': 'export function target() {\n  return 1;\n}\n',
+    'src/user.ts': "import { target } from './lib.js';\n\n\nexport function doIt() {\n  const a = 1;\n  target();\n  const b = 2;\n  return target() + a + b;\n}\n",
+  };
+
+  it('a caller carries the first call-site line and the site count, next to its declaration line', () => {
+    const n = neighborhood(indexed(FILES), 'src/lib.ts#target');
+    const caller = n.nodes.find((x) => x.role === 'caller' && x.name === 'doIt');
+    expect(caller).toMatchObject({ path: 'src/user.ts', line: 4, site: { path: 'src/user.ts', line: 6, count: 2 } });
+    const text = formatNeighborhood(n);
+    expect(text).toContain('doIt src/user.ts:6 ×2');
+    expect(text).not.toContain('doIt src/user.ts:4');
+  });
+
+  it('file-level callers and importers print the site line and count in the text map too', () => {
+    const files = { ...FILES, 'src/top.ts': "import { target } from './lib.js';\ntarget();\ntarget();\n" };
+    const text = formatNeighborhood(neighborhood(indexed(files), 'src/lib.ts'));
+    expect(text).toMatch(/called by: .*src\/top\.ts:2 ×2/);
+    expect(text).toMatch(/imported by: .*src\/user\.ts:1/); // top.ts is both caller and importer: the stronger role (caller) keeps it
+  });
+
+  it('an importer carries the import statement line', () => {
+    const n = neighborhood(indexed(FILES), 'src/lib.ts');
+    expect(n.nodes.find((x) => x.role === 'importer')).toMatchObject({ path: 'src/user.ts', site: { path: 'src/user.ts', line: 1, count: 1 } });
+  });
+
+  it('callees keep the declaration line (that is where you go next)', () => {
+    const n = neighborhood(indexed(FILES), 'src/user.ts#doIt');
+    const callee = n.nodes.find((x) => x.role === 'callee' && x.name === 'target');
+    expect(callee).toMatchObject({ path: 'src/lib.ts', line: 1 });
+    expect(callee?.site).toBeUndefined();
+  });
+});
+
 describe('neighborhood (pure query)', () => {
   it('file map lists its symbols, callers, callees and importers', () => {
     const n = neighborhood(indexed(SMALL), 'src/svc.ts');

@@ -17,7 +17,8 @@ export function createServer(opts: MoleMcpOptions): McpServer {
       title: 'Mole map',
       description:
         'Ranked neighbourhood (<=25 nodes) of a file or symbol: what it defines, who calls it, what it calls, who imports it. ' +
-        'Facts come from the TypeScript compiler index with file:line evidence; no LLM. Use before reading unfamiliar code.',
+        'Facts come from the TypeScript compiler index with file:line evidence; no LLM. Use before reading unfamiliar code. ' +
+        'For "called by" and "imported by" the line is where the call or import happens (the first one; ×N means N sites); for everything else it is the declaration line.',
       inputSchema: {
         target: z.string().describe('repo-relative file (src/a.ts), file#Symbol (src/a.ts#Cls.method), or a bare symbol name'),
         impact: z.boolean().optional().describe('also mark transitive callers (what breaks if this changes) with !impact'),

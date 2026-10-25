@@ -18,6 +18,8 @@ export interface NeighborNode {
   score: number; // ranking score (higher = more connected to the focus)
   /** true when this node is among the transitive callers of the focus (impact view). */
   impacted?: boolean;
+  /** where the connection to the focus actually happens (callers: the first call site; importers: the first import statement). `line` stays the declaration line. */
+  site?: { path: string; line: number; count: number };
   evidence: Evidence;
 }
 
@@ -75,9 +77,13 @@ export function formatNeighborhood(n: Neighborhood): string {
     const more = n.more.find((m) => m.role === role)?.count ?? 0;
     if (!group.length && !more) continue;
     const items = group.map((x) => {
-      const where = x.path === n.focus?.path && role === 'own' ? `:${x.line}` : ` ${x.path}:${x.line}`;
+      // callers/importers: the line where the call/import happens (the declaration line of the caller is not where the call is)
+      const line = (role === 'caller' || role === 'importer') && x.site ? x.site.line : x.line;
+      const sites = (role === 'caller' || role === 'importer') && x.site && x.site.count > 1 ? ` ×${x.site.count}` : '';
+      const where = (x.path === n.focus?.path && role === 'own' ? `:${line}` : ` ${x.path}:${line}`) + sites;
       const flag = x.impacted ? ' !impact' : '';
-      return `${x.kind === 'file' ? x.path : x.name}${role === 'own' ? where : x.kind === 'file' ? '' : where}${flag}`;
+      const siteFile = x.kind === 'file' && (role === 'caller' || role === 'importer') && x.site ? `:${x.site.line}${sites}` : '';
+      return `${x.kind === 'file' ? x.path : x.name}${role === 'own' ? where : x.kind === 'file' ? siteFile : where}${flag}`;
     });
     if (more) items.push(`+${more} more`);
     lines.push(`${ROLE_LABEL[role]}: ${items.join(' · ')}`);
