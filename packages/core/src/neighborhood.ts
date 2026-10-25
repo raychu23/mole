@@ -82,7 +82,8 @@ export function formatNeighborhood(n: Neighborhood): string {
       const sites = (role === 'caller' || role === 'importer') && x.site && x.site.count > 1 ? ` ×${x.site.count}` : '';
       const where = (x.path === n.focus?.path && role === 'own' ? `:${line}` : ` ${x.path}:${line}`) + sites;
       const flag = x.impacted ? ' !impact' : '';
-      return `${x.kind === 'file' ? x.path : x.name}${role === 'own' ? where : x.kind === 'file' ? '' : where}${flag}`;
+      const siteFile = x.kind === 'file' && (role === 'caller' || role === 'importer') && x.site ? `:${x.site.line}${sites}` : '';
+      return `${x.kind === 'file' ? x.path : x.name}${role === 'own' ? where : x.kind === 'file' ? siteFile : where}${flag}`;
     });
     if (more) items.push(`+${more} more`);
     lines.push(`${ROLE_LABEL[role]}: ${items.join(' · ')}`);

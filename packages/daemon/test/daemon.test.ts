@@ -51,6 +51,13 @@ describe('call-site lines (T7)', () => {
     expect(text).not.toContain('doIt src/user.ts:4');
   });
 
+  it('file-level callers and importers print the site line and count in the text map too', () => {
+    const files = { ...FILES, 'src/top.ts': "import { target } from './lib.js';\ntarget();\ntarget();\n" };
+    const text = formatNeighborhood(neighborhood(indexed(files), 'src/lib.ts'));
+    expect(text).toMatch(/called by: .*src\/top\.ts:2 ×2/);
+    expect(text).toMatch(/imported by: .*src\/user\.ts:1/); // top.ts is both caller and importer: the stronger role (caller) keeps it
+  });
+
   it('an importer carries the import statement line', () => {
     const n = neighborhood(indexed(FILES), 'src/lib.ts');
     expect(n.nodes.find((x) => x.role === 'importer')).toMatchObject({ path: 'src/user.ts', site: { path: 'src/user.ts', line: 1, count: 1 } });
