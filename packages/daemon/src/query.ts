@@ -28,8 +28,10 @@ export function ensureQueryIndexes(db: DatabaseSync): void {
   db.exec('CREATE INDEX IF NOT EXISTS edges_from ON edges(from_id); CREATE INDEX IF NOT EXISTS nodes_name ON nodes(name);');
 }
 
-const toNode = (r: Row, role: NeighborRole, score: number): NeighborNode => ({
+const toNode = (r: Row, role: NeighborRole, score: number, site?: { line: number; count: number }): NeighborNode => ({
   id: String(r.id), kind: r.kind, name: String(r.name), role, path: String(r.path), line: Number(r.line), score,
+  // a call/import edge's evidence path is the file that contains the call, which is the caller's/importer's own file
+  ...(site ? { site: { path: String(r.path), line: site.line, count: site.count } } : {}),
   evidence: { path: String(r.path), line: Number(r.line), commit: String(r.commit_sha) },
 });
 
@@ -182,7 +184,7 @@ export function neighborhood(db: DatabaseSync, target: string, opts: MapOptions 
       const total = db.prepare('SELECT COUNT(*) AS n FROM edges WHERE to_id = ? OR from_id = ?').get(a.other, a.other) as unknown as { n: number };
       // test files call everything; keep them on the map but below real callers
       const weight = TEST_PATH.test(String(r.path)) ? 0.2 : 1;
-      cands.push({ node: toNode(r, role, (Number(a.n) * 10 + Math.min(Number(total.n), 9)) * weight) });
+      cands.push({ node: toNode(r, role, (Number(a.n) * 10 + Math.min(Number(total.n), 9)) * weight, role === 'caller' ? { line: Number(a.line), count: Number(a.n) } : undefined) });
     }
   };
   connect(calleeAgg, 'callee');
@@ -196,7 +198,7 @@ export function neighborhood(db: DatabaseSync, target: string, opts: MapOptions 
     }
     for (const a of aggIn(db, [String(focusRow.id)], 'imports').filter((x) => x.other !== focusRow.id)) {
       const r = nodeById(db, a.other);
-      if (r) cands.push({ node: toNode(r, 'importer', Number(a.n) * (TEST_PATH.test(String(r.path)) ? 0.2 : 1)) });
+      if (r) cands.push({ node: toNode(r, 'importer', Number(a.n) * (TEST_PATH.test(String(r.path)) ? 0.2 : 1), { line: Number(a.line), count: Number(a.n) }) });
     }
   }
 
