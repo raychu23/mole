@@ -1,22 +1,22 @@
 ---
-state: verified
+state: integrated
 owner: unclaimed
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t7-map-callsite-lines
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T7-map-callsite-lines
 base: 7458804
 reviewer: subagent sa-0-fd89d162
-updated: 2026-10-25 18:42
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+updated: 2026-10-25 18:43
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-10-25 18:32
 ---
 ```notes
 T7-map-callsite-lines      ledger task (rules.md §3 code features)      project tasks
     goal                    Fix the map's file:line evidence for callers and callees: show the CALL-SITE line (edge evidence, already stored in edges.path/line) instead of the neighbour function's declaration line, so the line a user or agent clicks/reads is where the call happens
     done-when               1) formatNeighborhood and the panel click target use edge evidence line for caller/callee/import neighbours (declaration line kept for own definitions); 2) when a caller has several call sites, the first call line is shown and '+N more sites' is available in the JSON; 3) daemon + core tests cover it (fixture with a function called twice in one caller); 4) excalidraw check: for shouldResizeFromCenter the map lines equal grep -n 'shouldResizeFromCenter(' lines; 5) npm run check passes; CLI==MCP output equality test still passes
-    status                  2026-10-25 verified      reviewer subagent sa-0-fd89d162 · findings: 3 fixes: file-level callers/importers print path:line xN in text, MCP descri
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-10-25 integrated      merge a16f9db merge of ledger/t7-map-callsite-lines into main · combined checks exit 0
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    code
     boundary                packages/core/src/neighborhood.ts, packages/daemon/src (query), packages/mcp, apps/vscode webview click target, their tests
