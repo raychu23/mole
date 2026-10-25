@@ -1,22 +1,22 @@
 ---
-state: submitted
+state: verified
 owner: unclaimed
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t6-m15b-agent-cost-excalidraw
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T6-m15b-agent-cost-excalidraw
 base: 5c7c442
-reviewer:
-updated: 2026-10-25 18:22
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+reviewer: subagent sa-0-5029bfa7
+updated: 2026-10-25 18:31
+status: ledger verified
+next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
 claimed: 2026-10-25 18:11
 ---
 ```notes
 T6-m15b-agent-cost-excalidraw      ledger task (rules.md §3 code features)      project tasks
     goal                    Rerun the M1.5 agent-cost comparison where the tool should help: impact, call-path and alias/barrel tickets on excalidraw (672 files) with the T4 harness, 3 conditions, 3 reps
     done-when               tickets + keys from the language service on excalidraw (d3a9c2a195), >=3 tickets per type incl. alias/barrel, same briefs/grader, results generated data/m15b-agent-cost.json, honest report vs T4
-    status                  2026-10-25 submitted      report: 66 runs graded on excalidraw, generated data/m15b-agent-cost.json, correctness 66/66, small consistent saving on
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    status                  2026-10-25 verified      reviewer subagent sa-0-5029bfa7 · findings: 6 fixes: narrowed claim (B non-users saved as much, C-A ~0, CI includes zero
+    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
     pinned
     mode                    code
     boundary                packages/daemon/bench/m15/** and generated data/m15b-*
