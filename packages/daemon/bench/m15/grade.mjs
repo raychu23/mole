@@ -8,16 +8,17 @@ import { DatabaseSync } from 'node:sqlite';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const S = process.env.SCRATCH ?? join(homedir(), '.hermes/cache/scratch/m15');
+const PFX = process.env.PFX ?? 'm15';
 const TICKETS = process.env.TICKETS ?? resolve(here, '../../../../generated data/m15-tickets.json');
 const OUT = process.env.OUT ?? resolve(here, '../../../../generated data/m15-agent-cost.json');
 const tk = JSON.parse(readFileSync(TICKETS, 'utf8'));
 const byId = new Map(tk.tickets.map((t) => [t.id, t]));
 const db = new DatabaseSync(join(homedir(), '.hermes/state.db'), { readOnly: true });
 
-const sessions = db.prepare(`SELECT id, title, model, started_at, ended_at, api_call_count, tool_call_count, message_count, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, reasoning_tokens, estimated_cost_usd, actual_cost_usd, end_reason FROM sessions WHERE title LIKE 'Subagent: m15 %'`).all();
+const sessions = db.prepare(`SELECT id, title, model, started_at, ended_at, api_call_count, tool_call_count, message_count, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, reasoning_tokens, estimated_cost_usd, actual_cost_usd, end_reason FROM sessions WHERE title LIKE 'Subagent: ${PFX} %'`).all();
 const rows = new Map(); // run id -> latest session for it
 for (const s of sessions) {
-  const m = /m15 ([ABC]-T\d\d-r\d+)/.exec(String(s.title));
+  const m = new RegExp(`${PFX} ([ABC]-[TM]\\d\\d-r\\d+)`).exec(String(s.title));
   if (!m) continue;
   const prev = rows.get(m[1]);
   if (!prev || Number(s.started_at) > Number(prev.started_at)) rows.set(m[1], s);

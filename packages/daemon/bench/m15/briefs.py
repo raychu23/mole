@@ -4,7 +4,8 @@ A brief is everything the agent is told. Both conditions get the same text excep
 usage: briefs.py <tickets.json> <scratch> <cli.js> [reps]"""
 import json, os, sys
 tk = json.load(open(sys.argv[1])); S = sys.argv[2]; cli = sys.argv[3]; reps = int(sys.argv[4]) if len(sys.argv) > 4 else 1
-ws = f"{S}/ui-tui"
+ws = os.environ.get("WS", f"{S}/ui-tui")
+PFX = os.environ.get("PFX", "m15")
 os.makedirs(f"{S}/briefs", exist_ok=True); os.makedirs(f"{S}/answers", exist_ok=True)
 MAP = (f'A compiler-derived code-map tool is also available through the terminal:\n\n    node --no-warnings "{cli}" map TARGET --root {ws} --state-dir {S}/state --no-start\n\n'
        "TARGET is a repo-relative file path, path#Symbol (for example src/a.ts#Cls.method), or a bare symbol name. It prints the ranked neighbourhood of that file or symbol: "
@@ -24,6 +25,6 @@ for rep in range(1, reps + 1):
             if cond in "BC": body += "\n## Code-map tool\n\n" + MAP
             if cond == "C": body += "\nStart with the code-map tool: run it on the relevant file or symbol before you search or read files by hand, and read the files only to confirm what it leaves open.\n"
             open(f"{S}/briefs/{rid}.md", "w").write(body)
-            goals[rid] = f"m15 {rid}: Read your brief at {S}/briefs/{rid}.md and follow it exactly."
+            goals[rid] = f"{PFX} {rid}: Read your brief at {S}/briefs/{rid}.md and follow it exactly."
 json.dump(goals, open(f"{S}/goals.json", "w"), indent=1)
 print(len(goals), "briefs")

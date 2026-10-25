@@ -11,6 +11,27 @@ const ts = createRequire(join(here, '../../../../package.json'))('typescript');
 
 export const TEST = /(?:^|\/)(?:__tests__|tests?)\/|\.(?:test|spec)\.[cm]?[jt]sx?$/;
 
+/** Monorepo variant: files come from the tsconfig (like Mole's daemon without --src-dir); production = not test/d.ts/examples/scripts. */
+export function openProjectFromConfig(root, tsconfig, excludeRe = /(?:^|\/)(?:examples|scripts|node_modules|dev-docs)\//) {
+  const cfgPath = join(root, tsconfig);
+  const cfg = ts.readConfigFile(cfgPath, ts.sys.readFile);
+  const parsed = ts.parseJsonConfigFileContent(cfg.config, ts.sys, root, undefined, cfgPath);
+  const options = { ...parsed.options, noEmit: true, composite: false };
+  const files = parsed.fileNames.map((f) => resolve(f));
+  const host = {
+    getScriptFileNames: () => files, getScriptVersion: () => '1',
+    getScriptSnapshot: (f) => (existsSync(f) ? ts.ScriptSnapshot.fromString(readFileSync(f, 'utf8')) : undefined),
+    getCurrentDirectory: () => root, getCompilationSettings: () => options,
+    getDefaultLibFileName: (o) => ts.getDefaultLibFilePath(o),
+    fileExists: ts.sys.fileExists, readFile: ts.sys.readFile, readDirectory: ts.sys.readDirectory,
+    directoryExists: ts.sys.directoryExists, getDirectories: ts.sys.getDirectories,
+  };
+  const ls = ts.createLanguageService(host, ts.createDocumentRegistry());
+  const rel = (f) => relative(root, f).split(sep).join('/');
+  const inSrc = (f) => !excludeRe.test(rel(f)) && !f.includes('/node_modules/');
+  return { ts, ls, program: ls.getProgram(), rel, inSrc, root, files };
+}
+
 export function openProject(root, tsconfig, srcPrefix = 'src/') {
   const cfgPath = join(root, tsconfig);
   const cfg = ts.readConfigFile(cfgPath, ts.sys.readFile);
