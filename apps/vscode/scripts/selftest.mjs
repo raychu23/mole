@@ -125,6 +125,7 @@ const report = {
   editorGroups: res.layoutGroups,
   screenshots: { ok: shots.shot ? SHOT : null, impact: shots.shot3 ? SHOT3 : null, indexUnavailable: shots.shot2 ? SHOT2 : null },
   clickToOpen: res.openCheck ?? null,
+  clickAll: { checked: (res.openChecks ?? []).length, ok: (res.openChecks ?? []).filter((c) => c.ok).length, failing: (res.openChecks ?? []).filter((c) => !c.ok), byRole: Object.fromEntries([...new Set((res.openChecks ?? []).map((c) => c.role))].map((r) => [r, { checked: res.openChecks.filter((c) => c.role === r).length, ok: res.openChecks.filter((c) => c.role === r && c.ok).length }])), callersTextChecked: (res.openChecks ?? []).filter((c) => c.textHasFocusName !== undefined).length },
   impactView: res.impactCheck ?? null,
   restoreAfterRelaunch: restored,
   failureCases: res.failures.map((f) => ({ file: f.file, state: f.state })),
@@ -137,4 +138,4 @@ const RUNS = join(dirname(OUT), 'm1-latency-runs.json');
 const runs = existsSync(RUNS) ? JSON.parse(readFileSync(RUNS, 'utf8')) : [];
 runs.push({ at: report.generatedAt, switches: report.switches, totalMsP95: report.totalMs?.p95, withDebounceMsP95: report.withDebounceMs?.p95, rpcMsP95: report.rpcMs?.p95, passed: report.passed });
 writeFileSync(RUNS, JSON.stringify(runs, null, 2) + '\n');
-console.log(JSON.stringify({ switches: report.switches, totalMs: report.totalMs, withDebounceMs: report.withDebounceMs, rpcMs: report.rpcMs, layoutMs: report.layoutMs, states: report.states, passed: report.passed, screenshots: report.screenshots, failureCases: report.failureCases, clickToOpen: report.clickToOpen, impactView: report.impactView, restoreAfterRelaunch: report.restoreAfterRelaunch }, null, 1));
+console.log(JSON.stringify({ switches: report.switches, totalMs: report.totalMs, withDebounceMs: report.withDebounceMs, rpcMs: report.rpcMs, layoutMs: report.layoutMs, states: report.states, passed: report.passed, screenshots: report.screenshots, failureCases: report.failureCases, clickToOpen: report.clickToOpen, clickAll: report.clickAll, impactView: report.impactView, restoreAfterRelaunch: report.restoreAfterRelaunch }, null, 1));

@@ -3,6 +3,7 @@ import { dirname, join, resolve } from 'node:path';
 import * as vscode from 'vscode';
 import type { Neighborhood } from '@mole/core';
 import { ensureDaemon, MoleClient } from '@mole/daemon';
+import { clickLine } from '../webview/render.js';
 import { CSS } from '../webview/style.js';
 import { debounce, toRepoPath } from './paths.js';
 
@@ -283,17 +284,34 @@ async function selfTest(mole: MolePanel, cfgPath: string): Promise<void> {
       await new Promise((r) => setTimeout(r, 4000));
       await mole.toggleImpact();
     }
-    // click-to-open: what the webview sends for a node (path + line from the map) must land on that line
-    const m = await new MoleClient({ root, stateDir: process.env.MOLE_STATE_DIR }).map(shotFile);
-    const target = m.nodes.find((n) => n.role === 'callee' && n.kind !== 'file') ?? m.nodes.find((n) => n.role === 'own');
-    let openCheck: { path: string; line: number; landedPath?: string; landedLine?: number; ok: boolean } | undefined;
-    if (target) {
-      await mole.openFile(target.path, target.line);
-      const ed = vscode.window.activeTextEditor;
-      const landedPath = ed ? toRepoPath(root, ed.document.uri.fsPath) : undefined;
-      const landedLine = ed ? ed.selection.active.line + 1 : undefined;
-      openCheck = { path: target.path, line: target.line, landedPath, landedLine, ok: landedPath === target.path && landedLine === target.line };
+    // click-to-open, EVERY node: the line the webview would send (clickLine) must be where the editor lands. For a symbol map the
+    // landed line of each caller must also contain the focus symbol's name (it is a real call site, not the caller's declaration).
+    type Open = { map: string; id: string; role: string; path: string; line: number; landedPath?: string; landedLine?: number; textHasFocusName?: boolean; ok: boolean };
+    const openChecks: Open[] = [];
+    const openAll = async (target: string, checkText: string | undefined): Promise<void> => {
+      const mp = await new MoleClient({ root, stateDir: process.env.MOLE_STATE_DIR }).map(target);
+      for (const n of mp.nodes.filter((x) => x.role !== 'focus')) {
+        const line = clickLine(n);
+        await mole.openFile(n.path, line);
+        const ed = vscode.window.activeTextEditor;
+        const landedPath = ed ? toRepoPath(root, ed.document.uri.fsPath) : undefined;
+        const landedLine = ed ? ed.selection.active.line + 1 : undefined;
+        const text = ed && landedLine ? ed.document.lineAt(landedLine - 1).text : '';
+        const needsText = checkText !== undefined && n.role === 'caller';
+        const textHasFocusName = needsText ? text.includes(checkText) : undefined;
+        openChecks.push({ map: target, id: n.id, role: n.role, path: n.path, line, landedPath, landedLine, textHasFocusName, ok: landedPath === n.path && landedLine === line && (!needsText || textHasFocusName === true) });
+      }
+    };
+    // every sampled file's map, plus the symbol map of its most-connected function (functions only: a class's call site is wherever
+    // an instance member is used, so its line need not contain the class name)
+    const clickFiles = [shotFile, ...cfg.files.filter((x) => x !== shotFile)].slice(0, Number(process.env.MOLE_CLICK_FILES ?? 40));
+    for (const file of clickFiles) {
+      await openAll(file, undefined);
+      const fileMap = await new MoleClient({ root, stateDir: process.env.MOLE_STATE_DIR }).map(file);
+      const fn = fileMap.nodes.filter((x) => x.role === 'own' && x.kind === 'function').sort((p, q) => q.score - p.score)[0];
+      if (fn) await openAll(`${file}#${fn.name}`, fn.name);
     }
+    const openCheck = openChecks[0];
     // failure cases in the real editor: a file outside the index, then the daemon going away
     const failures: Sample[] = [];
     const s1 = await switchTo('package.json');
@@ -307,7 +325,7 @@ async function selfTest(mole: MolePanel, cfgPath: string): Promise<void> {
       writeFileSync(`${cfg.shot2}.ready`, 'ok');
       await new Promise((r) => setTimeout(r, 4000));
     }
-    writeFileSync(cfg.out, JSON.stringify({ samples: out, failures, openCheck, impactCheck, layoutGroups: vscode.window.tabGroups.all.map((g) => ({ col: g.viewColumn, locked: undefined, tabs: g.tabs.length })) }, null, 2));
+    writeFileSync(cfg.out, JSON.stringify({ samples: out, failures, openCheck, openChecks, impactCheck, layoutGroups: vscode.window.tabGroups.all.map((g) => ({ col: g.viewColumn, locked: undefined, tabs: g.tabs.length })) }, null, 2));
   } catch (e) {
     writeFileSync(cfg.out, JSON.stringify({ error: (e as Error).message }));
   }
