@@ -3,7 +3,7 @@ import type { MoreGroup, NeighborEdge, NeighborNode, NeighborRole, Neighborhood,
 import { labelOf, maxChars, NODE_H, type Layout, type Placed } from '@mole/layout';
 
 /** Callers and importers connect to the focus at a call/import site; clicking should land there, not on the neighbour's declaration. */
-const clickLine = (n: NeighborNode): number => (n.site && (n.role === 'caller' || n.role === 'importer') ? n.site.line : n.line);
+export const clickLine = (n: NeighborNode): number => (n.site && (n.role === 'caller' || n.role === 'importer') ? n.site.line : n.line);
 const siteNote = (n: NeighborNode): string =>
   n.site && (n.role === 'caller' || n.role === 'importer') ? `\n${n.role === 'caller' ? 'call' : 'import'} at line ${n.site.line}${n.site.count > 1 ? ` (x${n.site.count})` : ''}` : '';
 

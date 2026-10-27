@@ -125,11 +125,15 @@ const report = {
   editorGroups: res.layoutGroups,
   screenshots: { ok: shots.shot ? SHOT : null, impact: shots.shot3 ? SHOT3 : null, indexUnavailable: shots.shot2 ? SHOT2 : null },
   clickToOpen: res.openCheck ?? null,
+  clickAll: { checked: (res.openChecks ?? []).length, ok: (res.openChecks ?? []).filter((c) => c.ok).length, failing: (res.openChecks ?? []).filter((c) => !c.ok), byVia: Object.fromEntries(['openFile', 'dom'].map((v) => [v, { checked: (res.openChecks ?? []).filter((c) => c.via === v).length, ok: (res.openChecks ?? []).filter((c) => c.via === v && c.ok).length }])), byRole: Object.fromEntries([...new Set((res.openChecks ?? []).map((c) => c.role))].map((r) => [r, { checked: res.openChecks.filter((c) => c.role === r).length, ok: res.openChecks.filter((c) => c.role === r && c.ok).length }])), callersTextChecked: (res.openChecks ?? []).filter((c) => c.textHasFocusName !== undefined).length },
   impactView: res.impactCheck ?? null,
   restoreAfterRelaunch: restored,
   failureCases: res.failures.map((f) => ({ file: f.file, state: f.state })),
   samples: res.samples,
 };
+const CLICK_OUT = process.env.CLICK_OUT ?? resolve(ext, '../../generated data/m1-click-all.json');
+mkdirSync(dirname(CLICK_OUT), { recursive: true });
+writeFileSync(CLICK_OUT, JSON.stringify({ generatedAt: report.generatedAt, what: 'every non-focus node of 40 sampled file maps + the symbol map of each file\'s most-connected function opened in a real VS Code window; landed path:line read back from the editor after parking it on package.json:1; caller lines of symbol maps must contain a call `name(` or `name<`; the first files are also opened through a real DOM click in the webview', fixture: report.fixture, vscode: report.vscode, summary: report.clickAll, limits: ['one repo (ui-tui), one VS Code build', 'classes are not text-checked (their call sites mention members)', 'DOM click path is exercised for the first MOLE_DOM_CLICK_FILES file maps only (default 6)', 'the text check proves the caller line holds a call of that name, not that it resolves to the same declaration'], records: (res.openChecks ?? []).map((c) => ({ via: c.via, map: c.map, id: c.id, role: c.role, path: c.path, line: c.line, landedPath: c.landedPath, landedLine: c.landedLine, textOk: c.textHasFocusName, ok: c.ok })) }, null, 2) + '\n');
 mkdirSync(dirname(OUT), { recursive: true });
 writeFileSync(OUT, JSON.stringify(report, null, 2) + '\n');
 // every run is kept: a loaded machine moves p95 by tens of ms, so quote the range, not one run
@@ -137,4 +141,4 @@ const RUNS = join(dirname(OUT), 'm1-latency-runs.json');
 const runs = existsSync(RUNS) ? JSON.parse(readFileSync(RUNS, 'utf8')) : [];
 runs.push({ at: report.generatedAt, switches: report.switches, totalMsP95: report.totalMs?.p95, withDebounceMsP95: report.withDebounceMs?.p95, rpcMsP95: report.rpcMs?.p95, passed: report.passed });
 writeFileSync(RUNS, JSON.stringify(runs, null, 2) + '\n');
-console.log(JSON.stringify({ switches: report.switches, totalMs: report.totalMs, withDebounceMs: report.withDebounceMs, rpcMs: report.rpcMs, layoutMs: report.layoutMs, states: report.states, passed: report.passed, screenshots: report.screenshots, failureCases: report.failureCases, clickToOpen: report.clickToOpen, impactView: report.impactView, restoreAfterRelaunch: report.restoreAfterRelaunch }, null, 1));
+console.log(JSON.stringify({ switches: report.switches, totalMs: report.totalMs, withDebounceMs: report.withDebounceMs, rpcMs: report.rpcMs, layoutMs: report.layoutMs, states: report.states, passed: report.passed, screenshots: report.screenshots, failureCases: report.failureCases, clickToOpen: report.clickToOpen, clickAll: report.clickAll, impactView: report.impactView, restoreAfterRelaunch: report.restoreAfterRelaunch }, null, 1));

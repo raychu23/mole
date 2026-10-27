@@ -60,11 +60,18 @@ app.addEventListener('click', (ev) => {
     return;
   }
   const node = t.closest('.node') as SVGGElement | null;
-  if (node) vscode.postMessage({ type: 'open', path: node.dataset.path, line: Number(node.dataset.line) });
+  if (node) vscode.postMessage({ type: 'open', id: node.dataset.id, path: node.dataset.path, line: Number(node.dataset.line) });
 });
 
 window.addEventListener('message', (ev) => {
-  const m = ev.data as { type: string; map?: Neighborhood; seq?: number; impact?: boolean };
+  const m = ev.data as { type: string; map?: Neighborhood; seq?: number; impact?: boolean; id?: string };
+  if (m.type === 'selftestClick') {
+    // self-test only: dispatch a real DOM click on a node so the click handler above runs, instead of posting 'open' directly
+    const el = Array.from(app.querySelectorAll('.node')).find((n) => (n as SVGGElement).dataset.id === m.id);
+    if (el) el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    else vscode.postMessage({ type: 'selftestClickMissing', id: m.id });
+    return;
+  }
   if (m.type === 'map' && m.map) {
     impact = m.impact === true;
     draw(m.map, m.seq);
