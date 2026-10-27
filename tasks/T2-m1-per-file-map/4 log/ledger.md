@@ -9,4 +9,6 @@ ledger (newest last, nothing deleted)
     2026-10-22 13:39      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T2-m1-per-file-map → exit 0 (Duration  17.43s (transform 740ms, setup 0ms, collect 3.56s, tests 37.28s, environment 1ms, prepare )
     2026-10-22 13:39      verified → integrated      merge 5ff6bf2 merge of ledger/t2-m1-per-file-map into main, npm run check 49 tests pass · combined checks exit 0
     2026-10-22 13:39      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (Duration  17.17s (transform 708ms, setup 0ms, collect 2.97s, tests 37.62s, environment 1ms, prepare )
+    2026-10-27 16:40      integrated → done      outcome: Per-file map shipped (daemon, mole_map, CLI, VS Code panel), p95 37-66 ms in real VS Code, review fixed false not-indexed during reindex, lock per root, impact view, debounce, merged 5ff6bf2 · resources: retain 
+    2026-10-27 16:40      prevents: packages/daemon/test/daemon.test.ts:262 full reindex never shows not-indexed [source: tasks/T2-m1-per-file-map; added: 2026-10-27]
 ```
