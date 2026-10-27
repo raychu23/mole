@@ -9,4 +9,6 @@ ledger (newest last, nothing deleted)
     2026-10-19 23:52      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T1-m0-engine-spike → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-19 23:54      verified → integrated      merge 603966f merge of ledger/t1-m0-engine-spike into main, npm run check 16 tests pass · combined checks exit 0
     2026-10-19 23:54      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-27 16:40      integrated → done      outcome: P2 engine chosen by measurement: TS Compiler API + SQLite, weighted recall ~1.0 on ui-tui, review fixed dangling edges, id collisions, partial marking, merged 603966f · resources: retain · prevents: packages/ind
+    2026-10-27 16:40      prevents: packages/indexer/test/indexer.test.ts:124 regression tests for the T1 review defects [source: tasks/T1-m0-engine-spike; added: 2026-10-27]
 ```
