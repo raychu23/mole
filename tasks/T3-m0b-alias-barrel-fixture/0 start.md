@@ -1,22 +1,22 @@
 ---
-state: integrated
+state: done
 owner: unclaimed
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t3-m0b-alias-barrel-fixture
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T3-m0b-alias-barrel-fixture
 base: 8dfe16a
 reviewer: subagent sa-0-d78c0d36 (independent)
-updated: 2026-10-20 01:06
-status: ledger integrated
-next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
+updated: 2026-10-27 16:40
+status: ledger done
+next: —
 claimed: 2026-10-19 23:54
 ---
 ```notes
 T3-m0b-alias-barrel-fixture      ledger task (rules.md §3 code features)      project Mole
     goal                    Add a second M0 fixture with real tsconfig-paths aliases and barrel re-exports and re-run the engine benchmark on it, so alias/barrel evidence is not one ambient module + 15 sites
     done-when               1) a real permissively licensed TS repo with >=100 call sites via tsconfig paths aliases and >=100 via barrel index.ts re-exports is chosen and recorded (name, URL, commit, license) 2) packages/indexer/bench runs on it via FIXTURE/TSCONFIG env, no engine code change, read-only 3) generated data/m0b-engine-report.json has per-stratum recall for TS API, scip-typescript, tree-sitter (CodeGraph optional) with n>=100 in alias and barrel 4) plan.json P2 m0_result updated: confirm or change the recommendation
-    status                  2026-10-20 integrated      merge merged to main 0e1fea5, npm run check 16 pass · combined checks exit 0
-    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
+    status                  2026-10-27 done      outcome: Second fixture excalidraw confirmed P2, this.x!() contextual calls fixed, dynamic recall 61/61, merged 23d2a62
+    next                    —
     pinned
     mode                    code
     boundary                packages/indexer/bench/** · generated data/m0b-* · plan.json P2 m0_result only · scratch clone outside the repo
@@ -24,6 +24,7 @@ T3-m0b-alias-barrel-fixture      ledger task (rules.md §3 code features)      p
     non-goals               no new engine code, no UI, no daemon; do not vendor the fixture; no GPL deps
     proof                   generated data/m0b-engine-report.json + npm run check + change-log entry in context/product-plan/0 start.md
     stop                    stop and report if no suitable permissive fixture is found or the bench needs engine changes beyond config
+    prevents                packages/indexer/test/indexer.test.ts:158 contextual member calls
     came from               T1 review 2026-10-19; USER 'yes do rec all'
     links                   4 log/ledger.md (every transition + its evidence)
     harness                 any

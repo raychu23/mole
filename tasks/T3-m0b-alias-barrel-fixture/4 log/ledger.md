@@ -9,4 +9,6 @@ ledger (newest last, nothing deleted)
     2026-10-20 01:05      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T3-m0b-alias-barrel-fixture → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-20 01:06      verified → integrated      merge merged to main 0e1fea5, npm run check 16 pass · combined checks exit 0
     2026-10-20 01:06      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-27 16:40      integrated → done      outcome: Second fixture excalidraw confirmed P2, this.x!() contextual calls fixed, dynamic recall 61/61, merged 23d2a62 · resources: retain · prevents: packages/indexer/test/indexer.test.ts:158 contextual member calls
+    2026-10-27 16:40      prevents: packages/indexer/test/indexer.test.ts:158 contextual member calls [source: tasks/T3-m0b-alias-barrel-fixture; added: 2026-10-27]
 ```
