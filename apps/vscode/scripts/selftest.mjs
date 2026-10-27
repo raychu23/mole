@@ -1,4 +1,4 @@
-// Real-editor proof for T2: launches a separate VS Code window (own user-data dir) with the built extension on a scratch
+// Real-editor proof for T2: launches a separate VS Code window (own user-data dir) with the built extension on a scratch // [source: tasks/T8-m1-click-every-node; added: 2026-10-27]
 // COPY of the read-only fixture, switches through N files, records warm file-switch latency inside the real webview,
 // takes a screenshot, then quits. Writes OUT (default "generated data/m1-latency.json") and SHOT (png).
 //   node scripts/selftest.mjs        (after `npm run build && npm run bundle`)
@@ -136,6 +136,11 @@ mkdirSync(dirname(CLICK_OUT), { recursive: true });
 writeFileSync(CLICK_OUT, JSON.stringify({ generatedAt: report.generatedAt, what: 'every non-focus node of 40 sampled file maps + the symbol map of each file\'s most-connected function opened in a real VS Code window; landed path:line read back from the editor after parking it on package.json:1; caller lines of symbol maps must contain a call `name(` or `name<`; the first files are also opened through a real DOM click in the webview', fixture: report.fixture, vscode: report.vscode, summary: report.clickAll, limits: ['one repo (ui-tui), one VS Code build', 'classes are not text-checked (their call sites mention members)', 'DOM click path is exercised for the first MOLE_DOM_CLICK_FILES file maps only (default 6)', 'the text check proves the caller line holds a call of that name, not that it resolves to the same declaration'], records: (res.openChecks ?? []).map((c) => ({ via: c.via, map: c.map, id: c.id, role: c.role, path: c.path, line: c.line, landedPath: c.landedPath, landedLine: c.landedLine, textOk: c.textHasFocusName, ok: c.ok })) }, null, 2) + '\n');
 mkdirSync(dirname(OUT), { recursive: true });
 writeFileSync(OUT, JSON.stringify(report, null, 2) + '\n');
+// a node that does not land on its path:line fails the run (T8)
+if (report.clickAll.checked === 0 || report.clickAll.failing.length > 0) {
+  console.error(`click check FAILED: ${report.clickAll.failing.length} of ${report.clickAll.checked} nodes did not land (see ${CLICK_OUT})`);
+  process.exitCode = 1;
+}
 // every run is kept: a loaded machine moves p95 by tens of ms, so quote the range, not one run
 const RUNS = join(dirname(OUT), 'm1-latency-runs.json');
 const runs = existsSync(RUNS) ? JSON.parse(readFileSync(RUNS, 'utf8')) : [];
