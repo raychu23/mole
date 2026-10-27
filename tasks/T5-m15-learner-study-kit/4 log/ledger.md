@@ -9,4 +9,6 @@ ledger (newest last, nothing deleted)
     2026-10-23 04:25      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T5-m15-learner-study-kit → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-23 04:26      verified → integrated      merge 2f982dd merge of ledger/t5-m15-learner-study-kit into main · combined checks exit 0
     2026-10-23 04:26      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-27 16:40      integrated → done      outcome: Human study kit built and reviewed, not yet run on people, merged 2f982dd · resources: retain · prevents: packages/daemon/test/study-score.test.ts:1 scorer validation tests
+    2026-10-27 16:40      prevents: packages/daemon/test/study-score.test.ts:1 scorer validation tests [source: tasks/T5-m15-learner-study-kit; added: 2026-10-27]
 ```
