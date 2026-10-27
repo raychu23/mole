@@ -164,6 +164,9 @@ class MolePanel {
       this.painters.delete(Number(m.seq));
     } else if (m.type === 'open') {
       await this.openFile(String(m.path), Number(m.line));
+      if (this.openWait && this.openWait.id === m.id) this.openWait.done('opened');
+    } else if (m.type === 'selftestClickMissing') {
+      if (this.openWait && this.openWait.id === m.id) this.openWait.done('missing');
     } else if (m.type === 'error') {
       output.appendLine(`webview error: ${String(m.message)}`);
     } else if (m.type === 'impact') {
@@ -172,6 +175,22 @@ class MolePanel {
     } else if (m.type === 'reindex') {
       await this.reindex();
     }
+  }
+
+  /** self-test: the pending DOM click (matched by node id, so a late message from an earlier click cannot resolve a newer one) */
+  openWait?: { id: string; done: (r: 'opened' | 'missing') => void };
+
+  /** self-test: make the webview click a node through its real DOM handler, then wait until the host handled the resulting 'open'. */
+  async domClick(id: string): Promise<'opened' | 'missing' | 'timeout'> {
+    if (!this.panel) return 'missing';
+    const done = new Promise<'opened' | 'missing' | 'timeout'>((ok) => {
+      this.openWait = { id, done: ok };
+      setTimeout(() => ok('timeout'), 4000);
+    });
+    await this.panel.webview.postMessage({ type: 'selftestClick', id });
+    const r = await done;
+    this.openWait = undefined;
+    return r;
   }
 
   /** Click on a node: open `file:line` in an editor group other than the panel's. */
@@ -286,22 +305,48 @@ async function selfTest(mole: MolePanel, cfgPath: string): Promise<void> {
     }
     // click-to-open, EVERY node: the line the webview would send (clickLine) must be where the editor lands. For a symbol map the
     // landed line of each caller must also contain the focus symbol's name (it is a real call site, not the caller's declaration).
-    type Open = { map: string; id: string; role: string; path: string; line: number; landedPath?: string; landedLine?: number; textHasFocusName?: boolean; ok: boolean };
+    type Open = { map: string; id: string; role: string; path: string; line: number; via: 'openFile' | 'dom'; landedPath?: string; landedLine?: number; textHasFocusName?: boolean; ok: boolean };
     const openChecks: Open[] = [];
+    const sentinel = async (): Promise<void> => {
+      // park the editor somewhere no node points at, so a navigation that silently does nothing cannot pass by coincidence
+      await mole.openFile('package.json', 1);
+    };
+    const callOf = (name: string): RegExp => new RegExp(`(?<![\\w$])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*[(<]`);
+    const record = (mapName: string, n: { id: string; role: string; path: string }, line: number, via: 'openFile' | 'dom', checkText: string | undefined): void => {
+      const ed = vscode.window.activeTextEditor;
+      const landedPath = ed ? toRepoPath(root, ed.document.uri.fsPath) : undefined;
+      const landedLine = ed ? ed.selection.active.line + 1 : undefined;
+      const text = ed && landedLine ? ed.document.lineAt(landedLine - 1).text : '';
+      const needsText = checkText !== undefined && n.role === 'caller';
+      const textHasFocusName = needsText ? callOf(checkText).test(text.replace(/\/\/.*$/, '')) : undefined;
+      openChecks.push({ map: mapName, id: n.id, role: n.role, path: n.path, line, via, landedPath, landedLine, textHasFocusName, ok: landedPath === n.path && landedLine === line && (!needsText || textHasFocusName === true) });
+    };
     const openAll = async (target: string, checkText: string | undefined): Promise<void> => {
       const mp = await new MoleClient({ root, stateDir: process.env.MOLE_STATE_DIR }).map(target);
       for (const n of mp.nodes.filter((x) => x.role !== 'focus')) {
         const line = clickLine(n);
+        await sentinel();
         await mole.openFile(n.path, line);
-        const ed = vscode.window.activeTextEditor;
-        const landedPath = ed ? toRepoPath(root, ed.document.uri.fsPath) : undefined;
-        const landedLine = ed ? ed.selection.active.line + 1 : undefined;
-        const text = ed && landedLine ? ed.document.lineAt(landedLine - 1).text : '';
-        const needsText = checkText !== undefined && n.role === 'caller';
-        const textHasFocusName = needsText ? text.includes(checkText) : undefined;
-        openChecks.push({ map: target, id: n.id, role: n.role, path: n.path, line, landedPath, landedLine, textHasFocusName, ok: landedPath === n.path && landedLine === line && (!needsText || textHasFocusName === true) });
+        record(target, n, line, 'openFile', checkText);
       }
     };
+    // the real DOM click path (webview click handler -> postMessage -> host open): for the first files, whose map is the one the panel shows
+    const domFiles = [shotFile, ...cfg.files.filter((x) => x !== shotFile)].slice(0, Number(process.env.MOLE_DOM_CLICK_FILES ?? 6));
+    for (const file of domFiles) {
+      const mp = await new MoleClient({ root, stateDir: process.env.MOLE_STATE_DIR }).map(file);
+      for (const n of mp.nodes.filter((x) => x.role !== 'focus')) {
+        const line = clickLine(n);
+        let result: 'opened' | 'missing' | 'timeout' = 'missing';
+        for (let attempt = 0; attempt < 2 && result !== 'opened'; attempt++) {
+          await sentinel();
+          await switchTo(file); // panel shows this file's map again (opening a node moved the editor, and the panel follows it)
+          await new Promise((r) => setTimeout(r, 150));
+          result = await mole.domClick(n.id);
+        }
+        if (result !== 'opened') openChecks.push({ map: file, id: n.id, role: n.role, path: n.path, line, via: 'dom', ok: false });
+        else record(file, n, line, 'dom', undefined);
+      }
+    }
     // every sampled file's map, plus the symbol map of its most-connected function (functions only: a class's call site is wherever
     // an instance member is used, so its line need not contain the class name)
     const clickFiles = [shotFile, ...cfg.files.filter((x) => x !== shotFile)].slice(0, Number(process.env.MOLE_CLICK_FILES ?? 40));
