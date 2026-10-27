@@ -9,4 +9,6 @@ ledger (newest last, nothing deleted)
     2026-10-25 18:31      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T6-m15b-agent-cost-excalidraw → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-25 18:32      verified → integrated      merge 00b4d82 merge of ledger/t6-m15b-agent-cost-excalidraw into main · combined checks exit 0
     2026-10-25 18:32      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-27 16:40      integrated → done      outcome: 66 runs on excalidraw: correctness 66/66, only call paths show a gap, 5-20% claim withdrawn after review, merged · resources: retain · prevents: packages/daemon/bench/m15/grade.mjs:157 limits emitted with every 
+    2026-10-27 16:40      prevents: packages/daemon/bench/m15/grade.mjs:157 limits emitted with every result [source: tasks/T6-m15b-agent-cost-excalidraw; added: 2026-10-27]
 ```
