@@ -1,22 +1,22 @@
 ---
-state: running
+state: submitted
 owner: unclaimed
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t8-m1-click-every-node
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T8-m1-click-every-node
 base: 46ed9be
 reviewer:
-updated: 2026-10-27 16:41
-status: ledger running
-next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+updated: 2026-10-27 16:46
+status: ledger submitted
+next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
 claimed: 2026-10-27 16:41
 ---
 ```notes
 T8-m1-click-every-node      ledger task (rules.md §3 code features)      project tasks
     goal                    Close the M1 acceptance gap 'every node opens file:line': in the real VS Code window, open EVERY node of a file map and a symbol map, and for callers check the landed line is a real call site of the focus symbol (T7 changed the click target and was only unit-tested in the webview)
     done-when               1) selftest opens every non-focus node of the shotFile map and of a symbol map through the same line rule the webview uses (clickLine), records landed path/line per node; 2) every node lands on its path:line (100%); 3) for the symbol map each caller's landed line text contains the focus symbol name; 4) generated data/m1-click-all.json with counts + any failing node; 5) selftest still passes the earlier checks (latency, restore, impact, failure cases); 6) npm run check passes
-    status                  2026-10-27 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T8-m1-click-every-node · branch ledger/t8-m1-click-every-node
-    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+    status                  2026-10-27 submitted      report: selftest now opens every node: 761/761 landed on path:line in real VS Code (40 file maps + 40 symbol maps), 103/
+    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
     pinned
     mode                    code
     boundary                apps/vscode/src/extension.ts, apps/vscode/scripts/selftest.mjs, apps/vscode/webview/render.ts (export clickLine only), generated data/m1-click-all.json
