@@ -9,4 +9,6 @@ ledger (newest last, nothing deleted)
     2026-10-25 18:42      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T7-map-callsite-lines → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-25 18:43      verified → integrated      merge a16f9db merge of ledger/t7-map-callsite-lines into main · combined checks exit 0
     2026-10-25 18:43      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-27 16:40      integrated → done      outcome: Callers/importers carry call/import site line in text, JSON and panel, excalidraw lines equal grep -n, merged · resources: retain · prevents: packages/daemon/test/daemon.test.ts:38 call-site lines tests
+    2026-10-27 16:40      prevents: packages/daemon/test/daemon.test.ts:38 call-site lines tests [source: tasks/T7-map-callsite-lines; added: 2026-10-27]
 ```
