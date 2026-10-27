@@ -35,7 +35,7 @@ function indexed(files: Record<string, string>) {
   return ix.db;
 }
 
-describe('call-site lines (T7)', () => {
+describe('call-site lines (T7)', () => { // [source: tasks/T7-map-callsite-lines; added: 2026-10-27]
   // doIt is declared on line 4 of user.ts and calls target() on lines 6 and 8
   const FILES = {
     'src/lib.ts': 'export function target() {\n  return 1;\n}\n',
@@ -259,7 +259,7 @@ describe('daemon robustness (T2 review)', () => {
     for (const r of res) if (r.status === 'rejected') expect(r.reason).toBeInstanceOf(AlreadyRunning);
   }, 60000);
 
-  it('a full re-index never makes an indexed file look "not-indexed"', async () => {
+  it('a full re-index never makes an indexed file look "not-indexed"', async () => { // [source: tasks/T2-m1-per-file-map; added: 2026-10-27]
     const root = repo(SMALL);
     const stateDir = join(root, '.state');
     const d = new Daemon({ root, stateDir, watch: false });

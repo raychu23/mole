@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'; // [source: tasks/T5-m15-learner-study-kit; added: 2026-10-27]
 // @ts-expect-error plain .mjs without types
 import { scoreOne, summarise, validate } from '../../../study/m15-learner/score.mjs';
 

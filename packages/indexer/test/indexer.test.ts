@@ -121,7 +121,7 @@ describe('incremental update', () => {
   });
 });
 
-describe('review fixes (T1 adversarial review)', () => {
+describe('review fixes (T1 adversarial review)', () => { // [source: tasks/T1-m0-engine-spike; added: 2026-10-27]
   it('updateFile drops edges that point at a symbol the file no longer defines', () => {
     const root = repo({
       'src/a.ts': 'export function a() {\n  return 1;\n}\n',
@@ -155,7 +155,7 @@ describe('review fixes (T1 adversarial review)', () => {
   });
 });
 
-describe('contextual member calls', () => {
+describe('contextual member calls', () => { // [source: tasks/T3-m0b-alias-barrel-fixture; added: 2026-10-27]
   it('this.x!() inside an object literal passed to a typed parameter resolves to the interface member', () => {
     const root = repo({
       'src/types.ts': 'export interface Action {\n  name: string;\n  checked?: (n: number) => boolean;\n  perform: () => boolean;\n}\n',
