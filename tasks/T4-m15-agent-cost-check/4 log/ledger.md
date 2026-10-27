@@ -9,4 +9,6 @@ ledger (newest last, nothing deleted)
     2026-10-22 17:22      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T4-m15-agent-cost-check → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-22 17:22      verified → integrated      merge ac6ab19 Merge branch ledger/t4-m15-agent-cost-check into main · combined checks exit 0
     2026-10-22 17:22      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-27 16:40      integrated → done      outcome: 78 runs on ui-tui: no correctness effect, no cost saving shown, claim stays a hypothesis, merged ac6ab19 · resources: retain · prevents: packages/daemon/bench/m15/grade.mjs:157 limits and lenient/subset scoring 
+    2026-10-27 16:40      prevents: packages/daemon/bench/m15/grade.mjs:157 limits and lenient/subset scoring emitted with every result [source: tasks/T4-m15-agent-cost-check; added: 2026-10-27]
 ```
