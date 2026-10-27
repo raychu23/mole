@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-10-27 16:46      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T8-m1-click-every-node → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-27 17:07      submitted → verified      reviewer subagent sa-0-6db3d303 · findings: 5 fixes: editor parked on package.json:1 before each open (no false pass), strict call regex instead of includes, real DOM click path exercised (96/96), selftest writes m1-clic
     2026-10-27 17:07      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T8-m1-click-every-node → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-27 17:08      verified → integrated      merge d0d9c1e merge of ledger/t8-m1-click-every-node into main · combined checks exit 0
+    2026-10-27 17:08      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
