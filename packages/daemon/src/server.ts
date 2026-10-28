@@ -17,6 +17,8 @@ export interface DaemonOptions {
   stateDir?: string;
   /** Watch the source tree and re-index changed files (default true). */
   watch?: boolean;
+  /** Stop by itself after this long without any client request (0 or unset = never). The editor starts a new one on next use. */
+  idleMs?: number;
   log?: (line: string) => void;
 }
 
@@ -65,10 +67,14 @@ export function normalizeTarget(root: string, target: string): string {
   return t;
 }
 
-/** Worker file: dist/worker.js next to this module, or (under vitest, which runs the .ts sources) the built copy. */
+/**
+ * Worker file: dist/worker.js next to this module, worker.cjs next to a bundled daemon (the VS Code extension ships
+ * dist/daemon.cjs + dist/worker.cjs), or (under vitest, which runs the .ts sources) the built copy.
+ */
 function workerFile(): string {
   const here = fileURLToPath(import.meta.url);
-  return here.endsWith('.ts') ? join(dirname(here), '../dist/worker.js') : join(dirname(here), 'worker.js');
+  if (here.endsWith('.ts')) return join(dirname(here), '../dist/worker.js');
+  return [join(dirname(here), 'worker.js'), join(dirname(here), 'worker.cjs')].find((f) => existsSync(f)) ?? join(dirname(here), 'worker.js');
 }
 
 /**
@@ -86,6 +92,10 @@ export class Daemon {
   private watchers: FSWatcher[] = [];
   private pending = new Set<string>();
   private timer?: NodeJS.Timeout;
+  private idleTimer?: NodeJS.Timeout;
+  private lastRequest = Date.now();
+  /** a worker job (full index or file update) is running: never idle, however long it takes */
+  private working = false;
   private status: DaemonStatus;
   private readonly log: (l: string) => void;
   private stopped?: () => void;
@@ -123,13 +133,23 @@ export class Daemon {
     this.spawnWorker();
     this.send({ type: 'indexAll' });
     if (this.opts.watch !== false) this.startWatching();
+    this.startIdleWatch();
     this.log(`listening on ${this.socket}`);
   }
 
-  async stop(): Promise<void> {
+  private stopping?: Promise<void>;
+
+  /** Idempotent: an idle stop followed by a shutdown request or a test cleanup must not close the database twice. */
+  stop(): Promise<void> {
+    this.stopping ??= this.doStop();
+    return this.stopping;
+  }
+
+  private async doStop(): Promise<void> {
     for (const w of this.watchers) w.close();
     this.watchers = [];
     clearTimeout(this.timer);
+    clearInterval(this.idleTimer);
     this.server?.close();
     await this.worker?.terminate();
     this.db?.close();
@@ -164,8 +184,11 @@ export class Daemon {
     if (m.type === 'ready') {
       this.openReader();
     } else if (m.type === 'indexing') {
+      this.working = true;
       if (this.status.state !== 'ready') this.status = { ...this.status, state: 'indexing' };
     } else if (m.type === 'done') {
+      this.working = false;
+      this.lastRequest = Date.now();
       this.status = { ...this.status, state: 'ready', commit: m.commit, files: m.stats.files, partialFiles: m.stats.partialFiles, nodes: m.stats.nodes, edges: m.stats.edges, indexedAt: Date.now(), lastError: undefined };
       this.log(`${m.full ? 'full index' : 'update'} ${m.ms.toFixed(0)} ms: ${m.stats.files} files, ${m.stats.nodes} nodes, ${m.stats.edges} edges`);
     } else {
@@ -185,10 +208,13 @@ export class Daemon {
   private startWatching(): void {
     const base = resolve(this.root, this.opts.srcDir ?? 'src');
     if (!existsSync(base)) return;
+    // editing counts as use: a person typing in one file for an hour must not lose the map
+
     try {
       this.watchers.push(
         watch(base, { recursive: true }, (_ev, file) => {
           if (!file || !/\.(?:ts|tsx|mts|cts)$/.test(file) || file.includes('node_modules')) return;
+          this.lastRequest = Date.now();
           this.pending.add(relative(this.root, join(base, file)).split(sep).join('/'));
           clearTimeout(this.timer);
           this.timer = setTimeout(() => this.flush(), 200);
@@ -248,6 +274,19 @@ export class Daemon {
     }
   }
 
+  /** Idle shutdown: a background process nobody asked for must not outlive its editor forever. Indexing never counts as idle. */
+  private startIdleWatch(): void {
+    const idle = this.opts.idleMs ?? 0;
+    if (idle <= 0) return;
+    this.idleTimer = setInterval(() => {
+      if (this.working || this.status.state === 'indexing' || this.status.state === 'starting') return;
+      if (Date.now() - this.lastRequest < idle) return;
+      this.log(`idle for ${Math.round(idle / 1000)} s: stopping`);
+      void this.stop();
+    }, Math.max(50, Math.min(30_000, Math.floor(idle / 4))));
+    this.idleTimer.unref();
+  }
+
   private onClient(s: Socket): void {
     let buf = '';
     s.setEncoding('utf8');
@@ -258,6 +297,7 @@ export class Daemon {
         const line = buf.slice(0, i);
         buf = buf.slice(i + 1);
         if (!line.trim()) continue;
+        this.lastRequest = Date.now();
         let res: RpcResponse;
         try {
           res = this.handle(JSON.parse(line) as RpcRequest);

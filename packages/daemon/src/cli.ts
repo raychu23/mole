@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // mole daemon | map | impact | status | stop | reindex  — thin CLI over the daemon (offerings F1.9).
+import { defaultSources } from './detect.js';
 import { resolve } from 'node:path';
 import { formatNeighborhood } from '@mole/core';
 import { ensureDaemon, MoleClient } from './client.js';
@@ -28,10 +29,12 @@ async function main(): Promise<number> {
   const { cmd, pos, flags } = parse(process.argv.slice(2));
   const root = resolve(str(flags.root) ?? process.cwd());
   const stateDir = str(flags['state-dir']);
-  const common = { root, stateDir, tsconfig: str(flags.tsconfig), srcDir: str(flags['src-dir']) };
+  const common = { root, stateDir, ...defaultSources(root, str(flags.tsconfig), str(flags['src-dir'])) };
 
   if (cmd === 'daemon') {
-    const d = new Daemon({ ...common, log: (l) => console.error(`[mole] ${l}`) });
+    // a background process nobody asked for must not outlive its editor: stop after 30 idle minutes (0 = never)
+    const idleMinutes = Number(str(flags['idle-minutes']) ?? 30);
+    const d = new Daemon({ ...common, idleMs: Number.isFinite(idleMinutes) && idleMinutes > 0 ? idleMinutes * 60_000 : 0, log: (l) => console.error(`[mole] ${l}`) });
     await d.start();
     for (const sig of ['SIGINT', 'SIGTERM'] as const) process.on(sig, () => void d.stop());
     await d.closed;
@@ -71,7 +74,7 @@ async function main(): Promise<number> {
       return 1;
     }
   }
-  console.error('usage: mole <daemon|map|impact|status|reindex|stop> [target] [--root DIR] [--state-dir DIR] [--tsconfig F] [--src-dir D] [--json]');
+  console.error('usage: mole <daemon|map|impact|status|reindex|stop> [target] [--root DIR] [--state-dir DIR] [--tsconfig F] [--src-dir D] [--idle-minutes N] [--json]');
   return cmd === 'help' ? 0 : 2;
 }
 

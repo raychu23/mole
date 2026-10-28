@@ -100,13 +100,13 @@ export function renderSvg(map: Neighborhood, layout: Layout, top: number, opts: 
 
 const STATE_COPY: Record<string, { title: string; hint: string }> = {
   indexing: { title: 'Indexing the repository…', hint: 'The map appears as soon as the first index finishes.' },
-  'not-indexed': { title: 'Not indexed', hint: 'This file is outside the indexed sources (or is not TypeScript).' },
+  'not-indexed': { title: 'Not indexed', hint: 'This file is outside the indexed sources (or is not TypeScript). If the whole project shows this, set the "mole.srcDir" setting to your source folder (and "mole.tsconfig" if needed).' },
   'index-unavailable': { title: 'Index unavailable', hint: 'The Mole daemon is not answering. Run "Mole: Re-index repository" or check the Mole output channel.' },
 };
 
 export function renderEmpty(map: Neighborhood): string {
   const c = STATE_COPY[map.state] ?? { title: map.state, hint: '' };
-  return `<div class="empty ${esc(map.state)}"><div class="title">${esc(c.title)}</div><div class="hint">${esc(map.message && map.message.replace(/…|\./g, '').toLowerCase() !== c.title.replace(/…|\./g, '').toLowerCase() ? map.message : c.hint)}</div></div>`;
+  return `<div class="empty ${esc(map.state)}"><div class="title">${esc(c.title)}</div><div class="hint">${esc(map.state !== 'not-indexed' && map.message && map.message.replace(/…|\./g, '').toLowerCase() !== c.title.replace(/…|\./g, '').toLowerCase() ? map.message : c.hint)}</div></div>`;
 }
 
 export function ago(ms: number): string {

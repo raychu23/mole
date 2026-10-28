@@ -20,6 +20,8 @@ const SHOT2 = process.env.SHOT2 ?? resolve(ext, '../../generated data/m1-panel-u
 const N = Number(process.env.FILES ?? 40);
 const SHOT_FILE = process.env.SHOT_FILE ?? 'src/gatewayClient.ts';
 const CODE = process.env.CODE_BIN ?? 'code';
+// VSIX=<file>: test the INSTALLED extension in a clean profile (own --user-data-dir and --extensions-dir) instead of the repo build
+const VSIX = process.env.VSIX ? resolve(process.env.VSIX) : undefined;
 
 rmSync(SCRATCH, { recursive: true, force: true });
 mkdirSync(SCRATCH, { recursive: true });
@@ -42,8 +44,14 @@ const files = all.filter((_, i) => i % step === 0).slice(0, N);
 const cfg = { out: join(SCRATCH, 'out.json'), files, shot: join(SCRATCH, 'shot'), shot2: join(SCRATCH, 'shot2'), shot3: join(SCRATCH, 'shot3'), shotFile: SHOT_FILE };
 writeFileSync(join(SCRATCH, 'selftest.json'), JSON.stringify(cfg));
 const env = { ...process.env, MOLE_SELFTEST: join(SCRATCH, 'selftest.json'), MOLE_STATE_DIR: join(SCRATCH, 'state'), MOLE_TSCONFIG: 'tsconfig.build.json', MOLE_SRC_DIR: 'src' };
+if (VSIX) {
+  rmSync(join(SCRATCH, 'ext'), { recursive: true, force: true });
+  rmSync(join(SCRATCH, 'ud'), { recursive: true, force: true });
+  console.log(execFileSync(CODE, ['--install-extension', VSIX, '--force', '--user-data-dir', join(SCRATCH, 'ud'), '--extensions-dir', join(SCRATCH, 'ext')], { encoding: 'utf8' }).trim());
+}
+const extArg = VSIX ? [] : ['--extensionDevelopmentPath', ext];
 try { execFileSync('osascript', ['-e', 'tell application "Code" to activate']); } catch {}
-const child = spawn(CODE, ['--new-window', '--user-data-dir', join(SCRATCH, 'ud'), '--extensions-dir', join(SCRATCH, 'ext'), '--extensionDevelopmentPath', ext, '--disable-workspace-trust', '--skip-welcome', '--skip-release-notes', ws], { env, stdio: 'ignore', detached: true });
+const child = spawn(CODE, ['--new-window', '--user-data-dir', join(SCRATCH, 'ud'), '--extensions-dir', join(SCRATCH, 'ext'), ...extArg, '--disable-workspace-trust', '--skip-welcome', '--skip-release-notes', ws], { env, stdio: 'ignore', detached: true });
 child.unref();
 
 const deadline = Date.now() + 240_000;
@@ -79,7 +87,7 @@ if (res.error) {
 }
 // ---- phase 2: relaunch on the same profile; the panel must come back without any command
 const restoreOut = join(SCRATCH, 'restore.json');
-const child2 = spawn(CODE, ['--new-window', '--user-data-dir', join(SCRATCH, 'ud'), '--extensions-dir', join(SCRATCH, 'ext'), '--extensionDevelopmentPath', ext, '--disable-workspace-trust', '--skip-welcome', '--skip-release-notes', ws], { env: { ...env, MOLE_SELFTEST: '', MOLE_SELFTEST_RESTORE: restoreOut }, stdio: 'ignore', detached: true });
+const child2 = spawn(CODE, ['--new-window', '--user-data-dir', join(SCRATCH, 'ud'), '--extensions-dir', join(SCRATCH, 'ext'), ...extArg, '--disable-workspace-trust', '--skip-welcome', '--skip-release-notes', ws], { env: { ...env, MOLE_SELFTEST: '', MOLE_SELFTEST_RESTORE: restoreOut }, stdio: 'ignore', detached: true });
 child2.unref();
 let restored = null;
 const d2 = Date.now() + 60_000;

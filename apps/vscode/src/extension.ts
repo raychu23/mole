@@ -1,4 +1,4 @@
-import { existsSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import * as vscode from 'vscode';
 import type { Neighborhood } from '@mole/core';
@@ -44,7 +44,11 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
         mole.adopt(panel);
       },
     }),
-    vscode.commands.registerCommand('mole.openMap', () => mole.open()),
+    // an explicit request starts everything, even in a workspace where Mole stayed dormant
+    vscode.commands.registerCommand('mole.openMap', async () => {
+      await mole.boot();
+      await mole.open();
+    }),
     vscode.commands.registerCommand('mole.toggleImpact', () => mole.toggleImpact()),
     vscode.commands.registerCommand('mole.reindex', () => mole.reindex()),
     vscode.window.onDidChangeActiveTextEditor(debounce((e: vscode.TextEditor | undefined) => void mole.follow(e, performance.now()), SWITCH_DEBOUNCE_MS)),
@@ -53,7 +57,18 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     output.appendLine('no workspace folder: Mole is idle');
     return;
   }
+  const testing = Boolean(process.env.MOLE_SELFTEST || process.env.MOLE_SELFTEST_RESTORE);
+  // a public extension must be silent where it has nothing to say: no TypeScript here = no panel, no background process
+  const dormant = !testing && !(await hasTypeScript());
+  if (process.env.MOLE_IDLE_PROBE) {
+    setTimeout(() => writeFileSync(String(process.env.MOLE_IDLE_PROBE), JSON.stringify({ dormant, panel: mole.hasPanel() || hasMoleTab() })), 6000);
+  }
+  if (dormant) {
+    output.appendLine('no TypeScript found in this workspace: Mole stays idle (run "Mole: Open map beside the code" to start it anyway)');
+    return;
+  }
   void mole.boot();
+  if (process.env.MOLE_REVIVE_PROBE) void reviveProbe(mole, root, process.env.MOLE_REVIVE_PROBE, process.env.MOLE_REVIVE_FILE ?? '');
   if (process.env.MOLE_SELFTEST) void selfTest(mole, process.env.MOLE_SELFTEST);
   else if (process.env.MOLE_SELFTEST_RESTORE) void restoreProbe(mole, process.env.MOLE_SELFTEST_RESTORE);
   else if (vscode.workspace.getConfiguration('mole').get<boolean>('autoOpen', true)) {
@@ -62,6 +77,48 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
       if (!mole.hasPanel() && !hasMoleTab()) void mole.open();
     }, 1500);
   }
+}
+
+/**
+ * MOLE_REVIVE_PROBE=<json path>: after the daemon stops itself (idle shutdown, MOLE_IDLE_MINUTES), switch to a file and check that
+ * the extension starts a new daemon and still answers. Used by the install check; never active in normal use.
+ */
+async function reviveProbe(mole: MolePanel, root: string, outPath: string, file: string): Promise<void> {
+  const out: Record<string, unknown> = {};
+  try {
+    await mole.boot();
+    const editor = await vscode.window.showTextDocument(vscode.Uri.file(join(root, file)), { viewColumn: vscode.ViewColumn.One, preview: false });
+    const c = new MoleClient({ root, stateDir: process.env.MOLE_STATE_DIR });
+    const t0 = Date.now();
+    out.ranAtStart = await c.running();
+    // watch the lock file, not the socket: asking the daemon whether it is alive would itself count as activity and keep it up
+    const dir = process.env.MOLE_STATE_DIR ?? '';
+    const lockExists = (): boolean => existsSync(dir) && readdirSync(dir).some((n) => n.endsWith('.lock'));
+    while (lockExists() && Date.now() - t0 < 120_000) await new Promise((r) => setTimeout(r, 500));
+    out.stoppedByItself = !(await c.running());
+    out.stoppedAfterMs = Date.now() - t0;
+    await new Promise((r) => setTimeout(r, 1500)); // let the panel exist
+    const sample = await mole.follow(editor, performance.now());
+    out.stateAfterSwitch = sample?.state ?? 'no sample';
+    for (let i = 0; i < 40 && !(await c.running()); i++) await new Promise((r) => setTimeout(r, 250));
+    out.daemonBackUp = await c.running();
+    out.mapAfterRevive = (await c.map(file)).state;
+  } catch (e) {
+    out.error = (e as Error).message;
+  }
+  writeFileSync(outPath, JSON.stringify(out, null, 2));
+}
+
+/** A tsconfig or any .ts/.tsx file outside dependency and build folders. */
+async function hasTypeScript(): Promise<boolean> {
+  const found = await vscode.workspace.findFiles('{**/tsconfig*.json,**/*.ts,**/*.tsx}', '**/{node_modules,dist,out,build,.git}/**', 1);
+  return found.length > 0;
+}
+
+/** node:sqlite (the graph store) needs Node 22.13+; VS Code 1.101+ ships it. Forks on older Electron get a clear message instead of a crash. */
+function nodeTooOld(): string | undefined {
+  const [maj = 0, min = 0] = process.versions.node.split('.').map(Number);
+  return maj > 22 || (maj === 22 && min >= 13) ? undefined : `This editor runs Node ${process.versions.node}; Mole needs Node 22.13 or newer (VS Code 1.101+). Update the editor, or use Mole from the command line.`;
 }
 
 /** A Mole webview tab exists in some editor group (restored or open). */
@@ -84,6 +141,9 @@ class MolePanel {
   private ready?: () => void;
   private readonly ui = new Promise<void>((r) => (this.ready = r));
   private pollTimer?: NodeJS.Timeout;
+  private booting?: Promise<void>;
+  private unsupported?: string;
+  private lastRevive = 0;
   samples: Sample[] = [];
 
   constructor(private readonly ctx: vscode.ExtensionContext, private readonly root: string | undefined) {}
@@ -92,11 +152,25 @@ class MolePanel {
     return this.panel !== undefined;
   }
 
-  /** Start (or find) the repo's daemon. Never throws: the panel shows "index unavailable" instead. */
-  async boot(): Promise<void> {
+  /** Start (or find) the repo's daemon, once. Never throws: the panel shows "index unavailable" instead. */
+  boot(): Promise<void> {
+    this.booting ??= this.startDaemon();
+    return this.booting;
+  }
+
+  /** (Re)start the daemon: it stops itself after `mole.idleMinutes` without requests, so the editor starts a new one on demand. */
+  private async startDaemon(): Promise<void> {
     if (!this.root) return;
+    this.unsupported = nodeTooOld();
+    if (this.unsupported) {
+      output.appendLine(this.unsupported);
+      // the panel must say so, not stay blank
+      void this.follow(vscode.window.activeTextEditor, performance.now());
+      return;
+    }
     const cfg = vscode.workspace.getConfiguration('mole');
-    const cli = cfg.get<string>('daemonCli') || resolve(this.ctx.extensionPath, '../../packages/daemon/dist/cli.js');
+    const bundled = join(this.ctx.extensionPath, 'dist', 'daemon.cjs');
+    const cli = cfg.get<string>('daemonCli') || (existsSync(bundled) ? bundled : resolve(this.ctx.extensionPath, '../../packages/daemon/dist/cli.js'));
     if (!existsSync(cli)) {
       output.appendLine(`daemon cli not found at ${cli}; set mole.daemonCli`);
       this.client = new MoleClient({ root: this.root, stateDir: cfg.get<string>('stateDir') || undefined });
@@ -107,6 +181,7 @@ class MolePanel {
       stateDir: cfg.get<string>('stateDir') || process.env.MOLE_STATE_DIR || undefined,
       tsconfig: cfg.get<string>('tsconfig') || process.env.MOLE_TSCONFIG || undefined,
       srcDir: cfg.get<string>('srcDir') || process.env.MOLE_SRC_DIR || undefined,
+      idleMinutes: process.env.MOLE_IDLE_MINUTES ? Number(process.env.MOLE_IDLE_MINUTES) : cfg.get<number>('idleMinutes', 30),
       nodePath: process.execPath,
       cliPath: cli,
       env: { ELECTRON_RUN_AS_NODE: '1' },
@@ -226,10 +301,19 @@ class MolePanel {
 
   private async send(target: string, startedAt = performance.now()): Promise<Sample | undefined> {
     const panel = this.panel;
-    if (!panel || !this.client) return undefined;
+    if (!panel || (!this.client && !this.unsupported)) return undefined;
     const seq = ++this.seq;
     const t0 = performance.now();
-    const map: Neighborhood = await this.client.map(target, this.impact);
+    let map: Neighborhood = this.unsupported
+      ? { state: 'index-unavailable', message: this.unsupported, nodes: [], edges: [], more: [] }
+      : await this.client!.map(target, this.impact);
+    if (map.state === 'index-unavailable' && !this.unsupported && !process.env.MOLE_SELFTEST && Date.now() - this.lastRevive > 10_000) {
+      // the daemon stopped (idle shutdown, crash, or killed): start a new one and ask again, at most once per 10 s
+      this.lastRevive = Date.now();
+      output.appendLine('daemon not answering: starting a new one');
+      await this.startDaemon();
+      map = this.unsupported ? map : await this.client!.map(target, this.impact);
+    }
     const rpcMs = performance.now() - t0;
     if (seq !== this.seq || !this.panel) return undefined; // a newer switch overtook this one
     await Promise.race([this.ui, new Promise((ok) => setTimeout(ok, 8000))]);
