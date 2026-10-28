@@ -6,6 +6,8 @@ that exact line. The map follows you as you move between files.
 
 ![Mole panel next to the code](media/panel.png)
 
+*Mole on the [Excalidraw](https://github.com/excalidraw/excalidraw) source (MIT), file `binding.ts`.*
+
 Think of it as the "you are here" sign in a shopping mall, but for code. It is meant for people who are new to a
 codebase, and for reviewers who want to see how a change connects to the rest.
 
@@ -24,7 +26,7 @@ The map shows at most 25 boxes; the rest is summarised as "+N more".
 ## Install
 
 Install the `.vsix` file with `code --install-extension mole-code-map-<version>.vsix` (or Extensions view → ⋯ → Install from VSIX).
-Once it is published it will also be on the VS Code Marketplace and Open VSX (Cursor, Windsurf, VSCodium). Needs VS Code 1.101 or newer. The panel opens by itself in workspaces that contain TypeScript; in any other
+It is also on Open VSX (VSCodium, and the forks that use it) and the VS Code Marketplace. Needs VS Code 1.101 or newer. The panel opens by itself in workspaces that contain TypeScript; in any other
 workspace Mole stays silent (run **Mole: Open map beside the code** to start it anyway).
 
 ## Privacy
@@ -55,6 +57,10 @@ minutes (setting `mole.idleMinutes`; `0` = never) and the extension starts it ag
 - Needs the editor's built-in Node 22.13 or newer (VS Code 1.101+). Some VS Code forks on older Electron show a message instead of a map.
 - One background process per repository folder.
 - Tested on macOS only so far; Windows and Linux are not tested yet.
+
+## Source and license
+
+MIT. Source and issues: https://github.com/raychu23/mole-code-map
 
 ## Status
 

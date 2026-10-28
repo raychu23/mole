@@ -10,7 +10,8 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ext = resolve(here, '..');
-const FIX = process.env.FIXTURE ?? join(homedir(), '.hermes/hermes-agent/ui-tui');
+const FIX = process.env.FIXTURE ?? ''; // path of a TypeScript repository with a src/ folder (a scratch COPY is safest)
+if (!FIX) throw new Error('set FIXTURE=<path of a TypeScript repository with a src/ folder>');
 const SCRATCH = process.env.SCRATCH ?? join(process.env.TMPDIR ?? tmpdir(), 'mole-m1-selftest');
 const OUT = process.env.OUT ?? resolve(ext, '../../generated data/m1-latency.json');
 const SHOT = process.env.SHOT ?? resolve(ext, '../../generated data/m1-panel.png');

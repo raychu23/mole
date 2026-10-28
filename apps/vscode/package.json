@@ -5,7 +5,7 @@
   "type": "module",
   "displayName": "Mole: Code Map",
   "description": "A map of the file you are looking at, beside the code: what it defines, who calls it, what it calls, who imports it. Local only, TypeScript.",
-  "publisher": "mole",
+  "publisher": "raychu23",
   "engines": {
     "vscode": "^1.101.0"
   },
@@ -101,5 +101,15 @@
   },
   "extensionKind": [
     "workspace"
-  ]
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/raychu23/mole-code-map.git",
+    "directory": "apps/vscode"
+  },
+  "homepage": "https://github.com/raychu23/mole-code-map#readme",
+  "bugs": {
+    "url": "https://github.com/raychu23/mole-code-map/issues"
+  }
 }
