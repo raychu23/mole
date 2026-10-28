@@ -11,7 +11,7 @@ if (!process.argv[2]) throw new Error('usage: node scripts/export-public.mjs <ou
 
 const include = ['apps', 'packages', 'LICENSE', 'package.json', 'package-lock.json', 'tsconfig.base.json', 'tsconfig.json', 'vitest.config.ts'];
 // private tooling that references the author's machine, chats or unpublished studies
-const exclude = [/(^|\/)node_modules(\/|$)/, /(^|\/)dist(\/|$)/, /(^|\/)\.stage(\/|$)/, /\.vsix$/, /\.tsbuildinfo$/, /^packages\/daemon\/bench\/m15(\/|$)/, /^packages\/daemon\/test\/study-score\.test\.ts$/, /^packages\/indexer\/bench(\/|$)/, /^packages\/indexer\/test\/fixture-repo\.test\.ts$/, /^apps\/vscode\/PUBLISH\.md$/, /^\.DS_Store$/, /\.DS_Store$/];
+const exclude = [/(^|\/)node_modules(\/|$)/, /(^|\/)dist(\/|$)/, /(^|\/)\.stage(\/|$)/, /\.vsix$/, /\.tsbuildinfo$/, /^packages\/daemon\/bench\/m15(\/|$)/, /^packages\/daemon\/test\/study-score\.test\.ts$/, /^packages\/indexer\/bench(\/|$)/, /^packages\/indexer\/test\/fixture-repo\.test\.ts$/,  /^\.DS_Store$/, /\.DS_Store$/];
 const forbidden = [/\/Users\/[a-z0-9_-]+/i, /\.hermes/i, /raymond/i, /CS Code/, /docs-over-chat/i, /ledger/i, /\bT\d{1,2}-[a-z0-9-]+/, /AGENTS\.md/, /BEGIN [A-Z ]*PRIVATE KEY/, /(ghp|gho|ghs|pat|sk)[-_][A-Za-z0-9]{20,}/];
 // exceptions that are intended: the copyright holder's name in LICENSE, the source link in package manifests
 const allowed = { 'LICENSE': [/raymond/i] };
@@ -32,7 +32,8 @@ function walk(rel) {
 }
 for (const p of include) if (existsSync(join(root, p))) walk(p);
 cpSync(join(root, 'scripts/public-README.md'), join(out, 'README.md'));
-copied.push('README.md');
+cpSync(join(root, 'scripts/public-gitignore'), join(out, '.gitignore'));
+copied.push('README.md', '.gitignore');
 
 const hits = [];
 for (const rel of copied) {
