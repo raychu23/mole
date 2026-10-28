@@ -1,21 +1,21 @@
 ---
-state: proposed
-owner:
+state: ready
+owner: unclaimed
 repo:
 branch:
 worktree:
 base:
 reviewer:
 updated: 2026-10-28 08:03
-status: ledger proposed
-next: fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+status: ledger ready
+next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
 ---
 ```notes
 T10-public-repo-and-marketplace      ledger task (rules.md §3 code features)      project tasks
     goal                    Publish Mole as a public MIT-licensed source repo (clean export, no private context) and release mole-code-map 0.1.0 to Open VSX and the VS Code Marketplace, doing every step an agent can and giving Raymond exact links for the rest
     done-when               1) LICENSE (MIT) + manifest license/repository/homepage/bugs; 2) public export script that copies only an allowlist (apps, packages, configs, public README, LICENSE) with fresh history and a scan for private strings/paths; 3) public GitHub repo pushed from it; 4) new cropped screenshot of the panel on an MIT repo (no desktop, no menu bar); 5) .vsix rebuilt with repository set and published to Open VSX (namespace created) if the account can be made from Raymond's logged-in browser; 6) VS Code Marketplace publisher + PAT: done if possible, else exact direct links + steps; 7) npm run check passes; listing URL(s) checked by opening them
-    status                  2026-10-28 proposed
-    next                    fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+    status                  2026-10-28 ready      owner unclaimed
+    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
     pinned
     mode                    code
     boundary                apps/vscode/**, LICENSE, scripts/export-public.*, root README for the public export only, tasks/T10*
