@@ -1,13 +1,13 @@
 {
   "name": "@mole/vscode",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
-  "displayName": "Mole",
-  "description": "Mole: a map of the file you are looking at, beside the code",
+  "displayName": "Mole: Code Map",
+  "description": "A map of the file you are looking at, beside the code: what it defines, who calls it, what it calls, who imports it. Local only, TypeScript.",
   "publisher": "mole",
   "engines": {
-    "vscode": "^1.90.0"
+    "vscode": "^1.101.0"
   },
   "main": "./dist/extension.cjs",
   "activationEvents": [
@@ -18,15 +18,18 @@
     "commands": [
       {
         "command": "mole.openMap",
-        "title": "Mole: Open map beside the code"
+        "title": "Open map beside the code",
+        "category": "Mole"
       },
       {
         "command": "mole.toggleImpact",
-        "title": "Mole: Toggle impact view"
+        "title": "Toggle impact view",
+        "category": "Mole"
       },
       {
         "command": "mole.reindex",
-        "title": "Mole: Re-index repository"
+        "title": "Re-index repository",
+        "category": "Mole"
       }
     ],
     "configuration": {
@@ -52,21 +55,51 @@
         "mole.daemonCli": {
           "type": "string",
           "description": "Path to the mole daemon cli.js (default: the one next to this extension in the repo)."
+        },
+        "mole.idleMinutes": {
+          "type": "number",
+          "default": 30,
+          "minimum": 0,
+          "description": "The background indexer stops after this many minutes without a request and is restarted when needed (0 = never stop)."
         }
       }
     }
   },
   "scripts": {
     "build": "tsc -b",
-    "bundle": "node esbuild.mjs"
+    "bundle": "node esbuild.mjs",
+    "package": "node scripts/package.mjs"
   },
   "devDependencies": {
     "@types/vscode": "^1.90.0",
-    "esbuild": "^0.28.2"
+    "@vscode/vsce": "^4.0.0",
+    "esbuild": "^0.28.2",
+    "ovsx": "^1.3.0"
   },
   "dependencies": {
     "@mole/core": "*",
     "@mole/daemon": "*",
     "@mole/layout": "*"
-  }
+  },
+  "categories": [
+    "Visualization",
+    "Education",
+    "Other"
+  ],
+  "keywords": [
+    "code map",
+    "call graph",
+    "typescript",
+    "code navigation",
+    "learning",
+    "impact analysis"
+  ],
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#202430",
+    "theme": "dark"
+  },
+  "extensionKind": [
+    "workspace"
+  ]
 }

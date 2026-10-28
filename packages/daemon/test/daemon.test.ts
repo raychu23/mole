@@ -35,6 +35,29 @@ function indexed(files: Record<string, string>) {
   return ix.db;
 }
 
+describe('idle shutdown (T9)', () => {
+  it('a daemon with no requests stops itself and removes its lock and socket; requests keep it alive', async () => {
+    const root = repo(SMALL);
+    const stateDir = join(root, '.state');
+    const d = new Daemon({ root, stateDir, watch: false, idleMs: 600 });
+    await d.start();
+    cleanups.push(() => d.stop());
+    const c = new MoleClient({ root, stateDir });
+    await until(() => c.map('src/svc.ts'), (x) => x.state === 'ok');
+    // keep asking for 1.5 s (> idleMs): it must stay up
+    const end = Date.now() + 1500;
+    while (Date.now() < end) {
+      expect(await c.running()).toBe(true);
+      await new Promise((r) => setTimeout(r, 150));
+    }
+    // now go quiet: it must stop by itself
+    await Promise.race([d.closed, new Promise((_, no) => setTimeout(() => no(new Error('daemon did not stop when idle')), 5000))]);
+    expect(await c.running()).toBe(false);
+    const down = await c.map('src/svc.ts');
+    expect(down.state).toBe('index-unavailable'); // the editor reads this and starts a new daemon
+  }, 30000);
+});
+
 describe('call-site lines (T7)', () => { // [source: tasks/T7-map-callsite-lines; added: 2026-10-27]
   // doIt is declared on line 4 of user.ts and calls target() on lines 6 and 8
   const FILES = {

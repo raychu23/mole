@@ -82,17 +82,26 @@ export interface EnsureOptions extends ClientOptions {
   cliPath?: string;
   env?: NodeJS.ProcessEnv;
   waitMs?: number;
+  /** The daemon stops itself after this many idle minutes (default 30, 0 = never). */
+  idleMinutes?: number;
+}
+
+function defaultCli(): string {
+  const here = fileURLToPath(import.meta.url);
+  return here.endsWith('daemon.cjs') ? here : join(dirname(here), 'cli.js');
 }
 
 /** Start a detached daemon for the repo unless one answers. Returns a client; never throws on spawn failure. */
 export async function ensureDaemon(opts: EnsureOptions): Promise<MoleClient> {
   const client = new MoleClient(opts);
   if (await client.running()) return client;
-  const cli = opts.cliPath ?? join(dirname(fileURLToPath(import.meta.url)), 'cli.js');
+  // next to this module (dist/cli.js), or this very file when it is the bundled daemon.cjs the VS Code extension ships
+  const cli = opts.cliPath ?? defaultCli();
   const args = [cli, 'daemon', '--root', opts.root];
   if (opts.stateDir) args.push('--state-dir', opts.stateDir);
   if (opts.tsconfig) args.push('--tsconfig', opts.tsconfig);
   if (opts.srcDir) args.push('--src-dir', opts.srcDir);
+  if (opts.idleMinutes !== undefined) args.push('--idle-minutes', String(opts.idleMinutes));
   try {
     const child = spawn(opts.nodePath ?? process.execPath, args, { detached: true, stdio: 'ignore', env: { ...process.env, ...opts.env } });
     child.unref();
