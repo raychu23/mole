@@ -42,11 +42,11 @@
         },
         "mole.tsconfig": {
           "type": "string",
-          "description": "tsconfig to index (default: auto)."
+          "description": "tsconfig to take compiler options from (default: none, built-in defaults)."
         },
         "mole.srcDir": {
           "type": "string",
-          "description": "Source dir to index (default: src, or the tsconfig's files)."
+          "description": "Folder to index, relative to the workspace (default: src if it exists, otherwise the whole workspace; node_modules, dist and dot-folders are skipped)."
         },
         "mole.stateDir": {
           "type": "string",
@@ -54,7 +54,7 @@
         },
         "mole.daemonCli": {
           "type": "string",
-          "description": "Path to the mole daemon cli.js (default: the one next to this extension in the repo)."
+          "description": "Advanced: path to a Mole daemon cli. Default: the one bundled with this extension."
         },
         "mole.idleMinutes": {
           "type": "number",

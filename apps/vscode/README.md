@@ -31,7 +31,8 @@ workspace Mole stays silent (run **Mole: Open map beside the code** to start it 
 
 Everything runs on your machine. Mole makes no network requests, collects no telemetry and calls no AI model.
 It reads your source files with the TypeScript compiler and keeps its index in `.git/mole` inside the repository
-(or `.mole` when the folder is not a git repository). Delete that folder at any time.
+(or `.mole` when the folder is not a git repository). Delete that folder at any time. The background process listens on a
+local socket file in your temp folder (`mole-<id>.sock`), reachable only by your user; no network port is opened.
 
 ## How it works
 
@@ -43,7 +44,7 @@ minutes (setting `mole.idleMinutes`; `0` = never) and the extension starts it ag
 
 - **Mole: Open map beside the code**, **Mole: Toggle impact view**, **Mole: Re-index repository**
 - `mole.autoOpen` open the panel on startup (default on)
-- `mole.tsconfig`, `mole.srcDir` choose what is indexed (default: auto)
+- `mole.srcDir`, `mole.tsconfig` choose what is indexed (default: the `src` folder, or the whole workspace when there is no `src` folder)
 - `mole.stateDir` where the index lives, `mole.idleMinutes` idle shutdown
 
 ## Known limits

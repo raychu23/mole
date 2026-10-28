@@ -94,6 +94,8 @@ export class Daemon {
   private timer?: NodeJS.Timeout;
   private idleTimer?: NodeJS.Timeout;
   private lastRequest = Date.now();
+  /** a worker job (full index or file update) is running: never idle, however long it takes */
+  private working = false;
   private status: DaemonStatus;
   private readonly log: (l: string) => void;
   private stopped?: () => void;
@@ -182,8 +184,11 @@ export class Daemon {
     if (m.type === 'ready') {
       this.openReader();
     } else if (m.type === 'indexing') {
+      this.working = true;
       if (this.status.state !== 'ready') this.status = { ...this.status, state: 'indexing' };
     } else if (m.type === 'done') {
+      this.working = false;
+      this.lastRequest = Date.now();
       this.status = { ...this.status, state: 'ready', commit: m.commit, files: m.stats.files, partialFiles: m.stats.partialFiles, nodes: m.stats.nodes, edges: m.stats.edges, indexedAt: Date.now(), lastError: undefined };
       this.log(`${m.full ? 'full index' : 'update'} ${m.ms.toFixed(0)} ms: ${m.stats.files} files, ${m.stats.nodes} nodes, ${m.stats.edges} edges`);
     } else {
@@ -203,10 +208,13 @@ export class Daemon {
   private startWatching(): void {
     const base = resolve(this.root, this.opts.srcDir ?? 'src');
     if (!existsSync(base)) return;
+    // editing counts as use: a person typing in one file for an hour must not lose the map
+
     try {
       this.watchers.push(
         watch(base, { recursive: true }, (_ev, file) => {
           if (!file || !/\.(?:ts|tsx|mts|cts)$/.test(file) || file.includes('node_modules')) return;
+          this.lastRequest = Date.now();
           this.pending.add(relative(this.root, join(base, file)).split(sep).join('/'));
           clearTimeout(this.timer);
           this.timer = setTimeout(() => this.flush(), 200);
@@ -271,7 +279,7 @@ export class Daemon {
     const idle = this.opts.idleMs ?? 0;
     if (idle <= 0) return;
     this.idleTimer = setInterval(() => {
-      if (this.status.state === 'indexing' || this.status.state === 'starting') return;
+      if (this.working || this.status.state === 'indexing' || this.status.state === 'starting') return;
       if (Date.now() - this.lastRequest < idle) return;
       this.log(`idle for ${Math.round(idle / 1000)} s: stopping`);
       void this.stop();

@@ -13,7 +13,8 @@ chat; keep it in an environment variable or your password manager.
    `training data`; `prototype/` is a rejected demo and should not ship).
 3. **Name and publisher id.** Display name "Mole: Code Map", id `mole-code-map` (the plain name "Mole" is already used by a
    game-engine extension, and "CodeMap" / "Visual Code Map" exist). The publisher id in `package.json` (`mole`) is a placeholder.
-4. **Screenshot.** `media/panel.png` shows file names from the hermes-agent ui-tui repo. Replace it with a repo you are happy to show.
+4. **Screenshot.** `media/panel.png` shows file names from the hermes-agent ui-tui repo (MIT) and a full-window capture with the macOS menu bar, clock and an "Extension Development Host" title. Retake it, cropped to the editor, on a repo you are happy to show.
+5. **Where the extension lives in the repo.** It is in `apps/vscode`, so `npm run package` passes the marketplace image and link base as `<repo>/raw/HEAD/apps/vscode` (only when `MOLE_REPO_URL` is set). If the repo layout changes, change it in `apps/vscode/scripts/package.mjs`. After publishing, open the listing and check the screenshot loads.
 
 ## VS Code Marketplace (VS Code, and the Microsoft builds)
 1. Sign in at https://marketplace.visualstudio.com/manage with a Microsoft account and create a **publisher** (this is the publisher id).
@@ -37,7 +38,7 @@ chat; keep it in an environment variable or your password manager.
 ## Before every publish
 - `npm run check` passes, `npm run package -w @mole/vscode`, `node apps/vscode/scripts/install-check.mjs apps/vscode/<vsix>` passes (clean profile).
 - Bump `version` in `apps/vscode/package.json` and add a line to `CHANGELOG.md`.
-- **Tested so far: macOS only** (VS Code 1.141). Windows and Linux are untested: the daemon uses a Unix socket in `/tmp` on
+- **Tested so far: macOS only** (VS Code 1.141, which runs Node 24). VS Code 1.101 to 1.122 (Node 22, the minimum the manifest allows) has not been run. Windows and Linux are untested: the daemon uses a Unix socket in `/tmp` on
   macOS/Linux and a named pipe on Windows. Say so in the listing, or test them first.
 - Remote development (SSH, containers, WSL): the extension is marked `workspace`, so the daemon should run next to the files. Untested.
 

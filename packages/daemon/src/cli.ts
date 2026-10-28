@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // mole daemon | map | impact | status | stop | reindex  — thin CLI over the daemon (offerings F1.9).
+import { defaultSources } from './detect.js';
 import { resolve } from 'node:path';
 import { formatNeighborhood } from '@mole/core';
 import { ensureDaemon, MoleClient } from './client.js';
@@ -28,7 +29,7 @@ async function main(): Promise<number> {
   const { cmd, pos, flags } = parse(process.argv.slice(2));
   const root = resolve(str(flags.root) ?? process.cwd());
   const stateDir = str(flags['state-dir']);
-  const common = { root, stateDir, tsconfig: str(flags.tsconfig), srcDir: str(flags['src-dir']) };
+  const common = { root, stateDir, ...defaultSources(root, str(flags.tsconfig), str(flags['src-dir'])) };
 
   if (cmd === 'daemon') {
     // a background process nobody asked for must not outlive its editor: stop after 30 idle minutes (0 = never)

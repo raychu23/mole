@@ -164,6 +164,8 @@ class MolePanel {
     this.unsupported = nodeTooOld();
     if (this.unsupported) {
       output.appendLine(this.unsupported);
+      // the panel must say so, not stay blank
+      void this.follow(vscode.window.activeTextEditor, performance.now());
       return;
     }
     const cfg = vscode.workspace.getConfiguration('mole');
@@ -299,18 +301,18 @@ class MolePanel {
 
   private async send(target: string, startedAt = performance.now()): Promise<Sample | undefined> {
     const panel = this.panel;
-    if (!panel || !this.client) return undefined;
+    if (!panel || (!this.client && !this.unsupported)) return undefined;
     const seq = ++this.seq;
     const t0 = performance.now();
     let map: Neighborhood = this.unsupported
       ? { state: 'index-unavailable', message: this.unsupported, nodes: [], edges: [], more: [] }
-      : await this.client.map(target, this.impact);
+      : await this.client!.map(target, this.impact);
     if (map.state === 'index-unavailable' && !this.unsupported && !process.env.MOLE_SELFTEST && Date.now() - this.lastRevive > 10_000) {
       // the daemon stopped (idle shutdown, crash, or killed): start a new one and ask again, at most once per 10 s
       this.lastRevive = Date.now();
       output.appendLine('daemon not answering: starting a new one');
       await this.startDaemon();
-      map = await this.client.map(target, this.impact);
+      map = this.unsupported ? map : await this.client!.map(target, this.impact);
     }
     const rpcMs = performance.now() - t0;
     if (seq !== this.seq || !this.panel) return undefined; // a newer switch overtook this one

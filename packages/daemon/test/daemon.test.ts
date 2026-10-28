@@ -58,6 +58,34 @@ describe('idle shutdown (T9)', () => {
   }, 30000);
 });
 
+describe('default sources (T9)', () => {
+  it('uses src when it exists, the whole folder when it does not, and never overrides an explicit choice', async () => {
+    const { defaultSources } = await import('../src/detect.js');
+    const withSrc = repo(SMALL);
+    expect(defaultSources(withSrc)).toEqual({});
+    const noSrc = mkdtempSync(join(tmpdir(), 'mole-nosrc-'));
+    cleanups.push(() => rmSync(noSrc, { recursive: true, force: true }));
+    expect(defaultSources(noSrc)).toEqual({ srcDir: '.' });
+    expect(defaultSources(noSrc, 'tsconfig.json')).toEqual({ tsconfig: 'tsconfig.json', srcDir: undefined });
+    expect(defaultSources(noSrc, undefined, 'lib')).toEqual({ tsconfig: undefined, srcDir: 'lib' });
+  });
+
+  it('a repo with .ts files in packages/*/src and no root src folder is indexed, not left empty', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'mole-mono-'));
+    cleanups.push(() => rmSync(root, { recursive: true, force: true }));
+    mkdirSync(join(root, 'packages/a/src'), { recursive: true });
+    writeFileSync(join(root, 'packages/a/src/x.ts'), 'export function x(): number { return 1; }\n');
+    writeFileSync(join(root, 'packages/a/src/y.ts'), "import { x } from './x';\nexport const y = x();\n");
+    const { defaultSources } = await import('../src/detect.js');
+    const d = new Daemon({ root, stateDir: join(root, '.state'), watch: false, ...defaultSources(root) });
+    await d.start();
+    cleanups.push(() => d.stop());
+    const c = new MoleClient({ root, stateDir: join(root, '.state') });
+    const m = await until(() => c.map('packages/a/src/x.ts'), (r) => r.state === 'ok');
+    expect(m.nodes.some((n) => n.name === 'x')).toBe(true);
+  }, 30000);
+});
+
 describe('call-site lines (T7)', () => { // [source: tasks/T7-map-callsite-lines; added: 2026-10-27]
   // doIt is declared on line 4 of user.ts and calls target() on lines 6 and 8
   const FILES = {

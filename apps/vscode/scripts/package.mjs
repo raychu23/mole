@@ -31,6 +31,7 @@ const out = join(ext, `${m.name}-${m.version}.vsix`);
 rmSync(out, { force: true });
 const vsce = resolve(ext, '../../node_modules/.bin/vsce');
 // without a repository URL the README's relative screenshot cannot be rewritten for the marketplace: fine for a local .vsix, not for publishing
-const args = ['package', '--no-dependencies', '--skip-license', '--out', out, ...(process.env.MOLE_REPO_URL ? [] : ['--allow-missing-repository', '--no-rewrite-relative-links']), ...(process.env.MOLE_PRERELEASE ? ['--pre-release'] : [])];
+const args = ['package', '--no-dependencies', '--skip-license', '--out', out, // the extension lives in apps/vscode of the repository: vsce would rewrite the screenshot to <repo>/raw/HEAD/media/panel.png
+  ...(process.env.MOLE_REPO_URL ? ['--baseContentUrl', `${process.env.MOLE_REPO_URL.replace(/\/$/, '')}/blob/HEAD/apps/vscode`, '--baseImagesUrl', `${process.env.MOLE_REPO_URL.replace(/\/$/, '')}/raw/HEAD/apps/vscode`] : ['--allow-missing-repository', '--no-rewrite-relative-links']), ...(process.env.MOLE_PRERELEASE ? ['--pre-release'] : [])];
 execFileSync(vsce, args, { cwd: stage, stdio: 'inherit' });
 console.log(`\nbuilt ${out}`);
