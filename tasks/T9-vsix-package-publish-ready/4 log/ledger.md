@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-10-27 19:16      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T9-vsix-package-publish-ready → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-27 22:57      submitted → verified      reviewer sa-0-966848ee · findings: verified-with-fixes: F1 old-Node message not shown, F2 no-src repos empty, F3 marketplace image URL: all fixed + re-verified, low notes open (restart re-index, screenshot retake, probe 
     2026-10-27 22:57      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T9-vsix-package-publish-ready → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-27 22:58      verified → integrated      merge e047a48 · combined checks exit 0
+    2026-10-27 22:58      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
