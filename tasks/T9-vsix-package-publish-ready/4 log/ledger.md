@@ -5,4 +5,6 @@ ledger (newest last, nothing deleted)
     2026-10-27 18:51      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T9-vsix-package-publish-ready · branch ledger/t9-vsix-package-publish-ready · base be7097f
     2026-10-27 19:16      running → submitted      report: mole-code-map-0.1.0.vsix (3.1 MB) builds with npm run package, clean-profile install check passes: silent without TypeScript, idle shutdown + restart, 857/857 nodes (96 DOM clicks) from the installed extension, p
     2026-10-27 19:16      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T9-vsix-package-publish-ready → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-27 22:57      submitted → verified      reviewer sa-0-966848ee · findings: verified-with-fixes: F1 old-Node message not shown, F2 no-src repos empty, F3 marketplace image URL: all fixed + re-verified, low notes open (restart re-index, screenshot retake, probe 
+    2026-10-27 22:57      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T9-vsix-package-publish-ready → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
