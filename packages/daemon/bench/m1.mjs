@@ -10,7 +10,8 @@ import { Daemon, MoleClient } from '../dist/index.js';
 import { layoutNeighborhood, newHome, nextTop, ROW_H } from '../../layout/dist/index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const FIX = process.env.FIXTURE ?? join(homedir(), '.hermes/hermes-agent/ui-tui');
+const FIX = process.env.FIXTURE ?? ''; // path of a TypeScript repository with a src/ folder (a scratch COPY is safest)
+if (!FIX) throw new Error('set FIXTURE=<path of a TypeScript repository with a src/ folder>');
 const OUT = process.env.OUT ?? resolve(here, '../../../generated data/m1-stability.json');
 const SWITCHES = Number(process.env.SWITCHES ?? 10);
 const state = mkdtempSync(join(process.env.TMPDIR ?? tmpdir(), 'mole-m1-'));

@@ -14,7 +14,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const vsix = resolve(process.argv[2] ?? '');
 if (!existsSync(vsix)) throw new Error('usage: node scripts/install-check.mjs <extension.vsix>');
 const CODE = process.env.CODE_BIN ?? 'code';
-const FIX = process.env.FIXTURE ?? join(homedir(), '.hermes/hermes-agent/ui-tui');
+const FIX = process.env.FIXTURE ?? ''; // path of a TypeScript repository with a src/ folder (a scratch COPY is safest)
+if (!FIX) throw new Error('set FIXTURE=<path of a TypeScript repository with a src/ folder>');
 const SCRATCH = join(process.env.TMPDIR ?? tmpdir(), 'mole-t9-install');
 rmSync(SCRATCH, { recursive: true, force: true });
 mkdirSync(SCRATCH, { recursive: true });
