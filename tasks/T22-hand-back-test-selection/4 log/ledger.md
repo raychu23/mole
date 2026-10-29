@@ -13,4 +13,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 09:40      checks ran: npm run check && node packages/verify/dist/bench/m14.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T22-hand-back-test-selection → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 09:45      submitted → verified      reviewer reviewer-T22-r3 · findings: confirmation after 2 review rounds (4 log/review-3.md @6f8c59e): review-2 P1-A fixed (excalidraw no-op refactor → '14 passed, 2 skipped by the test file', exit 0, real break → 6 faile
     2026-10-29 09:45      checks ran: npm run check && node packages/verify/dist/bench/m14.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T22-hand-back-test-selection → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 09:51      verified → integrated      merge 2cdf9ec · combined checks exit 0 · note: npm run check on main → 294/294 passed, exit 0, node packages/verify/dist/bench/m14.js on main → M14 caught 10/10 at 18.5% mean share of reaching tests (aggregate 1.3%), run
+    2026-10-29 09:51      combined checks ran: npm run check && node packages/verify/dist/bench/m14.js in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
