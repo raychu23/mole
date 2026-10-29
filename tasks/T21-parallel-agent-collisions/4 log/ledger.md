@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 02:28      checks ran: npm run check && node packages/agentstate/dist/bench/m11.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T21-parallel-agent-collisions → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 02:40      submitted → verified      reviewer reviewer-T21-r1 · findings: no P0/P1. P2: (1) hop limit unguarded: BFS d<=hops+1 passes vitest 9/9 and M11 (FA 1/17=5.9%, p08 only) - add 3-hop negatives via key-changes.md, (2) real bench reads live checkouts/w
     2026-10-29 02:40      checks ran: npm run check && node packages/agentstate/dist/bench/m11.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T21-parallel-agent-collisions → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 06:40      verified → integrated      merge 2e92a98 · combined checks exit 0 · note: npm run check on main 9695ca5 (incl. 2e92a98 T21 merge + key-ruling-3 test timeouts) + node packages/agentstate/dist/bench/m11.js → M11 recall 100.0% (16/16), false alarms 0
+    2026-10-29 06:40      combined checks ran: npm run check && node packages/agentstate/dist/bench/m11.js in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```

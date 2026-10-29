@@ -48,3 +48,45 @@ T19 insights      mole-builder-2      2026-10-29
         invalid run         first held-out run at c101cd8 had a git archive pathspec bug (empty new tree → 0/22, every similarity 0): logged INVALID, extraction fixed
                             in 29d56c3 (+ throw on an empty tree), key/labels/A untouched, then the one scored run
 ```
+```notes
+T19 builder 3 round (D33 'try options')      mole-builder-3      2026-10-29 CDT
+    held-out 2
+        source              honojs/hono src/ TS/TSX, full bare clone ~/.hermes/cache/scratch/mole-builder-3/hono.git (11 MB), head ed1d5f7213
+        builder             bench/m9-heldout2-builder.ts = held-out-1 builder with only repo/prefix changed (same file, git -M, cross-file Jaccard >= 0.5)
+        stop rule           fixed before labelling: newest first, stop after the first commit where expected re-anchors >= 20
+                            → walk 1023 (c4f4ab06): 75 pairs, 31 old symbols, 21 re-anchor, 10 stay unanchored
+        commit              bac1cf7 key + builder + bench (bench/m9-heldout2.ts, written 2026-10-29T06:03:56-0500), no impl change
+        labelling aid       whitespace/comment-insensitive diff of the two declarations with the old name swapped in (not the key measure)
+        INFERENCE           'rename' = identical tokens, so private x → #x (modifier dropped) is labelled rename+change
+                            10 of 21 positives come from one commit (walk 507, private → #); only 10 negatives, band 1 = inconclusive
+                            2 positives are role-only rewrites (parseAcceptValue → getNextAcceptValue, normalizeIntrinsicElementProps → …Key)
+        label vs measure    verifyFromJwks → verifyWithJwks labelled rename, but the error string carries the old name → code says
+                            renamed+changed 0.993 (miss); not relabelled (R2)
+    options                 each one commit after bac1cf7, one scored run on all three keys, no new numeric constant, then git revert
+        option 1            2e62f8e → revert 869c609
+                            d1 surviving name (old name still bound → only a wrapper's candidate) + d2 caller/import re-rank
+                            + d3 changed cross-file match needs a switched caller/import + option A band (0.40, switched caller)
+                            frozen 69.4% (25/36) wrong 0 · held-out 1 77.3% (17/22) wrong 1 · held-out 2 81% (17/21) wrong 0
+                            d3 killed 10 true moves on the frozen key (App → AppText methods: callers moved too)
+        option 2            4c1b71e → revert 0032278
+                            option 1 with d3b (decline only into a file that already existed) + d2b (drop a candidate another candidate calls)
+                            frozen 94.4% (34/36) wrong 0 · held-out 1 81.8% (18/22) wrong 1 (snip → paste) · held-out 2 85.7% (18/21) wrong 1 (patch → applyProps, new file)
+        option 3            not tried: every remaining wrong is a cross-file body match (0.619, 0.783) next to true moves at 0.576-0.99;
+                            any further rule would be fitted to cases already seen on all three keys
+        body-only (kept)    0032278 = the code before this round
+                            frozen 88.9% (32/36) wrong 0 · held-out 1 68.2% (15/22) wrong 3 · held-out 2 85.7% (18/21) wrong 1 (patch → applyProps 0.619)
+    verdict                 no option passes (>= 95% + 0 wrong frozen, 0 wrong on both held-outs) → body-only kept, M9 target NOT MET
+    INFERENCE               option 2 is better than body-only on every key (rights up, wrongs 3+1 → 1+1) but fails the bar; candidate if Raymond
+                            accepts 'fewer wrong' over 'kept as is'
+                            body-only is NOT 0-wrong off the frozen key: 3 wrong on held-out 1, 1 on held-out 2
+    honesty
+        held-out 1          seen before this round: d1/d2 were designed knowing its 3 wrong cases, so its scores for options 1-2 are not independent
+        held-out 2          blind only for option 1; option 2 was designed after option 1's held-out-2 score (d3b motivated by frozen misses)
+        no tuning           no constant changed after a score; own-name-in-strings fix (would fit verifyFromJwks) deliberately not added
+    incidents
+        scratch repo gone   ~/.hermes/cache/scratch/t19-hermes-git (held-out 1's alternates repo) was missing; recreated per the key's note
+        check under load    npm run check fails only on 5 s / 120 s vitest timeouts in other packages (daemon, indexer, agentstate, history,
+                            telemetry, plugins) at load 30-150; memory tests 34/34 pass; untouched (not this task's files)
+        held-out-1 bench    body-only reports 'thresholds match key false' (its key carries callerBandMin of the reverted option A)
+    gaps                    M9 frozen 88.9% < 95%; wrong re-anchors remain off the frozen key; held-out 2 band inconclusive (1 case)
+```
