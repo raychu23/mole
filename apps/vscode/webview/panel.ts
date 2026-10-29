@@ -45,8 +45,8 @@ function countOf(id: string, data: unknown): number {
   if (id === 'notes' && Array.isArray(data)) return (data as unknown[]).length;
   if (id === 'tests' && Array.isArray(data)) return (data as unknown[]).length;
   if (id === 'agents') {
-    const a = data as { claims?: { claims?: unknown[] }; collisions?: { collisions?: unknown[] }; tried?: { tried?: unknown[] } };
-    return (a.claims?.claims?.length ?? 0) + (a.collisions?.collisions?.length ?? 0) + (a.tried?.tried?.length ?? 0);
+    const a = data as { claims?: { claims?: unknown[] }; collisions?: { pairs?: unknown[] }; tried?: { tried?: unknown[] } };
+    return (a.claims?.claims?.length ?? 0) + (a.collisions?.pairs?.length ?? 0) + (a.tried?.tried?.length ?? 0);
   }
   if (id === 'blastRadius') {
     const b = data as { map?: { nodes?: unknown[] }; flows?: { tests?: unknown[] } };

@@ -103,7 +103,7 @@ export async function buildPanelModel(target: BuildTarget, r: Runners): Promise<
     section('agents', async () => {
       const [claims, collisions, tried] = await Promise.all([r.claims(), r.collisions(), r.tried(at)]);
       return { claims, collisions, tried };
-    }, (v: any) => emptyArr(v?.claims?.claims) && emptyArr(v?.collisions?.collisions) && emptyArr(v?.tried?.tried)),
+    }, (v: any) => emptyArr(v?.claims?.claims) && emptyArr(v?.collisions?.pairs) && emptyArr(v?.tried?.tried)),
     section('blastRadius', async () => {
       const [map, impact, flows] = await Promise.all([r.map(at), r.impact(at), r.flows(at)]);
       return { map, impact, flows };

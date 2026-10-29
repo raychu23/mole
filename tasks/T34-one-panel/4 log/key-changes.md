@@ -38,3 +38,9 @@ existing `seen` recorder already uses in `extension.ts`), not a direct package i
 This also matches the existing, documented limitation that `mole rules` needs a repo checkout in the
 packaged `.vsix` (esbuild.mjs's own comment) — the panel's rules section degrades to "unavailable" in a
 packaged extension run from a bare `.vsix` without `node_modules`, same as the CLI already does.
+
+## 2026-10-29 reviewer P1 fix (not a loosened check)
+Reviewer found: collisions() test mock used `{collisions: []}` but @mole/agentstate's real collisions() returns `{pairs: []}`,
+masking a real bug (panelData.ts + webview/panel.ts read `.collisions.collisions` instead of `.collisions.pairs`, so the agents
+section's emptiness/count was always wrong). Fix: both files now read `.pairs`; test fixtures corrected to `{pairs: []}` to
+match the real @mole/agentstate shape. Same assertion strength, correct field name — not a loosened check (R2/R7 compliant).
