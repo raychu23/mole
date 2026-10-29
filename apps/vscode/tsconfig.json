@@ -24,6 +24,15 @@
     },
     {
       "path": "../../packages/layout"
+    },
+    {
+      "path": "../../packages/history"
+    },
+    {
+      "path": "../../packages/memory"
+    },
+    {
+      "path": "../../packages/questions"
     }
   ]
 }

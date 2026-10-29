@@ -32,7 +32,7 @@ it('mole_map over stdio returns the same neighbourhood text as the CLI; a down d
   // daemon down and not startable? the MCP server starts one itself (ensureDaemon); prove that path first
   const client = await connect();
   const tools = await client.listTools();
-  expect(tools.tools.map((t) => t.name)).toEqual(['mole_map']);
+  expect(tools.tools.map((t) => t.name)).toContain('mole_map'); // T15 adds mole_check (changed in the red commit)
   const res = await client.callTool({ name: 'mole_map', arguments: { target: 'src/a.ts', impact: true } });
   const text = (res.content as Array<{ type: string; text: string }>)[0]?.text ?? '';
   expect(res.isError).toBeFalsy();

@@ -34,5 +34,14 @@ export function createServer(opts: MoleMcpOptions): McpServer {
       return { content: [{ type: 'text' as const, text: formatNeighborhood(n) }], isError: n.state === 'index-unavailable' };
     },
   );
+  server.registerTool(
+    'mole_check',
+    {
+      title: 'Mole check',
+      description: 'T15 stub (red commit)',
+      inputSchema: { root: z.string().optional(), sha: z.string().optional(), diff: z.string().optional(), base: z.string().optional(), worktree: z.boolean().optional() },
+    },
+    async () => ({ content: [{ type: 'text' as const, text: 'not implemented' }], isError: true }),
+  );
   return server;
 }
