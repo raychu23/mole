@@ -150,7 +150,7 @@ async function main(): Promise<number> {
     const diffFile = str(flags.diff);
     const modes = [sha !== undefined, diffFile !== undefined, flags.worktree === true].filter(Boolean).length;
     if (modes !== 1) {
-      console.error('usage: mole check <sha | --diff FILE [--base SHA] | --worktree> [--json] [--fix-rule RE] [--root DIR] [--notes-root DIR] [--reword]');
+      console.error('usage: mole check <sha | --diff FILE [--base SHA] | --worktree> [--json] [--fix-rule RE] [--root DIR] [--notes-root DIR] [--reword] [--spec-kit [--adr-dir DIR[,DIR]]]');
       return 2;
     }
     if (flags['run-tests']) return (await import('@mole/verify')).verifyCli(pos, flags, root); // T22: run the tests that matter, no daemon needed
@@ -167,8 +167,34 @@ async function main(): Promise<number> {
     span({ 'mole.hunks': q.facts.hunks.length, 'mole.past_fixes': q.facts.hunks.reduce((n, h) => n + h.pastFixes.length, 0), 'mole.questions.count': q.questions.length });
     for (const n of q.notices) console.error(`mole: ${n}`);
     const { notes: _notes, guards: _guards, ...r } = q.facts;
-    if (flags.json) console.log(JSON.stringify({ ...r, questions: q.questions }, null, 2));
-    else console.log(formatCheck(r) + (q.questions.length ? `\n\n${formatQuestions(q.questions)}` : ''));
+    // T36: --spec-kit (one flag) -- the files this change touched, cross-referenced against the decision graph's own
+    // scope anchors (.mole + ADR folders + spec-kit specs/*/research.md), so a spec-kit /speckit.implement hook can
+    // show the agent which decisions its change touched, same flags/hover/view the rest of Mole computes.
+    let touched: Array<{ id: string; kind: string; title: string; flag: string; anchor: string }> | undefined;
+    if (flags['spec-kit']) {
+      const { computeFlags, loadGraph } = await import('@mole/decisions');
+      const adrArg = str(flags['adr-dir']);
+      const adrDirs = adrArg ? adrArg.split(',').map((s) => s.trim()).filter(Boolean) : [];
+      const graph = loadGraph(root, { adrDirs });
+      const flagged = new Map(computeFlags(graph).map((f) => [f.id, f]));
+      const changedFiles = new Set(q.facts.hunks.map((h) => h.file));
+      touched = [];
+      for (const n of graph.nodes) {
+        if (n.scope.length === 0) continue;
+        const hit = n.scope.find((a) => [...changedFiles].some((f) => f === a.target.replace(/\/$/, '') || f.startsWith(a.target.endsWith('/') ? a.target : `${a.target}/`) || a.target === f));
+        if (!hit) continue;
+        const f = flagged.get(n.id);
+        touched.push({ id: n.id, kind: n.kind, title: n.title, flag: f?.flag ?? 'grey', anchor: hit.target });
+      }
+    }
+    if (flags.json) console.log(JSON.stringify({ ...r, questions: q.questions, ...(touched ? { decisionsTouched: touched } : {}) }, null, 2));
+    else {
+      console.log(formatCheck(r) + (q.questions.length ? `\n\n${formatQuestions(q.questions)}` : ''));
+      if (touched) {
+        console.log(touched.length === 0 ? '\ndecisions touched: none' : `\ndecisions touched (${touched.length}):`);
+        for (const t of touched) console.log(`  ${t.flag.padEnd(6)} ${t.id}  ${t.title}  (${t.anchor})`);
+      }
+    }
     return 0;
       });
     } finally {
