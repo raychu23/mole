@@ -5,3 +5,4 @@ export { frontMatter, loadGraph, MOLE_DIR, normStatus } from './graph.js';
 export { computeFlags } from './flags.js';
 export { contentHash } from './anchors.js';
 export { decisions, decisionsCli, formatDecisions } from './cli.js';
+export * from './check/index.js';
