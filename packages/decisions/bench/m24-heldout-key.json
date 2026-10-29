@@ -1,0 +1,215 @@
+{
+  "metric": "M24 held-out",
+  "written": "2026-10-29T07:44:27-05:00",
+  "task": "T32-team-pr-check",
+  "purpose": "held-out key for the options round (content anchors, version-bump rule): labeled and committed BEFORE any option was scored on it",
+  "targets": {
+    "precision": 0.9,
+    "recall": 0.8,
+    "owners_exact": "all",
+    "silent_exact": "all",
+    "p95_seconds": 60
+  },
+  "labeling_rule": "A record governs a PR when its ADR's decision constrains what the PR's changed lines may contain or how they are written (the decided choice, the component it chose, or the structure it mandates), judged by reading each hunk against the ADR text. Codebase-wide conventions (named exports, export structure, React.FC, MSW, Luxon, plugin package structure) count wherever the changed lines contain the construct (any added/changed `export` in a package src/ file counts for bs-adr003 + bs-adr004). Superseded/deprecated records never govern. Labels were written from the diffs and the ADR texts, never from the overlay anchors or Mole's output.",
+  "selection": "Fixed rule, none of the frozen key's 30. Neither clone had merges newer than the frozen key's newest PR after `git fetch origin` (2026-10-29), so: per repo, walk first-parent merges of origin/HEAD newest-first, skipping the frozen key's heads and merges with no changed file. govuk-infrastructure: the 3 newest (#4990, #4984, #4986) + the 3 newest whose paths fall under the ADR-subject paths of the frozen selection (terraform/deployments/{cluster-*,github,tfc-*}/: #4920, #4926, #4924). backstage: the clone (depth 200) has no merge touching the frozen ADR-subject paths (catalog-model kinds/entity/schema, frontend-plugin-api blueprints, the ADR log), so the 6 newest with <= 30 changed files (#36296, a 409-file release PR, skipped by that cap): #36488, #36491, #36490, #36497, #36492, #36180. Labels from reading each diff (git diff base...head) against the ADR texts, never from overlay anchors or Mole output.",
+  "owners_rule": "bench/m24_owners.py (GitHub's documented CODEOWNERS rules, CODEOWNERS read at the merge base, union over changed paths)",
+  "repos": {
+    "govuk-infrastructure": {
+      "url": "https://github.com/alphagov/govuk-infrastructure",
+      "clone": "~/.hermes/cache/scratch/t32/govuk-infrastructure",
+      "clone_cmd": "git clone --no-checkout --depth 400 --single-branch <url>",
+      "records": "packages/decisions/bench/m24/govuk-infrastructure",
+      "adr_dir": "docs/architecture/decisions",
+      "pinned_head": "879ee65c4417045dcb5b6589c07b70560f5cb161"
+    },
+    "backstage": {
+      "url": "https://github.com/backstage/backstage",
+      "clone": "~/.hermes/cache/scratch/t32/backstage",
+      "clone_cmd": "git clone --no-checkout --depth 200 --single-branch <url>; git fetch --depth 2 origin <the 8 older merge shas>",
+      "records": "packages/decisions/bench/m24/backstage",
+      "adr_dir": "docs/architecture-decisions",
+      "pinned_head": "e8c4d056e3c850a467e34eba810a3ed00d62cfe2"
+    }
+  },
+  "prs": [
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4990,
+      "title": "Merge pull request #4990 from alphagov/revert-4984-cr-123-set-replication-on-integration-for-content-data",
+      "base": "c1082dd70707eba57aca63b610f326ab9657d1d3",
+      "head": "2df213adc82779ea06815e8032b4d6212ec38830",
+      "governs": [],
+      "convention": [],
+      "owners": [],
+      "silent": true,
+      "why": "revert of #4984: RDS engine params in integration rds.tfvars: no ADR (same kind as frozen #4991)"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4984,
+      "title": "Merge pull request #4984 from alphagov/cr-123-set-replication-on-integration-for-content-data",
+      "base": "1f971df4ff857126a992fb5599f83a8ab0b1a30a",
+      "head": "c1082dd70707eba57aca63b610f326ab9657d1d3",
+      "governs": [],
+      "convention": [],
+      "owners": [],
+      "silent": true,
+      "why": "RDS logical-replication params in integration rds.tfvars: no ADR"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4986,
+      "title": "Merge pull request #4986 from alphagov/CSMD-terraform-cleanup-for-content-tagger-integration",
+      "base": "70a0e1e976d9aa66b56e90c7f996fbba67d143e7",
+      "head": "1157a348f4b22ac5ee58331c379bd85d7d6f948f",
+      "governs": [],
+      "convention": [],
+      "owners": [],
+      "silent": true,
+      "why": "RDS engine version + params family in integration rds.tfvars: no ADR (an engine version is not a decided component)"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4920,
+      "title": "Merge pull request #4920 from alphagov/import-gh-data-engineers-team",
+      "base": "2fd92252d6fc2ed93b6a7e26763dd99ecfa9f187",
+      "head": "3d2db669300678761c4af922f05d92c3143c04c6",
+      "governs": [],
+      "convention": [],
+      "owners": [
+        "@alphagov/gov-uk-platform-engineering"
+      ],
+      "silent": true,
+      "why": "imports + defines a github_team in the GitHub deployment: ADR 17 decides how REPOSITORIES are configured (no topics as selectors); a team definition is not constrained by it. Borderline, labeled none"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4926,
+      "title": "Merge pull request #4926 from alphagov/add-ruleset",
+      "base": "4403ee42c94cca484d3cc11fce7a60e9187f7bbc",
+      "head": "48b1037f4d39ebd06e78f62ab3795d4e1249d3aa",
+      "governs": [
+        "gi-0017"
+      ],
+      "convention": [],
+      "owners": [
+        "@alphagov/gov-uk-platform-engineering"
+      ],
+      "silent": false,
+      "why": "branch protection selector excludes a repo by explicit name + per-repo rulesets in code in the GitHub deployment: ADR 17 (configure repositories explicitly in config/code, not via topics)"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4924,
+      "title": "Merge pull request #4924 from alphagov/fix-for-each-in-cluster-infrastructure",
+      "base": "236619bb1c38aaa685b7d25205a4cefe13cf1c4d",
+      "head": "861f61c67b229f62391a3078fd262441c0f38889",
+      "governs": [],
+      "convention": [],
+      "owners": [
+        "@alphagov/gov-uk-platform-engineering"
+      ],
+      "silent": true,
+      "why": "for_each type fix (toset([])) on the Athena ALB-access-log data source in cluster-infrastructure: no ADR constrains it (ADR 3 decides which root holds which provider; ADR 4 the LB controller, not log querying)"
+    },
+    {
+      "repo": "backstage",
+      "pr": 36488,
+      "title": "Merge pull request #36488 from stanislav-c/msgraph-events-spin-off",
+      "base": "2b909b4966a125bdb7092c644fc415a0bf90f9d4",
+      "head": "ad7daa5f24794fb3710b5d9aa07246a8921cadcc",
+      "governs": [
+        "bs-adr003",
+        "bs-adr004"
+      ],
+      "convention": [
+        "bs-adr003",
+        "bs-adr004"
+      ],
+      "owners": [
+        "@backstage/maintainers"
+      ],
+      "silent": false,
+      "why": "new `export interface ParsedQueryString` in plugins/events-node/src + index.ts `export type { ParsedQueryString, RequestDetails }` re-export: named exports (ADR003) + index re-export structure (ADR004); tests use supertest, not fetch"
+    },
+    {
+      "repo": "backstage",
+      "pr": 36491,
+      "title": "Merge pull request #36491 from backstage/dependabot/npm_and_yarn/workspaces/ui/postcss-selector-parser-6.1.5",
+      "base": "903e2b1996d61e95c00fe5a9aadd296aacb541ca",
+      "head": "276ae388739eaed574ec93feb5d546fe9bddd711",
+      "governs": [],
+      "convention": [],
+      "owners": [
+        "@backstage-service",
+        "@backstage/maintainers"
+      ],
+      "silent": true,
+      "why": "workspaces/ui/yarn.lock bump only: no ADR"
+    },
+    {
+      "repo": "backstage",
+      "pr": 36490,
+      "title": "Merge pull request #36490 from backstage/dependabot/npm_and_yarn/microsite/postcss-selector-parser-6.1.5",
+      "base": "b219f886bf2381ba279d9fbf0c0fae78c4d64332",
+      "head": "903e2b1996d61e95c00fe5a9aadd296aacb541ca",
+      "governs": [],
+      "convention": [],
+      "owners": [
+        "@backstage-service",
+        "@backstage/maintainers"
+      ],
+      "silent": true,
+      "why": "microsite/yarn.lock bump only: no ADR"
+    },
+    {
+      "repo": "backstage",
+      "pr": 36497,
+      "title": "Merge pull request #36497 from sebdanielsson/remove-stale-e2e-warning-filters",
+      "base": "30d50db87408e11390662d848f16715f50ca899a",
+      "head": "b219f886bf2381ba279d9fbf0c0fae78c4d64332",
+      "governs": [],
+      "convention": [],
+      "owners": [
+        "@backstage/operations-maintainers"
+      ],
+      "silent": true,
+      "why": "removes stale warning filters in a non-exported function of packages/e2e-test/src: no ADR"
+    },
+    {
+      "repo": "backstage",
+      "pr": 36492,
+      "title": "Merge pull request #36492 from sebdanielsson/microsite/tsconfig-base-url",
+      "base": "f20fd9b598285c88401406b3812fe00d7708136c",
+      "head": "30d50db87408e11390662d848f16715f50ca899a",
+      "governs": [],
+      "convention": [],
+      "owners": [
+        "@backstage/documentation-maintainers",
+        "@backstage/maintainers"
+      ],
+      "silent": true,
+      "why": "microsite (not a package src/) TS typing fixes, no export lines, no React.FC: no ADR"
+    },
+    {
+      "repo": "backstage",
+      "pr": 36180,
+      "title": "Merge pull request #36180 from alizard0/auth-backend-pqc",
+      "base": "10d6bed37e606f5e32954f1940f87ca8acf282f0",
+      "head": "70265641c96de5ad05b781ce062318d5df4eef32",
+      "governs": [
+        "bs-adr007"
+      ],
+      "convention": [
+        "bs-adr007"
+      ],
+      "owners": [
+        "@backstage-service",
+        "@backstage/framework-maintainers",
+        "@backstage/maintainers"
+      ],
+      "silent": false,
+      "why": "jose ^5 -> ^6 bump + KeyLike->CryptoKey type changes (no changed export lines); two tests add msw handlers (server.use(http.get(... HttpResponse.json))) to mock the JWKS fetch: ADR007 (mock fetch with msw). package.json dependency bumps: no ADR"
+    }
+  ]
+}
