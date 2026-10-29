@@ -276,3 +276,31 @@ raychu23.mole-code-map@0.3.0 is still installed (`code --list-extensions --show-
 Noted and left untouched per this message: T33-team-server (owner builder 9 / a13, Postgres go-ahead
 from Raymond 22:08) and T38-bitemporal-decision-graph (new builder a16, packages/temporal, Postgres
 database mole_t38) — neither is in my queue.
+
+## 2026-10-29 T32-team-pr-check fresh review (fresh-review-a14-r1): VERIFIED + INTEGRATED
+
+- Fresh review per R5 (no transcript access, test diff then impl diff, independent re-run). Round 3 (f880258..3c6400b,
+  options 4/5/6: exportConventionGate/scopeNoiseFilter/tfBareBlockTitleGate) touches only options.ts/pr-check.ts/
+  types.ts/m24-options.ts/pr-check-options.test.ts + task logs, in boundary. R2 confirmed over the WHOLE branch (not
+  just round 3): m24-key.json and the m24/{backstage,govuk-infrastructure} overlays diff empty vs the red commit
+  feb813d. Boundary clean: zero files outside the stated list; cli.ts is exactly 1 import + 1 call.
+- Independently reproduced M24 from real clones (not the implementer's numbers): precision 0.93, recall 0.93, owners
+  exact 30/30, silent 30/30, p95 1.3-2.0s, errors 0, same residual false-hits/misses (gi-0006, bs-adr009, bs-adr015,
+  bs-adr011) as runs.jsonl. npm run check 54-58/54-58 files, 431-455/431-455 tests green across several reruns.
+- 1 P1 found and fixed this round (disclosed, 1 commit 77b31a1): `.github/actions/mole-check/action.yml` built with
+  `npx tsc -b packages/daemon`, which fails on a genuine clean checkout ("Cannot find module @mole/flows") because
+  packages/daemon/tsconfig.json has no project reference to packages/flows (pre-existing gap from T28, unrelated to
+  T32's own 1-line cli.ts addition; dist/ is gitignored). Reproduced via m24-workflow-local.sh (exit 2 before, exit 0
+  after); fix stays in boundary (`npx tsc -b`, whole graph, same as `npm run build`, instead of touching daemon's
+  tsconfig.json). P2 notes (not blocking): pr-check-review-fixes.test.ts's 5s default timeout is contention-flaky
+  under this host's heavy load (load avg ~193 from concurrent builders) -- confirmed host-load, not logic, by timing
+  git worktree add standalone (0.15s) and by an 11/11 pass with --testTimeout=30000; dogfood regressed 9/11->0/11
+  after a main merge, disclosed by the implementer and confirmed outside M24's own pass gate in m24.ts source.
+- Merged main into the branch (ce523c8), rebuilt, reran npm run check (58/58, 455/455) + M24 bench (PASS, same
+  numbers) + the local workflow proof (3/3 steps exit 0) on the merged state before integrating.
+- `ledger move tasks/T32-team-pr-check verified --reviewer fresh-review-a14-r1 ...` then merged
+  ledger/t32-team-pr-check into main (--no-ff, commit cc3f521), reran the full stack on real main (58/58 files,
+  455/455 tests; M24 PASS precision 0.93/recall 0.93/owners 30/30/silent 30/30/p95 1.63s on main HEAD), then
+  `ledger move tasks/T32-team-pr-check integrated --merge cc3f521 --checks-result ...`.
+- Cleaned up: deleted the T32 worktree's node_modules, `git worktree remove --force` (freed ~4GB, 3.0GB -> 7.0GB
+  free), and removed the two scratch benchmark clones under ~/.hermes/cache/scratch/t32 (freed another ~1GB).
