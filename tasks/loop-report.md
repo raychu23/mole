@@ -239,3 +239,27 @@ open follow-ups (all P2, none blocks)
 - Host load was volatile: spiked to 290 (1-min avg) right after claiming, then dropped to a genuine low window (1-min avg 12-76) where 2 back-to-back `npm run check && node packages/verify/dist/bench/m17.js` runs were captured. `npm run check` passed both times (392/392). M17 was IDENTICAL both runs: agree 17/20 (85%, target >= 18/20 — MISS), planted verified 0/6 (target 0 — MET), gate p95 excalidraw 3.1-3.3s (target <= 20s — MET), gate p95 mole 20.5-20.6s (target <= 20s — MISS by ~0.5-0.6s).
 - Consistency across 2 clean reruns of the same commit (d1b7298/93707ed) under materially lower load than round3's 190-290 contention means this is the real current performance/accuracy gap, not noise. Per the task's own decision rules: agree < 18/20 even under low load -> do NOT integrate.
 - Moved back to `blocked`, decision-owner raymond, with the clean-load numbers now in `4 log/runs.jsonl` (better evidence than round3's contention-poisoned 66.9-255.4s range). The 3 stable disagreements: H05 and H09 (expected bad, gate says verified — false-verified risk, though not on the 6 planted-defect items) and H10 (expected good, gate says unverified — overly conservative). Recommend next round target the H05/H09 false-verified logic specifically rather than more speed work, since planted-safety (0/6) already holds.
+
+## 2026-10-29 mole-builder-7 (a11): T34-one-panel + T30-annotated-file-tree integrated, v0.3.0 shipped
+
+- T34-one-panel: INTEGRATED. M26a 14/14 CLI read features have a non-terminal VS Code surface (new
+  WebviewViewProvider sidebar + 14 command-palette entries + Problems-panel rule diagnostics); M26b refresh
+  p95 1-46ms (target <=300ms). Fresh review found 1 P1 (collisions().pairs vs .collisions mock mismatch),
+  fixed before integrate. npm run check on main after merge: 53/53 files, 396/396 tests, clean.
+- T30-annotated-file-tree: INTEGRATED (D39 "make it work"). Decorations met target: p95 0.001-0.002ms per
+  folder (target <=50ms), empty-folder case correct (no invented content). M22b "harder questions" proxy
+  missed target after 3 rounds (R3, honest miss, not re-attempted): 27/27 correct both arms (tie),
+  tool-call reduction 25% vs required >=50%. Real number logged in tasks/T30-annotated-file-tree/4 log/runs.jsonl;
+  the resume/product-page claim about M22b should be reworded to this real number by the planning chat
+  (not edited here, per task ownership).
+- Packaged apps/vscode v0.3.0, ran install-check (install + silent-without-TypeScript + idle-shutdown/revive
+  all pass; selftestInstalled fails on a pre-existing, unrelated osascript "activate" AppleEvent timeout on
+  this shared sandboxed machine, no Automation permission grant — reproduced standalone, not a T34/T30
+  regression), then `code --install-extension --force`: raychu23.mole-code-map@0.3.0 is now installed.
+- Machine was under heavy shared-resource contention during this work (load avg up to 326, main checkout
+  node_modules/package-lock churn from concurrent builders) causing transient vitest flakes unrelated to
+  these diffs; confirmed flaky-under-load by isolated reruns each time before concluding pass.
+- T35-agent-coverage was still `blocked` (not integrated) during T30's work, so the agent-coverage tint in
+  the file tree and the T34 panel's "agent coverage" section both correctly show "not available yet".
+- Cleaned up integrated T19's worktree node_modules + `git worktree remove` to free disk (was down to
+  ~1.7GB free at one point from concurrent builders' npm installs + a worktree node_modules pile-up).
