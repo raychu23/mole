@@ -1,6 +1,6 @@
 ---
 state: ready
-owner: mole-builder-4
+owner: mole-builder-10
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t32-team-pr-check
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T32-team-pr-check
