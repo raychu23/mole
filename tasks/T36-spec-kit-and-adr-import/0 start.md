@@ -1,21 +1,21 @@
 ---
-state: proposed
-owner:
+state: ready
+owner: mole-builder-10
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch:
 worktree:
 base:
 reviewer:
 updated: 2026-10-29 15:39
-status: ledger proposed
-next: fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+status: ledger ready
+next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
 ---
 ```notes
 T36-spec-kit-and-adr-import      ledger task (rules.md §3 code features)      project tasks
     goal                    Read decisions where teams already keep them, nothing new to learn (USER 10-29 'highly integrate'; 3C1 741 'either: give structured docs format (like big tech) or allow them easily plug own syst'; D37). Import GitHub spec-kit (.specify/memory/constitution.md principles → tenets; specs/NNN-*/spec.md, plan.md, research.md decisions + rationale → decisions anchored to the code paths they name), MADR / adr-tools / log4brains ADR folders, and KEP-style status + replaces fields, into Mole's graph (T29) so flags, rules, hover and the view work on them unchanged; plus a spec-kit extension or hook that runs `mole check` after /speckit.implement so the agent sees which decisions its change touched. Research input: context/product-plan/systems/specs-vs-decisions/spec-kit.json when present.
     done-when               1) M29a: key hand-labelled before code from 3 public repos (one using spec-kit, two with ADR folders; pinned shas): every record file found (recall 100%), title/status/date/deciders/supersedes mapped >= 95% exact; 2) M29b: records naming code paths get anchors, and flags on them (code changed after the record's date → yellow) match the key >= 95%; 3) the spec-kit hook runs in a fixture spec-kit project and prints the decisions touched; 4) failure case: malformed front matter → that record skipped with a reason, the others still load; 5) npm run check passes
-    status                  2026-10-29 proposed
-    next                    fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+    status                  2026-10-29 ready      owner mole-builder-10
+    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
     pinned
     mode                    code
     boundary                packages/decisions/src/import/** (new) + packages/decisions/bench/m29*, packages/decisions/src/graph.ts (register importers: one call), integrations/spec-kit/** (new), packages/daemon/src/cli.ts (one flag), tasks/T37-spec-kit-and-adr-import/**
