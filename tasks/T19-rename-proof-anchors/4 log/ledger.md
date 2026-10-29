@@ -13,4 +13,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 10:22      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T19-rename-proof-anchors → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 10:24      submitted → verified      reviewer self-fresh-review · findings: none: fresh re-read of 0 start.md + the merge diff (0032278..HEAD) confirms (a) packages/memory/** has zero diff — bench/key files (m9-key.json, m9.ts, heldout keys) untouched since
     2026-10-29 10:24      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T19-rename-proof-anchors → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 10:29      verified → integrated      merge 1716ca6 · combined checks exit 0 · note: npm run check on main -> pass (372/372, 49 test files), m9 bench -> frozen 88.9% (32/36) wrong 0, held-out1 68.2% wrong 3, held-out2 85.7% wrong 1, target >=95% wrong 0 NOT 
+    2026-10-29 10:29      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
