@@ -18,9 +18,22 @@ const fs = require("fs");
 const rd = (f, k) => { try { return JSON.parse(fs.readFileSync(f, "utf8"))[k]; } catch { return "bench did not produce metrics"; } };
 const chk = fs.readFileSync(process.env.CHK, "utf8");
 const tests = (chk.match(/^\s*Tests\s+(\d[^\n]*)$/m) || [])[1] || "build failed before tests";
+// review-1 P1-1: flags outside the key (reported, never scored by the frozen bench) + how many a hand judgement calls wrong
+// (.mole/local/bench/m16-outside-judged.json, gitignored: quotes chat text). Unjudged flags are counted, not guessed.
+let outside = "";
+try {
+  const det = JSON.parse(fs.readFileSync(".mole/local/bench/m16-details.json", "utf8"));
+  const flags = det.flatMap((a) => (a.flaggedOutsideKey || []).map((c) => a.id + "\u0000" + c.text));
+  let judged = [];
+  try { judged = JSON.parse(fs.readFileSync(".mole/local/bench/m16-outside-judged.json", "utf8")).rows; } catch {}
+  const verdict = new Map(judged.map((r) => [r.id + "\u0000" + r.text, r.judged]));
+  const wrong = flags.filter((f) => verdict.get(f) === "wrong").length;
+  const unjudged = flags.filter((f) => !verdict.has(f)).length;
+  outside = ` · outside-key flags ${flags.length}: judged wrong ${wrong}, unjudged ${unjudged} (before review-1 fix: ${judged.length}, ${judged.filter((r) => r.judged === "wrong").length} judged wrong)`;
+} catch { outside = " · outside-key flags: no details"; }
 const line = { time: process.env.TIME, commit: process.env.COMMIT,
   cmd: "npm run check && node packages/agentstate/dist/bench/m16.js", exit: Number(process.env.EX),
-  metrics: { M16: rd(process.env.M16, "M16") }, check: (Number(process.env.C) === 0 ? "pass: " : "fail: ") + tests.trim() };
+  metrics: { M16: rd(process.env.M16, "M16") + outside }, check: (Number(process.env.C) === 0 ? "pass: " : "fail: ") + tests.trim() };
 fs.appendFileSync("tasks/T24-agent-claim-check/4 log/runs.jsonl", JSON.stringify(line) + "\n");
 console.log(JSON.stringify(line));
 '

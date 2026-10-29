@@ -44,3 +44,37 @@ limits
     a claim whose clause has a negation/plan word (not, until, will, without, …) or names another agent is skipped, so e.g.
     "It now fails without the fix" is not checked
 ```
+
+review round 1 → 2 (4 log/review-1.md, key-ruling-1.md)
+    key-ruling-1            applied verbatim in 3212348: C03 claim 3 → supported (label/evidence/note only, `written` unchanged),
+                            same bytes copied to the main checkout's gitignored copy; key.md sha256 → 06d9064e…; the bench reads
+                            the sha from key.md, so bench/m16.ts is untouched. Effect with the old code: recall 9/9, false flags 0/111
+    P1-1 (fixed)            red tests first (720b05b, packages/agentstate/test/claims-precision.test.ts, 19 failing), then cdb428c+:
+                            not claims = count claims with a metric word (M#, target, score, recall, precision, accuracy, false flags)
+                            or with no test verb ('traced (9 of 9)'); 'exits N' without I/we and 'exited N when/if …' (behaviour);
+                            present-tense 'writes/deletes' without 'now' or I/we (feature description); 'was/were being', 'used to'
+                            (the old bug); clauses after 'if/unless/whenever' in the same sentence unless first person; text in
+                            ``` blocks and inside a "metrics" object (quoted runs.jsonl lines); bullets under an intro that reports
+                            someone else's findings or lists bugs/issues ('It also confirmed:', 'The three serious bugs:') unless the
+                            bullet says I/we/my/our.
+                            verifier: a failing run in a temp copy (/tmp, /var/folders, $TMPDIR, mktemp, not the run's cwd) does not
+                            decide a plain pass claim when the run also tested its own tree; 'earlier/previous/first … passed' and
+                            'without/before the fix' are backed by any matching pass and never contradicted by a later run.
+                            Bench: flagged outside key 14 → 0; I judged all 14 old flags wrong by the key rule (13 non-claims + H27, a
+                            real claim with a wrong verdict from an unrelated daemon FAIL line); hand judgement in the gitignored
+                            .mole/local/bench/m16-outside-judged.json, counted by run-check.sh into the runs.jsonl metric string
+    test edited after red   claims-precision.test.ts H06 case: I dropped the sentence's lead '1. T16 (traces, runs, CI): merged, met.'
+                            because 'merged' there is a real merge claim, not the out-of-key flag; the rest of the file is as committed
+    P2-3 (fixed)            'without' left NOT_DONE; 'user' only bans when not 'user-…'; 'they' still bans except a leading pronoun
+                            result ('They all pass now', "they're now fixed"); pronouns joined the topic stop words (else 'they' matched
+                            a heredoc and picked an unrelated failing run). 'They fail on …' stays skipped (a limitation description)
+    P2-4/P2-5 (fixed)       stop.mjs calls `mole claims` itself with a 10 s timeout and stderr ignored: unknown session, timeout or crash
+                            = no output (new test plugins/claude-code/test/claims-hook-quiet.test.ts, red on the old stop.mjs by stash)
+    P2-1 (partly)           the dead agentCli 'claims' branch + its import are removed (one route: daemon cli.ts → claims/cli.js).
+                            The daemon's deep import '@mole/agentstate/dist/src/claims/cli.js' stays: adding an "exports" map to
+                            @mole/agentstate would close every other deep import other packages may use (shared file, parallel
+                            builders), and importing the package root loads LangGraph + the TS compiler (1.4-5 s) on every Stop hook
+    P2-2 (noted)            outside-boundary lines now: agentstate/src/index.ts +1 export, agentstate/src/cli.ts usage text only (+2/-1)
+    limits                  the precision rules are English patterns tuned on the review's examples + the 14 flags of this one sample;
+                            an out-of-sample metric phrased without a metric word, or a bug description without was/were being or 'if',
+                            can still be read as a claim

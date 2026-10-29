@@ -147,7 +147,7 @@ const STOP = new Set(
     'tested testing result results number numbers count total time times ok yes done work works working fine good well real each per ' +
     'still checkout repo repository worktree local locally machine copy copies using used use now there reran rerun rerunning ' +
     'fail fails failed failing failure failures error errors warning warnings across files file output outputs same tool tools agent agents ' +
-    'line lines from up down via against both again more'
+    'line lines from up down via against both again more they them these those everything'
   ).split(' '),
 );
 /** distinctive words of the clause that also occur somewhere in the run's own calls (prose words that occur nowhere are dropped) */
