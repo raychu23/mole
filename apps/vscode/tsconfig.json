@@ -33,6 +33,9 @@
     },
     {
       "path": "../../packages/questions"
+    },
+    {
+      "path": "../../packages/decisions"
     }
   ]
 }

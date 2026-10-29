@@ -1,0 +1,71 @@
+{
+  "written": "2026-10-29T06:55:00-05:00",
+  "how": "Hand-labeled by the T30 builder from the ADR texts (docs/architecture-decisions in backstage e8c4d056e3c, the same texts as bench/corpora/backstage-3ecfb121859/child) before any tree code existed. Correct = the answer or its source cites the expected ADR id, OR the answer contains >= 2 of the key phrases (case-insensitive substring). Decoration expectations: Mole folders from .mole/ by hand; backstage folders from bench/m22/overlay/.mole by hand.",
+  "clone": {
+    "path": "~/.hermes/cache/scratch/mole-builder-4/backstage",
+    "commit": "e8c4d056e3c850a467e34eba810a3ed00d62cfe2",
+    "sparse": ["docs/architecture-decisions", "plugins/notifications"]
+  },
+  "folder": "plugins/notifications",
+  "questions": [
+    {
+      "id": "q1",
+      "expect": "adr007",
+      "phrases": ["xmlhttprequest", "react-testing-library", "network request"],
+      "text": "plugins/notifications/src/api/NotificationsClient.test.ts mocks the notifications backend with `setupServer()` and `http.get(...)` handlers instead of stubbing `fetchApi` or `fetch` directly. Why is the test written this way?"
+    },
+    {
+      "id": "q2",
+      "expect": "adr014",
+      "phrases": ["native fetch", "frontend plugins", "supersede"],
+      "text": "plugins/notifications/src/api/NotificationsClient.ts receives a `fetchApi` in its constructor (wired from `fetchApiRef` in src/plugin.ts) instead of importing an HTTP library such as node-fetch or cross-fetch. Why? Name the decision that applies today."
+    },
+    {
+      "id": "q3",
+      "expect": "adr010",
+      "phrases": ["bundle size", "immutab", "sunset"],
+      "text": "plugins/notifications/src/components/RelativeTime/RelativeTime.tsx handles timestamps with luxon's `DateTime` rather than Moment.js or a hand-written helper on `Date`. Why luxon?"
+    },
+    {
+      "id": "q4",
+      "expect": "adr006",
+      "phrases": ["implicit", "generic", "base template"],
+      "text": "Components in plugins/notifications/src/components (for example RelativeTime) are typed as plain functions taking a props object, never as `React.FC<Props>`. Why?"
+    },
+    {
+      "id": "q5",
+      "expect": "adr004",
+      "phrases": ["traceable", "immediate", "boundar"],
+      "text": "Each subfolder of plugins/notifications/src (api, hooks, components and each component folder) has its own index.ts, and src/index.ts re-exports from ./api, ./hooks and ./components instead of reaching into deeper files. Why is the package's public surface built through index files this way?"
+    }
+  ],
+  "decorations": {
+    "targets": { "p95MsPerFolder": 50 },
+    "mole": {
+      "recorded": [
+        {
+          "folder": "packages/daemon",
+          "decisions": ["0007", "0008", "0009", "0013"],
+          "exceptions": { "0007": ["0008", "0009"] },
+          "purposeStartsWith": "One background process per repo",
+          "ask": ["raymond"]
+        },
+        { "folder": "packages/memory", "decisions": ["0011", "0012"], "purposeStartsWith": null },
+        { "folder": "packages/indexer/src", "decisions": ["0010"], "purposeStartsWith": null }
+      ],
+      "noRecords": ["apps/vscode/media", "packages/telemetry/src", "scripts", "study"]
+    },
+    "backstage": {
+      "recorded": [
+        { "folder": "plugins/notifications/src/api", "decisions": ["adr007", "adr014"], "replaced": ["adr013"], "purposeStartsWith": null },
+        { "folder": "plugins/notifications/src/components", "decisions": ["adr006", "adr010", "adr012"], "purposeStartsWith": null },
+        {
+          "folder": "plugins/notifications",
+          "decisions": ["adr004", "adr006", "adr007", "adr010", "adr011", "adr012", "adr014"],
+          "purposeStartsWith": "Main frontend code of the notifications plugin"
+        }
+      ],
+      "noRecords": ["plugins/notifications/src/hooks", "plugins/notifications/src/utils", "plugins/notifications/dev", "docs"]
+    }
+  }
+}

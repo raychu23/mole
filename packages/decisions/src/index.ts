@@ -5,3 +5,5 @@ export { frontMatter, loadGraph, MOLE_DIR, normStatus } from './graph.js';
 export { computeFlags } from './flags.js';
 export { contentHash } from './anchors.js';
 export { decisions, decisionsCli, formatDecisions } from './cli.js';
+// T30: the annotated file tree (badges, colors, intent cards per folder)
+export * from './tree/index.js';
