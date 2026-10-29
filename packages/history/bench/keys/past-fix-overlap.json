@@ -1,0 +1,555 @@
+{
+ "what": "share of recent changes that edit lines last written by a fix commit (git blame on the parent commit, -U0 hunks, .ts/.tsx under the pathspec)",
+ "method": "for each non-merge commit: old-side line ranges of its hunks \u2192 git blame on the parent \u2192 the commits that last wrote those lines \u2192 is any a fix commit (strict rule per repo)",
+ "limits": "a line 'last written by a fix' is a proxy for 'something broke here before'; later non-fix rewrites hide older fixes (undercount); fix commits can include cleanups (overcount); excalidraw = last 40 commits under packages/ (shallow clone, depth 250); mole = last 60 under packages/ + apps/",
+ "summary": {
+  "excalidraw": {
+   "changesEditingOldLines": 29,
+   "touchLinesWrittenByAFix": 18,
+   "share": 0.621,
+   "fixRule": "^(fix|revert)\\b|regression"
+  },
+  "mole": {
+   "changesEditingOldLines": 13,
+   "touchLinesWrittenByAFix": 3,
+   "share": 0.231,
+   "fixRule": "review fixes|^fix\\b"
+  }
+ },
+ "excalidraw": [
+  {
+   "commit": "14bb42edee",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12",
+   "editedOldLines": 25,
+   "linesFromFixCommits": 2,
+   "fixCommits": [
+    "808d068e18"
+   ],
+   "fixCommitsStrict": [
+    "808d068e18"
+   ]
+  },
+  {
+   "commit": "c711e80ec5",
+   "subject": "fix(editor): route elbow arrows with a single corner where one fits (#12458)",
+   "editedOldLines": 1,
+   "linesFromFixCommits": 0,
+   "fixCommits": [],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "808d068e18",
+   "subject": "fix(packages/excalidraw): update arrow binding on skeleton transform (#12425)",
+   "editedOldLines": 66,
+   "linesFromFixCommits": 4,
+   "fixCommits": [
+    "31df3e6ef2",
+    "4850bf336f",
+    "d3a9c2a195"
+   ],
+   "fixCommitsStrict": [
+    "31df3e6ef2",
+    "4850bf336f",
+    "d3a9c2a195"
+   ]
+  },
+  {
+   "commit": "b7de45e881",
+   "subject": "feat(editor): fit arrowheads to short last segments & fill them along their outl",
+   "editedOldLines": 20,
+   "linesFromFixCommits": 0,
+   "fixCommits": [],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "1d4dc2c0e6",
+   "subject": "feat(editor): Lazy load and don't precache Firebase, lazy load mermaid (#12274)",
+   "editedOldLines": 29,
+   "linesFromFixCommits": 9,
+   "fixCommits": [
+    "24a6941861",
+    "84a309d669"
+   ],
+   "fixCommitsStrict": [
+    "24a6941861",
+    "84a309d669"
+   ]
+  },
+  {
+   "commit": "bee01e3a12",
+   "subject": "fix(packages/excalidraw): load export fonts into a worker's font set, warn witho",
+   "editedOldLines": 13,
+   "linesFromFixCommits": 5,
+   "fixCommits": [
+    "d3a9c2a195"
+   ],
+   "fixCommitsStrict": [
+    "d3a9c2a195"
+   ]
+  },
+  {
+   "commit": "a3fdf471ee",
+   "subject": "feat(editor): support Instagram embeds (#12373)",
+   "editedOldLines": 1,
+   "linesFromFixCommits": 0,
+   "fixCommits": [],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "d3a9c2a195",
+   "subject": "fix(packages/excalidraw): complete cross-document runtime ownership (#11997)",
+   "editedOldLines": 596,
+   "linesFromFixCommits": 264,
+   "fixCommits": [
+    "063e0256f5",
+    "0642e72cfa",
+    "374716304a",
+    "4ce70b815e",
+    "60759d314d",
+    "65aa577e39",
+    "757dfeb6ad",
+    "834e5af631",
+    "b42b1a193d",
+    "dd8296af18",
+    "dfa1ce572b",
+    "f3d99c42e9"
+   ],
+   "fixCommitsStrict": [
+    "063e0256f5",
+    "0642e72cfa",
+    "374716304a",
+    "4ce70b815e",
+    "60759d314d",
+    "65aa577e39",
+    "757dfeb6ad",
+    "834e5af631",
+    "b42b1a193d",
+    "dd8296af18",
+    "dfa1ce572b",
+    "f3d99c42e9"
+   ]
+  },
+  {
+   "commit": "e1b7aacb35",
+   "subject": "feat(packages/excalidraw): replace the export functions with `exportScene` (#123",
+   "editedOldLines": 101,
+   "linesFromFixCommits": 36,
+   "fixCommits": [
+    "063e0256f5",
+    "61fe15a51d",
+    "dd8296af18"
+   ],
+   "fixCommitsStrict": [
+    "063e0256f5",
+    "61fe15a51d",
+    "dd8296af18"
+   ]
+  },
+  {
+   "commit": "4c37956ba5",
+   "subject": "fix(editor): detect line height from the migrated font props on restore (#12033)",
+   "editedOldLines": 0,
+   "linesFromFixCommits": 0,
+   "fixCommits": []
+  },
+  {
+   "commit": "541653c7c9",
+   "subject": "fix(editor): frame membership, clipping and cut fixes (#12270)",
+   "editedOldLines": 3,
+   "linesFromFixCommits": 3,
+   "fixCommits": [
+    "43fa4b5602",
+    "b6d80e4256",
+    "dd8296af18"
+   ],
+   "fixCommitsStrict": [
+    "43fa4b5602",
+    "b6d80e4256",
+    "dd8296af18"
+   ]
+  },
+  {
+   "commit": "704db6803c",
+   "subject": "feat(editor): `w` to wrap/unwrap selection (#12264)",
+   "editedOldLines": 28,
+   "linesFromFixCommits": 1,
+   "fixCommits": [
+    "9357f98a9b"
+   ],
+   "fixCommitsStrict": [
+    "9357f98a9b"
+   ]
+  },
+  {
+   "commit": "ef53e5417b",
+   "subject": "feat(editor): crop editor modifiers as resizing, and double-click a handle to un",
+   "editedOldLines": 40,
+   "linesFromFixCommits": 10,
+   "fixCommits": [
+    "b57f3e0096",
+    "dd8296af18"
+   ],
+   "fixCommitsStrict": [
+    "b57f3e0096",
+    "dd8296af18"
+   ]
+  },
+  {
+   "commit": "e65eca999e",
+   "subject": "refactor(editor): app.selection, and the rest of the selection tool out of App (",
+   "editedOldLines": 414,
+   "linesFromFixCommits": 43,
+   "fixCommits": [
+    "b57f3e0096",
+    "d2557474e2",
+    "d29fd62e41",
+    "dd8296af18"
+   ],
+   "fixCommitsStrict": [
+    "b57f3e0096",
+    "d2557474e2",
+    "d29fd62e41",
+    "dd8296af18"
+   ]
+  },
+  {
+   "commit": "2559257bb2",
+   "subject": "fix(editor): pan once and keep editing on a wheel-button drag over the text edit",
+   "editedOldLines": 1,
+   "linesFromFixCommits": 0,
+   "fixCommits": [],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "53973c3a42",
+   "subject": "feat(editor): alt-click to cycle the selection through overlapping elements (#12",
+   "editedOldLines": 88,
+   "linesFromFixCommits": 27,
+   "fixCommits": [
+    "a3b90897b5",
+    "cf212b2f33",
+    "dd8296af18"
+   ],
+   "fixCommitsStrict": [
+    "a3b90897b5",
+    "dd8296af18"
+   ]
+  },
+  {
+   "commit": "ed10ac7dca",
+   "subject": "feat(editor): alt-drag the text being edited to duplicate it (#12219)",
+   "editedOldLines": 34,
+   "linesFromFixCommits": 0,
+   "fixCommits": [],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "9ba66ed9b5",
+   "subject": "feat(editor): auto increment numbers/lists on duplicate (#12189)",
+   "editedOldLines": 19,
+   "linesFromFixCommits": 0,
+   "fixCommits": [],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "1919728724",
+   "subject": "fix(editor): reach text containers below transparent ones (#12210)",
+   "editedOldLines": 40,
+   "linesFromFixCommits": 15,
+   "fixCommits": [
+    "acb48c3f45",
+    "dc2c16d9e2",
+    "dd8296af18"
+   ],
+   "fixCommitsStrict": [
+    "acb48c3f45",
+    "dc2c16d9e2",
+    "dd8296af18"
+   ]
+  },
+  {
+   "commit": "e283f724c8",
+   "subject": "refactor(editor): move the clipboard out of App into AppClipboard (app.clipboard",
+   "editedOldLines": 141,
+   "linesFromFixCommits": 11,
+   "fixCommits": [
+    "374716304a",
+    "d2557474e2",
+    "f3d99c42e9"
+   ],
+   "fixCommitsStrict": [
+    "374716304a",
+    "d2557474e2",
+    "f3d99c42e9"
+   ]
+  },
+  {
+   "commit": "3947883063",
+   "subject": "refactor(editor): move text editing out of App into AppText (app.text) (#12195)",
+   "editedOldLines": 509,
+   "linesFromFixCommits": 70,
+   "fixCommits": [
+    "d2557474e2",
+    "dd8296af18",
+    "f3d99c42e9"
+   ],
+   "fixCommitsStrict": [
+    "d2557474e2",
+    "dd8296af18",
+    "f3d99c42e9"
+   ]
+  },
+  {
+   "commit": "3d056dbc8a",
+   "subject": "feat(editor): wrap text at 800 and keep it clear of the side panels (#12192)",
+   "editedOldLines": 90,
+   "linesFromFixCommits": 74,
+   "fixCommits": [
+    "374716304a",
+    "d2557474e2",
+    "f3d99c42e9"
+   ],
+   "fixCommitsStrict": [
+    "374716304a",
+    "d2557474e2",
+    "f3d99c42e9"
+   ]
+  },
+  {
+   "commit": "2d3707b816",
+   "subject": "feat(editor): add showHints to command palette (#12187)",
+   "editedOldLines": 2,
+   "linesFromFixCommits": 0,
+   "fixCommits": [],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "834e5af631",
+   "subject": "fix(editor): follow-ups to zen mode polish & delayed tooltips (#12188)",
+   "editedOldLines": 16,
+   "linesFromFixCommits": 0,
+   "fixCommits": [],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "02fc9f3505",
+   "subject": "fix(packages/excalidraw): setViewport stops following a collaborator (#12184)",
+   "editedOldLines": 2,
+   "linesFromFixCommits": 1,
+   "fixCommits": [
+    "374716304a"
+   ],
+   "fixCommitsStrict": [
+    "374716304a"
+   ]
+  },
+  {
+   "commit": "74423812ec",
+   "subject": "perf(editor): avoid rebuilding id sets on every drag (#12183)",
+   "editedOldLines": 0,
+   "linesFromFixCommits": 0,
+   "fixCommits": []
+  },
+  {
+   "commit": "84e3f5a40c",
+   "subject": "perf(editor): avoid rebuilding id sets on every resize (#12180)",
+   "editedOldLines": 0,
+   "linesFromFixCommits": 0,
+   "fixCommits": []
+  },
+  {
+   "commit": "974f054baf",
+   "subject": "fix(editor): embed YouTube live links (#12178)",
+   "editedOldLines": 0,
+   "linesFromFixCommits": 0,
+   "fixCommits": []
+  },
+  {
+   "commit": "afed9e6e27",
+   "subject": "fix(editor): handle the save-as shortcut while editing text (#11922)",
+   "editedOldLines": 0,
+   "linesFromFixCommits": 0,
+   "fixCommits": []
+  },
+  {
+   "commit": "d29d864884",
+   "subject": "feat(editor): file drop overlay & shift-to-merge imported scene (#12177)",
+   "editedOldLines": 3,
+   "linesFromFixCommits": 0,
+   "fixCommits": [],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "f3d99c42e9",
+   "subject": "fix(editor): pan the canvas to follow the caret instead of shifting the UI (#121",
+   "editedOldLines": 5,
+   "linesFromFixCommits": 4,
+   "fixCommits": [
+    "374716304a"
+   ],
+   "fixCommitsStrict": [
+    "374716304a"
+   ]
+  },
+  {
+   "commit": "c10499eebb",
+   "subject": "feat(editor): text tool edits what you click, shows what a click will do, drags ",
+   "editedOldLines": 299,
+   "linesFromFixCommits": 1,
+   "fixCommits": [
+    "d2557474e2"
+   ],
+   "fixCommitsStrict": [
+    "d2557474e2"
+   ]
+  },
+  {
+   "commit": "c12a8cd037",
+   "subject": "fix(editor): reduce cursor hint cooldown to 30s (#12174)",
+   "editedOldLines": 1,
+   "linesFromFixCommits": 0,
+   "fixCommits": [],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "5feb2172d5",
+   "subject": "feat(editor): better library search + display names (#12173)",
+   "editedOldLines": 11,
+   "linesFromFixCommits": 0,
+   "fixCommits": [],
+   "fixCommitsStrict": []
+  }
+ ],
+ "mole": [
+  {
+   "commit": "ac8e02d759",
+   "subject": "T10 review fixes: drop private path comment, node engines 22.13, public-safe PUB",
+   "editedOldLines": 1,
+   "linesFromFixCommits": 0,
+   "fixCommits": [],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "9e19c51865",
+   "subject": "T9 review fixes: Node-too-old message shown in panel, whole-folder default when ",
+   "editedOldLines": 7,
+   "linesFromFixCommits": 3,
+   "fixCommits": [
+    "05089bca20"
+   ],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "6a546ecfce",
+   "subject": "T9: self-contained .vsix (extension + bundled daemon/worker + TypeScript libs), ",
+   "editedOldLines": 12,
+   "linesFromFixCommits": 6,
+   "fixCommits": [
+    "05089bca20"
+   ],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "61564ebf85",
+   "subject": "T8 review fixes: park editor on package.json:1 before every open, strict call re",
+   "editedOldLines": 10,
+   "linesFromFixCommits": 2,
+   "fixCommits": [
+    "05089bca20",
+    "fd7ed34c68"
+   ],
+   "fixCommitsStrict": [
+    "fd7ed34c68"
+   ]
+  },
+  {
+   "commit": "da799b56e2",
+   "subject": "T8: selftest opens every node of 40 file maps + top-function symbol maps in real",
+   "editedOldLines": 12,
+   "linesFromFixCommits": 2,
+   "fixCommits": [
+    "fd7ed34c68"
+   ],
+   "fixCommitsStrict": [
+    "fd7ed34c68"
+   ]
+  },
+  {
+   "commit": "bb4d23cc57",
+   "subject": "stamp artifacts named by ledger done moves (T1-T7 prevents)",
+   "editedOldLines": 5,
+   "linesFromFixCommits": 3,
+   "fixCommits": [
+    "78c0c941bb",
+    "b903a6ffa3",
+    "fd7ed34c68"
+   ],
+   "fixCommitsStrict": [
+    "78c0c941bb",
+    "fd7ed34c68"
+   ]
+  },
+  {
+   "commit": "8664b8bfe4",
+   "subject": "T7 review fixes: file-level callers/importers print site line + count in text; M",
+   "editedOldLines": 2,
+   "linesFromFixCommits": 0,
+   "fixCommits": [],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "bb3846f6ae",
+   "subject": "T7: callers and importers carry the call/import site line (map text, JSON, webvi",
+   "editedOldLines": 7,
+   "linesFromFixCommits": 4,
+   "fixCommits": [
+    "05089bca20"
+   ],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "de22e1baa2",
+   "subject": "T5 review fixes: tests removed from study copy, unrelated transfer task TX1, REA",
+   "editedOldLines": 1,
+   "linesFromFixCommits": 0,
+   "fixCommits": [],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "fd7ed34c68",
+   "subject": "T2 review fixes: atomic full reindex (no false not-indexed), per-root lock/db/so",
+   "editedOldLines": 78,
+   "linesFromFixCommits": 44,
+   "fixCommits": [
+    "05089bca20"
+   ],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "7149cfce44",
+   "subject": "T2: click-to-open verified in the real editor (selftest openCheck)",
+   "editedOldLines": 6,
+   "linesFromFixCommits": 6,
+   "fixCommits": [
+    "05089bca20"
+   ],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "05089bca20",
+   "subject": "T2: apps/vscode map panel (locked 50% group, follows open file, impact, restore)",
+   "editedOldLines": 23,
+   "linesFromFixCommits": 0,
+   "fixCommits": [],
+   "fixCommitsStrict": []
+  },
+  {
+   "commit": "78c0c941bb",
+   "subject": "T1 review fixes: drop dangling edges on updateFile, ambient-module ids, overload",
+   "editedOldLines": 7,
+   "linesFromFixCommits": 0,
+   "fixCommits": [],
+   "fixCommitsStrict": []
+  }
+ ]
+}
