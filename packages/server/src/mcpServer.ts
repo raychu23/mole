@@ -28,26 +28,29 @@ export async function createMcpHttpServer(opts: { pool: Pool; issuer: TestIssuer
   const verifier = {
     async verifyAccessToken(token: string) {
       const claims = await issuer.verifyToken(token);
-      return { token, clientId: claims.org, scopes: claims.scopes, extra: { org: claims.org } };
+      return { token, clientId: claims.org, scopes: claims.scopes, expiresAt: claims.expiresAt, extra: { org: claims.org } };
     },
   };
 
-  const mcp = new McpServer({ name: 'mole-team-server', version: '0.0.0' });
-  mcp.registerTool(
-    'governing_decisions',
-    {
-      description: 'Decisions/tenets governing a file, scoped to the caller org (D31 decision graph)',
-      inputSchema: { org: z.string(), file: z.string() },
-    },
-    async ({ org, file }, extra) => {
-      // The caller's authenticated org (from the bearer token) is the ONLY org scope ever
-      // used for the query — `org` in args is what the caller is asking ABOUT, which may
-      // legitimately differ (and then RLS returns nothing, per the M25 leak test).
-      const viewerOrg = (extra as any)?.authInfo?.extra?.org ?? (extra as any)?.authInfo?.clientId;
-      const rows = await getGoverningDecisions(pool, viewerOrg, file, { forOrg: org });
-      return { content: [{ type: 'text', text: JSON.stringify(rows) }] };
-    }
-  );
+  function buildMcpServer() {
+    const srv = new McpServer({ name: 'mole-team-server', version: '0.0.0' });
+    srv.registerTool(
+      'governing_decisions',
+      {
+        description: 'Decisions/tenets governing a file, scoped to the caller org (D31 decision graph)',
+        inputSchema: { org: z.string(), file: z.string() },
+      },
+      async ({ org, file }, extra) => {
+        // The caller's authenticated org (from the bearer token) is the ONLY org scope ever
+        // used for the query — `org` in args is what the caller is asking ABOUT, which may
+        // legitimately differ (and then RLS returns nothing, per the M25 leak test).
+        const viewerOrg = (extra as any)?.authInfo?.extra?.org ?? (extra as any)?.authInfo?.clientId;
+        const rows = await getGoverningDecisions(pool, viewerOrg, file, { forOrg: org });
+        return { content: [{ type: 'text', text: JSON.stringify(rows) }] };
+      }
+    );
+    return srv;
+  }
 
   const app = express();
   app.use(express.json());
@@ -55,9 +58,12 @@ export async function createMcpHttpServer(opts: { pool: Pool; issuer: TestIssuer
     '/mcp',
     requireBearerAuth({ verifier: verifier as any }),
     async (req, res) => {
+      // Stateless mode (sessionIdGenerator: undefined): one McpServer + one transport per
+      // request, since a McpServer instance can only be connected to one transport at a time.
       const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
       res.on('close', () => transport.close());
-      await mcp.connect(transport);
+      const srv = buildMcpServer();
+      await srv.connect(transport);
       await transport.handleRequest(req, res, req.body);
     }
   );

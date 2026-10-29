@@ -6,7 +6,7 @@ import { SignJWT, jwtVerify } from 'jose';
 
 export interface TestIssuer {
   mintToken(org: string, scopes?: string[]): Promise<string>;
-  verifyToken(token: string): Promise<{ org: string; scopes: string[] }>;
+  verifyToken(token: string): Promise<{ org: string; scopes: string[]; expiresAt?: number }>;
 }
 
 export function createTestIssuer(secret = 'mole-local-test-issuer-2026-10-29'): TestIssuer {
@@ -22,7 +22,7 @@ export function createTestIssuer(secret = 'mole-local-test-issuer-2026-10-29'): 
     },
     async verifyToken(token) {
       const { payload } = await jwtVerify(token, key, { issuer: 'mole-local-test-issuer' });
-      return { org: String(payload.org), scopes: (payload.scopes as string[]) ?? [] };
+      return { org: String(payload.org), scopes: (payload.scopes as string[]) ?? [], expiresAt: payload.exp };
     },
   };
 }

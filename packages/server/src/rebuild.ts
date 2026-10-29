@@ -87,6 +87,11 @@ export async function rebuildIndexFromGit(
       await client.query('begin');
       await client.query('set local role mole_app');
       await client.query('select set_config($1, $2, true)', ['app.current_org_id', orgId]);
+      // Serialize ALL rebuilds for this org (across concurrent pg-boss workers and any
+      // direct/reconcile calls): an xact-scoped advisory lock keyed by org_id, released
+      // automatically at commit/rollback. Without this, two concurrent delete+insert
+      // sequences for the same org can interleave and hit nodes_pkey (org_id, id) races.
+      await client.query('select pg_advisory_xact_lock(hashtext($1))', [orgId]);
       // deterministic replace: delete then insert, in one transaction, so the index always
       // matches exactly what's in git at ref (never an accumulation of stale rows).
       await client.query('delete from nodes where org_id = $1', [orgId]);
