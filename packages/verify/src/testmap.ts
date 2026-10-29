@@ -133,3 +133,47 @@ export function testsAtLine(m: TestMap, line: number): TestCase[] {
   if (best >= 0) return m.tests.filter((t) => t.suites.includes(best));
   return m.tests;
 }
+
+/**
+ * The tests that use the helper function(s) of a test file holding `line` (review-2 P2-D): helpers = named functions
+ * (declarations, or `const f = () => ...`) at any depth whose span holds the line, closed over helpers that mention them;
+ * every other line mentioning one of them names its tests (testsAtLine). Empty when the line is in no helper.
+ */
+export function helperUsers(path: string, text: string, m: TestMap, line: number): { helpers: string[]; tests: TestCase[] } {
+  const kind = /\.[cm]?[jt]sx$/.test(path) ? ts.ScriptKind.TSX : /\.[cm]?jsx?$/.test(path) ? ts.ScriptKind.JS : ts.ScriptKind.TS;
+  const sf = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, kind);
+  const lineOf = (pos: number): number => sf.getLineAndCharacterOfPosition(pos).line + 1;
+  const fns: Array<{ name: string; start: number; end: number }> = [];
+  const visit = (n: ts.Node): void => {
+    if (ts.isFunctionDeclaration(n) && n.name) fns.push({ name: n.name.text, start: lineOf(n.getStart(sf)), end: lineOf(n.getEnd()) });
+    else if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.initializer && (ts.isArrowFunction(n.initializer) || ts.isFunctionExpression(n.initializer)))
+      fns.push({ name: n.name.text, start: lineOf(n.getStart(sf)), end: lineOf(n.getEnd()) });
+    ts.forEachChild(n, visit);
+  };
+  visit(sf);
+  // a helper that is itself inside a test is part of that test (the caller handles edits inside tests)
+  const inH = fns.filter((f) => f.start <= line && line <= f.end && !m.tests.some((t) => t.start <= f.start && f.end <= t.end));
+  if (!inH.length) return { helpers: [], tests: [] };
+  const lines = text.split('\n');
+  const word = (w: string): RegExp => new RegExp(`(^|[^\\w$])${w.replace(/[$]/g, '\\$')}($|[^\\w$])`);
+  const H = new Set(inH);
+  for (let grew = true; grew; ) {
+    grew = false;
+    for (const f of fns) {
+      if (H.has(f)) continue;
+      const body = lines.slice(f.start - 1, f.end).join('\n');
+      if ([...H].some((h) => word(h.name).test(body))) {
+        H.add(f);
+        grew = true;
+      }
+    }
+  }
+  const names = [...new Set([...H].map((h) => h.name))];
+  const res = new Set<TestCase>();
+  lines.forEach((txt, i) => {
+    const l = i + 1;
+    if ([...H].some((h) => h.start <= l && l <= h.end)) return;
+    if (names.some((n) => word(n).test(txt))) for (const t of testsAtLine(m, l)) res.add(t);
+  });
+  return { helpers: inH.map((h) => h.name), tests: [...res] };
+}

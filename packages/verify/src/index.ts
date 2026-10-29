@@ -11,7 +11,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { check, type Change, type CheckResult } from '@mole/history';
 import { callersOf, declarations, enclosing, hasNode, importersOf, openGraph, RUNNER_TEST, SOURCE, usersInFile, type Decl } from './graph.js';
-import { testMap, testsAtLine, type TestMap } from './testmap.js';
+import { helperUsers, testMap, testsAtLine, type TestMap } from './testmap.js';
 
 export type { Change } from '@mole/history';
 export { testMap, testsAtLine, type TestCase, type TestMap } from './testmap.js';
@@ -166,16 +166,13 @@ export async function selectTests(rootIn: string, change: Change, opts: SelectOp
     const lines = h.newLines > 0 ? Array.from({ length: h.newLines }, (_, i) => h.newStart + i) : [h.newStart, h.newStart + 1];
     if (RUNNER_TEST.test(h.file)) {
       const m = testMap(h.file, text);
-      const tdecls = declarations(h.file, text);
-      const body = text.split('\n');
       for (const l of lines) {
         const own = m.tests.filter((x) => x.start <= l && l <= x.end);
         for (const t of own) add(h.file, t, 'edited', { reason: 'the change edits this test' });
         if (own.length) continue;
         // review-2 P2-D: an edit outside any test. In a helper function of the file: the file's tests that use it; else
         // (hook, describe body, imports) the tests of the innermost describe holding the line, or the whole file
-        const helpers = enclosing(tdecls, [l]).map((d) => d.name.slice(Math.max(d.name.lastIndexOf('.'), d.name.lastIndexOf(':')) + 1)).filter(Boolean);
-        const users = m.tests.filter((t) => helpers.some((w) => new RegExp(`\\b${w.replace(/[$]/g, '\\$')}\\b`).test(body.slice(t.start - 1, t.end).join('\n'))));
+        const { helpers, tests: users } = helperUsers(h.file, text, m, l);
         if (users.length) for (const t of users) add(h.file, t, 'edited', { reason: `uses ${helpers.join(', ')}, edited in this test file` });
         else for (const t of testsAtLine(m, l)) add(h.file, t, 'edited', { reason: 'the change edits this test file outside any test' });
       }
@@ -461,7 +458,9 @@ export async function runTests(root: string, sel: Selection, opts: { vitest?: st
     for (const t of sel.tests) {
       const os = result.outcomes.filter((o) => sameTest(t, o));
       if (os.some((o) => o.status !== 'skipped')) continue;
-      if (t.skip && os.length) result.skippedByFile.push(t);
+      // .skip/.todo (own or a describe's) never runs, even when the runner names it under other titles (a describe built
+      // by a helper called from another describe); a run-time condition (skipIf/runIf/ctx.skip) needs the runner's skip
+      if ((t.skip === 'skip' || t.skip === 'todo') || (t.skip && os.length)) result.skippedByFile.push(t);
       else result.notRun.push(t);
     }
   } catch (e) {
