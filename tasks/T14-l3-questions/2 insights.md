@@ -41,7 +41,8 @@ cli          `mole check ... [--notes-root DIR] [--reword]`: T12's text output u
 results      round 3 (8b8f725): npm run check 98/98; M4 past-fix in top3 8/8, empty-case questions 0, useless 0.0% (0/15),
              key past-fix items asked 11/11, order ok 13/13, model calls 0. Round 2 failed only on an untouched daemon
              test timing out under outside load (load avg ~33-60)
-read-only    excalidraw clone `git status --porcelain` empty after the bench (only diff/log/show/blame/rev-parse used)
+read-only    excalidraw clone `git status --porcelain` after the bench shows only `?? .mcp.json`, dated 19:28, before this
+             run (not ours); T14 runs only diff/log/show/blame/rev-parse there
 not done     no key changes; useless share is graded only against the key's facts (a question can match the key and
              still be a weak question, e.g. a 'why' taken from a nearby fix comment such as R4's "SAFETY: ..." line)
 ```
