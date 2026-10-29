@@ -1,22 +1,22 @@
 ---
-state: submitted
+state: verified
 owner: mole-builder (Hermes chat)
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t14-l3-questions
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T14-l3-questions
 base: ef51e65
-reviewer:
-updated: 2026-10-28 22:46
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+reviewer: reviewer-T14-r2
+updated: 2026-10-28 22:49
+status: ledger verified
+next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
 claimed: 2026-10-28 22:05
 ---
 ```notes
 T14-l3-questions      ledger task (rules.md §3 code features)      project Mole
     goal                    L3 questions: when a change touches symbols with notes, past fixes or your seen history, mole check adds at most 3 questions aimed at your understanding (from templates over facts T11/T12/T13 found; a model may only reword them, behind a flag, never decide them), ranked past fix > your note > a guarding test changed in the same diff
     done-when               1) <= 3 questions per change, each citing its fact with a clickable source; 2) 0 questions on a change touching nothing known; 3) a question when the change edits or deletes a guarding test of a past fix (read the test diff first); 4) M4: expected questions written into packages/questions/bench/m4-key.json BEFORE the implementation commit for B1 + B3 + 3 no-known-facts changes → the past-fix question in the top 3 for every past-fix case, 0 on the empty ones, useless share < 10%; 5) works with no model configured; 6) npm run check passes
-    status                  2026-10-28 submitted      report: round 2 @07b7a04 (fix f233906): guard rule narrowed (fix-written lines inside a test block, or the it/test block
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    status                  2026-10-28 verified      reviewer reviewer-T14-r2 · findings: P2 only: (1) guard of an unasked fix still evicts lowest note/3rd past fix (forced
+    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
     pinned
     mode                    code
     boundary                packages/questions/** (new), packages/daemon/src/cli.ts (check output only), tasks/T14-l3-questions/**

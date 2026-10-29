@@ -8,4 +8,6 @@ ledger (newest last, nothing deleted)
     2026-10-28 22:33      submitted → running      changes requested: review-1 (tasks/T14-l3-questions/4 log/review-1.md, ff5b850): P1-1 guard-test 'named' rule matches outer/file-wide describe via hunk-header context, so editing any test inside it asks about an unrelate
     2026-10-28 22:46      running → submitted      report: round 2 @07b7a04 (fix f233906): guard rule narrowed (fix-written lines inside a test block, or the it/test block whose title the fix added, or deleting a whole block T12 names) — 808d068 now asks 3 past-fix quest
     2026-10-28 22:46      checks ran: npm run check && node packages/questions/dist/bench/m4.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T14-l3-questions → exit 0 (bench: all targets met)
+    2026-10-28 22:49      submitted → verified      reviewer reviewer-T14-r2 · findings: P2 only: (1) guard of an unasked fix still evicts lowest note/3rd past fix (forced by frozen red test, documented), (2) blame guards on formatting-only fix lines + same-sha guard aske
+    2026-10-28 22:49      checks ran: npm run check && node packages/questions/dist/bench/m4.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T14-l3-questions → exit 0 (bench: all targets met)
 ```
