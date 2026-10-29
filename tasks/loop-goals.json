@@ -1,0 +1,57 @@
+{
+ "what": "Build loop for Mole L1-L3 (D24 order). Each task runs produce -> check -> correct -> repeat until green, against checks written and committed BEFORE its code. Done = those checks pass and the evidence is saved, never the agent saying so.",
+ "asked": "USER 2026-10-28 21:00: \"can we pls get started on building. lets say l2 l3 at least or anything before really just all get to building keeping end goals checkpoints metrics benchamrs in midn as the loop goals, which the twitter articles describes. also pls spin up new agennt chat here in this project for that and whatever else needed there.\" + 3C1 line 672 \"verificatn: sure thing u tell it to do actually done\"",
+ "method": [
+  {"id": "S1", "src": "hanakoxbt, Loops and Graphs (3C1 line 505; context/product-plan/systems/iteration-3/research/raw/hanakoxbt_2091515787366306154_text.txt)", "rule": "a loop is produce, check, correct, repeat until green; the check is the whole thing, written first so a program can evaluate it; absence of an error is not evidence of correctness; the graph (which tasks exist, what waits on what) is the layer above: an edge exists only if a task reads another's output"},
+  {"id": "S2", "src": "alexlavaee, Agents Write the Code. Your System Has to Prove It. (3C1 line 504; .../raw/alexlavaee_2110521585623003572_text.txt)", "rule": "done = checks the agent didn't write and can't change say the acceptance criteria are met, and their output is saved; contract before code; deterministic pyramid (types/lint, unit, integration, end-to-end) with a thin model judge on top; fresh reviewer session that never saw the implementer's transcript, findings P0-P2, review rounds capped (same blocker 3 rounds -> blocked); read the test diff before the implementation diff"}
+ ],
+ "loop_rules": [
+  "R1 checks first: each task commits its benchmark keys + failing tests (red) in a commit of their own before any implementation commit; the keys carry a written date earlier than the first implementation commit",
+  "R2 can't change: after R1's commit the implementer never edits those keys or tests; a needed change goes to tasks/<T>/4 log/key-changes.md with the reason and waits for the reviewer (or Raymond)",
+  "R3 repeat until green: run the task's checks after every change; cap 6 rounds per task; the same failure 3 rounds in a row -> ledger blocked with the cause",
+  "R4 evidence saved: every check run appends one line to tasks/<T>/4 log/runs.jsonl {time, commit, cmd, exit, metric values}; the ledger hand-in quotes the last line",
+  "R5 fresh reviewer: a session that never saw the implementer's transcript reviews against done-when, reads the test diff first, findings P0-P2 with a reproducer; P0/P1 must be fixed or disputed with evidence",
+  "R6 deterministic first: every metric here is computed by code; a model may only word things (reasons, questions) on top of facts code already found, and is never the check",
+  "R7 never green by deleting: a check that was red may turn green only through an implementation change, never by loosening the check (R2)"
+ ],
+ "end_goals": [
+  {"id": "E1", "goal": "when an agent changes code you knew, Mole tells you which of your understanding went stale", "measured_by": ["M1", "M3"]},
+  {"id": "E2", "goal": "when a change edits lines a past fix wrote, Mole brings up that fix's reason and guarding test, beside the change, with a clickable source", "measured_by": ["M2"]},
+  {"id": "E3", "goal": "at most 3 questions per change, aimed at your understanding, and none when the change touches nothing known", "measured_by": ["M4"]},
+  {"id": "E4", "goal": "all of it from your own files (repo + .mole/), local, fast enough to run on every agent stop", "measured_by": ["M5"]}
+ ],
+ "metrics": [
+  {"id": "M1", "name": "stale-flag recall / false flags", "how": "notes placed on symbols before replayed real commits; truth = the symbol's normalized body changed", "target": "recall 100%, false flags <= 5%, whitespace/comment-only edits never flagged", "task": "T11"},
+  {"id": "M2", "name": "past-fix recall (the trial's M8, same key and scoring)", "how": "context/product-plan/systems/tool-trials/keys/m8-key.json cases R1-R5 + R6 (Mole 9e19c51), scored by its own rule (1 = fix named or its reason + clickable source)", "target": ">= 4 of 5 on R1-R5 and R6 = 1 (bar was 3 of 5; every outside tool scored 0, git blame 5/5 raw)", "task": "T12"},
+  {"id": "M3", "name": "since-you-last-looked precision / recall", "how": "seen-log fixture + replayed commits; truth = symbols you saw whose body changed after your last view", "target": "precision 100%, recall 100% on the fixture; unseen symbols never listed", "task": "T13"},
+  {"id": "M4", "name": "question usefulness", "how": "expected questions written into a key before the run, per benchmark change; a question counts useful if it matches a key item", "target": "the past-fix question is in the top 3 for every case with a past fix; 0 questions on changes touching nothing known; useless share < 10% (trial M4 target)", "task": "T14"},
+  {"id": "M5", "name": "speed + cost", "how": "wall time of mole check on each benchmark change (excalidraw clone, Mole repo); model calls counted", "target": "p95 < 2 s per change without a model; 0 model calls needed for any metric above", "task": "T12"}
+ ],
+ "benchmarks": [
+  {"id": "B1", "what": "trial M8 cases R1-R6 (excalidraw + Mole 9e19c51), key dated 2026-10-28 20:00", "path": "context/product-plan/systems/tool-trials/keys/m8-key.json"},
+  {"id": "B2", "what": "past-fix overlap ground truth: excalidraw 18 of 29, Mole 3 of 13 changes edit lines a fix wrote", "path": "context/product-plan/systems/benefits/past-fix-overlap.json"},
+  {"id": "B3", "what": "planted regression: undo part of the idle-clock fix 9e19c51", "path": "context/product-plan/systems/tool-trials/fixtures/planted-m8.diff"},
+  {"id": "B4", "what": "excalidraw clone used by the trial and impact runs (read-only)", "path": "~/.hermes/cache/scratch/impact/excalidraw"}
+ ],
+ "graph": [
+  {"task": "T11-l2-memory-notes", "needs": [], "why": "notes anchored to symbols + stale flags"},
+  {"task": "T12-l2-why-and-past-fixes", "needs": [], "why": "runs in parallel with T11: reads git history only"},
+  {"task": "T13-l1-since-you-last-looked", "needs": ["T11-l2-memory-notes"], "why": "reuses T11's symbol anchor + normalized-body hash"},
+  {"task": "T14-l3-questions", "needs": ["T11-l2-memory-notes", "T12-l2-why-and-past-fixes"], "why": "questions are built from notes + past fixes"},
+  {"task": "T15-surface-hover-and-agent-hooks", "needs": ["T12-l2-why-and-past-fixes", "T13-l1-since-you-last-looked", "T14-l3-questions"], "why": "shows it inline on touched lines (D23), in the panel, and to agents (MCP + Claude Code hooks)"}
+ ],
+ "checkpoints": [
+  {"id": "C1", "when": "first", "pass": "keys + red tests for T11 and T12 committed (R1); npm run check still builds"},
+  {"id": "C2", "when": "after T11 + T12", "pass": "M1 and M2 + M5 at target, reviewed (R5), ledger integrated"},
+  {"id": "C3", "when": "after T13 + T14", "pass": "M3 and M4 at target, reviewed, integrated"},
+  {"id": "C4", "when": "dogfood", "pass": "mole check run on Mole's last 13 changes; report in tasks/loop-report.md with each metric's latest value and what it missed"},
+  {"id": "C5", "when": "after T15", "pass": "hover on touched lines in a clean VS Code profile (T9's selftest style) + Claude Code Stop hook prints the check; npm run check passes"}
+ ],
+ "never": [
+  "no PR comments or PR bot (D24: PR review is integrated, not built)",
+  "no more work on the structure map (D23, AtomicViz verdict 3C1 line 658)",
+  "no new wiki generator (D13)",
+  "prototype/ is rejected",
+  "don't publish, push, or use Raymond's accounts"
+ ]
+}
