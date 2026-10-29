@@ -190,3 +190,15 @@ describe('P1-2 + P2-6 workflow: one "mole" check run per push, no persisted cred
     expect(sh).toMatch(/job name/);
   });
 });
+
+describe('P1-1 citator flags are computed at the merge base too', () => {
+  it('a record whose anchor is intact at the base is green whichever side is checked out (not red for a missing file)', async () => {
+    git(root, 'checkout', '-q', heads.silence!);
+    const atHead = await prCheck({ root, base, head: heads.silence!, history: false });
+    git(root, 'checkout', '-q', base);
+    const atBase = await prCheck({ root, base, head: heads.silence!, history: false });
+    expect(atHead.governed.map((g) => [g.id, g.flag])).toEqual([['0001', 'green']]);
+    expect(atBase.governed.map((g) => [g.id, g.flag])).toEqual([['0001', 'green']]);
+    expect(execFileSync('git', ['-C', root, 'worktree', 'list'], { encoding: 'utf8' }).trim().split('\n').length).toBe(1); // no leftover worktree
+  });
+});

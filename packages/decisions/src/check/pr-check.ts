@@ -99,17 +99,17 @@ const levelOf = (flag: Flag): CheckAnnotation['annotation_level'] => (flag === '
 const fmtRanges = (rs: Range[]) => rs.map(([a, b]) => (a === b ? `${a}` : `${a}-${b}`)).join(', ');
 
 export async function prCheck(opts: PrCheckOptions): Promise<PrCheckResult> {
-  const snapDirs: string[] = []; // merge-base / head snapshots of the records, removed when the check is done
+  const cleanups: Array<() => void> = []; // merge-base worktree / head snapshot of the records, removed when the check is done
   try {
-    return await prCheckIn(opts, snapDirs);
+    return await prCheckIn(opts, cleanups);
   } finally {
-    for (const d of snapDirs) rmSync(d, { recursive: true, force: true });
+    for (const c of cleanups.reverse()) c();
   }
 }
 
 const posixRel = (from: string, to: string) => relative(from, to).split(sep).join('/');
 
-async function prCheckIn(opts: PrCheckOptions, snapDirs: string[]): Promise<PrCheckResult> {
+async function prCheckIn(opts: PrCheckOptions, cleanups: Array<() => void>): Promise<PrCheckResult> {
   const t0 = performance.now();
   const root = git(resolve(opts.root), ['rev-parse', '--show-toplevel']).trim();
   const head = git(root, ['rev-parse', '--verify', `${opts.head}^{commit}`]).trim();
@@ -121,9 +121,9 @@ async function prCheckIn(opts: PrCheckOptions, snapDirs: string[]): Promise<PrCh
   const existsAtHead = (path: string) => (gitOrNull(root, ['cat-file', '-e', `${head}:${path}`]) ?? null) !== null;
 
   // ---- records and their flags (review 1 P1-1): when the records root is inside the checked repository, the records (and
-  // notes, .mole/notes) are read AT THE MERGE BASE from git objects, so a PR cannot silence its own check by editing,
-  // superseding or deleting a record, and the result does not depend on what is checked out. A records folder outside the
-  // repository (the M24 overlays) is read from disk as before.
+  // notes, .mole/notes) are read AT THE MERGE BASE from git objects (a temporary detached worktree, below), so a PR cannot
+  // silence its own check by editing, superseding or deleting a record, and the result does not depend on what is checked
+  // out. A records folder outside the repository (the M24 overlays) is read from disk as before.
   const recordsRootAbs = (() => {
     const p = resolve(opts.recordsRoot ?? root);
     try {
@@ -137,9 +137,10 @@ async function prCheckIn(opts: PrCheckOptions, snapDirs: string[]): Promise<PrCh
   const sameRepo = inRepo && recordsRootAbs === root;
   const prefix = inRepo ? posixRel(root, recordsRootAbs) : '';
   const recordPaths = [join(prefix, MOLE_DIR), ...(opts.adrDirs ?? []).filter((d) => d && !isAbsolute(d)).map((d) => join(prefix, d))].map((p) => p.split(sep).join('/'));
+  // the head side's records, only to list what the PR changes (blobs of the record folders; never governs)
   const snapshot = (rev: string): string => {
     const dir = mkdtempSync(join(tmpdir(), 'mole-pr-records-'));
-    snapDirs.push(dir);
+    cleanups.push(() => rmSync(dir, { recursive: true, force: true }));
     for (const p of recordPaths) {
       const ls = gitOrNull(root, ['ls-tree', '-r', '-z', '--full-tree', rev, '--', p]) ?? '';
       for (const entry of ls.split('\0')) {
@@ -152,7 +153,19 @@ async function prCheckIn(opts: PrCheckOptions, snapDirs: string[]): Promise<PrCh
     }
     return join(dir, prefix);
   };
-  const recordsRoot = inRepo ? snapshot(mergeBase) : recordsRootAbs;
+  // the merge base as a detached temporary worktree: records, notes AND the files their anchors name are the base's, and
+  // its HEAD is the merge base, so the citator flags (anchor drift since the record was confirmed) are the base's too.
+  // Hooks are off (core.hooksPath) so no repository script runs; the worktree is removed when the check is done.
+  const baseTree = (): string => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), 'mole-pr-base-')));
+    cleanups.push(() => {
+      gitOrNull(root, ['worktree', 'remove', '--force', dir]); // removes its admin entry too (no global `worktree prune`)
+      rmSync(dir, { recursive: true, force: true });
+    });
+    git(root, ['-c', 'core.hooksPath=/dev/null', 'worktree', 'add', '--detach', '--quiet', dir, mergeBase]);
+    return prefix ? join(dir, prefix) : dir;
+  };
+  const recordsRoot = inRepo ? baseTree() : recordsRootAbs;
   const graph = loadGraph(recordsRoot, { adrDirs: opts.adrDirs });
   const flags = new Map<string, Flag>();
   if (sameRepo) for (const f of computeFlags(graph)) flags.set(f.id, f.flag);
