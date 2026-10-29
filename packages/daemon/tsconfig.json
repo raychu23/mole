@@ -19,6 +19,9 @@
     },
     {
       "path": "../history"
+    },
+    {
+      "path": "../questions"
     }
   ]
 }
