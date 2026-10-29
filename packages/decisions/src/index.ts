@@ -5,3 +5,5 @@ export { frontMatter, loadGraph, MOLE_DIR, normStatus } from './graph.js';
 export { computeFlags } from './flags.js';
 export { contentHash } from './anchors.js';
 export { decisions, decisionsCli, formatDecisions } from './cli.js';
+export { CALL_RULES_FILE, checkRules, DEPCRUISE_FILE, depcruiseRuleSet, emitConfig, formatRules, loadRules, rulesCli } from './rules/index.js';
+export type { RuleDecision, RuleKind, RuleSpec, RulesLoad, RulesOptions, RulesResult, SkippedRules, Violation } from './rules/index.js';

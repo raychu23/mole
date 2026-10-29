@@ -11,6 +11,12 @@ evidence:
   - test: packages/agentstate/test/agentstate.test.ts#opens sources read-only (a 0444 db works and is not modified)
 approver: raymond
 source: T18 commit 9902b50 (@mole/agentstate Hermes/Claude Code/Codex readers)
+rules:
+  - forbid: call
+    callee: [writeFileSync, appendFileSync, writeFile, appendFile, rmSync, unlinkSync, renameSync, truncateSync, createWriteStream, mkdirSync]
+    from: packages/agentstate/src/
+    except: [packages/agentstate/src/langgraph.ts]
+    why: harness transcripts are opened read-only; the one write path is the explicit LangGraph export (langgraph.ts), into a file the user names
 ---
 
 ## Decision
