@@ -15,7 +15,7 @@ TIME="$(date +%Y-%m-%dT%H:%M:%S%z)" COMMIT="$(git rev-parse --short HEAD)" EX=$e
 const fs = require("fs");
 let m = {}; try { m = JSON.parse(fs.readFileSync(process.env.M, "utf8")); } catch { m = { M1: "bench did not produce metrics" }; }
 const chk = fs.readFileSync(process.env.CHK, "utf8");
-const tests = (chk.match(/Tests\s+([^\n]+)/) || [])[1] || "build failed before tests";
+const tests = (chk.match(/^\s*Tests\s+(\d[^\n]*)$/m) || [])[1] || "build failed before tests";
 const line = { time: process.env.TIME, commit: process.env.COMMIT, cmd: "npm run check && node packages/memory/dist/bench/m1.js", exit: Number(process.env.EX),
   metrics: { M1: m.M1 }, detail: m.M1_detail, check: Number(process.env.C) === 0 ? "pass: " + tests.trim() : "fail: " + tests.trim() };
 fs.appendFileSync("tasks/T11-l2-memory-notes/4 log/runs.jsonl", JSON.stringify(line) + "\n");
