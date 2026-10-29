@@ -82,6 +82,11 @@ export function computeFlags(graph: DecisionGraph, ctx: FlagContext = {}): FlagR
   const relFlag = (e: GraphEdge, target: string, other: string) => {
     const o = byId.get(other);
     const t = byId.get(target);
+    // review 1 P1-1: a record that itself says superseded_by <unknown id> is red, never silently green
+    if (!o && t && reasons.has(target) && e.type === 'supersedes' && e.file === t.file) {
+      add(target, { flag: 'red', code: 'superseded', text: `superseded by ${other} (not found)`, file: e.file, line: e.line, by: other });
+      return;
+    }
     if (!o || !t || !reasons.has(target) || o.kind !== 'decision') return;
     if (e.type === 'supersedes') {
       const writtenInTarget = e.file === t.file;

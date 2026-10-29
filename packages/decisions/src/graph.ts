@@ -409,5 +409,13 @@ export function loadGraph(root: string, opts: LoadOptions = {}): DecisionGraph {
   loadIntent(b);
   loadIncidents(b);
   for (const d of opts.adrDirs ?? []) if (d) loadAdrDir(b, d);
+  // review 1 P2-1 / P2-2: an unknown status or a reference to an unknown id is reported at file:line, never dropped silently
+  for (const n of b.nodes)
+    if (n.kind === 'decision' && n.format === 'mole' && n.status === 'unknown')
+      b.problems.push({ file: n.file, line: n.fields.status ?? 1, message: n.statusText ? `unknown status '${n.statusText}' (proposed | accepted | superseded | deprecated | rejected)` : 'no status' });
+  for (const e of b.edges) {
+    if (e.type === 'applies_to') continue;
+    for (const id of [e.from, e.to]) if (!b.has(id)) b.problems.push({ file: e.file, line: e.line, message: `${e.type}: unknown id ${id}` });
+  }
   return { root, nodes: b.nodes, edges: b.edges, problems: b.problems };
 }
