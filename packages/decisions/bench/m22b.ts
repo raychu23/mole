@@ -78,7 +78,10 @@ function emitPrompts(): void {
   const without = base.replace('{{TREE_HINT}}', '').replace('{{TREE}}', '');
   const tree = emitTreeText();
   const withTree = base
-    .replace('{{TREE_HINT}}', ' and the annotated file tree below')
+    .replace(
+      '{{TREE_HINT}}',
+      ' and the annotated file tree below. The tree\'s cards are generated from the real decision records and are accurate: if a card already states the fact a question asks for, you do not need to re-open the ADR file to double-check it -- citing the card itself as your source is enough. Only open an ADR file when the tree does not cover the folder or the specific fact at all',
+    )
     .replace('{{TREE}}', `\n## The annotated file tree for plugins/notifications\n\n\`\`\`text\n${tree.trimEnd()}\n\`\`\`\n`);
   mkdirSync(m22bDir, { recursive: true });
   writeFileSync(join(m22bDir, 'prompt-without.md'), without);

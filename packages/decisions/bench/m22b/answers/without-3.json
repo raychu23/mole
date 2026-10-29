@@ -1,46 +1,46 @@
 {
   "answers": {
     "q1": {
-      "answer": "No. ADR013 ('Proper use of HTTP fetching libraries', the node-fetch one) is marked superseded and no longer applies. It was replaced by ADR014, which says frontend plugins/packages should prefer the fetchApiRef (as this file does via its injected fetchApi), while Node.js code should use native fetch instead of node-fetch.",
-      "source": "docs/architecture-decisions/adr013-use-node-fetch.md and docs/architecture-decisions/adr014-use-fetch.md"
+      "answer": "No. ADR013 (node-fetch) is marked superseded in its own text by ADR014. ADR014 says frontend plugins and packages should prefer the fetchApiRef (which NotificationsClient's injected fetchApi matches), while Node.js backend/CLI code should use native fetch instead of third-party libraries like node-fetch.",
+      "source": "docs/architecture-decisions/adr014-use-fetch.md (adr013-use-node-fetch.md confirms it is superseded)"
     },
     "q2": {
-      "answer": "ADR007 ('Use MSW to mock http requests') requires any fetch/XMLHTTPRequest in tests to be mocked with msw. It frames this as replacing a world where every test (unit through e2e) 'always have their own implementation of mocking these requests', so the msw approach avoids each test inventing its own ad-hoc mocking scheme and avoids mocking fetch/XHR directly (brittle, implementation-coupled), using an express-style route declaration instead.",
+      "answer": "ADR007 requires all fetch/XMLHttpRequest calls in tests to be mocked using msw. Per its Context, this avoids the 'total pain' of every type of test (unit through e2e) having its own, inconsistent implementation of request mocking, replacing that mix of ad hoc approaches with one consistent express-style route-declaration pattern.",
       "source": "docs/architecture-decisions/adr007-use-msw-to-mock-service-requests.md"
     },
     "q3": {
-      "answer": "ADR006 cites two technical problems with React.FC: it implicitly adds a `children` prop even when not wanted, and it does not support a generic type on children. The concrete upstream fact given is that Facebook removed React.FC from the create-react-app TypeScript template because it was found to be an unnecessary feature with next to no benefits.",
+      "answer": "ADR006 cites that React.FC implicitly added children props to the component's prop types, and that it did not support a generic type on children. The concrete upstream fact given is that Facebook/Create React App removed React.FC from its base TypeScript template because it was found to have next to no benefit with these downsides.",
       "source": "docs/architecture-decisions/adr006-avoid-react-fc.md"
     },
     "q4": {
-      "answer": "ADR010 mandates Luxon as the replacement for Moment.js. Two reasons given for retiring Moment.js: it suffers from large bundle sizes and mutable state issues, and separately, the Moment.js project itself is 'being sunset' with its maintainers recommending a move to a more modern alternative library.",
+      "answer": "The library being replaced is Moment.js. ADR010 gives two reasons it's being retired: it's affected by large bundle sizes, and it has mutable-state issues; separately, the Moment.js project itself is being sunset and recommends switching to a modern alternative.",
       "source": "docs/architecture-decisions/adr010-luxon-date-library.md"
     },
     "q5": {
-      "answer": "ADR004 ('Module Export Structure') requires every exported symbol to be traceable through index files all the way to the package root src/index.ts (each index file only re-exporting its own immediate directory children). It was written specifically to make it easy to answer questions like 'Is the export in this module also exported by the package?' / 'What is exported from this directory?'.",
+      "answer": "ADR004 (Module Export Structure) requires every exported symbol to be traceable through index files all the way to the package root src/index.ts, with each index file re-exporting only from its immediate directory children. It was meant to make it easy to answer the question 'Is the export in this module also exported by the package?' (equivalently, what is exported from this directory).",
       "source": "docs/architecture-decisions/adr004-module-export-structure.md"
     },
     "q6": {
-      "answer": "No, they are not part of the public API. Under ADR004's rule, a symbol is only publicly exported if it can be traced upward through a chain of index.ts files to the package root; since there is no src/utils/index.ts and src/index.ts doesn't mention these files, the chain is broken at the very first step, so notificationLinks.ts and plainText.ts are implicitly private even though nothing explicitly marks them as such.",
+      "answer": "No -- under ADR004's rule, if any index file in the chain toward the root doesn't re-export a symbol (or the index file doesn't exist at all, as with a missing src/utils/index.ts), that symbol is not publicly exported, regardless of whether it was explicitly marked private. Since src/utils/index.ts doesn't exist and src/index.ts never mentions these files, notificationLinks.ts and plainText.ts are internal implementation details, not part of the public API.",
       "source": "docs/architecture-decisions/adr004-module-export-structure.md"
     },
     "q7": {
-      "answer": "ADR011 says an `x-react` package is for shared widgets, hooks, and similar code that both the plugin itself and third-party frontend plugins can depend on. For notifications to need a notifications-react package, there would have to be components/hooks in this plugin that other, third-party frontend plugins also want to reuse/depend on -- i.e. shared frontend code crossing plugin boundaries, which currently doesn't exist here (everything stays internal to the single `notifications` package).",
+      "answer": "ADR011 says an x-react package is for shared widgets, hooks, and similar code that both the plugin itself (x) and third-party frontend plugins can depend on. For notifications to need a notifications-react package, some of its components/hooks would have to be needed by other, third-party frontend plugins outside the notifications plugin itself.",
       "source": "docs/architecture-decisions/adr011-plugin-package-structure.md"
     },
     "q8": {
-      "answer": "ADR003 allows a default export only when 'absolutely necessary', giving React.lazy-loaded modules as the one example (React.lazy expects a module with a default export). The workaround it gives for avoiding even that exception is to wrap the dynamic import and remap the named export to `default` in the `.then()`, e.g. `React.lazy(() => import('../path/to/Component').then(m => ({ default: m.Component })))`.",
+      "answer": "ADR003 allows default exports only when 'absolutely necessary', citing React.lazy modules as the example. For teams wanting to avoid even that, it gives a workaround: wrap the dynamic import in a .then() that maps the named export to a synthetic { default: m.Component } object before passing it to React.lazy.",
       "source": "docs/architecture-decisions/adr003-avoid-default-exports.md"
     },
     "q9": {
-      "answer": "ADR015 defines the `loader`/`component` option pattern for providing JSX elements and components. Its Consequences section says they will update all APIs for the new frontend system (`@backstage/frontend-*` packages) but will NOT update any of the existing APIs for the old frontend system (`@backstage/core-*` packages) -- i.e. they explicitly do not plan to retrofit the pattern onto pre-existing old-style code like the dev app.",
+      "answer": "ADR015. Its Consequences section says the new loader/component option pattern will only be applied to APIs in the new frontend system (@backstage/frontend-* packages) and explicitly states existing APIs in the old frontend system (@backstage/core-* packages, which is the style the dev app uses) will not be updated/retrofitted.",
       "source": "docs/architecture-decisions/adr015-jsx-loader-structure.md"
     }
   },
   "meta": {
     "arm": "without",
     "run": 3,
-    "numTurns": 4,
-    "durationMs": 53929
+    "numTurns": 11,
+    "durationMs": 39962
   }
 }

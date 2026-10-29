@@ -1,46 +1,46 @@
 {
   "answers": {
     "q1": {
-      "answer": "No. ADR013 (use node-fetch) is marked superseded in its own text and no longer applies. It was replaced by ADR014, which says frontend plugins and packages should prefer the fetchApiRef (which wraps fetch, injected via useApi), while Node.js code should use native fetch instead of node-fetch.",
-      "source": "docs/architecture-decisions/adr013-use-node-fetch.md and docs/architecture-decisions/adr014-use-fetch.md"
+      "answer": "No. ADR013 (use node-fetch) is explicitly marked superseded and says it 'no longer applies', replaced by ADR014. ADR014 says frontend plugins and packages should prefer to use fetchApiRef (which NotificationsClient does via the injected fetchApi), while Node.js/backend code should use native fetch.",
+      "source": "docs/architecture-decisions/adr014-use-fetch.md (supersedes docs/architecture-decisions/adr013-use-node-fetch.md)"
     },
     "q2": {
-      "answer": "ADR007 requires all fetch/XMLHttpRequest calls in tests to be mocked with msw. It says doing so avoids each test having its own ad-hoc implementation of mocking network requests, i.e. it avoids inconsistent, per-test mocking approaches scattered across the codebase (unit tests through e2e tests each reinventing their own mocking).",
+      "answer": "ADR007 requires all fetch/XMLHttpRequest calls in tests to be mocked using msw. Rather than stating exactly 'two avoided things' in those words, it frames the problem as every test having its own ad-hoc mocking implementation (inconsistency across unit/e2e tests) and tests directly mocking fetch/XHR itself; msw avoids both by giving a single, express-style, shared way to intercept requests.",
       "source": "docs/architecture-decisions/adr007-use-msw-to-mock-service-requests.md"
     },
     "q3": {
-      "answer": "ADR006 cites two problems: React.FC implicitly added a `children` prop to every component, and it did not support generic types on children. The ADR notes that Facebook removed React.FC from the official create-react-app TypeScript template because it was found to be an unnecessary feature with next to no benefit and these downsides.",
+      "answer": "ADR006 cites that React.FC implicitly added a 'children' prop to every component (even when not wanted) and that Generic Type parameters were not supported on children. It notes React.FC was removed from Facebook's Create React App TypeScript template because it was found to be an unnecessary feature with next to no benefits and a few downsides (see the linked create-react-app PR #8177).",
       "source": "docs/architecture-decisions/adr006-avoid-react-fc.md"
     },
     "q4": {
-      "answer": "ADR010 mandates Luxon and names Moment.js as the library it replaces, for two reasons: Moment.js suffers from large bundle sizes and mutable-state issues, and the Moment.js project itself was being sunset/is in maintenance mode, recommending users move to more modern alternatives.",
+      "answer": "The alternative is Moment.js. ADR010 gives two reasons it's being retired: it's affected by large bundle sizes, and it has mutable state issues (plus the Moment.js project itself is being sunset/recommends alternatives).",
       "source": "docs/architecture-decisions/adr010-luxon-date-library.md"
     },
     "q5": {
-      "answer": "ADR004 (Module Export Structure) requires every exported symbol to be traceable through index files down to the package's root src/index.ts. It was meant to make it easy to answer the question \"is this export in this module also exported by the package?\" (equivalently, \"what is exported from this directory?\").",
+      "answer": "ADR004 (Module Export Structure) requires every exported symbol to be traceable through index files all the way down to the package root src/index.ts. It was specifically meant to make it easy to answer 'Is the export in this module also exported by the package?' / 'What is exported from this directory?'",
       "source": "docs/architecture-decisions/adr004-module-export-structure.md"
     },
     "q6": {
-      "answer": "No, under ADR004's rule they are not part of the public API: the rule says a symbol is only exported from the package if every index file on the path from it up to the root re-exports the previous level, and there is no src/utils/index.ts and src/index.ts doesn't mention these files, so the chain to the root is broken — nothing needs to be explicitly marked private because the absence of a traceable index-file chain itself means 'not publicly exported'.",
+      "answer": "No, they are not part of the public API. ADR004's rule is that a symbol is only publicly exported if it can be traced through an unbroken chain of index files up to src/index.ts; since there is no src/utils/index.ts re-exporting them and src/index.ts never mentions them, the chain is broken, so by the rule they are implicitly not exported even though nothing explicitly marks them private.",
       "source": "docs/architecture-decisions/adr004-module-export-structure.md"
     },
     "q7": {
-      "answer": "ADR011 says an x-react package is for shared widgets, hooks and similar code that both the plugin itself (x) and third-party frontend plugins can depend on; it would only become justified once other third-party frontend plugins need to reuse notifications' components/hooks, i.e. once there's cross-plugin shared frontend code to extract, which isn't currently the case for this single-package plugin.",
+      "answer": "ADR011 says the x-react package is for shared widgets, hooks and similar code that both the plugin itself (x) and third-party frontend plugins can depend on. For notifications to need a notifications-react package, other third-party frontend plugins would have to need to reuse its components/hooks directly, which currently isn't the case (it's all internal to the single package).",
       "source": "docs/architecture-decisions/adr011-plugin-package-structure.md"
     },
     "q8": {
-      "answer": "ADR003 allows a default export only when 'absolutely necessary,' citing React.lazy modules as the example (React.lazy requires a module with a default export). For teams wanting to avoid even that, the ADR gives the workaround of wrapping the dynamic import and remapping the named export to `default` inline, e.g. `React.lazy(() => import('../path/to/Component').then(m => ({ default: m.Component })))`.",
+      "answer": "The one exception ADR003 allows is React.lazy() modules, which require a default export. The workaround it gives for avoiding even that is to wrap the lazy import with React.lazy(() => import('../path/to/Component').then(m => ({ default: m.Component }))), converting a named export into the required default at the call site.",
       "source": "docs/architecture-decisions/adr003-avoid-default-exports.md"
     },
     "q9": {
-      "answer": "ADR015 defines the loader/component option pattern. Its Consequences section says it will be applied to update all APIs for the new frontend system (@backstage/frontend-* packages), but explicitly states existing APIs for the old frontend system (@backstage/core-* packages) will NOT be updated — so no, the team will not retrofit it onto pre-existing dev-app-style code.",
+      "answer": "ADR015 defines the loader/component option pattern. Its Consequences section says the pattern will be applied to update APIs in the new @backstage/frontend-* packages, but explicitly states they will NOT update any existing APIs in the old frontend system (@backstage/core-* packages) — so pre-existing code like the dev app, which predates/uses the old system's style, will not be retrofitted.",
       "source": "docs/architecture-decisions/adr015-jsx-loader-structure.md"
     }
   },
   "meta": {
     "arm": "without",
     "run": 1,
-    "numTurns": 3,
-    "durationMs": 25669
+    "numTurns": 11,
+    "durationMs": 41820
   }
 }

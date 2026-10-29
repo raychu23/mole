@@ -10,6 +10,9 @@ You are new to the Backstage repository. You have been asked 9 "why" questions a
   or the file/folder names and the annotated file tree below.
 - No web search, no network, no `git log`, `git grep` or anything that fetches more of the repository than what is
   already on disk.
+- Read ONE file per shell command (one `cat`, one `Read`); do not use wildcards, `cat *`, shell loops, or anything
+  else that opens more than one file in a single command. Treat this the way you would a folder of hundreds of
+  decision records in a real repo, where reading them all at once is not realistic.
 - Do not open any other folder on this machine (in particular not the Mole repository or anything named `bench`,
   `m22`, `m22b` or `answers`).
 - Spend at most 12 minutes. A short answer is fine; say "don't know" rather than guess at an ADR number.
