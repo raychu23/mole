@@ -6,7 +6,7 @@ branch: ledger/t24-agent-claim-check
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T24-agent-claim-check
 base: 80e2ca0
 reviewer:
-updated: 2026-10-29 07:09
+updated: 2026-10-29 07:48
 status: ledger submitted
 next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
 claimed: 2026-10-29 05:08
@@ -15,7 +15,7 @@ claimed: 2026-10-29 05:08
 T24-agent-claim-check      ledger task (rules.md §3 code features)      project tasks
     goal                    Check what an agent says it did against what it did: parse an agent's final answer for claims ('tests pass', 'fixed X', 'updated file Y', 'committed') and verify each against its own transcript (tool calls + their results, from T18's run states) and the git state; flag claims with no or contrary evidence (3C1 line 672: 'verificatn: sure thing u tell it to do actually done')
     done-when               1) mole claims <run> lists each claim → evidence (tool call id, exit code, commit) → supported / unsupported / contradicted, deterministic matchers only (sentence split + patterns, no model call tonight, a model splitter stays a later option), 2) M16 bench: 40 final answers from Hermes + Claude Code sessions, labeled before the code (incl. the builder chat's own self-corrected 'exit 0' runs.jsonl line) → recall >= 90% of unsupported/contradicted claims, false flags <= 10%, 3) Stop-hook output names the unsupported claims in one line each, 4) failure case: an answer with no checkable claims → 'nothing to check', exit 0, 5) npm run check passes
-    status                  2026-10-29 submitted      report: packages/agentstate/src/claims: answers.ts (turn-final answers, read-only), split.ts (sentence/clause split + pa
+    status                  2026-10-29 submitted      report: review-1 fixes: key-ruling-1 applied (3212348, C03 → supported, new sha in key.md), P1-1 fixed (cdb428c, 96ad794
     next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
     pinned
     mode                    code
