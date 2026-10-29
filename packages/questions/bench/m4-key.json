@@ -1,0 +1,246 @@
+{
+ "written": "2026-10-28T22:12:24-0500",
+ "what": "M4 L3 questions: for a change, at most 3 questions aimed at your understanding, built from templates over the facts T12 (past fixes, guarding tests) and T11 (notes) find",
+ "scoring": "Per case, a question is USEFUL iff it matches an unused key item of its case: same kind; cites the item (past-fix: cites.sha shares a prefix with the item sha and source.sha too; note: cites.note == item path relative to notesRoot; guard-test: cites.testFile == item path); its source is clickable (non-empty file, integer line > 0); and its text contains every mustMention string. USELESS share = unmatched questions / all questions over all cases; target < 10%. PAST-FIX TOP 3: every case with >= 1 past-fix item has a matched past-fix question at rank <= 3 (diagnostic: share of past-fix items matched). EMPTY: cases with expect [] must yield 0 questions. CAP: every case <= 3 questions. GUARD: every guard-test item must be matched. ORDER (diagnostic): kinds appear past-fix, note, guard-test in that order except a guard-test question that took the last slot. Model calls must be 0. notesRoot null = an empty notes directory; else the fixture dir (relative to bench/) whose .mole/notes is read. fixRule per repo = past-fix-overlap.json summary (as T12's bench). Change paths relative to bench/.",
+ "cases": [
+  {
+   "id": "B1-R1",
+   "repo": "excalidraw",
+   "change": {
+    "sha": "02fc9f3505"
+   },
+   "fixRule": "^(fix|revert)\\b|regression",
+   "notesRoot": null,
+   "expect": [
+    {
+     "kind": "past-fix",
+     "cites": "374716304a"
+    }
+   ],
+   "why": "m8-key R1: the edited App.viewport.ts line was last written by fix 3747163; test hunks only add lines (fitToContent.test.tsx +39 after line 231) so no guard-test edit"
+  },
+  {
+   "id": "B1-R2",
+   "repo": "excalidraw",
+   "change": {
+    "sha": "704db6803c"
+   },
+   "fixRule": "^(fix|revert)\\b|regression",
+   "notesRoot": null,
+   "expect": [
+    {
+     "kind": "past-fix",
+     "cites": "9357f98a9b"
+    }
+   ],
+   "why": "m8-key R2: actionFrame.ts line from fix 9357f98; test hunks (linearElementEditor, textWysiwyg, new wrap.test.tsx) only add lines"
+  },
+  {
+   "id": "B1-R3",
+   "repo": "excalidraw",
+   "change": {
+    "sha": "bee01e3a12"
+   },
+   "fixRule": "^(fix|revert)\\b|regression",
+   "notesRoot": null,
+   "expect": [
+    {
+     "kind": "past-fix",
+     "cites": "d3a9c2a195"
+    }
+   ],
+   "why": "m8-key R3: Fonts.ts lines from fix d3a9c2a; export.test.ts hunk only adds lines"
+  },
+  {
+   "id": "B1-R4",
+   "repo": "excalidraw",
+   "change": {
+    "sha": "53973c3a42"
+   },
+   "fixRule": "^(fix|revert)\\b|regression",
+   "notesRoot": null,
+   "expect": [
+    {
+     "kind": "past-fix",
+     "cites": "a3b90897b5"
+    },
+    {
+     "kind": "past-fix",
+     "cites": "dd8296af18"
+    }
+   ],
+   "why": "m8-key R4: two fixes on App.tsx. Test edits of old lines: duplicate.test.tsx 637/703 (blame = shallow boundary 87faa5d, no fix ever touched the file after it) and tests/helpers/api.ts 156-157 (blame = boundary; no describe/it encloses them) -> no guard-test question"
+  },
+  {
+   "id": "B1-R5",
+   "repo": "excalidraw",
+   "change": {
+    "sha": "1919728724"
+   },
+   "fixRule": "^(fix|revert)\\b|regression",
+   "notesRoot": null,
+   "expect": [
+    {
+     "kind": "past-fix",
+     "cites": "dc2c16d9e2"
+    },
+    {
+     "kind": "past-fix",
+     "cites": "dd8296af18"
+    },
+    {
+     "kind": "past-fix",
+     "cites": "acb48c3f45"
+    }
+   ],
+   "why": "m8-key R5: three fixes; textWysiwyg.test.tsx hunks only add lines"
+  },
+  {
+   "id": "B3-R6",
+   "repo": "mole",
+   "change": {
+    "diffFile": "../../history/bench/fixtures/planted-m8.diff",
+    "base": "bdeff14"
+   },
+   "fixRule": "review fixes|^fix\\b",
+   "notesRoot": null,
+   "expect": [
+    {
+     "kind": "past-fix",
+     "cites": "9e19c51",
+     "mustMention": [
+      "9e19c51",
+      "editing counts as use",
+      "idle shutdown (T9)"
+     ]
+    }
+   ],
+   "why": "m8-key R6 / B3 planted regression: watcher no longer resets the idle clock; 9e19c51 wrote those lines, its comment says why, its guarding test is 'idle shutdown (T9)'"
+  },
+  {
+   "id": "G1-guard-delete",
+   "repo": "mole",
+   "change": {
+    "diffFile": "fixtures/guard-delete-idle.diff",
+    "base": "bdeff14"
+   },
+   "fixRule": "review fixes|^fix\\b",
+   "notesRoot": null,
+   "expect": [
+    {
+     "kind": "guard-test",
+     "cites": "packages/daemon/test/daemon.test.ts",
+     "mustMention": [
+      "idle shutdown (T9)",
+      "9e19c51"
+     ]
+    }
+   ],
+   "why": "deletes describe('idle shutdown (T9)') (lines 38-60, written by 6a546ec, not a fix); fix 9e19c51 names that describe as its guard (its daemon.test.ts hunk sits in it), so deleting it removes a guard of a past fix"
+  },
+  {
+   "id": "G2-planted-plus-guard",
+   "repo": "mole",
+   "change": {
+    "diffFile": "fixtures/planted-plus-guard.diff",
+    "base": "bdeff14"
+   },
+   "fixRule": "review fixes|^fix\\b",
+   "notesRoot": null,
+   "expect": [
+    {
+     "kind": "past-fix",
+     "cites": "9e19c51",
+     "mustMention": [
+      "9e19c51"
+     ]
+    },
+    {
+     "kind": "guard-test",
+     "cites": "packages/daemon/test/daemon.test.ts",
+     "mustMention": [
+      "idle shutdown (T9)",
+      "9e19c51"
+     ]
+    }
+   ],
+   "why": "the planted regression AND the deletion of its guarding test in one change: both questions, past fix first"
+  },
+  {
+   "id": "N1-planted-plus-note",
+   "repo": "mole",
+   "change": {
+    "diffFile": "../../history/bench/fixtures/planted-m8.diff",
+    "base": "bdeff14"
+   },
+   "fixRule": "review fixes|^fix\\b",
+   "notesRoot": "fixtures/notes-watch",
+   "expect": [
+    {
+     "kind": "past-fix",
+     "cites": "9e19c51",
+     "mustMention": [
+      "9e19c51"
+     ]
+    },
+    {
+     "kind": "note",
+     "cites": ".mole/notes/packages-daemon-src-server.ts-Daemon.startWatching.md"
+    }
+   ],
+   "why": "planted change edits Daemon.startWatching (lines 208-226 at bdeff14), which carries a note: past fix first, then your note"
+  },
+  {
+   "id": "N2-note-only",
+   "repo": "mole",
+   "change": {
+    "sha": "8664b8bfe4"
+   },
+   "fixRule": "review fixes|^fix\\b",
+   "notesRoot": "fixtures/notes-format",
+   "expect": [
+    {
+     "kind": "note",
+     "cites": ".mole/notes/packages-core-src-neighborhood.ts-formatNeighborhood.md",
+     "mustMention": [
+      "formatNeighborhood"
+     ]
+    }
+   ],
+   "why": "same change as E2 (no past fix on its lines) but a note sits on formatNeighborhood (lines 69-95 at the parent), which the change edits at line 85"
+  },
+  {
+   "id": "E1-empty-excalidraw",
+   "repo": "excalidraw",
+   "change": {
+    "sha": "ed10ac7dca"
+   },
+   "fixRule": "^(fix|revert)\\b|regression",
+   "notesRoot": null,
+   "expect": [],
+   "why": "hand blame of every edited old line at the parent: 9ba66ed (feat) 29, b552c60 (feat) 4, 97c68dd (refactor) 1, 87faa5d 10 = shallow boundary (ignored, as T12 does); test hunks only add lines; no .mole/notes in the clone"
+  },
+  {
+   "id": "E2-empty-mole",
+   "repo": "mole",
+   "change": {
+    "sha": "8664b8bfe4"
+   },
+   "fixRule": "review fixes|^fix\\b",
+   "notesRoot": null,
+   "expect": [],
+   "why": "hand blame: neighborhood.ts:85 <- 9224561 'T2: core Neighborhood types...', mcp/src/server.ts:20 <- 822106c 'T2: packages/mcp...' (neither matches the fix rule); daemon.test.ts hunk only adds lines; no notes"
+  },
+  {
+   "id": "E3-empty-mole-addonly",
+   "repo": "mole",
+   "change": {
+    "sha": "d250105"
+   },
+   "fixRule": "review fixes|^fix\\b",
+   "notesRoot": null,
+   "expect": [],
+   "why": "T5 study kit: every file is new (git show --name-status: all A), no old lines, no notes"
+  }
+ ]
+}

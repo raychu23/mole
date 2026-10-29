@@ -15,6 +15,7 @@
     "@mole/core": "*",
     "@mole/indexer": "*",
     "@mole/memory": "*",
-    "@mole/history": "*"
+    "@mole/history": "*",
+    "@mole/questions": "*"
   }
 }

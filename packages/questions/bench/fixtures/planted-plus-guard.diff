@@ -1,0 +1,53 @@
+diff --git a/packages/daemon/src/server.ts b/packages/daemon/src/server.ts
+index 3040712..4ca5cb3 100644
+--- a/packages/daemon/src/server.ts
++++ b/packages/daemon/src/server.ts
+@@ -208,13 +208,11 @@ export class Daemon {
+   private startWatching(): void {
+     const base = resolve(this.root, this.opts.srcDir ?? 'src');
+     if (!existsSync(base)) return;
+-    // editing counts as use: a person typing in one file for an hour must not lose the map
+-
+     try {
+       this.watchers.push(
+         watch(base, { recursive: true }, (_ev, file) => {
++          // only TypeScript sources outside node_modules feed the index
+           if (!file || !/\.(?:ts|tsx|mts|cts)$/.test(file) || file.includes('node_modules')) return;
+-          this.lastRequest = Date.now();
+           this.pending.add(relative(this.root, join(base, file)).split(sep).join('/'));
+           clearTimeout(this.timer);
+           this.timer = setTimeout(() => this.flush(), 200);
+diff --git a/packages/daemon/test/daemon.test.ts b/packages/daemon/test/daemon.test.ts
+index c521250..2f1b01e 100644
+--- a/packages/daemon/test/daemon.test.ts
++++ b/packages/daemon/test/daemon.test.ts
+@@ -35,29 +35,6 @@ function indexed(files: Record<string, string>) {
+   return ix.db;
+ }
+ 
+-describe('idle shutdown (T9)', () => {
+-  it('a daemon with no requests stops itself and removes its lock and socket; requests keep it alive', async () => {
+-    const root = repo(SMALL);
+-    const stateDir = join(root, '.state');
+-    const d = new Daemon({ root, stateDir, watch: false, idleMs: 600 });
+-    await d.start();
+-    cleanups.push(() => d.stop());
+-    const c = new MoleClient({ root, stateDir });
+-    await until(() => c.map('src/svc.ts'), (x) => x.state === 'ok');
+-    // keep asking for 1.5 s (> idleMs): it must stay up
+-    const end = Date.now() + 1500;
+-    while (Date.now() < end) {
+-      expect(await c.running()).toBe(true);
+-      await new Promise((r) => setTimeout(r, 150));
+-    }
+-    // now go quiet: it must stop by itself
+-    await Promise.race([d.closed, new Promise((_, no) => setTimeout(() => no(new Error('daemon did not stop when idle')), 5000))]);
+-    expect(await c.running()).toBe(false);
+-    const down = await c.map('src/svc.ts');
+-    expect(down.state).toBe('index-unavailable'); // the editor reads this and starts a new daemon
+-  }, 30000);
+-});
+-
+ describe('default sources (T9)', () => {
+   it('uses src when it exists, the whole folder when it does not, and never overrides an explicit choice', async () => {
+     const { defaultSources } = await import('../src/detect.js');
