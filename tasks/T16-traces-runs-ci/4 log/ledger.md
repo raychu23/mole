@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 02:22      checks ran: npm run check && node packages/telemetry/dist/bench/m13.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T16-traces-runs-ci → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 02:35      submitted → verified      reviewer reviewer-T16-r1 · findings: P0 none, P1 none. P2-1 key guard accepts a self-written ruling (no reviewer id, same commit allowed), P2-2 APPROVE matched anywhere, so 'REJECT ... do not APPROVE' passes, P2-3 load_r
     2026-10-29 02:35      checks ran: npm run check && node packages/telemetry/dist/bench/m13.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T16-traces-runs-ci → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 02:42      verified → integrated      merge 6463b51 · combined checks exit 0 · note: npm run check && node packages/telemetry/dist/bench/m13.js on main 6463b51 → 159/159, M13 stage coverage 100% (9/9), off 0, mlflow 34/34 second load 0, CI key guard red 1 / 
+    2026-10-29 02:42      combined checks ran: npm run check && node packages/telemetry/dist/bench/m13.js in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
