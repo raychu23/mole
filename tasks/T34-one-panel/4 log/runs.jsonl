@@ -1,1 +1,15 @@
 {"time": "2026-10-29T20:51:10.826757Z", "commit": "486aea0ea6b642be7a6744f22f9644953a824a50", "cmd": "npx vitest run apps/vscode/test/panel.test.ts", "exit": 1, "metrics": {"M26": "red (src/panelData.ts not implemented yet)"}}
+{"time":"2026-10-29T21:11:31.907Z","commit":"0fe37a9f8d4fdf06959255b69a96db9b965092e4","cmd":"node apps/vscode/scripts/m26.mjs","exit":1,"metrics":{"M26a":"14/14","M26b_p95_ms":null}}
+{"time":"2026-10-29T21:12:45.835Z","commit":"0fe37a9f8d4fdf06959255b69a96db9b965092e4","cmd":"node apps/vscode/scripts/m26.mjs","exit":1,"metrics":{"M26a":"14/14","M26b_p95_ms":null}}
+{"time":"2026-10-29T21:13:52.668Z","commit":"0fe37a9f8d4fdf06959255b69a96db9b965092e4","cmd":"node apps/vscode/scripts/m26.mjs","exit":1,"metrics":{"M26a":"14/14","M26b_p95_ms":null}}
+{"time":"2026-10-29T21:16:08.815Z","commit":"0fe37a9f8d4fdf06959255b69a96db9b965092e4","cmd":"node apps/vscode/scripts/m26.mjs","exit":1,"metrics":{"M26a":"14/14","M26b_p95_ms":null}}
+{"time":"2026-10-29T21:21:11.019Z","commit":"0fe37a9f8d4fdf06959255b69a96db9b965092e4","cmd":"node apps/vscode/scripts/m26.mjs","exit":1,"metrics":{"M26a":"14/14","M26b_p95_ms":null}}
+{"time":"2026-10-29T21:22:24.707Z","commit":"0fe37a9f8d4fdf06959255b69a96db9b965092e4","cmd":"node apps/vscode/scripts/m26.mjs","exit":1,"metrics":{"M26a":"14/14","M26b_p95_ms":null}}
+{"time":"2026-10-29T21:24:16.171Z","commit":"0fe37a9f8d4fdf06959255b69a96db9b965092e4","cmd":"node apps/vscode/scripts/m26.mjs","exit":1,"metrics":{"M26a":"14/14","M26b_p95_ms":17673}}
+{"time":"2026-10-29T21:26:01.755Z","commit":"0fe37a9f8d4fdf06959255b69a96db9b965092e4","cmd":"node apps/vscode/scripts/m26.mjs","exit":1,"metrics":{"M26a":"14/14","M26b_p95_ms":15661}}
+{"time":"2026-10-29T21:27:29.929Z","commit":"0fe37a9f8d4fdf06959255b69a96db9b965092e4","cmd":"node apps/vscode/scripts/m26.mjs","exit":0,"metrics":{"M26a":"14/14","M26b_p95_ms":18}}
+{"time":"2026-10-29T21:28:33.258Z","commit":"0fe37a9f8d4fdf06959255b69a96db9b965092e4","cmd":"node apps/vscode/scripts/m26.mjs","exit":1,"metrics":{"M26a":"14/14","M26b_p95_ms":10462}}
+{"time":"2026-10-29T21:30:06.326Z","commit":"0fe37a9f8d4fdf06959255b69a96db9b965092e4","cmd":"node apps/vscode/scripts/m26.mjs","exit":0,"metrics":{"M26a":"14/14","M26b_p95_ms":46}}
+{"time":"2026-10-29T21:31:46.515Z","commit":"0fe37a9f8d4fdf06959255b69a96db9b965092e4","cmd":"node apps/vscode/scripts/m26.mjs","exit":1,"metrics":{"M26a":"14/14","M26b_p95_ms":null}}
+{"time":"2026-10-29T21:33:59.484Z","commit":"0fe37a9f8d4fdf06959255b69a96db9b965092e4","cmd":"node apps/vscode/scripts/m26.mjs","exit":0,"metrics":{"M26a":"14/14","M26b_p95_ms":2}}
+{"time":"2026-10-29T21:35:35.614Z","commit":"0fe37a9f8d4fdf06959255b69a96db9b965092e4","cmd":"node apps/vscode/scripts/m26.mjs","exit":0,"metrics":{"M26a":"14/14","M26b_p95_ms":32}}
