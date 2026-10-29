@@ -1,0 +1,45 @@
+# T32 (Team phase A, no server): on every pull request push, ONE check run named "mole" with the decision records whose
+# scope covers the changed lines, the CODEOWNERS owners, past fixes and up to 3 questions; silent (neutral, no annotations)
+# when nothing governs. Posted with the workflow's own token (checks: write); never a PR comment, never a bot account.
+# Note: pull requests from forks get a read-only token, so the POST is refused there (GitHub's rule, not Mole's).
+# One "mole" check run per push (review 1 P1-2): GitHub Actions itself creates a check run for this job, named after the
+# job's `name:` ('mole-pr-check (runner)'); the action POSTs the ONE check run named "mole" that carries the annotations.
+# The names differ on purpose, so a required-check rule on "mole" is unambiguous.
+name: mole pr-check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  checks: write
+
+# at most one check run per push: a newer push cancels the run still working on the older one
+concurrency:
+  group: mole-pr-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  mole:
+    name: mole-pr-check (runner)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: checkout (full history for the merge base, CODEOWNERS at the base, past fixes)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # the PR's code (npm ci scripts, the PR-built mole) runs next; git reads need no token in .git/config
+          persist-credentials: false
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: mole check
+        uses: ./.github/actions/mole-check
+        with:
+          token: ${{ github.token }}
