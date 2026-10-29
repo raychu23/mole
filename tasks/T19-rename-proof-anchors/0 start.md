@@ -1,22 +1,22 @@
 ---
-state: running
+state: blocked
 owner: mole-builder-2 (Hermes chat)
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t19-rename-proof-anchors
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T19-rename-proof-anchors
 base: 1dc06c4
 reviewer:
-updated: 2026-10-29 05:44
-status: ledger running
-next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+updated: 2026-10-29 06:43
+status: ledger blocked
+next: decision owner unblocks → ledger move <task> ready --note …
 claimed: 2026-10-29 05:44
 ---
 ```notes
 T19-rename-proof-anchors      ledger task (rules.md §3 code features)      project tasks
     goal                    Make note and memory anchors survive renames: when a function, method or class is renamed (or renamed + moved), re-attach its notes, seen history and past-fix links by matching the normalized body hash and call-graph neighbors, instead of marking them deleted/orphaned (T13 found 'renamed symbol shows deleted')
     done-when               1) mole memory and mole since report 'renamed: old → new' and keep the note fresh when only the name changed; 2) M9 bench: every rename found in the Mole repo and the Excalidraw clone history (git log -M + TS symbol diff), key written before the code → >= 95% re-anchored to the right symbol, 0 wrong re-anchors; 3) ambiguous case (two candidates with the same body) → stays orphaned and lists both candidates, never guesses; 4) failure case: a rename plus a body edit above a similarity threshold is reported as 'renamed + changed' (stale), not silently fresh; 5) npm run check passes
-    status                  2026-10-29 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T19-rename-proof-anchors · branch ledger/t19-rename-proof-anch
-    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+    status                  2026-10-29 blocked      cause: M9 NOT MET after the D33 'try options' round (builder 3): held-out key 2 built first (honojs/hono src, bac1cf7, 2
+    next                    decision owner unblocks → ledger move <task> ready --note …
     pinned
     mode                    code
     boundary                packages/memory/** (anchor + re-anchor only), tasks/T19-rename-proof-anchors/**
