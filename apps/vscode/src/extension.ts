@@ -1,3 +1,4 @@
+import { spawn } from 'node:child_process';
 import { existsSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import * as vscode from 'vscode';
@@ -6,6 +7,7 @@ import { ensureDaemon, MoleClient } from '@mole/daemon';
 import { clickLine } from '../webview/render.js';
 import { CSS } from '../webview/style.js';
 import { debounce, toRepoPath } from './paths.js';
+import { documentSymbolTails, dwellSpans, SeenRecorder, spanAt, type DocSymbol, type SeenHit, type SymbolSpan } from './seen.js';
 
 const VIEW_TYPE = 'mole.map';
 const SWITCH_DEBOUNCE_MS = 120;
@@ -67,6 +69,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     output.appendLine('no TypeScript found in this workspace: Mole stays idle (run "Mole: Open map beside the code" to start it anyway)');
     return;
   }
+  startSeen(ctx, root);
   void mole.boot();
   if (process.env.MOLE_REVIVE_PROBE) void reviveProbe(mole, root, process.env.MOLE_REVIVE_PROBE, process.env.MOLE_REVIVE_FILE ?? '');
   if (process.env.MOLE_SELFTEST) void selfTest(mole, process.env.MOLE_SELFTEST);
@@ -107,6 +110,111 @@ async function reviveProbe(mole: MolePanel, root: string, outPath: string, file:
     out.error = (e as Error).message;
   }
   writeFileSync(outPath, JSON.stringify(out, null, 2));
+}
+
+/** The Mole CLI this extension runs: mole.daemonCli, else the bundled one, else the repo build (development). */
+function moleCli(ctx: vscode.ExtensionContext): string {
+  const bundled = join(ctx.extensionPath, 'dist', 'daemon.cjs');
+  return vscode.workspace.getConfiguration('mole').get<string>('daemonCli') || (existsSync(bundled) ? bundled : resolve(ctx.extensionPath, '../../packages/daemon/dist/cli.js'));
+}
+
+const TS_LANGS = new Set(['typescript', 'typescriptreact']);
+const SEEN_FLUSH_MS = 3000;
+
+/**
+ * L1 (T13): record what you look at into .mole/local/seen.jsonl (personal, gitignored): a symbol visible for 5 s, or hovered.
+ * Symbol names come from VS Code's document symbols (no TypeScript compiler in the extension host); `mole seen --stdin` hashes
+ * the bodies, so the file format has one owner (@mole/memory). Setting mole.recordSeen (default on) turns it off.
+ */
+function startSeen(ctx: vscode.ExtensionContext, root: string): void {
+  const enabled = (): boolean => vscode.workspace.getConfiguration('mole').get<boolean>('recordSeen', true);
+  const spansCache = new Map<string, { version: number; spans: SymbolSpan[] }>();
+  const spansOf = async (doc: vscode.TextDocument): Promise<SymbolSpan[]> => {
+    const key = doc.uri.toString();
+    const hit = spansCache.get(key);
+    if (hit && hit.version === doc.version) return hit.spans;
+    let nodes: DocSymbol[] = [];
+    try {
+      nodes = (await vscode.commands.executeCommand<vscode.DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', doc.uri)) ?? [];
+    } catch {
+      // no symbol provider (TypeScript extension disabled): nothing to record
+    }
+    const spans = documentSymbolTails(nodes);
+    if (spansCache.size > 200) spansCache.clear();
+    spansCache.set(key, { version: doc.version, spans });
+    return spans;
+  };
+  const repoPath = (doc: vscode.TextDocument): string | undefined => (doc.uri.scheme === 'file' && TS_LANGS.has(doc.languageId) ? toRepoPath(root, doc.uri.fsPath) : undefined);
+  const write = (hits: SeenHit[]): void => {
+    const time = new Date().toISOString();
+    const dirty = new Map(vscode.workspace.textDocuments.filter((d) => d.isDirty).map((d) => [toRepoPath(root, d.uri.fsPath), d.getText()] as const));
+    const batch = hits.map((h) => ({ ...h, time, ...(dirty.has(h.path) ? { text: dirty.get(h.path) } : {}) }));
+    try {
+      const child = spawn(process.execPath, [moleCli(ctx), 'seen', '--stdin', '--root', root], { env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, stdio: ['pipe', 'ignore', 'pipe'] });
+      let err = '';
+      child.stderr?.on('data', (d: Buffer) => (err += d.toString()));
+      child.on('error', (e) => output.appendLine(`seen log: ${e.message}`));
+      child.on('exit', (code) => {
+        if (code !== 0) output.appendLine(`seen log: mole seen exited ${code} ${err.slice(0, 300)}`);
+      });
+      child.stdin?.end(JSON.stringify(batch));
+    } catch (e) {
+      output.appendLine(`seen log: ${(e as Error).message}`);
+    }
+  };
+  const recorder = new SeenRecorder({ enabled, write });
+  let focused = vscode.window.state.focused;
+  let viewSeq = 0;
+  const update = async (): Promise<void> => {
+    const seq = ++viewSeq;
+    const editor = vscode.window.activeTextEditor;
+    const path = editor && focused && enabled() ? repoPath(editor.document) : undefined;
+    if (!editor || !path) {
+      recorder.view(undefined);
+      return;
+    }
+    const spans = dwellSpans(await spansOf(editor.document));
+    if (seq !== viewSeq) return; // a newer scroll/switch already reported
+    recorder.view({ path, symbols: spans, ranges: editor.visibleRanges.map((r) => ({ start: r.start.line, end: r.end.line })) });
+  };
+  let sinceFlush = 0;
+  const timer = setInterval(() => {
+    recorder.tick();
+    sinceFlush += 1000;
+    if (sinceFlush >= SEEN_FLUSH_MS && recorder.pendingCount() > 0) {
+      sinceFlush = 0;
+      recorder.flush();
+    }
+  }, 1000);
+  const hover: vscode.HoverProvider = {
+    async provideHover(doc, pos) {
+      const path = repoPath(doc);
+      if (path && enabled()) {
+        const s = spanAt(await spansOf(doc), pos.line);
+        if (s) recorder.hover(path, s.tail);
+      }
+      return undefined; // Mole adds nothing to the hover itself
+    },
+  };
+  ctx.subscriptions.push(
+    vscode.languages.registerHoverProvider([{ language: 'typescript', scheme: 'file' }, { language: 'typescriptreact', scheme: 'file' }], hover),
+    vscode.window.onDidChangeActiveTextEditor(() => void update()),
+    vscode.window.onDidChangeTextEditorVisibleRanges(() => void update()),
+    vscode.window.onDidChangeWindowState((st) => {
+      focused = st.focused;
+      void update();
+    }),
+    vscode.workspace.onDidSaveTextDocument((doc) => {
+      const path = repoPath(doc);
+      if (path) recorder.reset(path); // the saved body is new: looking at it for 5 s counts again
+      void update();
+    }),
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('mole.recordSeen')) void update();
+    }),
+    { dispose: () => (clearInterval(timer), recorder.flush()) },
+  );
+  void update();
 }
 
 /** A tsconfig or any .ts/.tsx file outside dependency and build folders. */
@@ -169,8 +277,7 @@ class MolePanel {
       return;
     }
     const cfg = vscode.workspace.getConfiguration('mole');
-    const bundled = join(this.ctx.extensionPath, 'dist', 'daemon.cjs');
-    const cli = cfg.get<string>('daemonCli') || (existsSync(bundled) ? bundled : resolve(this.ctx.extensionPath, '../../packages/daemon/dist/cli.js'));
+    const cli = moleCli(this.ctx);
     if (!existsSync(cli)) {
       output.appendLine(`daemon cli not found at ${cli}; set mole.daemonCli`);
       this.client = new MoleClient({ root: this.root, stateDir: cfg.get<string>('stateDir') || undefined });

@@ -61,6 +61,11 @@
           "default": 30,
           "minimum": 0,
           "description": "The background indexer stops after this many minutes without a request and is restarted when needed (0 = never stop)."
+        },
+        "mole.recordSeen": {
+          "type": "boolean",
+          "default": true,
+          "description": "Record which symbols you looked at (visible for 5 s or hovered) in .mole/local/seen.jsonl, so `mole since` can list what changed after your last look. Personal: the folder is gitignored and never leaves this machine."
         }
       }
     }
