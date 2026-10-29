@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { formatNeighborhood } from '@mole/core';
 import { ensureDaemon, MoleClient, type EnsureOptions } from '@mole/daemon';
 import { defaultSources, tried } from '@mole/agentstate';
+import { executeTool, GEN_AI } from '@mole/telemetry';
 
 export interface MoleMcpOptions extends EnsureOptions {
   /** Do not spawn a daemon if none runs (tests). */
@@ -25,15 +26,18 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         impact: z.boolean().optional().describe('also mark transitive callers (what breaks if this changes) with !impact'),
       },
     },
-    async ({ target, impact }) => {
+    // T16: OTel GenAI execute_tool span per call (no-op unless MOLE_OTEL=1)
+    async ({ target, impact }, extra) =>
+      executeTool('mole_map', { [GEN_AI.toolCallId]: String(extra.requestId), [GEN_AI.mcpMethod]: 'tools/call', 'mole.target': target }, async (span) => {
       const client = opts.noStart ? new MoleClient(opts) : await ensureDaemon(opts);
       let n = await client.map(target, impact === true);
       for (let i = 0; i < 50 && n.state === 'indexing'; i++) {
         await new Promise((r) => setTimeout(r, 200));
         n = await client.map(target, impact === true);
       }
+      span({ 'mole.map.state': n.state });
       return { content: [{ type: 'text' as const, text: formatNeighborhood(n) }], isError: n.state === 'index-unavailable' };
-    },
+    }),
   );
   // T18: what agents already tried (commands, tests, fixes + outcome), including before a context compaction
   server.registerTool(

@@ -1,0 +1,68 @@
+{
+  "written": "2026-10-29T01:20:00-0500",
+  "about": "M13 key (T16), written by hand before any implementation. M13 observability coverage = (1) every expected span below is exported over OTLP/HTTP with its parent and required attributes when MOLE_OTEL=1, and 0 requests / 0 spans when MOLE_OTEL is unset; (2) the MLflow loader logs exactly one run per runs.jsonl line (counted in the tree the bench runs in) and a second load adds 0; (3) the key guard in .github/workflows/check.yml is green on HEAD, red after a protected key is edited and committed, and green again only with an approved ruling naming that key and its new sha256.",
+  "otel": {
+    "env_flag": "MOLE_OTEL",
+    "endpoint_env": "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "check": {
+      "commit": "61564ebf85",
+      "why_this_commit": "tasks/c4-dogfood.json: 11 hunks, 1 past fix (fd7ed34), 1 question, so every stage does real work",
+      "service": "mole-cli",
+      "spans": [
+        { "name": "mole.check", "parent": null, "attributes": ["mole.change.kind", "mole.change.ref", "mole.hunks", "mole.past_fixes", "mole.questions.count"], "values": { "mole.change.kind": "sha" }, "min": { "mole.hunks": 1, "mole.past_fixes": 1, "mole.questions.count": 1 } },
+        { "name": "mole.questions", "parent": "mole.check", "attributes": [] },
+        { "name": "mole.history.check", "parent": "mole.questions", "attributes": ["mole.change.kind"] },
+        { "name": "mole.git.resolve_change", "parent": "mole.history.check", "attributes": [] },
+        { "name": "mole.git.blame", "parent": "mole.history.check", "attributes": ["mole.files"] },
+        { "name": "mole.history.fix_lookup", "parent": "mole.history.check", "attributes": ["mole.commits"] },
+        { "name": "mole.history.symbol_resolution", "parent": "mole.history.check", "attributes": [] }
+      ]
+    },
+    "mcp": {
+      "tool": "mole_map",
+      "service": "mole-mcp",
+      "span": { "name": "execute_tool mole_map", "parent": null, "attributes": ["gen_ai.operation.name", "gen_ai.tool.name", "gen_ai.tool.call.id", "mcp.method.name"], "values": { "gen_ai.operation.name": "execute_tool", "gen_ai.tool.name": "mole_map", "mcp.method.name": "tools/call" } }
+    },
+    "daemon": {
+      "service": "mole-daemon",
+      "span": { "name": "mole.daemon.rpc", "parent": null, "attributes": ["mole.rpc.method"], "values": { "mole.rpc.method": "map" } }
+    },
+    "off": { "requests": 0, "spans": 0 }
+  },
+  "mlflow": {
+    "experiment": "mole-build-loop",
+    "params": ["task", "commit", "cmd", "exit"],
+    "metric_prefixes": ["M1", "M2", "M3", "M4", "M5"],
+    "second_run_adds": 0,
+    "parse_cases": [
+      { "metric": "M3", "raw": "precision 100% (3/3), recall 100% (3/3), unseen listed 0", "expect": { "M3.precision": 100, "M3.recall": 100, "M3.unseen_listed": 0 } },
+      { "metric": "M5", "raw": "p95 423 ms over 53 changes, model calls 0", "expect": { "M5.p95_ms": 423, "M5.changes": 53, "M5.model_calls": 0 } },
+      { "metric": "M2", "raw": "R1-R5 5/5 (R1 1, R2 1, R3 1, R4 1, R5 1; lenient 5/5), R6 1", "expect": { "M2.R1-R5": 5, "M2.R1-R5.total": 5, "M2.R1": 1, "M2.R2": 1, "M2.R3": 1, "M2.R4": 1, "M2.R5": 1, "M2.lenient": 5, "M2.lenient.total": 5, "M2.R6": 1 } },
+      { "metric": "M4", "raw": "past-fix in top3 8/8, empty-case questions 0, useless share 0.0% (0/15)", "expect": { "M4.past-fix_in_top3": 8, "M4.past-fix_in_top3.total": 8, "M4.empty-case_questions": 0, "M4.useless_share": 0 } },
+      { "metric": "M1", "raw": "recall 100% (136/136), false flags 0% (0/1151), ws/comment-only flagged 0", "expect": { "M1.recall": 100, "M1.false_flags": 0, "M1.ws_comment-only_flagged": 0 } },
+      { "metric": "B2", "raw": "21/21", "expect": { "B2": 21, "B2.total": 21 } },
+      { "metric": "B3", "raw": "pass", "expect": { "B3": 1 } },
+      { "metric": "B3", "raw": "fail {\"names9e19c51\":false}", "expect": { "B3": 0 } },
+      { "metric": "at_target", "raw": true, "expect": { "at_target": 1 } },
+      { "metric": "M9", "raw": 0.5, "expect": { "M9": 0.5 } }
+    ]
+  },
+  "ci": {
+    "workflow": ".github/workflows/check.yml",
+    "events": ["push", "pull_request"],
+    "node": "22",
+    "required_runs": ["npm ci", "npm run check", "node packages/memory/dist/bench/m3.js", "node packages/telemetry/dist/bench/m13.js"],
+    "guard_step": "key guard",
+    "protected_keys": [
+      "packages/history/bench/keys/m8-key.json",
+      "packages/history/bench/keys/past-fix-overlap.json",
+      "packages/memory/bench/m1-key.json",
+      "packages/memory/bench/m3-key.json",
+      "packages/questions/bench/m4-key.json",
+      "packages/telemetry/bench/m13-key.json"
+    ],
+    "edit_for_red": "packages/memory/bench/m3-key.json",
+    "expect": { "green_exit": 0, "red_exit_nonzero": true, "ruled_exit": 0, "wrong_hash_ruling_exit_nonzero": true }
+  },
+  "targets": { "stage_coverage_pct": 100, "off_requests": 0, "mlflow_runs_equal_lines": true, "parse_cases_pass": "all", "ci": "green on HEAD, red on key edit, green with approved hashed ruling only" }
+}

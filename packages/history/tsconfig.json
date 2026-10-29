@@ -7,5 +7,10 @@
   "include": [
     "src",
     "bench"
+  ],
+  "references": [
+    {
+      "path": "../telemetry"
+    }
   ]
 }
