@@ -92,3 +92,18 @@ T32 insights      (a6 · mole-builder-4 · 2026-10-29 06:50)      INFERENCE = ch
                           that can only be scored honestly on a new held-out key; that is Raymond's call (R2/R7)
         runs              4 log/runs.jsonl line 2026-10-29T07:51:41 (commit 528a257)
 ```
+
+```notes
+4 review-1 fixes      (a6 · 2026-10-29 09:30 · review: 4 log/review-1.md)
+    P1-1 fixed          records + notes load at the merge base (git objects + a detached worktree for flags), never the PR side;
+                        records the PR changes are listed separately and don't govern      b7cff63, d3e834c
+    P1-2 fixed          workflow job named 'mole-pr-check (runner)', the posted run 'mole' → 1 'mole' check run per push;
+                        bench/m24-workflow-local.sh fails unless exactly 1 check-runs POST      4 log/workflow-local-run.txt (09:23)
+    P2 fixed            match: invalid regex / nested quantifier → problem at file:line · lines > 2,000 chars skipped · persist-credentials: false
+    P2 disclosed        528a257 edited a fixture glob inside red options test 7a2f1ce (fixture bug, not a loosened check)
+                        wiring outside the boundary: package.json, package-lock, tsconfig, packages/decisions/src/index.ts
+    P2 left             owners key (m24_owners.py) mirrors the TS matcher: 30/30 = agreement, not proof against GitHub (invalid-owner lines, '*.js' on a folder)
+                        options round held-out gain is small (3 pairs, 2 PRs); fork PRs get a read-only token → the POST fails
+    checks              npm run check 264/264 · M24 unchanged: precision 0.63, recall 0.52, owners 30/30, silent 27/30 → still BLOCKED (Raymond)
+    note                the fix subagent was interrupted after its commits; a6 ran the checks row itself and logged the true line
+```

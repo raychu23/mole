@@ -1,46 +1,44 @@
-# T32 workflow local run 2026-10-29 07:07 CDT — .github/workflows/mole-pr-check.yml steps run locally (actions/checkout + setup-node replaced by a fresh clone + local node v22.21.0); gh stubbed on PATH
-# cmd: bash packages/decisions/bench/m24-workflow-local.sh <worktree> fb240ab 8fe43dd <out>
-## job workspace: fresh clone of /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T32-team-pr-check at 8fe43dde8450604706ba94a1aef28b419b8c70c5 (actions/checkout fetch-depth: 0)
-## fake event: {"action":"synchronize","number":32,"pull_request":{"number":32,"base":{"sha":"fb240abf227f63dbbc5bbc5eb55e61915b927ea4","ref":"main"},"head":{"sha":"8fe43dde8450604706ba94a1aef28b419b8c70c5","ref":"ledger/t32-team-pr-check"}}}
+# T32 workflow local run 2026-10-29 08:17 CDT (review 1 fixes, d3e834c) — .github/workflows/mole-pr-check.yml steps run locally (actions/checkout + setup-node replaced by a fresh clone + local node v22.21.0); gh stubbed on PATH
+# cmd: bash packages/decisions/bench/m24-workflow-local.sh <worktree> fb240ab d3e834c <out>      exit 0, 172 s wall (npm ci 159 s this run, cold; earlier runs 8-14 s)
+# the script now FAILS unless exactly 1 check-runs POST and no workflow job name equals the posted check-run name (review 1 P1-2)
+## job workspace: fresh clone of /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T32-team-pr-check at d3e834c (actions/checkout fetch-depth: 0)
+## fake event: {"action":"synchronize","number":32,"pull_request":{"number":32,"base":{"sha":"fb240ab","ref":"main"},"head":{"sha":"d3e834c","ref":"ledger/t32-team-pr-check"}}}
 ## step 1/3: build mole
    | npm ci --no-audit --no-fund
    | npx tsc -b packages/daemon
    > npm warn deprecated prebuild-install@7.1.3: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
    > 
-   > added 365 packages in 11s
-   (exit 0, 22 s)
+   > added 365 packages in 2m
+   (exit 0, 159 s)
 ## step 2/3: mole pr-check
    | export MOLE_RECORDS="."
    | node packages/daemon/dist/cli.js pr-check --event "$GITHUB_EVENT_PATH" --root . --records "$MOLE_RECORDS" --out "$RUNNER_TEMP/mole-check-run.json"
-   > (node:96778) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+   > (node:66722) ExperimentalWarning: SQLite is an experimental feature and might change at any time
    > (Use `node --trace-warnings ...` to show where the warning was created)
-   > mole pr-check fb240ab..8fe43dd: 58 files · mole: 2 decisions govern these lines
+   > mole pr-check fb240ab..d3e834c: 102 files · mole: 2 decisions govern these lines
    > ### Decisions that govern these lines (2)
    > - **0007** (yellow) Stop the daemon after 30 idle minutes · .mole/decisions/0007-idle-shutdown.md:1 · packages/daemon/src/cli.ts:108
    > - **0013** (yellow) The CLI loads heavy modules only in the subcommand that needs them · .mole/decisions/0013-cli-loads-heavy-modules-lazily.md:1 · packages/daemon/src/cli.ts:108
    > ### Owners
    > no CODEOWNERS file
-   > (2 annotations, 1079 ms)
-   (exit 0, 1 s)
+   > (2 annotations, 1518 ms)
+   (exit 0, 2 s)
 ## step 3/3: post the check run
    | export GH_TOKEN="fake-github-token"
    | gh api --method POST "repos/$GITHUB_REPOSITORY/check-runs" --input "$RUNNER_TEMP/mole-check-run.json" --jq '.html_url'
    > https://github.com/raymond/mole/runs/0
    (exit 0, 1 s)
 ## gh calls (stub log)
-   gh api --method POST repos/raymond/mole/check-runs --input /var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T//mole-wf-u3JDAR/runner-temp/mole-check-run.json --jq .html_url
+   gh api --method POST repos/raymond/mole/check-runs --input /var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T//mole-wf-UHi8ji/runner-temp/mole-check-run.json --jq .html_url
    GH_TOKEN set: yes
 ## check runs POSTed: 1
 ## comment calls: 0
-
-real	0m29.819s
-user	0m13.979s
-sys	0m10.855s
-exit 0
+## job name(s) (GitHub creates one check run each): "mole-pr-check (runner)"; posted check run: "mole"
+## check runs named "mole" per push: 1
 ## captured POST body (check-run-post-body.json)
 {
   "name": "mole",
-  "head_sha": "8fe43dde8450604706ba94a1aef28b419b8c70c5",
+  "head_sha": "d3e834c77c71e050c88678cadfe6ef196d34f23a",
   "status": "completed",
   "conclusion": "neutral",
   "output": {
