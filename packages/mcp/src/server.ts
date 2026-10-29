@@ -87,6 +87,33 @@ export function createServer(opts: MoleMcpOptions): McpServer {
       }
     },
   );
+  // T29: the decision graph (tenets, decisions, plain ADR folders) with citator flags; same JSON as `mole decisions --json`
+  server.registerTool(
+    'mole_decisions',
+    {
+      title: 'Mole decisions',
+      description:
+        'Every decision and tenet of the repo (.mole/tenets.md, .mole/decisions/*.md, plus plain ADR folders) with a flag and its reasons at file:line: ' +
+        'red = superseded/deprecated/orphaned (every scope anchor gone)/retired tenet; yellow = a proposed record conflicts with or supersedes it, its scope code ' +
+        'changed since the approver confirmed, an anchor or evidence test is missing or failing, or a record it traces to is yellow/red; green = accepted and intact; ' +
+        'grey = proposed. Same JSON as `mole decisions --json`. Files + git only, no model calls. Use before editing code a decision covers.',
+      inputSchema: {
+        root: z.string().optional().describe('repository root (default: the server root, MOLE_ROOT or cwd)'),
+        adrDir: z.array(z.string()).optional().describe('plain ADR folders to include, relative to root (e.g. docs/architecture-decisions)'),
+        testReport: z.string().optional().describe('a vitest JSON report: evidence tests that fail there turn their decisions yellow'),
+      },
+    },
+    async (args) => {
+      const root = resolve(opts.root, args.root ?? '.');
+      try {
+        const { decisions } = await import('@mole/decisions');
+        const json = decisions(root, { adrDirs: args.adrDir ?? [], testReport: args.testReport ? resolve(root, args.testReport) : undefined });
+        return { content: [{ type: 'text' as const, text: JSON.stringify(json, null, 2) }] };
+      } catch (e) {
+        return { content: [{ type: 'text' as const, text: `mole_decisions: ${(e as Error).message}` }], isError: true };
+      }
+    },
+  );
   return server;
 }
 

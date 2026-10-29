@@ -1,0 +1,592 @@
+{
+  "metric": "M21",
+  "written": "2026-10-29T10:24:30Z",
+  "author": "mole-builder-4 (T29 red commit), before any implementation exists",
+  "method": "Expected flags written by hand from the rules in tasks/T29-decision-graph-core/2 insights.md section 0 (+ section 2 builder notes, written before this key) and each scenario's construction. Public base labels from each record's ## Status section / :::note[Superseded] block read by hand (awk over the Status sections; statusRead below), NOT from running the code.",
+  "scoring": "recall = (scenario, record) pairs expected yellow/red that get exactly that colour / all such pairs; false flags = raised yellow/red not expected / all raised yellow/red (also reported over all records). A record a scenario does not list keeps its base label; a record in neither is expected not raised.",
+  "targets": {
+    "recallPct": 90,
+    "falseFlagsPct": 10,
+    "recomputeP95Ms": 1000,
+    "modelCalls": 0
+  },
+  "corpora": {
+    "mole": {
+      "copy": [
+        [
+          "corpora/mole",
+          "."
+        ],
+        [
+          "@repo/.mole/tenets.md",
+          ".mole/tenets.md"
+        ],
+        [
+          "@repo/.mole/decisions",
+          ".mole/decisions"
+        ],
+        [
+          "@repo/.mole/intent",
+          ".mole/intent"
+        ],
+        [
+          "@repo/.mole/incidents",
+          ".mole/incidents"
+        ]
+      ],
+      "adrDirs": [],
+      "confirm": true,
+      "source": "Mole repo: .mole records (this task) + snapshot of their scope/evidence files at 491dd7e",
+      "base": {
+        "tenet-1": "green",
+        "tenet-2": "green",
+        "tenet-3": "green",
+        "tenet-4": "green",
+        "0007": "green",
+        "0008": "green",
+        "0009": "green",
+        "0010": "green",
+        "0011": "green",
+        "0012": "green",
+        "0013": "green",
+        "0014": "green",
+        "0015": "green"
+      }
+    },
+    "backstage": {
+      "copy": [
+        [
+          "corpora/backstage",
+          "."
+        ]
+      ],
+      "adrDirs": [
+        "docs/architecture-decisions"
+      ],
+      "source": "backstage/backstage e8c4d056e3c850a467e34eba810a3ed00d62cfe2 docs/architecture-decisions (Apache-2.0)",
+      "base": {
+        "adr001": "green",
+        "adr002": "green",
+        "adr003": "green",
+        "adr004": "green",
+        "adr005": "green",
+        "adr006": "green",
+        "adr007": "green",
+        "adr008": "green",
+        "adr009": "green",
+        "adr010": "green",
+        "adr011": "green",
+        "adr012": "green",
+        "adr013": "red",
+        "adr014": "green",
+        "adr015": "green"
+      }
+    },
+    "backstage-3ecfb121859": {
+      "copy": [
+        [
+          "corpora/backstage-3ecfb121859/parent",
+          "."
+        ]
+      ],
+      "adrDirs": [
+        "docs/architecture-decisions"
+      ],
+      "source": "backstage/backstage 3ecfb121859^ (parent of 'move to a new ADR')",
+      "base": {
+        "adr001": "green",
+        "adr002": "green",
+        "adr003": "green",
+        "adr004": "green",
+        "adr005": "green",
+        "adr006": "green",
+        "adr007": "green",
+        "adr008": "green",
+        "adr009": "green",
+        "adr010": "green",
+        "adr011": "green",
+        "adr012": "green",
+        "adr013": "green"
+      }
+    },
+    "govuk-aws": {
+      "copy": [
+        [
+          "corpora/govuk-aws",
+          "."
+        ]
+      ],
+      "adrDirs": [
+        "docs/architecture/decisions"
+      ],
+      "source": "alphagov/govuk-aws 81ee9f6e91fd8692fbf751ecf980c671c13aa3c0 docs/architecture/decisions (MIT)",
+      "base": {
+        "0001": "green",
+        "0002": "green",
+        "0003": "yellow",
+        "0004": "red",
+        "0005": "green",
+        "0006": "grey",
+        "0007": "green",
+        "0008": "green",
+        "0009": "grey",
+        "0010": "green",
+        "0011": "green",
+        "0012": "green",
+        "0013": "grey",
+        "0014": "green",
+        "0015": "green",
+        "0016": "green",
+        "0017": "green",
+        "0018": "green",
+        "0019": "green",
+        "0020": "green",
+        "0021": "green",
+        "0022": "green",
+        "0023": "green",
+        "0024": "green",
+        "0025": "green",
+        "0026": "green",
+        "0027": "green",
+        "0028": "green",
+        "0029": "green",
+        "0030": "green",
+        "0031": "grey",
+        "0032": "green",
+        "0033": "grey",
+        "0035": "grey",
+        "0036": "grey",
+        "0037": "green",
+        "0038": "green",
+        "0039": "green"
+      },
+      "statusRead": {
+        "0001": "Accepted",
+        "0002": "Accepted",
+        "0003": "Partly superseded",
+        "0004": "Superseded by [DNS Infrastructure](0015-dns-infrastructure.md)",
+        "0005": "Accepted",
+        "0006": "Pending",
+        "0007": "Accepted",
+        "0008": "Accepted",
+        "0009": "Pending",
+        "0010": "Accepted; Amended by 0017",
+        "0011": "Accepted",
+        "0012": "Accepted",
+        "0013": "Pending",
+        "0014": "Accepted",
+        "0015": "Accepted",
+        "0016": "Accepted",
+        "0017": "Accepted; Amends 0010",
+        "0018": "Accepted",
+        "0019": "Accepted",
+        "0020": "Accepted",
+        "0021": "Accepted",
+        "0022": "Accepted",
+        "0023": "Accepted",
+        "0024": "Accepted",
+        "0025": "Accepted",
+        "0026": "Accepted",
+        "0027": "Accepted",
+        "0028": "Accepted",
+        "0029": "Accepted",
+        "0030": "Accepted",
+        "0031": "Pending",
+        "0032": "Accepted",
+        "0033": "Pending",
+        "0035": "Pending",
+        "0036": "Proposed",
+        "0037": "Accepted",
+        "0038": "Approved",
+        "0039": "Accepted"
+      }
+    },
+    "govuk-aws-52979fc8": {
+      "copy": [
+        [
+          "corpora/govuk-aws-52979fc8/parent",
+          "."
+        ]
+      ],
+      "adrDirs": [
+        "doc/architecture/decisions"
+      ],
+      "source": "alphagov/govuk-aws 52979fc8^ (parent of 'Supersed dns-definitions-for-hosts-and-services')",
+      "base": {
+        "0001": "green",
+        "0002": "green",
+        "0003": "grey",
+        "0004": "grey",
+        "0005": "green",
+        "0006": "grey",
+        "0007": "green",
+        "0008": "green",
+        "0009": "grey",
+        "0010": "green",
+        "0011": "green",
+        "0012": "green",
+        "0015": "grey"
+      },
+      "statusRead": {
+        "0001": "Accepted",
+        "0002": "Accepted",
+        "0003": "Pending",
+        "0004": "Pending",
+        "0005": "Accepted",
+        "0006": "Pending",
+        "0007": "Accepted",
+        "0008": "Accepted",
+        "0009": "Pending",
+        "0010": "Accepted",
+        "0011": "Accepted",
+        "0012": "Accepted",
+        "0015": "Pending"
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "id": "M01",
+      "corpus": "mole",
+      "change": "code edit inside 0007's scope (Daemon.startIdleWatch poll interval) after it was confirmed",
+      "ops": [
+        {
+          "type": "edit",
+          "file": "packages/daemon/src/server.ts",
+          "find": "Math.max(50, Math.min(30_000, Math.floor(idle / 4)))",
+          "replace": "Math.max(50, Math.min(10_000, Math.floor(idle / 4)))"
+        }
+      ],
+      "expect": {
+        "0007": "yellow",
+        "0008": "yellow",
+        "0009": "yellow"
+      },
+      "why": "0007 scope changed since confirmed; 0008 and 0009 override 0007 so they inherit yellow"
+    },
+    {
+      "id": "M02",
+      "corpus": "mole",
+      "change": "control: comment + blank-line only edit inside Daemon.startIdleWatch",
+      "ops": [
+        {
+          "type": "edit",
+          "file": "packages/daemon/src/server.ts",
+          "find": "    if (idle <= 0) return;\n",
+          "replace": "    if (idle <= 0) return;\n\n    // poll about four times per idle period, at most every 30 s\n\n"
+        }
+      ],
+      "expect": {},
+      "why": "normalized body hash ignores comments and whitespace"
+    },
+    {
+      "id": "M03",
+      "corpus": "mole",
+      "change": "delete the only scope file of 0011 (packages/memory/src/notes.ts) [done-when 4]",
+      "ops": [
+        {
+          "type": "delete",
+          "file": "packages/memory/src/notes.ts"
+        }
+      ],
+      "expect": {
+        "0011": "red"
+      },
+      "why": "every scope anchor gone -> red orphaned, never green"
+    },
+    {
+      "id": "M04",
+      "corpus": "mole",
+      "change": "delete one of 0014's two anchors (packages/agentstate/src/langgraph.ts)",
+      "ops": [
+        {
+          "type": "delete",
+          "file": "packages/agentstate/src/langgraph.ts"
+        }
+      ],
+      "expect": {
+        "0014": "yellow"
+      },
+      "why": "some (not all) scope anchors gone"
+    },
+    {
+      "id": "M05",
+      "corpus": "mole",
+      "change": "remove the evidence test name 'idle shutdown (T9)' (describe renamed)",
+      "ops": [
+        {
+          "type": "edit",
+          "file": "packages/daemon/test/daemon.test.ts",
+          "find": "describe('idle shutdown (T9)'",
+          "replace": "describe('daemon lifetime (T9)'"
+        }
+      ],
+      "expect": {
+        "0007": "yellow",
+        "0008": "yellow",
+        "0009": "yellow"
+      },
+      "why": "0007, 0008, 0009 list that test as evidence; it is missing"
+    },
+    {
+      "id": "M06",
+      "corpus": "mole",
+      "change": "a test report where 'seen log robustness' fails",
+      "ops": [
+        {
+          "type": "testReport",
+          "failing": [
+            "packages/memory/test/seen-log.test.ts#seen log robustness"
+          ],
+          "passing": [
+            "packages/daemon/test/daemon.test.ts#idle shutdown (T9)"
+          ]
+        }
+      ],
+      "expect": {
+        "0012": "yellow"
+      },
+      "why": "listed evidence failing in the given test report"
+    },
+    {
+      "id": "M07",
+      "corpus": "mole",
+      "change": "a new PROPOSED record 0016 conflicts_with accepted 0007",
+      "ops": [
+        {
+          "type": "write",
+          "file": ".mole/decisions/0016-idle-five-minutes.md",
+          "text": "---\nid: '0016'\ntitle: Stop the daemon after 5 idle minutes\nstatus: proposed\ndoor: two-way\ntraces_to: [tenet-2]\nconflicts_with: ['0007']\napprover: raymond\nsource: m21 planted proposal\n---\n\n## Decision\n\nStop after 5 idle minutes instead of 30.\n"
+        }
+      ],
+      "expect": {
+        "0007": "yellow",
+        "0008": "yellow",
+        "0009": "yellow",
+        "0016": "grey"
+      },
+      "why": "a proposed record conflicts with 0007; 0008/0009 override 0007; 0016 itself proposed = grey"
+    },
+    {
+      "id": "M08",
+      "corpus": "mole",
+      "change": "a new ACCEPTED record 0016 supersedes 0007",
+      "ops": [
+        {
+          "type": "write",
+          "file": ".mole/decisions/0016-extension-owns-idle-shutdown.md",
+          "text": "---\nid: '0016'\ntitle: The editor extension owns idle shutdown\nstatus: accepted\ndoor: two-way\ntraces_to: [tenet-2]\nsupersedes: ['0007']\napprover: raymond\nsource: m21 planted decision\n---\n\n## Decision\n\nThe VS Code extension stops the daemon when the last window closes; the daemon no longer keeps its own idle clock.\n"
+        }
+      ],
+      "expect": {
+        "0007": "red",
+        "0008": "yellow",
+        "0009": "yellow",
+        "0016": "green"
+      },
+      "why": "another accepted record supersedes 0007 -> red; its exceptions override a red record -> yellow"
+    },
+    {
+      "id": "M09",
+      "corpus": "mole",
+      "change": "tenet-2 retired",
+      "ops": [
+        {
+          "type": "edit",
+          "file": ".mole/tenets.md",
+          "find": "## tenet-2 · A background",
+          "replace": "## tenet-2 · retired · A background"
+        }
+      ],
+      "expect": {
+        "tenet-2": "red",
+        "0007": "yellow",
+        "0008": "yellow",
+        "0009": "yellow"
+      },
+      "why": "retired tenet red; decisions tracing to it yellow"
+    },
+    {
+      "id": "M10",
+      "corpus": "mole",
+      "change": "control: code edit outside every scope (new function in packages/daemon/src/client.ts)",
+      "ops": [
+        {
+          "type": "append",
+          "file": "packages/daemon/src/client.ts",
+          "text": "\nexport function m21Unused(): number {\n  return 1;\n}\n"
+        }
+      ],
+      "expect": {},
+      "why": "no record's scope covers client.ts"
+    },
+    {
+      "id": "M11",
+      "corpus": "mole",
+      "change": "control: the M01 edit, then the approver re-confirms 0007 at the new sha",
+      "ops": [
+        {
+          "type": "edit",
+          "file": "packages/daemon/src/server.ts",
+          "find": "Math.max(50, Math.min(30_000, Math.floor(idle / 4)))",
+          "replace": "Math.max(50, Math.min(10_000, Math.floor(idle / 4)))"
+        },
+        {
+          "type": "reconfirm",
+          "record": "0007"
+        }
+      ],
+      "expect": {},
+      "why": "scope unchanged since the new confirmed sha; 0008/0009 scopes untouched"
+    },
+    {
+      "id": "B01",
+      "corpus": "backstage-3ecfb121859",
+      "change": "real history backstage 3ecfb121859: adr014 added, adr013 renamed + marked superseded",
+      "ops": [
+        {
+          "type": "replaceDir",
+          "dir": "docs/architecture-decisions",
+          "from": "corpora/backstage-3ecfb121859/child/docs/architecture-decisions"
+        }
+      ],
+      "expect": {
+        "adr013": "red",
+        "adr014": "green"
+      },
+      "why": ":::note Superseded block + [superseded] title"
+    },
+    {
+      "id": "B02",
+      "corpus": "backstage",
+      "change": "a new PROPOSED ADR016 supersedes ADR010",
+      "ops": [
+        {
+          "type": "write",
+          "file": "docs/architecture-decisions/adr016-use-temporal.md",
+          "text": "---\nid: adrs-adr016\ntitle: 'ADR016: Use Temporal instead of Luxon'\ndescription: Architecture Decision Record (ADR) for using the Temporal API for dates\n---\n\n## Status\n\nProposed\n\nSupersedes [ADR010](./adr010-luxon-date-library.md)\n\n## Context\n\nThe Temporal API is available in the supported runtimes.\n\n## Decision\n\nUse Temporal for date calculations and formatting.\n"
+        }
+      ],
+      "expect": {
+        "adr010": "yellow",
+        "adr016": "grey"
+      },
+      "why": "a proposed record supersedes adr010"
+    },
+    {
+      "id": "B03",
+      "corpus": "backstage",
+      "change": "control: body-text typo in ADR005",
+      "ops": [
+        {
+          "type": "edit",
+          "file": "docs/architecture-decisions/adr005-catalog-core-entities.md",
+          "find": "standardize on a few core entities",
+          "replace": "standardize on a few core entites"
+        }
+      ],
+      "expect": {},
+      "why": "body text is not treatment"
+    },
+    {
+      "id": "B05",
+      "corpus": "backstage",
+      "change": "ADR006 marked superseded by ADR015 with backstage's :::note[Superseded] block",
+      "ops": [
+        {
+          "type": "edit",
+          "file": "docs/architecture-decisions/adr006-avoid-react-fc.md",
+          "find": "description: Architecture Decision Record (ADR) log on Avoid React.FC and React.SFC\n---\n",
+          "replace": "description: Architecture Decision Record (ADR) log on Avoid React.FC and React.SFC\n---\n\n:::note[Superseded]\n\nThis ADR has been superseded by [ADR015](./adr015-jsx-loader-structure.md) and no longer applies.\n\n:::\n"
+        }
+      ],
+      "expect": {
+        "adr006": "red"
+      },
+      "why": "superseded block"
+    },
+    {
+      "id": "G01",
+      "corpus": "govuk-aws-52979fc8",
+      "change": "real history govuk-aws 52979fc8: 0004 Pending -> Superseded by 0015",
+      "ops": [
+        {
+          "type": "replaceDir",
+          "dir": "doc/architecture/decisions",
+          "from": "corpora/govuk-aws-52979fc8/child/doc/architecture/decisions"
+        }
+      ],
+      "expect": {
+        "0004": "red"
+      },
+      "why": "status superseded"
+    },
+    {
+      "id": "G02",
+      "corpus": "govuk-aws",
+      "change": "0022 status Accepted -> Deprecated",
+      "ops": [
+        {
+          "type": "edit",
+          "file": "docs/architecture/decisions/0022-remove-the-elasticsearch-proxy.md",
+          "find": "## Status\n\nAccepted\n",
+          "replace": "## Status\n\nDeprecated\n"
+        }
+      ],
+      "expect": {
+        "0022": "red"
+      },
+      "why": "status deprecated"
+    },
+    {
+      "id": "G03",
+      "corpus": "govuk-aws",
+      "change": "a new PROPOSED 0040 supersedes 0010 (which 0017 amends)",
+      "ops": [
+        {
+          "type": "write",
+          "file": "docs/architecture/decisions/0040-terraform-directory-structure-per-environment.md",
+          "text": "# 40. Terraform directory structure per environment\n\nDate: 2026-10-29\n\n## Status\n\nProposed\n\nSupersedes [10. Terraform directory structure](0010-terraform-directory-structure.md)\n\n## Context\n\nThe project layout has grown per environment.\n\n## Decision\n\nGroup Terraform projects by environment first.\n"
+        }
+      ],
+      "expect": {
+        "0010": "yellow",
+        "0017": "yellow",
+        "0040": "grey"
+      },
+      "why": "proposed supersedes 0010; 0017 amends 0010 so it inherits"
+    },
+    {
+      "id": "G04",
+      "corpus": "govuk-aws",
+      "change": "control: body-text typo in 0018",
+      "ops": [
+        {
+          "type": "edit",
+          "file": "docs/architecture/decisions/0018-use-rds-instead-of-provisioned-ec2-databases.md",
+          "find": "These\nhave been traditionally provisioned",
+          "replace": "These\nhave been tradtionally provisioned"
+        }
+      ],
+      "expect": {},
+      "why": "body text is not treatment"
+    },
+    {
+      "id": "G05",
+      "corpus": "govuk-aws",
+      "change": "a new ACCEPTED 0040 supersedes 0016",
+      "ops": [
+        {
+          "type": "write",
+          "file": "docs/architecture/decisions/0040-single-internal-dns-zone.md",
+          "text": "# 40. Single DNS zone for internal services\n\nDate: 2026-10-29\n\n## Status\n\nAccepted\n\nSupersedes [16. Internal DNS zones](0016-internal-dns-zones.md)\n\n## Context\n\nInternal zones per stack are hard to keep in sync.\n\n## Decision\n\nUse one internal zone for every stack.\n"
+        }
+      ],
+      "expect": {
+        "0016": "red",
+        "0040": "green"
+      },
+      "why": "an accepted record supersedes 0016"
+    }
+  ]
+}
