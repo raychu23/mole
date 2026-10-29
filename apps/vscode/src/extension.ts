@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { execFile } from 'node:child_process';
 import { existsSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import * as vscode from 'vscode';
@@ -8,6 +9,7 @@ import { clickLine } from '../webview/render.js';
 import { CSS } from '../webview/style.js';
 import { debounce, toRepoPath } from './paths.js';
 import { Surface } from './surface.js';
+import { MolePanelView, PANEL_VIEW_ID } from './panelView.js';
 import type { SinceResult } from '@mole/memory';
 import { documentSymbolTails, dwellSpans, SeenRecorder, spanAt, type DocSymbol, type SeenHit, type SymbolSpan } from './seen.js';
 
@@ -41,6 +43,17 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
   output = vscode.window.createOutputChannel('Mole');
   const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   const mole = new MolePanel(ctx, root);
+  let panelView: MolePanelView | undefined;
+  if (root) {
+    panelView = new MolePanelView(ctx, root, { cliPath: moleCli(ctx), root, nodePath: process.execPath }, () => mole.getClient(), (m) => output.appendLine(m));
+    ctx.subscriptions.push(vscode.window.registerWebviewViewProvider(PANEL_VIEW_ID, panelView), panelView);
+    const followPanel = debounce((e: vscode.TextEditor | undefined) => void panelView!.follow(e), 150);
+    ctx.subscriptions.push(
+      vscode.window.onDidChangeActiveTextEditor(followPanel),
+      vscode.window.onDidChangeTextEditorSelection((e) => followPanel(e.textEditor)),
+    );
+    if (vscode.window.activeTextEditor) void panelView.follow(vscode.window.activeTextEditor);
+  }
   ctx.subscriptions.push(
     output,
     vscode.window.registerWebviewPanelSerializer(VIEW_TYPE, {
@@ -57,11 +70,12 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     vscode.commands.registerCommand('mole.reindex', () => mole.reindex()),
     vscode.window.onDidChangeActiveTextEditor(debounce((e: vscode.TextEditor | undefined) => void mole.follow(e, performance.now()), SWITCH_DEBOUNCE_MS)),
   );
+  if (root) registerCliCommands(ctx, root);
   if (!root) {
     output.appendLine('no workspace folder: Mole is idle');
     return;
   }
-  const testing = Boolean(process.env.MOLE_SELFTEST || process.env.MOLE_SELFTEST_RESTORE || process.env.MOLE_HOVER_CHECK);
+  const testing = Boolean(process.env.MOLE_SELFTEST || process.env.MOLE_SELFTEST_RESTORE || process.env.MOLE_HOVER_CHECK || process.env.MOLE_M26_CHECK);
   // a public extension must be silent where it has nothing to say: no TypeScript here = no panel, no background process
   const dormant = !testing && !(await hasTypeScript());
   if (process.env.MOLE_IDLE_PROBE) {
@@ -91,6 +105,10 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
   void booted.then(() => Promise.all([surface.refresh(), surface.refreshSince()]));
   if (process.env.MOLE_HOVER_CHECK) {
     void hoverCheck(mole, surface, root, process.env.MOLE_HOVER_CHECK);
+    return;
+  }
+  if (process.env.MOLE_M26_CHECK) {
+    void m26Check(mole, panelView, root, process.env.MOLE_M26_CHECK);
     return;
   }
   if (process.env.MOLE_REVIVE_PROBE) void reviveProbe(mole, root, process.env.MOLE_REVIVE_PROBE, process.env.MOLE_REVIVE_FILE ?? '');
@@ -132,6 +150,102 @@ async function reviveProbe(mole: MolePanel, root: string, outPath: string, file:
     out.error = (e as Error).message;
   }
   writeFileSync(outPath, JSON.stringify(out, null, 2));
+}
+
+/** T34 (M26): one command-palette entry per CLI read feature that is not already inside the sidebar view
+ *  (the view covers most of them; a command still exists for each, per the done-when: "every CLI read
+ *  command gets a command-palette entry"). Each runs the human-formatted CLI and opens the result read-only
+ *  so it never needs a terminal. Prompts for a target where the CLI needs one, defaulting to the file open
+ *  in the active editor. */
+function registerCliCommands(ctx: vscode.ExtensionContext, root: string): void {
+  const cli = moleCli(ctx);
+  const show = async (title: string, args: string[]): Promise<void> => {
+    const text = await new Promise<string>((resolvePromise) => {
+      execFile(process.execPath, [cli, ...args, '--root', root], { env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, maxBuffer: 1 << 24 }, (err, stdout, stderr) => {
+        resolvePromise(stdout?.trim() || stderr?.trim() || (err ? err.message : '(no output)'));
+      });
+    });
+    const doc = await vscode.workspace.openTextDocument({ content: `# mole ${args.join(' ')}\n\n${text}\n`, language: 'markdown' });
+    await vscode.window.showTextDocument(doc, { preview: true });
+  };
+  const currentTarget = (): string | undefined => {
+    const ed = vscode.window.activeTextEditor;
+    if (!ed || ed.document.uri.scheme !== 'file') return undefined;
+    return toRepoPath(root, ed.document.uri.fsPath);
+  };
+  const askTarget = async (prompt: string): Promise<string | undefined> => vscode.window.showInputBox({ prompt, value: currentTarget() ?? '' });
+  const cmds: Array<[string, string, () => Promise<void>]> = [
+    ['mole.cli.map', 'Map (mole map)', async () => { const t = await askTarget('file or file#Symbol to map'); if (t) await show('map', ['map', t]); }],
+    ['mole.cli.impact', 'Impact (mole impact)', async () => { const t = await askTarget('file or file#Symbol for impact'); if (t) await show('impact', ['impact', t]); }],
+    ['mole.cli.noteAdd', 'Add a note (mole note add)', async () => {
+      const t = await askTarget('file#Symbol to note');
+      if (!t) return;
+      const text = await vscode.window.showInputBox({ prompt: 'note text' });
+      if (text) await show('note add', ['note', 'add', t, text]);
+    }],
+    ['mole.cli.memory', 'Notes (mole memory)', () => show('memory', ['memory'])],
+    ['mole.cli.since', 'Since you last looked (mole since)', () => show('since', ['since'])],
+    ['mole.cli.pastFixes', 'Past fixes (mole check)', () => show('check', ['check', '--worktree'])],
+    ['mole.cli.questions', 'Questions (mole check)', () => show('check --questions', ['check', '--worktree'])],
+    ['mole.cli.decisions', 'Decisions (mole decisions)', () => show('decisions', ['decisions'])],
+    ['mole.cli.rules', 'Rule violations (mole rules)', () => show('rules', ['rules'])],
+    ['mole.cli.runTests', 'Run guarding tests (mole check --run-tests)', () => show('check --run-tests', ['check', '--worktree', '--run-tests'])],
+    ['mole.cli.claims', 'Claims (mole claims)', async () => {
+      const id = await vscode.window.showInputBox({ prompt: 'run id (Hermes/Claude Code/Codex session)' });
+      if (id) await show('claims', ['claims', id]);
+    }],
+    ['mole.cli.flows', 'Blast radius: flows (mole flows)', async () => { const t = await askTarget('file#Symbol for flows'); if (t) await show('flows', ['flows', t]); }],
+    ['mole.cli.collisions', 'Agent collisions (mole collisions)', () => show('collisions', ['collisions'])],
+    ['mole.cli.tried', 'Already tried (mole tried)', async () => { const t = await askTarget('file#Symbol or run id'); if (t) await show('tried', ['tried', t]); }],
+  ];
+  for (const [id, , handler] of cmds) ctx.subscriptions.push(vscode.commands.registerCommand(id, handler));
+}
+
+/**
+ * MOLE_M26_CHECK=<json path>: {out}. T34's own done-when check (apps/vscode/scripts/m26.mjs), run inside a real
+ * Extension Development Host via `code --extensionDevelopmentPath` (no @vscode/test-electron, no Electron
+ * download — see tasks/T34-one-panel/4 log/key-changes.md #1). Opens a few TypeScript files in the Mole repo,
+ * moves the cursor, and records: every registered command id, the sidebar view's last-rendered model (for
+ * M26a's "in the rendered model" check), the rules diagnostics collection, and (M26b) the ms from each
+ * cursor-move/file-switch trigger to its webview postMessage round trip, 3 refreshes.
+ */
+async function m26Check(mole: MolePanel, panelView: MolePanelView | undefined, root: string, cfgPath: string): Promise<void> {
+  const cfg = JSON.parse((await vscode.workspace.fs.readFile(vscode.Uri.file(cfgPath))).toString()) as { out: string; files?: string[] };
+  const out: Record<string, unknown> = {};
+  try {
+    await vscode.commands.executeCommand('workbench.action.closeAuxiliaryBar');
+    await mole.boot();
+    out.commands = await vscode.commands.getCommands(true);
+    const files = cfg.files ?? ['apps/vscode/src/extension.ts', 'apps/vscode/src/panelData.ts', 'apps/vscode/src/panelView.ts'];
+    for (const f of files) {
+      const full = join(root, f);
+      if (!existsSync(full)) continue;
+      await vscode.window.showTextDocument(vscode.Uri.file(full), { viewColumn: vscode.ViewColumn.One, preview: false });
+      await vscode.commands.executeCommand('workbench.action.focusSideBar');
+      if (panelView) {
+        panelView.refreshMsSamples.length = 0;
+        for (let i = 0; i < 3; i++) {
+          await panelView.follow(vscode.window.activeTextEditor);
+          const editor = vscode.window.activeTextEditor;
+          if (editor) {
+            const pos = new vscode.Position(Math.min(editor.document.lineCount - 1, 10 + i), 0);
+            editor.selection = new vscode.Selection(pos, pos);
+          }
+          await panelView.follow(vscode.window.activeTextEditor);
+        }
+        await new Promise((r) => setTimeout(r, 300));
+      }
+    }
+    out.model = panelView?.lastModel;
+    out.refreshMs = panelView?.refreshMsSamples ?? [];
+    out.diagnosticsCollections = vscode.languages.getDiagnostics().map(([, ds]) => ds.map((d) => d.source ?? '')).flat();
+    out.diagnosticsNames = ['mole-rules']; // the collection name itself (for M26a's "rules" coverage)
+  } catch (e) {
+    out.error = (e as Error).stack ?? (e as Error).message;
+  }
+  writeFileSync(cfg.out, JSON.stringify(out, null, 2));
+  await new Promise((r) => setTimeout(r, 500));
+  await vscode.commands.executeCommand('workbench.action.quit');
 }
 
 /** The Mole CLI this extension runs: mole.daemonCli, else the bundled one, else the repo build (development). */
@@ -289,6 +403,11 @@ class MolePanel {
 
   hasPanel(): boolean {
     return this.panel !== undefined;
+  }
+
+  /** T34: the live daemon client, if the daemon has started (undefined before boot() resolves or when unsupported). */
+  getClient(): MoleClient | undefined {
+    return this.client;
   }
 
   /** Start (or find) the repo's daemon, once. Never throws: the panel shows "index unavailable" instead. */
