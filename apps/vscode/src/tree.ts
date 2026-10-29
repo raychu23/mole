@@ -31,6 +31,11 @@ export class FolderTree {
     return { dispose: () => void this.listeners.delete(listener) };
   }
 
+  /** Every folder with a decoration or a card, once loaded (T30 proof artifact; undefined before the first refresh()). */
+  get folders(): string[] | undefined {
+    return this.tree?.folders;
+  }
+
   /** Recompute the records + flags once; decorations then come from this cached index. A failed load clears it and never throws. */
   async refresh(): Promise<void> {
     try {

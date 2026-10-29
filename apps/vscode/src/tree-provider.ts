@@ -4,7 +4,7 @@
 // extension host); records and the tree index from @mole/decisions' core, which needs neither. Computed once and cached; a change
 // under .mole/ or a saved file recomputes them (debounced).
 import { execFile } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as vscode from 'vscode';
 import type { DecisionsResult } from '@mole/decisions';
@@ -33,6 +33,45 @@ export function startDecisionTree(ctx: vscode.ExtensionContext, root: string, lo
   } catch (e) {
     log(`decision tree: not started (${(e as Error).message})`); // never blocks the rest of activation
   }
+}
+
+/**
+ * MOLE_TREE_CHECK=<json path>: proof artifact for T30 (no new Electron/Chromium download needed for a screenshot). After the
+ * first refresh, dump every decorated folder's {badge, color, tooltip (intent card text)} plus one no-record folder (done-when
+ * 4: must decorate to undefined) straight from the registered FileDecorationProvider — not re-derived, the same function the
+ * Explorer calls. Used by scripts/tree-check.mjs.
+ */
+function treeCheck(tree: FolderTree, root: string, provider: vscode.FileDecorationProvider, outPath: string): void {
+  const timer = setInterval(() => {
+    const folders = tree.folders;
+    if (folders === undefined) return; // refresh() not finished yet
+    clearInterval(timer);
+    const sample = folders.filter((f) => f !== '').slice(0, 12);
+    const decorations = sample.map((f) => {
+      const uri = vscode.Uri.file(join(root, f));
+      const d = provider.provideFileDecoration!(uri, new vscode.CancellationTokenSource().token);
+      const out = d as vscode.FileDecoration | undefined;
+      return { path: f, badge: out?.badge, tooltip: out?.tooltip, color: (out?.color as vscode.ThemeColor | undefined)?.id };
+    });
+    const noRecordCandidates = ['generated data', 'node_modules', '.git'];
+    const noRecord = noRecordCandidates
+      .filter((p) => existsSync(join(root, p)))
+      .map((p) => ({ path: p, decoration: provider.provideFileDecoration!(vscode.Uri.file(join(root, p)), new vscode.CancellationTokenSource().token) }));
+    writeFileSync(
+      outPath,
+      JSON.stringify(
+        {
+          generatedAt: new Date().toISOString(),
+          what: 'T30: every decorated folder (badge/color/tooltip=intent card) from the live FileDecorationProvider, plus a no-record folder (done-when 4: must be undefined)',
+          folderCount: folders.length,
+          decorations,
+          noRecord,
+        },
+        null,
+        2,
+      ) + '\n',
+    );
+  }, 300);
 }
 
 function register(ctx: vscode.ExtensionContext, root: string, log: (m: string) => void, cli: string): void {
@@ -74,4 +113,5 @@ function register(ctx: vscode.ExtensionContext, root: string, log: (m: string) =
     { dispose: () => timer && clearTimeout(timer) },
   );
   void tree.refresh();
+  if (process.env.MOLE_TREE_CHECK) treeCheck(tree, root, provider, process.env.MOLE_TREE_CHECK);
 }
