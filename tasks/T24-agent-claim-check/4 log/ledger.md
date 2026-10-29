@@ -13,4 +13,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 09:52      checks ran: npm run check && node packages/agentstate/dist/bench/m16.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T24-agent-claim-check → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 09:57      submitted → verified      reviewer reviewer-T24-r3 · findings: confirmation after 2 review rounds (4 log/review-3.md @c9b1ca6): done-when 1-5 hold, P1-2 fixed (self-echo unsupported, hook lines), Stop hook 0 lines on 11 out-of-sample answers (0 w
     2026-10-29 09:57      checks ran: npm run check && node packages/agentstate/dist/bench/m16.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T24-agent-claim-check → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 10:00      verified → integrated      merge 007f80b · combined checks exit 0 · note: npm run check on main → 365/365 passed, exit 0, node packages/agentstate/dist/bench/m16.js on main → recall 100% (9/9), false flags 0/111, all targets met (held-out: CLI ver
+    2026-10-29 10:00      combined checks ran: npm run check && node packages/agentstate/dist/bench/m16.js in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```

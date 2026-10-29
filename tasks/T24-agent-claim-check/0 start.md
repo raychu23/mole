@@ -1,22 +1,22 @@
 ---
-state: verified
+state: integrated
 owner: mole-builder-5
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t24-agent-claim-check
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T24-agent-claim-check
 base: 80e2ca0
 reviewer: reviewer-T24-r3
-updated: 2026-10-29 09:57
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+updated: 2026-10-29 10:00
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-10-29 05:08
 ---
 ```notes
 T24-agent-claim-check      ledger task (rules.md §3 code features)      project tasks
     goal                    Check what an agent says it did against what it did: parse an agent's final answer for claims ('tests pass', 'fixed X', 'updated file Y', 'committed') and verify each against its own transcript (tool calls + their results, from T18's run states) and the git state; flag claims with no or contrary evidence (3C1 line 672: 'verificatn: sure thing u tell it to do actually done')
     done-when               1) mole claims <run> lists each claim → evidence (tool call id, exit code, commit) → supported / unsupported / contradicted, deterministic matchers only (sentence split + patterns, no model call tonight, a model splitter stays a later option), 2) M16 bench: 40 final answers from Hermes + Claude Code sessions, labeled before the code (incl. the builder chat's own self-corrected 'exit 0' runs.jsonl line) → recall >= 90% of unsupported/contradicted claims, false flags <= 10%, 3) Stop-hook output names the unsupported claims in one line each, 4) failure case: an answer with no checkable claims → 'nothing to check', exit 0, 5) npm run check passes
-    status                  2026-10-29 verified      reviewer reviewer-T24-r3 · findings: confirmation after 2 review rounds (4 log/review-3.md @c9b1ca6): done-when 1-5 hold
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-10-29 integrated      merge 007f80b · combined checks exit 0 · note: npm run check on main → 365/365 passed, exit 0, node packages/agentstate/
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    code
     boundary                packages/agentstate/src/claims/** + packages/agentstate/bench/m16*, packages/daemon/src/cli.ts (register the subcommand with one import + one call only), packages/mcp/src (new mole_claims tool only), plugins/claude-code/** (Stop hook output line only), tasks/T24-agent-claim-check/**
