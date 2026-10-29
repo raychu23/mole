@@ -14,13 +14,22 @@
       "path": "packages/indexer"
     },
     {
+      "path": "packages/flows"
+    },
+    {
       "path": "packages/memory"
+    },
+    {
+      "path": "packages/decisions"
     },
     {
       "path": "packages/questions"
     },
     {
       "path": "packages/agentstate"
+    },
+    {
+      "path": "packages/verify"
     },
     {
       "path": "packages/daemon"

@@ -1,0 +1,13 @@
+diff --git a/packages/element/src/textWrapping.ts b/packages/element/src/textWrapping.ts
+index 7f50644..1d68646 100644
+--- a/packages/element/src/textWrapping.ts
++++ b/packages/element/src/textWrapping.ts
+@@ -386,7 +386,7 @@ export const parseTokens = (line: string) => {
+   // normalizing to single-codepoint composed chars due to canonical equivalence
+   // of multi-codepoint versions for chars like č, で (~ so that we don't break a line in between c and ˇ)
+   // filtering due to multi-codepoint chars like 👨‍👩‍👧‍👦, 👩🏽‍🦰
+-  return line.normalize("NFC").split(breakLineRegex).filter(Boolean);
++  return line.split(breakLineRegex).filter(Boolean);
+ };
+ 
+ /**

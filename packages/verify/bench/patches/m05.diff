@@ -1,0 +1,13 @@
+diff --git a/packages/core/src/neighborhood.ts b/packages/core/src/neighborhood.ts
+index 1175c87..99b2faa 100644
+--- a/packages/core/src/neighborhood.ts
++++ b/packages/core/src/neighborhood.ts
+@@ -79,7 +79,7 @@ export function formatNeighborhood(n: Neighborhood): string {
+     const items = group.map((x) => {
+       // callers/importers: the line where the call/import happens (the declaration line of the caller is not where the call is)
+       const line = (role === 'caller' || role === 'importer') && x.site ? x.site.line : x.line;
+-      const sites = (role === 'caller' || role === 'importer') && x.site && x.site.count > 1 ? ` ×${x.site.count}` : '';
++      const sites = (role === 'caller' || role === 'importer') && x.site && x.site.count >= 1 ? ` ×${x.site.count}` : '';
+       const where = (x.path === n.focus?.path && role === 'own' ? `:${line}` : ` ${x.path}:${line}`) + sites;
+       const flag = x.impacted ? ' !impact' : '';
+       const siteFile = x.kind === 'file' && (role === 'caller' || role === 'importer') && x.site ? `:${x.site.line}${sites}` : '';

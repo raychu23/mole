@@ -1,0 +1,13 @@
+diff --git a/packages/common/src/utils.ts b/packages/common/src/utils.ts
+index be2e4b1..fa5d5e4 100644
+--- a/packages/common/src/utils.ts
++++ b/packages/common/src/utils.ts
+@@ -259,7 +259,7 @@ export const chunk = <T extends any>(
+   array: readonly T[],
+   size: number,
+ ): T[][] => {
+-  if (!array.length || size < 1) {
++  if (!array.length || size <= 1) {
+     return [];
+   }
+   let index = 0;

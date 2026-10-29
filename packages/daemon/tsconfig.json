@@ -28,6 +28,12 @@
     },
     {
       "path": "../telemetry"
+    },
+    {
+      "path": "../decisions"
+    },
+    {
+      "path": "../verify"
     }
   ]
 }

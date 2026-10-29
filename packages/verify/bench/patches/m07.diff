@@ -1,0 +1,12 @@
+diff --git a/packages/memory/src/symbols.ts b/packages/memory/src/symbols.ts
+index 038bea0..0d31362 100644
+--- a/packages/memory/src/symbols.ts
++++ b/packages/memory/src/symbols.ts
+@@ -9,7 +9,6 @@ const isJsDoc = (n: ts.Node) => n.kind >= ts.SyntaxKind.FirstJSDocNode && n.kind
+ 
+ /** Token texts of a node in source order: trivia (whitespace, comments) never appears; JSX text loses its whitespace. */
+ function tokens(node: ts.Node, sf: ts.SourceFile, out: string[]): string[] {
+-  if (isJsDoc(node)) return out;
+   const kids = node.getChildren(sf);
+   if (kids.length === 0) {
+     let text = node.getText(sf);

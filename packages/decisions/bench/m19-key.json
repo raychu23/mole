@@ -1,0 +1,138 @@
+{
+  "metric": "M19",
+  "written": "2026-10-29T11:54:37Z",
+  "author": "mole-builder-4 (T27 red commit), before any implementation exists",
+  "method": "Each planted violation is one line inserted after a stated line of a file at a pinned commit, so its expected line is (after + 1), counted by hand from `git show <sha>:<file> | wc -l` / sed. The expected decision is the record whose rule the line breaks (rules written by hand in the same commit); ruleAt is that rule item's line in the record, read with grep -n. Nothing here comes from running the implementation.",
+  "scoring": "caught = the run on base+patch reports a violation with exactly this file, line and decision id, citing the decision title and the rule's record file:line (ruleAt). Any other violation in a planted run (beyond the base) = planted false positive. Controls must add 0 violations. False positives on the 13 C4 changes = violations of the CURRENT Mole rules (repo .mole/decisions at bench time) on a line that change added or modified (git diff -U0 sha^ sha, new side). The base trees (Mole fb240ab, the live repo, Excalidraw e7b5346) must have 0 violations before any patch.",
+  "targets": { "caught": 10, "plantedFalsePositives": 0, "controlViolations": 0, "c4FalsePositives": 0, "c4Violations": 0, "baseViolations": 0, "modelCalls": 0 },
+  "trees": {
+    "mole": {
+      "repo": "self",
+      "sha": "fb240abf227f63dbbc5bbc5eb55e61915b927ea4",
+      "decisions": "repo .mole/decisions (live)"
+    },
+    "excalidraw": {
+      "repo": "~/.hermes/cache/scratch/impact/excalidraw (env MOLE_EXCALIDRAW overrides)",
+      "sha": "e7b534668a60add7f725531f3c9abf32508c7b4e",
+      "decisions": "packages/decisions/bench/m19-excalidraw/.mole"
+    }
+  },
+  "planted": [
+    {
+      "id": "P01",
+      "tree": "mole",
+      "file": "packages/daemon/src/cli.ts",
+      "after": 11,
+      "text": "import { createIndexer } from '@mole/indexer';",
+      "expect": { "decision": "0013", "file": "packages/daemon/src/cli.ts", "line": 12, "ruleAt": ".mole/decisions/0013-cli-loads-heavy-modules-lazily.md:12" },
+      "why": "static import of the indexer in the CLI entry"
+    },
+    {
+      "id": "P02",
+      "tree": "mole",
+      "file": "packages/daemon/src/cli.ts",
+      "after": 10,
+      "text": "import ts from 'typescript';",
+      "expect": { "decision": "0013", "file": "packages/daemon/src/cli.ts", "line": 11, "ruleAt": ".mole/decisions/0013-cli-loads-heavy-modules-lazily.md:12" },
+      "why": "static import of the TypeScript compiler (a node_modules package, resolved when installed)"
+    },
+    {
+      "id": "P03",
+      "tree": "mole",
+      "file": "packages/agentstate/src/sources.ts",
+      "after": 400,
+      "text": "export const markRead = (p: string): void => writeFileSync(p, '');",
+      "expect": { "decision": "0014", "file": "packages/agentstate/src/sources.ts", "line": 401, "ruleAt": ".mole/decisions/0014-agent-states-read-only.md:15" },
+      "why": "a bare write call in the transcript reader"
+    },
+    {
+      "id": "P04",
+      "tree": "mole",
+      "file": "packages/agentstate/src/steps.ts",
+      "after": 182,
+      "text": "export const forget = (p: string): void => fs.rmSync(p, { force: true });",
+      "expect": { "decision": "0014", "file": "packages/agentstate/src/steps.ts", "line": 183, "ruleAt": ".mole/decisions/0014-agent-states-read-only.md:15" },
+      "why": "a property-access write call (fs.rmSync)"
+    },
+    {
+      "id": "P05",
+      "tree": "mole",
+      "file": "packages/core/src/neighborhood.ts",
+      "after": 2,
+      "text": "import { loadGraph } from '@mole/decisions';",
+      "expect": { "decision": "0017", "file": "packages/core/src/neighborhood.ts", "line": 3, "ruleAt": ".mole/decisions/0017-core-is-the-bottom-layer.md:10" },
+      "why": "core importing a package above it (a proposed record: still enforced, cited as grey/proposed)"
+    },
+    {
+      "id": "P06",
+      "tree": "excalidraw",
+      "file": "packages/math/src/point.ts",
+      "after": 3,
+      "text": "import { newElement } from \"@excalidraw/element\";",
+      "expect": { "decision": "X001", "file": "packages/math/src/point.ts", "line": 4, "ruleAt": ".mole/decisions/X001-math-is-the-bottom-layer.md:9" },
+      "why": "math importing the element package"
+    },
+    {
+      "id": "P07",
+      "tree": "excalidraw",
+      "file": "packages/common/src/colors.ts",
+      "after": 4,
+      "text": "import { getDefaultAppState } from \"@excalidraw/excalidraw/appState\";",
+      "expect": { "decision": "X002", "file": "packages/common/src/colors.ts", "line": 5, "ruleAt": ".mole/decisions/X002-common-has-no-runtime-upward-imports.md:9" },
+      "why": "a runtime import of an editor sub-path from common"
+    },
+    {
+      "id": "P08",
+      "tree": "excalidraw",
+      "file": "packages/element/src/align.ts",
+      "after": 1,
+      "text": "import { t } from \"@excalidraw/excalidraw/i18n\";",
+      "expect": { "decision": "X003", "file": "packages/element/src/align.ts", "line": 2, "ruleAt": ".mole/decisions/X003-element-uses-editor-types-only.md:9" },
+      "why": "a value import from the editor next to an existing type-only one (line 1 stays legal)"
+    },
+    {
+      "id": "P09",
+      "tree": "excalidraw",
+      "file": "packages/common/src/url.ts",
+      "after": 37,
+      "text": "export const ping = (u: string) => fetch(u);",
+      "expect": { "decision": "X004", "file": "packages/common/src/url.ts", "line": 38, "ruleAt": ".mole/decisions/X004-no-network-in-core-libraries.md:11" },
+      "why": "a network call in common (rule from a {common,math,element} glob)"
+    },
+    {
+      "id": "P10",
+      "tree": "excalidraw",
+      "file": "packages/math/src/utils.ts",
+      "after": 33,
+      "text": "export const jitter = (): number => Math.random();",
+      "expect": { "decision": "X005", "file": "packages/math/src/utils.ts", "line": 34, "ruleAt": ".mole/decisions/X005-math-is-deterministic.md:9" },
+      "why": "a qualified callee (Math.random)"
+    }
+  ],
+  "controls": [
+    { "id": "C01", "tree": "mole", "file": "packages/daemon/src/cli.ts", "after": 11, "text": "import type { Graph } from '@mole/indexer';", "why": "type-only import: erased, loads nothing (0013 has no types: true)" },
+    { "id": "C02", "tree": "mole", "file": "packages/daemon/src/cli.ts", "after": 11, "text": "export const lazyTs = () => import('typescript');", "why": "dynamic import is what 0013 asks for (dynamic: false)" },
+    { "id": "C03", "tree": "mole", "file": "packages/agentstate/src/langgraph.ts", "after": 110, "text": "export const touch = (p: string): void => writeFileSync(p, '');", "why": "langgraph.ts is 0014's except path" },
+    { "id": "C04", "tree": "excalidraw", "file": "packages/common/src/utils.ts", "after": 5, "text": "export type { AppState as S2 } from \"@excalidraw/excalidraw/types\";", "why": "type-only re-export is allowed by X002" },
+    { "id": "C05", "tree": "excalidraw", "file": "packages/math/src/utils.ts", "after": 33, "text": "// fetch(u) and Math.random() are not called here: \"Math.random()\"", "why": "a comment, not a call" }
+  ],
+  "c4": {
+    "source": "tasks/c4-dogfood.json key b2 (13 changes; key 'recent' lists 9 of the same era)",
+    "changes": [
+      "ac8e02d759dd394b12442ac3cc7ab67f2196b0d1",
+      "9e19c51865114310db5e40c6114123e1b32a6995",
+      "6a546ecfce49aa97602d74689873c861936fe04a",
+      "61564ebf85760b6e97ca28899dd93360927b6148",
+      "da799b56e2044e94e9c4ec6b19483c46c85fa534",
+      "bb4d23cc5712b9a23c078f94f51182265e622f76",
+      "8664b8bfe4e0825f3bc0fbbef8886c49fc7af4c1",
+      "bb3846f6ae9e870e51be2de0119f853d4e37f1a8",
+      "de22e1baa25f6135c5bc0b4e9f470420dde380d3",
+      "fd7ed34c68d8e9f2ee6c6012d804c3b4c372a51e",
+      "7149cfce44c49ddd0d78ecff8e0d8d51c86888c5",
+      "05089bca2040ba3d33d12cdb0d8c7281ed926bab",
+      "78c0c941bb2ded535d36e131ed6d1f24334fab47"
+    ],
+    "realViolations": []
+  }
+}
