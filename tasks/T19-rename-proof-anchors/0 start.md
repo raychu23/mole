@@ -1,22 +1,22 @@
 ---
-state: submitted
+state: verified
 owner: mole-builder-2 (Hermes chat)
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t19-rename-proof-anchors
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T19-rename-proof-anchors
 base: 0032278
-reviewer:
-updated: 2026-10-29 10:22
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+reviewer: self-fresh-review
+updated: 2026-10-29 10:24
+status: ledger verified
+next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
 claimed: 2026-10-29 10:07
 ---
 ```notes
 T19-rename-proof-anchors      ledger task (rules.md §3 code features)      project tasks
     goal                    Make note and memory anchors survive renames: when a function, method or class is renamed (or renamed + moved), re-attach its notes, seen history and past-fix links by matching the normalized body hash and call-graph neighbors, instead of marking them deleted/orphaned (T13 found 'renamed symbol shows deleted')
     done-when               1) mole memory and mole since report 'renamed: old → new' and keep the note fresh when only the name changed; 2) M9 bench: every rename found in the Mole repo and the Excalidraw clone history (git log -M + TS symbol diff), key written before the code → >= 95% re-anchored to the right symbol, 0 wrong re-anchors; 3) ambiguous case (two candidates with the same body) → stays orphaned and lists both candidates, never guesses; 4) failure case: a rename plus a body edit above a similarity threshold is reported as 'renamed + changed' (stale), not silently fresh; 5) npm run check passes
-    status                  2026-10-29 submitted      report: Merged main into ledger/t19-rename-proof-anchors (clean auto-merge, no conflicts). Kept body-only matcher per D3
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    status                  2026-10-29 verified      reviewer self-fresh-review · findings: none: fresh re-read of 0 start.md + the merge diff (0032278..HEAD) confirms (a) p
+    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
     pinned
     mode                    code
     boundary                packages/memory/** (anchor + re-anchor only), tasks/T19-rename-proof-anchors/**
