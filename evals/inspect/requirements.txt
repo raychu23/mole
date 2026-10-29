@@ -1,0 +1,5 @@
+# tested 2026-10-29 with python 3.12 (python.org framework build); install into evals/inspect/.venv
+inspect-ai==0.3.286
+inspect-swe==0.2.72
+anthropic==2.3.0  # request translation for the agent bridge only; no API key is used
+pytest==9.2.0

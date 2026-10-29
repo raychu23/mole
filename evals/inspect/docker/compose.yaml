@@ -1,0 +1,10 @@
+# Inspect docker sandbox for T17. network_mode none: Claude Code reaches the model only through Inspect's in-sandbox
+# bridge (localhost), so nothing in the container can call a paid API or the internet by itself.
+services:
+  default:
+    build: .
+    image: mole-t17-eval:latest
+    init: true
+    command: ["sleep", "infinity"]
+    network_mode: none
+    mem_limit: 4g

@@ -3,9 +3,9 @@
 // stdout on exit 0. A hook never fails the session: any problem = exit 0 with no output (and a line on stderr, which Claude
 // Code only writes to its debug log for exit 0).
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { delimiter, dirname, join, resolve } from 'node:path';
+import { delimiter, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -98,4 +98,83 @@ export const clip = (s, n = MAX_CHARS) => (s.length > n ? `${s.slice(0, n - 40)}
 /** Print one JSON object for Claude Code and exit 0. */
 export function emit(obj) {
   process.stdout.write(`${JSON.stringify(obj)}\n`);
+}
+
+// ---------------------------------------------------------------- T21: parallel-agent collisions for this session
+const hhmm = (iso) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? String(iso) : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+const via = (p) => (p.path?.length ? p.path.join(', ') : `shared ${p.shared.join(', ')}`);
+
+/**
+ * The repo root written the way Claude Code writes paths for this session (its cwd), not git's resolved form: transcripts
+ * record cwd + file paths as the session saw them (/var/... vs git's /private/var/..., or a symlinked project folder), and
+ * mole collisions matches runs to the repo by path prefix.
+ */
+export function sameFormRoot(root, cwd) {
+  try {
+    if (!cwd) return root;
+    const rel = relative(root, realpathSync(cwd));
+    if (rel.startsWith('..')) return root;
+    const parts = rel ? rel.split('/').length : 0;
+    let r = resolve(cwd);
+    for (let i = 0; i < parts; i++) r = dirname(r);
+    return realpathSync(r) === realpathSync(root) ? r : root;
+  } catch {
+    return root;
+  }
+}
+
+/**
+ * `mole collisions --json --run <session>` for the last few hours; undefined when the CLI fails or the session is unknown.
+ * Only when the session's transcript already has a tool call: a session with no steps of its own can't collide, and the
+ * CLI call (reads every harness's recent runs) is skipped. timeoutMs = this call's own budget inside the hook's Claude Code
+ * timeout (MOLE_COLLISIONS_TIMEOUT_MS overrides); on timeout nothing is printed for collisions.
+ */
+export function sessionCollisions(mole, root, input, timeoutMs, hours = 4) {
+  const sessionId = input.session_id;
+  if (!sessionId || !input.transcript_path) return undefined;
+  try {
+    if (!readFileSync(input.transcript_path, 'utf8').includes('"tool_use"')) return undefined;
+  } catch {
+    return undefined;
+  }
+  const budget = Number(process.env.MOLE_COLLISIONS_TIMEOUT_MS) > 0 ? Number(process.env.MOLE_COLLISIONS_TIMEOUT_MS) : timeoutMs;
+  const r = moleJson(mole, sameFormRoot(root, input.cwd), ['collisions', '--json', '--run', String(sessionId), '--since', String(hours)], budget);
+  return r && Array.isArray(r.pairs) ? r : undefined;
+}
+
+/** SessionStart: other parallel runs whose work meets this session's (max 3 pairs). '' when none. */
+export function collisionsStartText(r, sessionId) {
+  const pairs = (r?.pairs ?? []).filter((p) => p.a.run === sessionId || p.b.run === sessionId);
+  if (!pairs.length) return '';
+  const out = [`mole: ${pairs.length} parallel run${pairs.length === 1 ? ' touches' : 's touch'} code near yours (mole collisions):`];
+  for (const p of pairs.slice(0, 3)) {
+    const other = p.a.run === sessionId ? p.b : p.a;
+    const did = p.changes.filter((c) => c.run === other.run).map((c) => `${c.how === 'edit' ? 'edited' : 'read'} ${c.symbol} ${hhmm(c.time)}`);
+    out.push(`- ${other.harness} ${other.run}${other.title ? ` (${other.title})` : ''}: ${did.join('; ') || 'related code'}`, `  path: ${via(p)}`);
+  }
+  if (pairs.length > 3) out.push(`(${pairs.length - 3} more: mole collisions --run ${sessionId})`);
+  return out.join('\n');
+}
+
+/** Stop: what THIS session edited that another parallel run relies on, + its edits under notes. '' when none. */
+export function collisionsStopText(r, sessionId) {
+  const out = [];
+  for (const p of r?.pairs ?? []) {
+    if (p.a.run !== sessionId && p.b.run !== sessionId) continue;
+    const other = p.a.run === sessionId ? p.b : p.a;
+    // the other run relies on an edit of mine when it touched the same function, or its code calls (via the chain) the
+    // function I edited: the chain's LAST node. A chain starting at my edit = I call into its code, not the other way round.
+    const end = p.path?.length ? p.path.at(-1).split(' -> ').at(-1) : undefined;
+    const theirs = new Set(p.changes.filter((c) => c.run === other.run).map((c) => c.symbol));
+    const start = p.path?.length ? p.path[0].split(' -> ')[0] : undefined;
+    for (const c of p.changes.filter((c) => c.run === sessionId && c.how === 'edit')) {
+      const relies = p.shared.includes(c.symbol) || (end === c.symbol && start !== undefined && theirs.has(start));
+      if (relies) out.push(`mole: you changed ${c.symbol}; ${other.harness} ${other.run} relies on it (${via(p)})`);
+    }
+  }
+  for (const n of r?.notes ?? []) if (n.run === sessionId) out.push(`mole: you edited ${n.symbol} under note ${n.note}`);
+  return [...new Set(out)].join('\n');
 }

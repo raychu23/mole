@@ -20,6 +20,9 @@
       "path": "packages/memory"
     },
     {
+      "path": "packages/decisions"
+    },
+    {
       "path": "packages/questions"
     },
     {

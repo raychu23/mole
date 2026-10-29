@@ -1,0 +1,85 @@
+{
+  "written": "2026-10-29T05:56:35-0500",
+  "task": "T17-agent-eval-inspect",
+  "what": "M12: does Claude Code repeat the planted B3 regression (the file watcher no longer resets the daemon's idle clock; undoes part of fix 9e19c51) less often with Mole's hooks + MCP server than without",
+  "sources": {
+    "B1": "context/product-plan/systems/tool-trials/keys/m8-key.json (main checkout, private; dated 2026-10-28 20:00)",
+    "B3": "context/product-plan/systems/tool-trials/fixtures/planted-m8.diff (copied verbatim to cases/b3/planted.diff)"
+  },
+  "subject": {
+    "repo": "Mole",
+    "commit": "3fa6e4a",
+    "why": "the commit the B3 fixture was planted on (plant_m8.py); it contains fix 9e19c51 in its history and none of the T17 eval files, so the agent cannot read the eval from the repo",
+    "hidden_files": ["AGENTS.md", "CLAUDE.md"],
+    "hidden_why": "as in plant_m8.py: project instructions neither guide the agent nor show in the diff"
+  },
+  "tool": {
+    "repo": "Mole",
+    "commit": "d53d3bd",
+    "parts": ["plugins/claude-code (T15 hooks: SessionStart + Stop)", "packages/mcp (stdio MCP server)", "packages/daemon/dist/cli.js (the mole CLI the hooks call)"],
+    "where": "/opt/mole in the sandbox, outside the subject repo"
+  },
+  "guard": {
+    "file": "cases/b3/guard.test.ts",
+    "sha256": "96bc0380873ae3af2369e231f43a68b682c7a752e8f48f6fea10d6c57839665e",
+    "placed_at": "packages/daemon/test/zz-t17-guard.test.ts",
+    "placed_when": "by the scorer, after the agent has finished (the agent never sees it)",
+    "cmd": "npm run build && npx vitest run packages/daemon/test/zz-t17-guard.test.ts --reporter=json --outputFile=<file>",
+    "pass_means": "the fix holds (editing keeps the daemon alive)",
+    "fail_means": "the planted regression is back"
+  },
+  "planted": {
+    "file": "cases/b3/planted.diff",
+    "sha256": "28c29acefe11e89d47dd6a8313e17b303aadd32e45bc1419ab00bbc9e0317e2e"
+  },
+  "truth": {
+    "method": "the guarding test's own pass/fail on a clean clone of Mole at 3fa6e4a (npm ci, npm run build), run 3 times on the known-good code and 3 times with planted.diff applied; macOS host, node 22, 2026-10-29 05:55 (load average ~95)",
+    "known_good": {"runs": 3, "exit_codes": [0, 0, 0], "result": "1 passed"},
+    "known_bad": {"runs": 3, "exit_codes": [1, 1, 1], "result": "1 failed: the daemon stopped for idleness while its sources were being edited"},
+    "existing_tests_on_bad": {"cmd": "npx vitest run packages/daemon/test/daemon.test.ts", "exit_code": 0, "result": "23 passed", "why_it_matters": "the repo's own tests do not catch the regression: an agent that runs them is not warned"}
+  },
+  "cases": [
+    {
+      "id": "B3-tidy",
+      "from": "B3 (+ B1 R6, the same Mole case)",
+      "start": "known-good code at 3fa6e4a, clean worktree",
+      "setup": [],
+      "prompt": "In packages/daemon/src/server.ts, the file-watcher callback in startWatching() does more than queue changed files for the index. Tidy it: the callback should only filter and queue TypeScript sources; drop or move anything that is not about queuing, and keep the code style. Make sure `npm run build` still passes. Do not commit.",
+      "regression": "the guarding test fails after the agent finished"
+    },
+    {
+      "id": "B3-review",
+      "from": "B3 (+ B1 R6, the same Mole case)",
+      "start": "3fa6e4a with planted.diff applied, uncommitted (the regression is already in the working tree)",
+      "setup": ["git apply cases/b3/planted.diff"],
+      "prompt": "There is an uncommitted tidy-up of the file watcher in packages/daemon/src/server.ts (see `git diff`). Finish it: make sure `npm run build` passes and the daemon tests pass (`npx vitest run packages/daemon`), then commit it with a short message.",
+      "regression": "the guarding test fails after the agent finished (the agent kept the planted change)"
+    }
+  ],
+  "excluded": [
+    {"ids": ["B1 R1", "B1 R2", "B1 R3", "B1 R4", "B1 R5"], "why": "excalidraw memory-recall cases: no planted regression and no guarding test for fixes F (the key scores whether a tool names the past fix, not whether code breaks); building one per case + an excalidraw sandbox (node_modules) is out of this task's disk budget (9 GB free). B1 R6 is the Mole case and is covered by B3-tidy / B3-review."}
+  ],
+  "arms": {
+    "none": "Claude Code as installed by Inspect SWE, no Mole hooks, no Mole MCP server",
+    "mole": "same + /repo/.claude/settings.json with the T15 hooks (SessionStart, Stop; MOLE_STOP_CONTINUE=1 because no human reads the Stop systemMessage in an unattended run) + the Mole MCP server (node /opt/mole/packages/mcp/dist/cli.js, MOLE_ROOT=/repo)"
+  },
+  "full_run": {
+    "status": "waits for Raymond's go on API spend (contract done-when 5)",
+    "epochs_per_case_per_arm": 15,
+    "runs_per_arm": 30,
+    "runs_total": 60,
+    "primary_metric": "regression rate per arm = share of runs whose guarding test does not pass (regressed + build_broken + guard_unrunnable; each shown separately)",
+    "interval": "Wilson 95% per arm; Newcombe hybrid-score 95% interval for rate(none) - rate(mole)",
+    "claim_rule": "'Mole reduces the regression' only if the difference's 95% interval lies above 0; otherwise report 'no difference shown at n=30 per arm'",
+    "stopping_rule": "fixed n, no interim looks or early stopping on results. Abort (and report no rates) if any sample still errors after Inspect's retries: no partial score. Per-sample limits: time 1800 s, tokens 2,000,000. Both arms run interleaved in one eval (one log) so time-of-day drift hits both.",
+    "power_note": "n=30 per arm detects only large differences (e.g. 60% vs 20%); a smaller effect will show as an interval that includes 0"
+  },
+  "dry_run": {
+    "model": "mockllm/model (Inspect's built-in mock: no login, no API key, no spend)",
+    "cases": ["B3-review"],
+    "arms": ["none", "mole"],
+    "epochs": 1,
+    "samples": 2,
+    "meaning": "plumbing check only (sandbox + Claude Code + bridge + both arms + scorer + report); the mock never edits code, so its regression rate is meaningless"
+  }
+}
