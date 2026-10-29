@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 03:36      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T15-surface-hover-and-agent-hooks → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 03:39      submitted → verified      reviewer reviewer-T15-r1 · findings: P2 only: (1) findMole prefers any 'mole' on PATH (tw93 Mac cleaner collides) -> hooks silent, (2) Stop hook re-emits the same cumulative check every turn, (3) git show <sha> without -
     2026-10-29 03:39      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T15-surface-hover-and-agent-hooks → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 03:43      verified → integrated      merge 79520b5 · combined checks exit 0 · note: npm run check on main 79520b5 → 181/181 passed · m1/m2/m3/m4 benches exit 0 (all targets) on main
+    2026-10-29 03:43      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
