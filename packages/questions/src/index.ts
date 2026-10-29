@@ -85,6 +85,14 @@ const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
 // same test-file and title patterns as @mole/history (T12), so "guarding test" means the same thing in both
 const TEST_FILE = /(^|\/)(test|tests|__tests__|spec|specs)\/|\.(test|spec)\.[cm]?[jt]sx?$|_test\.(go|py)$|(^|\/)test_[^/]*\.py$/;
 const TITLE = /\b(?:describe|it|test|suite|context)(?:\.\w+)*\(\s*(['"`])((?:\\.|(?!\1).)+?)\1/g;
+/** an it()/test() call: the only block level a guard can be named at when the change edits inside it (review-1 P1-1) */
+const IT_TITLE = /\b(?:it|test)(?:\.\w+)*\(\s*(['"`])((?:\\.|(?!\1).)+?)\1/;
+/** a snapshot is not a test you can name or that guards anything by itself (review-1 P2-1) */
+const SNAPSHOT = /\.snap$|(^|\/)__snapshots__\//;
+/** lines a fix wrote here can't "keep a fix working": docs, changelogs, lockfiles, snapshots (review-1 P2-4) */
+const NON_CODE =
+  /\.(md|mdx|markdown|txt|rst|adoc|lock|snap)$|(^|\/)(CHANGELOG|CHANGES|HISTORY|LICENSE|LICENCE|NOTICE|AUTHORS)[^/]*$|(^|\/)(package-lock\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|go\.sum)$/i;
+const isTest = (f: string): boolean => TEST_FILE.test(f) && !SNAPSHOT.test(f);
 /** at most this many fix commits per test file are read for their guarding-test names */
 const MAX_FIXES_PER_TEST_FILE = 50;
 
@@ -99,9 +107,13 @@ function git(root: string, args: string[]): Promise<string> {
   });
 }
 
+/** clip to n chars on a word boundary (never mid-word), with an ellipsis when cut */
 const clip = (s: string, n: number): string => {
   const t = s.replace(/\s+/g, ' ').trim();
-  return t.length > n ? `${t.slice(0, n - 1)}…` : t;
+  if (t.length <= n) return t;
+  const cut = t.slice(0, n);
+  const sp = cut.lastIndexOf(' ');
+  return `${(sp > n / 3 ? cut.slice(0, sp) : cut.slice(0, n - 1)).replace(/[\s,;:–—-]+$/, '')}…`;
 };
 const range = (start: number, n: number): string => (n <= 1 ? `${start}` : `${start}-${start + n - 1}`);
 const titlesIn = (s: string): string[] => [...s.matchAll(TITLE)].map((m) => m[2]!);
@@ -196,10 +208,13 @@ interface FixNames {
   sha: string;
   subject: string;
   date: string;
+  /** titles on lines the fix added (it wrote or edited that title line) */
+  added: Set<string>;
+  /** T12's names: added titles + the -U0 hunk-header context titles the fix "sat in" */
   names: Set<string>;
 }
 
-/** fix-rule commits that touched a test file before the base, each with the test titles it added or sat in (T12's names) */
+/** fix-rule commits that touched a test file before the base, each with the titles it added and T12's names */
 async function fixesOfTestFile(root: string, base: string, file: string, rule: RegExp, shallow: boolean): Promise<FixNames[]> {
   const raw = await git(root, ['log', `-n${MAX_FIXES_PER_TEST_FILE * 4}`, '--format=%H%x1f%P%x1f%aI%x1f%s', base, '--', file]).catch(() => '');
   const fixes = raw
@@ -212,16 +227,20 @@ async function fixesOfTestFile(root: string, base: string, file: string, rule: R
   for (const [sha, parents, date, subject] of fixes) {
     const parent = parents.split(' ')[0] || EMPTY_TREE;
     const d = await git(root, ['diff', '-U0', '--no-color', '--no-ext-diff', parent, sha, '--', file]).catch(() => '');
+    const added = new Set<string>();
     const names = new Set<string>();
-    for (const f of parseDiff(d)) for (const b of f.blocks) for (const t of [...titlesIn(b.context), ...b.added.flatMap((a) => titlesIn(a.text))]) names.add(t);
-    out.push({ sha, subject, date, names });
+    for (const f of parseDiff(d))
+      for (const b of f.blocks) {
+        for (const t of b.added.flatMap((a) => titlesIn(a.text))) added.add(t), names.add(t);
+        for (const t of titlesIn(b.context)) names.add(t);
+      }
+    out.push({ sha, subject, date, added, names });
   }
   return out;
 }
 
-/** describe/it titles that enclose base line `at` (by indentation, walking up) */
-function enclosingTitles(lines: string[], at: number): string[] {
-  const out: string[] = [];
+/** the innermost titled block (describe/it/...) enclosing base line `at` (by indentation, walking up) */
+function innermostTitled(lines: string[], at: number): { title: string; it: boolean } | undefined {
   const start = lines[at - 1];
   let indent = start !== undefined && start.trim() ? indentOf(start) : Number.POSITIVE_INFINITY;
   for (let i = at - 2; i >= 0 && indent > 0; i--) {
@@ -230,17 +249,58 @@ function enclosingTitles(lines: string[], at: number): string[] {
     const ind = indentOf(l);
     if (ind >= indent) continue;
     const t = titlesIn(l);
-    if (t.length) out.push(t[0]!);
+    if (t.length) {
+      const m = IT_TITLE.exec(l);
+      return { title: m ? m[2]! : t[0]!, it: !!m };
+    }
     indent = ind;
   }
-  return out;
+  return undefined;
+}
+
+/** last base line of the block whose title is on base line `at` (its closing line at the same indent, if any) */
+function blockEnd(lines: string[], at: number): number {
+  const ind = indentOf(lines[at - 1] ?? '');
+  for (let i = at; i < lines.length; i++) {
+    const l = lines[i]!;
+    if (l.trim() && indentOf(l) <= ind) return /^\s*[)}\]]/.test(l) ? i + 1 : i;
+  }
+  return lines.length;
+}
+
+/** titles of the innermost it/test blocks around the edited old lines, or on removed it/test title lines; never a
+ *  describe the edit merely sits in (review-1 P1-1) */
+function editedItTitles(lines: string[], b: Block): string[] {
+  const out: string[] = [];
+  for (const r of b.removed) {
+    const m = IT_TITLE.exec(r.text);
+    if (m) out.push(m[2]!);
+    const e = innermostTitled(lines, r.line);
+    if (e?.it) out.push(e.title);
+  }
+  return uniq(out);
+}
+
+/** titles of whole test blocks (title line through its end) the change deletes */
+function deletedBlockTitles(lines: string[], b: Block): string[] {
+  const gone = new Set(b.removed.map((r) => r.line));
+  const out: string[] = [];
+  for (const r of b.removed) {
+    const t = titlesIn(r.text);
+    if (!t.length) continue;
+    const end = blockEnd(lines, r.line);
+    let all = true;
+    for (let i = r.line; i <= end && all; i++) if (lines[i - 1]?.trim() && !gone.has(i)) all = false;
+    if (all) out.push(t[0]!);
+  }
+  return uniq(out);
 }
 
 async function guardFacts(root: string, r: CheckResult, files: FileDiff[], base: BaseFiles, rule: RegExp, shallow: boolean): Promise<GuardFact[]> {
   const out: GuardFact[] = [];
   for (const f of files) {
     const file = f.oldPath;
-    if (!file || !TEST_FILE.test(file)) continue;
+    if (!file || !isTest(file)) continue; // snapshots never guard (P2-1)
     const edits = f.blocks.filter((b) => b.oldLines > 0); // pure additions never edit a guarding test
     if (!edits.length) continue;
     const lines = (await base.lines(file)) ?? [];
@@ -250,9 +310,13 @@ async function guardFacts(root: string, r: CheckResult, files: FileDiff[], base:
     for (const b of edits) {
       const h = r.hunks.find((x) => x.file === (f.newPath ?? f.oldPath) && x.oldStart === b.oldStart && x.oldLines === b.oldLines);
       for (const pf of h?.pastFixes ?? []) {
+        // only fix-written lines inside a describe/it block count: an import or top-level helper the fix wrote is not
+        // "a guarding test" (seen on excalidraw 4850bf3: blame guards on import lines)
+        const inBlocks = pf.lines.map((l) => innermostTitled(lines, l)).filter((x): x is { title: string; it: boolean } => !!x);
+        if (!inBlocks.length) continue;
         const e = blamed.get(pf.sha) ?? { fix: pf, n: 0, line: b.oldStart, names: [] };
         e.n += pf.lines.length;
-        e.names.push(...b.removed.flatMap((x) => titlesIn(x.text)), ...enclosingTitles(lines, b.oldStart));
+        e.names.push(...deletedBlockTitles(lines, b), ...inBlocks.filter((x) => x.it).map((x) => x.title), ...editedItTitles(lines, b));
         blamed.set(pf.sha, e);
       }
     }
@@ -269,14 +333,19 @@ async function guardFacts(root: string, r: CheckResult, files: FileDiff[], base:
       });
       continue;
     }
-    // (b) named: a title the change deletes or edits inside is one a fix added or sat in
+    // (b) named, two narrow forms only (review-1 P1-1):
+    //   - the change edits/deletes old lines inside an it/test block whose title line the fix itself added;
+    //   - the change deletes a whole test block (title line to its end) that T12 names as the fix's guarding test
+    //     (T12's names include the fix's hunk-header context: the M4 key's G1/G2 cases rest on that, see insights).
+    // A describe an edit merely sits in, or a hunk-header title, never makes an EDIT a guard edit.
     const fixes = await fixesOfTestFile(root, r.change.base, file, rule, shallow);
     if (!fixes.length) continue;
     let found: GuardFact | undefined;
     for (const b of edits) {
-      const titles = uniq([...b.removed.flatMap((x) => titlesIn(x.text)), ...enclosingTitles(lines, b.oldStart), ...titlesIn(b.context)]);
+      const inIt = editedItTitles(lines, b);
+      const whole = deletedBlockTitles(lines, b);
       for (const fx of fixes) {
-        const names = titles.filter((t) => fx.names.has(t));
+        const names = uniq([...whole.filter((t) => fx.names.has(t)), ...inIt.filter((t) => fx.added.has(t))]);
         if (!names.length) continue;
         found = { testFile: file, names, action: action([b]), line: b.oldStart, fix: { sha: fx.sha, shortSha: fx.sha.slice(0, 7), subject: fx.subject, date: fx.date }, via: 'named' };
         break; // newest matching fix first (git log order)
@@ -290,27 +359,45 @@ async function guardFacts(root: string, r: CheckResult, files: FileDiff[], base:
 
 // ---------- templates ----------
 
-function why(f: PastFix): string | undefined {
-  const comment = f.reasonSources.find((s) => s.kind === 'comment');
-  if (comment) return comment.text;
-  const task = f.reasonSources.find((s) => s.kind === 'task');
-  if (task) return task.text;
-  const body = f.reason.startsWith(`${f.subject} — `) ? f.reason.slice(f.subject.length + 3).split(' | ')[0] : undefined;
-  return body && body.length >= 12 ? body : undefined;
+/** first sentence of the fix's commit body; a squash bullet list or a repeat of the subject is no reason (P2-2) */
+function bodySentence(f: PastFix): string | undefined {
+  if (!f.reason.startsWith(`${f.subject} — `)) return undefined;
+  const body = f.reason.slice(f.subject.length + 3).split(' | ')[0]!.trim();
+  if (!body || /^([*•+]|-(?!-)|\d+[.)])\s/.test(body)) return undefined;
+  const first = (/^(.+?[.!?])(\s|$)/.exec(body)?.[1] ?? body).trim();
+  if (first.length < 12 || first.toLowerCase() === f.subject.toLowerCase()) return undefined;
+  return first;
 }
 
-function pastFixText(f: PastFix, where: string): string {
+/** the fix's reason: its body's first sentence; else a comment the fix added inside the blamed lines; else a task line */
+function why(f: PastFix): string | undefined {
+  const body = bodySentence(f);
+  if (body) return body;
+  const span = f.lines.length ? Math.max(...f.lines) - Math.min(...f.lines) : 0;
+  const comment = f.reasonSources.find(
+    (s) => s.kind === 'comment' && s.path === f.source.file && s.line !== undefined && s.line >= f.source.line - 3 && s.line <= f.source.line + span + 1,
+  );
+  // T12 keeps one line of a comment: mark it as cut when it stops mid-sentence
+  if (comment) return /[.!?:)]$/.test(comment.text.trim()) ? comment.text : `${comment.text.trim()}…`;
+  return f.reasonSources.find((s) => s.kind === 'task')?.text;
+}
+
+function pastFixText(f: PastFix, where: string, guard?: GuardFact): string {
   const w = why(f);
-  const real = f.tests.filter((x) => !/\.snap$/.test(x.file)); // a snapshot is not a test you can name
-  const t = real.find((x) => x.via === 'fix' && x.names?.length) ?? real.find((x) => x.via === 'fix') ?? f.tests.find((x) => x.via === 'fix') ?? real[0];
+  const real = f.tests.filter((x) => !SNAPSHOT.test(x.file)); // a snapshot is not a test you can name (P2-1)
+  const t = real.find((x) => x.via === 'fix' && x.names?.length) ?? real.find((x) => x.via === 'fix') ?? real[0];
   const test = t
     ? t.via === 'symbol'
       ? ` A test that references this code: ${t.file}.`
       : ` Its guarding test: ${t.file}${t.names?.length ? ` » "${t.names[0]}"` : ''}.`
     : ' No test was added with that fix.';
+  // a guard-test fact on the same fix is merged here instead of taking a slot (review-1 P1-1)
+  const g = guard
+    ? ` This change also ${guard.action} ${guard.testFile}${guard.names.length ? ` » "${guard.names[0]}"` : ''} (line ${guard.line}), a test guarding it: if that fix breaks again, what will catch it?`
+    : '';
   return (
     `You edit ${where}, lines ${f.shortSha} "${clip(f.subject, 90)}" wrote as a fix${w ? ` (why: ${clip(w, 140)})` : ''}. ` +
-    `Does your change keep that fix working?${test} (source: ${f.shortSha} ${f.source.file}:${f.source.line})`
+    `Does your change keep that fix working?${test}${g} (source: ${f.shortSha} ${f.source.file}:${f.source.line})`
   );
 }
 
@@ -337,6 +424,40 @@ function seenText(s: SeenFact): string {
 
 type Draft = Omit<Question, 'rank'>;
 
+/**
+ * Contract ranking past fix > note > guard-test > seen, cap 3 (review-1 P1-1). A guard-test fact:
+ *  - takes a free slot when fewer than 3 higher-ranked questions exist (M4 key G2 asks past fix + guard separately);
+ *  - cap full and its fix already has a past-fix question: merged into that question's text, takes no slot;
+ *  - else (cap full, its fix not asked): an edited/deleted guard of an UNASKED fix is the one thing the past-fix
+ *    questions can't cover (done-when 3), so it replaces the lowest note, or, with no note in the cap, the 3rd past
+ *    fix; only one guard may do this. Decision recorded in tasks/T14-l3-questions/2 insights.md.
+ * Seen questions only fill free slots.
+ */
+function rank(pastFix: Draft[], notes: Draft[], guards: Array<Draft & { guard: GuardFact }>, seen: Draft[], merge: (sha: string, g: GuardFact) => string): Draft[] {
+  const picked: Draft[] = [...pastFix, ...notes].slice(0, MAX_QUESTIONS);
+  const merged = new Set<string>();
+  let replaced = false;
+  for (const { guard: g, ...q } of guards) {
+    if (picked.length < MAX_QUESTIONS) {
+      picked.push(q); // a free slot: the guard is its own question (M4 key G2: past fix + its deleted guard)
+      continue;
+    }
+    const asked = picked.find((p) => p.kind === 'past-fix' && p.cites.sha === g.fix.sha);
+    if (asked) {
+      if (!merged.has(g.fix.sha)) asked.text = merge(g.fix.sha, g);
+      merged.add(g.fix.sha);
+      continue;
+    }
+    if (replaced) continue;
+    replaced = true;
+    const noteAt = picked.map((p) => p.kind).lastIndexOf('note');
+    picked.splice(noteAt >= 0 ? noteAt : MAX_QUESTIONS - 1, 1);
+    picked.push(q);
+  }
+  for (const q of seen) if (picked.length < MAX_QUESTIONS) picked.push(q);
+  return picked;
+}
+
 export async function questions(repoRoot: string, change: Change, opts: QuestionsOptions = {}): Promise<QuestionsResult> {
   const root = (await git(resolve(repoRoot), ['rev-parse', '--show-toplevel'])).trim();
   const r = await check(root, change, opts.fixRule !== undefined ? { fixRule: opts.fixRule } : {});
@@ -351,6 +472,7 @@ export async function questions(repoRoot: string, change: Change, opts: Question
   const bySha = new Map<string, { fix: PastFix; n: number; hunk: { file: string; oldStart: number; oldLines: number }; best: number }>();
   for (const h of r.hunks) {
     if (TEST_FILE.test(h.file)) continue; // a fix on test lines is asked as a guard-test question
+    if (NON_CODE.test(h.file)) continue; // docs/changelog/lockfile lines stay in T12's facts, never a question (P2-4)
     for (const f of h.pastFixes) {
       const e = bySha.get(f.sha);
       if (!e) bySha.set(f.sha, { fix: f, n: f.lines.length, hunk: h, best: f.lines.length });
@@ -360,16 +482,17 @@ export async function questions(repoRoot: string, change: Change, opts: Question
       }
     }
   }
-  const pastFix: Draft[] = [...bySha.values()]
-    .sort((a, b) => b.n - a.n || b.fix.date.localeCompare(a.fix.date))
-    .map(({ fix, hunk }) => ({
-      kind: 'past-fix',
-      text: pastFixText(fix, `${hunk.file}:${range(hunk.oldStart, hunk.oldLines)}`),
-      cites: { sha: fix.sha },
-      source: { file: fix.source.file, line: fix.source.line, sha: fix.sha },
-    }));
+  const pastFixFacts = [...bySha.values()].sort((a, b) => b.n - a.n || b.fix.date.localeCompare(a.fix.date));
+  const where = (h: { file: string; oldStart: number; oldLines: number }) => `${h.file}:${range(h.oldStart, h.oldLines)}`;
+  const pastFix: Draft[] = pastFixFacts.map(({ fix, hunk }) => ({
+    kind: 'past-fix',
+    text: pastFixText(fix, where(hunk)),
+    cites: { sha: fix.sha },
+    source: { file: fix.source.file, line: fix.source.line, sha: fix.sha },
+  }));
   const noteQs: Draft[] = notes.map((n) => ({ kind: 'note', text: noteText(n), cites: { note: n.file }, source: { file: n.file, line: n.line } }));
-  const guardQs: Draft[] = guards.map((g) => ({
+  const guardQs: Array<Draft & { guard: GuardFact }> = guards.map((g) => ({
+    guard: g,
     kind: 'guard-test',
     text: guardText(g, r.change.base),
     cites: { testFile: g.testFile, sha: g.fix.sha },
@@ -379,10 +502,10 @@ export async function questions(repoRoot: string, change: Change, opts: Question
     .filter((s) => files.some((f) => f.oldPath === s.file && f.blocks.some((b) => b.oldLines > 0 && s.line >= b.oldStart && s.line < b.oldStart + b.oldLines)))
     .map((s) => ({ kind: 'seen', text: seenText(s), cites: s.sha ? { sha: s.sha } : {}, source: { file: s.file, line: s.line, ...(s.sha ? { sha: s.sha } : {}) } }));
 
-  const all = [...pastFix, ...noteQs, ...guardQs, ...seenQs];
-  const picked = all.slice(0, MAX_QUESTIONS);
-  // an edited or deleted guarding test is always asked: it takes the last slot when the cap is full without it
-  if (guardQs.length && !picked.some((q) => q.kind === 'guard-test')) picked[MAX_QUESTIONS - 1] = guardQs[0]!;
+  const picked = rank(pastFix, noteQs, guardQs, seenQs, (sha, g) => {
+    const e = pastFixFacts.find((x) => x.fix.sha === sha)!;
+    return pastFixText(e.fix, where(e.hunk), g);
+  });
 
   const notices: string[] = [];
   let modelCalls = 0;
