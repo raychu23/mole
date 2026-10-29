@@ -1,0 +1,270 @@
+// prCheck: which decision records govern a pull request's changed lines, who owns them, what broke there before, and ONE
+// GitHub check-run payload built from those facts. Code only: git plumbing + the record files, no model, no network.
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { computeFlags } from '../flags.js';
+import { loadGraph } from '../graph.js';
+import type { Flag, GraphNode } from '../types.js';
+import { codeownersAt, parseCodeowners } from './codeowners.js';
+import { parseGitDiff, type ChangedFile } from './diff.js';
+import type { CheckAnnotation, CheckRunPayload, GovernedRecord, PrCheckOptions, PrCheckResult, PrQuestion, UnanchoredRecord } from './types.js';
+
+export const CHECK_NAME = 'mole';
+export const MAX_ANNOTATIONS = 50; // GitHub accepts at most 50 annotations per check-run request
+/** statuses that never govern lines: their successor (or nothing) does */
+const NOT_GOVERNING = new Set(['superseded', 'deprecated', 'rejected', 'retired']);
+
+function git(root: string, args: string[]): string {
+  return execFileSync('git', ['-C', root, '-c', 'core.quotepath=off', ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 512 * 1024 * 1024 });
+}
+function gitOrNull(root: string, args: string[]): string | null {
+  try {
+    return git(root, args);
+  } catch {
+    return null;
+  }
+}
+
+type Range = [number, number];
+const merge = (rs: Range[]): Range[] => {
+  const s = [...rs].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const out: Range[] = [];
+  for (const r of s) {
+    const last = out[out.length - 1];
+    if (last && r[0] <= last[1] + 1) last[1] = Math.max(last[1], r[1]);
+    else out.push([r[0], r[1]]);
+  }
+  return out;
+};
+const clip = (rs: Range[], lo: number, hi: number): Range[] => rs.map(([a, b]): Range => [Math.max(a, lo), Math.min(b, hi)]).filter(([a, b]) => a <= b);
+
+/** changed line ranges of a file: new side (added/modified lines) and old side (removed lines) */
+function changedRanges(f: ChangedFile): { added: Range[]; removed: Range[]; deletionPoints: number[] } {
+  const added: Range[] = [];
+  const removed: Range[] = [];
+  const deletionPoints: number[] = [];
+  for (const h of f.hunks) {
+    if (h.newLines > 0) added.push([h.newStart, h.newStart + h.newLines - 1]);
+    if (h.oldLines > 0) removed.push([h.oldStart, h.oldStart + h.oldLines - 1]);
+    if (h.newLines === 0) deletionPoints.push(Math.max(1, h.newStart));
+  }
+  return { added: merge(added), removed: merge(removed), deletionPoints };
+}
+
+type Anchor = { kind: 'file'; path: string } | { kind: 'folder'; path: string } | { kind: 'symbol'; path: string; tail: string };
+function parseAnchor(target: string): Anchor {
+  const t = target.trim().replace(/^\.\//, '');
+  const i = t.indexOf('#');
+  if (i > 0) return { kind: 'symbol', path: t.slice(0, i), tail: t.slice(i + 1) };
+  if (t.endsWith('/')) return { kind: 'folder', path: t.replace(/\/+$/, '') };
+  return { kind: 'file', path: t };
+}
+const under = (path: string, folder: string) => folder === '' || folder === '.' || path.startsWith(`${folder}/`);
+
+/** symbol line ranges per (rev, path), parsed with the same extractor the notes use (T11) */
+class Symbols {
+  private cache = new Map<string, Map<string, Range> | null>();
+  private mod: typeof import('@mole/memory') | null = null;
+  constructor(private root: string) {}
+  async range(rev: string, path: string, tail: string): Promise<Range | null> {
+    const k = `${rev}:${path}`;
+    if (!this.cache.has(k)) {
+      const text = gitOrNull(this.root, ['show', `${rev}:${path}`]);
+      if (text === null) this.cache.set(k, null);
+      else {
+        this.mod ??= await import('@mole/memory');
+        const m = new Map<string, Range>();
+        try {
+          for (const s of this.mod.symbolsOfText(path, text)) if (!m.has(s.tail)) m.set(s.tail, [s.startLine, s.endLine]);
+        } catch {
+          // not parseable as code: no symbols
+        }
+        this.cache.set(k, m);
+      }
+    }
+    return this.cache.get(k)?.get(tail) ?? null;
+  }
+}
+
+function statusFlag(n: GraphNode): Flag {
+  if (n.status === 'partly-superseded') return 'yellow';
+  return n.status === 'accepted' ? 'green' : 'grey';
+}
+
+const levelOf = (flag: Flag): CheckAnnotation['annotation_level'] => (flag === 'green' ? 'notice' : 'warning');
+const fmtRanges = (rs: Range[]) => rs.map(([a, b]) => (a === b ? `${a}` : `${a}-${b}`)).join(', ');
+
+export async function prCheck(opts: PrCheckOptions): Promise<PrCheckResult> {
+  const t0 = performance.now();
+  const root = git(resolve(opts.root), ['rev-parse', '--show-toplevel']).trim();
+  const head = git(root, ['rev-parse', '--verify', `${opts.head}^{commit}`]).trim();
+  const base = git(root, ['rev-parse', '--verify', `${opts.base}^{commit}`]).trim();
+  const mergeBase = (gitOrNull(root, ['merge-base', base, head]) ?? base).trim();
+  const diffText = git(root, ['diff', '-M', '-U0', '--no-color', '--no-ext-diff', mergeBase, head]);
+  const changed = parseGitDiff(diffText);
+  const files = changed.map((f) => (f.newPath ?? f.oldPath)!).filter(Boolean);
+  const existsAtHead = (path: string) => (gitOrNull(root, ['cat-file', '-e', `${head}:${path}`]) ?? null) !== null;
+
+  // ---- records (working tree of the records root) and their flags
+  const recordsRoot = resolve(opts.recordsRoot ?? root);
+  const graph = loadGraph(recordsRoot, { adrDirs: opts.adrDirs });
+  const recTop = gitOrNull(recordsRoot, ['rev-parse', '--show-toplevel'])?.trim();
+  const sameRepo = recTop === root && resolve(recordsRoot) === root;
+  const flags = new Map<string, Flag>();
+  if (sameRepo) for (const f of computeFlags(graph)) flags.set(f.id, f.flag);
+  const symbols = new Symbols(root);
+
+  const governed: GovernedRecord[] = [];
+  const unanchored: UnanchoredRecord[] = [];
+  const candidates = graph.nodes.filter((n) => n.kind === 'decision' && n.scope.length > 0 && !NOT_GOVERNING.has(n.status));
+  for (const n of candidates) {
+    const hits: GovernedRecord['hits'] = [];
+    const lost: UnanchoredRecord[] = [];
+    for (const a of n.scope) {
+      const an = parseAnchor(a.target);
+      for (const f of changed) {
+        const { added, removed, deletionPoints } = changedRanges(f);
+        const push = (side: 'new' | 'old', path: string, ranges: Range[]) => {
+          if (ranges.length) hits.push({ anchor: a.target, path, side, ranges });
+        };
+        // a rename away from the anchored path: the anchor cannot re-attach (it never follows the file to a new name)
+        const renamedAway = f.status === 'R' && f.oldPath !== null && (an.kind === 'folder' ? under(f.oldPath, an.path) && !under(f.newPath ?? '', an.path) : f.oldPath === an.path);
+        if (renamedAway && an.kind !== 'folder' && !existsAtHead(an.path)) {
+          lost.push({ id: n.id, title: n.title, flag: 'grey', anchor: a.target, path: f.oldPath!, renamedTo: f.newPath ?? undefined, reason: `${f.oldPath} was renamed to ${f.newPath}; the anchor ${a.target} no longer resolves at the head` });
+          continue;
+        }
+        if (an.kind === 'file' || an.kind === 'folder') {
+          const hitNew = f.newPath !== null && (an.kind === 'file' ? f.newPath === an.path || under(f.newPath, an.path) : under(f.newPath, an.path));
+          const hitOld = f.oldPath !== null && (an.kind === 'file' ? f.oldPath === an.path || under(f.oldPath, an.path) : under(f.oldPath, an.path));
+          if (hitNew) {
+            push('new', f.newPath!, added.length ? added : deletionPoints.map((p): Range => [p, p]));
+            if (!added.length && !deletionPoints.length && f.status === 'R') push('new', f.newPath!, [[1, 1]]); // pure rename into the scope
+          } else if (hitOld) push('old', f.oldPath!, removed.length ? removed : [[1, 1]]);
+          continue;
+        }
+        // symbol anchor: the symbol's lines at the head (added lines) and at the merge base (removed lines)
+        if (f.newPath === an.path) {
+          const r = await symbols.range(head, an.path, an.tail);
+          if (r) push('new', an.path, clip(added, r[0], r[1]));
+        }
+        if (f.oldPath === an.path) {
+          const r = await symbols.range(mergeBase, an.path, an.tail);
+          if (r) {
+            const gone = clip(removed, r[0], r[1]);
+            if (gone.length && !hits.some((h) => h.anchor === a.target && h.side === 'new')) push('old', an.path, gone);
+          }
+        }
+      }
+    }
+    if (hits.length) {
+      governed.push({ id: n.id, title: n.title, status: n.status, flag: flags.get(n.id) ?? statusFlag(n), file: n.file, line: n.line, hits });
+    } else if (lost.length) unanchored.push(lost[0]!);
+  }
+  governed.sort((a, b) => a.id.localeCompare(b.id));
+  unanchored.sort((a, b) => a.id.localeCompare(b.id));
+
+  // ---- owners: CODEOWNERS at the merge base, every changed path (both names of a rename)
+  const co = codeownersAt(root, mergeBase);
+  const owners = co ? parseCodeowners(co.text) : null;
+  const ownersByFile: Record<string, string[]> = {};
+  for (const f of changed) for (const p of [f.oldPath, f.newPath]) if (p && !(p in ownersByFile)) ownersByFile[p] = owners ? owners.ownersOf(p) : [];
+  const allOwners = [...new Set(Object.values(ownersByFile).flat())].sort();
+
+  const silent = governed.length === 0 && unanchored.length === 0;
+
+  // ---- past fixes (T12) + questions (T14): only when something governs, so a silent check stays cheap and quiet
+  let pastFixes: PrCheckResult['pastFixes'] = [];
+  let questions: PrQuestion[] = [];
+  if (!silent && opts.history !== false && changed.some((f) => f.hunks.length)) {
+    const tmp = mkdtempSync(join(tmpdir(), 'mole-pr-check-'));
+    try {
+      const diffFile = join(tmp, 'pr.diff');
+      writeFileSync(diffFile, git(root, ['diff', '-U0', '--no-color', '--no-ext-diff', mergeBase, head]));
+      const q = await import('@mole/questions');
+      const r = await q.questions(root, { diffFile, base: mergeBase }, { notesRoot: opts.notesRoot ? resolve(opts.notesRoot) : recordsRoot, ...(opts.fixRule ? { fixRule: opts.fixRule } : {}) });
+      const seen = new Set<string>();
+      for (const h of r.facts.hunks)
+        for (const p of h.pastFixes)
+          if (!seen.has(`${h.file}\0${p.sha}`)) {
+            seen.add(`${h.file}\0${p.sha}`);
+            pastFixes.push({ file: h.file, line: h.newStart > 0 ? h.newStart : 1, sha: p.sha, subject: p.subject });
+          }
+      questions = r.questions.slice(0, 3).map((x) => ({ rank: x.rank, kind: x.kind, text: x.text, source: x.source }));
+    } catch {
+      pastFixes = [];
+      questions = [];
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  }
+
+  const checkRun = buildCheckRun({ head, governed, unanchored, owners: allOwners, ownersByFile, codeownersFile: co?.path ?? null, pastFixes, questions, silent, changed });
+  return { base, head, mergeBase, files, governed, unanchored, owners: allOwners, ownersByFile, codeownersFile: co?.path ?? null, pastFixes, questions, silent, checkRun, ms: Math.round(performance.now() - t0) };
+}
+
+function buildCheckRun(r: {
+  head: string;
+  governed: GovernedRecord[];
+  unanchored: UnanchoredRecord[];
+  owners: string[];
+  ownersByFile: Record<string, string[]>;
+  codeownersFile: string | null;
+  pastFixes: PrCheckResult['pastFixes'];
+  questions: PrQuestion[];
+  silent: boolean;
+  changed: ChangedFile[];
+}): CheckRunPayload {
+  if (r.silent) return { name: CHECK_NAME, head_sha: r.head, status: 'completed', conclusion: 'neutral', output: { title: 'mole: nothing governed these lines', summary: 'nothing governed', annotations: [] } };
+  const annotations: CheckAnnotation[] = [];
+  const add = (a: CheckAnnotation) => {
+    if (annotations.length < MAX_ANNOTATIONS) annotations.push(a);
+  };
+  const atHead = new Set(r.changed.map((f) => f.newPath).filter((p): p is string => !!p));
+  const deletionPoint = (path: string) => r.changed.find((f) => f.oldPath === path && f.newPath)?.hunks.find((h) => h.newLines === 0)?.newStart ?? 1;
+  for (const g of r.governed)
+    for (const h of g.hits) {
+      const own = r.ownersByFile[h.path] ?? [];
+      const message = `${g.title}\n${g.id} (${g.status}, flag ${g.flag}) governs these lines through scope ${h.anchor}; record ${g.file}:${g.line}${own.length ? `\nowners: ${own.join(' ')}` : ''}`;
+      if (h.side === 'new') for (const [a, b] of h.ranges) add({ path: h.path, start_line: a, end_line: b, annotation_level: levelOf(g.flag), title: `${g.id} ${g.flag}: ${g.title}`.slice(0, 255), message });
+      else if (atHead.has(h.path)) {
+        const p = Math.max(1, deletionPoint(h.path));
+        add({ path: h.path, start_line: p, end_line: p, annotation_level: levelOf(g.flag), title: `${g.id} ${g.flag}: ${g.title}`.slice(0, 255), message: `${message}\n(removed lines ${fmtRanges(h.ranges)} at the base)` });
+      }
+    }
+  for (const u of r.unanchored)
+    if (u.renamedTo) add({ path: u.renamedTo, start_line: 1, end_line: 1, annotation_level: 'notice', title: `${u.id} grey: unanchored`, message: `${u.title}\n${u.reason}. Re-anchor the record (scope) to keep it attached; it is not applied to the new file.` });
+  for (const p of r.pastFixes.slice(0, 10))
+    if (atHead.has(p.file)) add({ path: p.file, start_line: Math.max(1, p.line), end_line: Math.max(1, p.line), annotation_level: 'notice', title: `past fix ${p.sha.slice(0, 7)}`, message: p.subject });
+
+  const s: string[] = [];
+  if (r.governed.length) {
+    s.push(`### Decisions that govern these lines (${r.governed.length})`);
+    for (const g of r.governed) s.push(`- **${g.id}** (${g.flag}) ${g.title} · ${g.file}:${g.line} · ${g.hits.map((h) => `${h.path}:${fmtRanges(h.ranges)}${h.side === 'old' ? ' (removed)' : ''}`).join('; ')}`);
+  }
+  if (r.unanchored.length) {
+    s.push(`### Unanchored (${r.unanchored.length}, grey)`);
+    for (const u of r.unanchored) s.push(`- **${u.id}** ${u.title}: ${u.reason}`);
+  }
+  s.push(`### Owners`, r.codeownersFile ? (r.owners.length ? r.owners.join(' ') : `no owners in ${r.codeownersFile} for these files`) : 'no CODEOWNERS file');
+  if (r.pastFixes.length) {
+    s.push(`### Past fixes on these lines (${r.pastFixes.length})`);
+    for (const p of r.pastFixes.slice(0, 5)) s.push(`- ${p.sha.slice(0, 7)} ${p.subject} · ${p.file}`);
+  }
+  if (r.questions.length) {
+    s.push(`### Questions for the author (${r.questions.length})`);
+    for (const q of r.questions) s.push(`${q.rank}. ${q.text}`);
+  }
+  const parts = [`${r.governed.length} decision${r.governed.length === 1 ? '' : 's'} govern these lines`];
+  if (r.unanchored.length) parts.push(`${r.unanchored.length} unanchored`);
+  return { name: CHECK_NAME, head_sha: r.head, status: 'completed', conclusion: 'neutral', output: { title: `mole: ${parts.join(', ')}`, summary: s.join('\n').slice(0, 65000), annotations } };
+}
+
+export function formatPrCheck(r: PrCheckResult): string {
+  const out: string[] = [`mole pr-check ${r.mergeBase.slice(0, 7)}..${r.head.slice(0, 7)}: ${r.files.length} files · ${r.checkRun.output.title}`];
+  if (r.silent) return out.join('\n');
+  out.push(r.checkRun.output.summary);
+  out.push(`(${r.checkRun.output.annotations.length} annotations, ${r.ms} ms)`);
+  return out.join('\n');
+}
