@@ -1,22 +1,22 @@
 ---
-state: submitted
+state: verified
 owner: mole-builder-4
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t27-decisions-as-rules
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T27-decisions-as-rules
 base: fb240ab
-reviewer:
-updated: 2026-10-29 07:40
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+reviewer: t27 fresh reviewers (r1 deleg_ecbe76ff, r2 deleg_5df60e1f, r2b deleg_86fc2156)
+updated: 2026-10-29 07:54
+status: ledger verified
+next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
 claimed: 2026-10-29 06:45
 ---
 ```notes
 T27-decisions-as-rules      ledger task (rules.md §3 code features)      project tasks
     goal                    Turn decisions into checks: a decision record can carry an architecture rule (e.g. 'ui never imports db', 'only api/ calls fetch'), compiled to dependency-cruiser rules (and TS-compiler call rules where imports aren't enough); violations at the hand-back cite the decision and its why instead of a bare lint error
     done-when               1) .mole/decisions/*.md front matter 'rules:' → generated .dependency-cruiser config + mole's own call rules; 2) M19 bench: 10 planted violations across Mole + Excalidraw → 10/10 caught, each citing its decision; 0 false positives on Mole's last 13 changes; 3) a rule with a syntax error fails loudly with file:line; 4) npm run check passes
-    status                  2026-10-29 submitted      report: decision records carry rules: forbid import -> real dependency-cruiser forbidden rules, forbid call -> TS call s
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    status                  2026-10-29 verified      reviewer t27 fresh reviewers (r1 deleg_ecbe76ff, r2 deleg_5df60e1f, r2b deleg_86fc2156) · findings: r1: P1 emitted confi
+    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
     pinned
     mode                    code
     boundary                packages/decisions/src/rules/** + packages/decisions/bench/m19*, packages/decisions/package.json (dependency-cruiser dep), packages/daemon/src/cli.ts (register the subcommand with one import + one call only), tasks/T27-decisions-as-rules/**
