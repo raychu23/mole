@@ -32,8 +32,19 @@ export function normalizedHash(text: string): string {
   return digest(tokens(sf, sf, []));
 }
 
+/** A symbol plus its declaration tokens (trivia-free; every declaration of an overloaded tail, in source order). */
+export interface SymbolDecl {
+  sym: CodeSymbol;
+  tokens: string[];
+}
+
 /** Symbols of one source text (path is only used for names and the TS/TSX choice). */
 export function symbolsOfText(path: string, text: string): CodeSymbol[] {
+  return declsOfText(path, text).map((d) => d.sym);
+}
+
+/** symbolsOfText plus each symbol's tokens (T19 re-anchoring compares bodies token by token). */
+export function declsOfText(path: string, text: string): SymbolDecl[] {
   const sf = parse(path, text);
   const out: Array<CodeSymbol & { hasBody: boolean; node: ts.Node }> = [];
   const line = (pos: number) => sf.getLineAndCharacterOfPosition(pos).line + 1;
@@ -45,7 +56,7 @@ export function symbolsOfText(path: string, text: string): CodeSymbol[] {
       kind,
       startLine: line(node.getStart(sf)),
       endLine: line(node.getEnd()),
-      hash: digest(tokens(node, sf, [])),
+      hash: '', // set below from every declaration of the tail
       hasBody,
       node,
     });
@@ -76,7 +87,8 @@ export function symbolsOfText(path: string, text: string): CodeSymbol[] {
     .filter((s) => keep.get(s.tail) === s)
     .map(({ hasBody: _h, node: _n, ...s }) => {
       const nodes = all.get(s.tail) ?? [];
-      return nodes.length > 1 ? { ...s, hash: digest(nodes.flatMap((n) => tokens(n, sf, []))) } : s;
+      const toks = nodes.flatMap((n) => tokens(n, sf, []));
+      return { sym: { ...s, hash: digest(toks) }, tokens: toks };
     });
 }
 

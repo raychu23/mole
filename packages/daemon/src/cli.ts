@@ -39,7 +39,12 @@ function formatMemory(list: MemoryEntry[]): string {
       const status = e.status === 'moved' && e.changed ? 'moved*' : e.status;
       const where = e.newPath ? ` -> ${e.newPath}${e.line ? `:${e.line}` : ''}` : e.line ? `:${e.line}` : '';
       const text = e.text.split('\n')[0] ?? '';
-      return `${status.padEnd(9)} ${e.symbol}${where}  ${text.length > 80 ? `${text.slice(0, 77)}...` : text}  (${e.file})`;
+      // T19: a renamed symbol keeps its note ('renamed' = only the name changed, fresh; 'renamed + changed' = stale)
+      const sym = e.renamedTo
+        ? `${e.changed ? 'renamed + changed' : 'renamed'}: ${e.symbol} → ${e.renamedTo}${e.line ? `:${e.line}` : ''}`
+        : `${e.symbol}${where}`;
+      const ambiguous = e.candidates?.length ? `  (ambiguous rename, not re-anchored: ${e.candidates.join(', ')})` : '';
+      return `${status.padEnd(9)} ${sym}  ${text.length > 80 ? `${text.slice(0, 77)}...` : text}  (${e.file})${ambiguous}`;
     })
     .join('\n') + (list.some((e) => e.status === 'moved' && e.changed) ? '\n(moved* = moved and its body changed since the note)' : '');
 }
