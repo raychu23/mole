@@ -36,3 +36,12 @@ extension (apps/vscode/src/seen.ts pure + extension.ts glue)
 bundle impact               extension.cjs 32,209 -> 40,273 bytes (+8 KB); daemon.cjs 10,012,495 -> 10,023,854 (+11 KB); no TypeScript added to the extension host
 tests after red             apps/vscode/test/seen-spans.test.ts, packages/memory/test/seen-log.test.ts (new files, red tests untouched)
 ```
+
+```notes
+rounds
+    red b56bbe8             18 failed | 88 passed; M3 0/3 (not implemented)
+    round 1 89f015b         M3 at target; check exit 1: indexer barrel test 5 s timeout + daemon 'indexing' vs 'ready' (load avg 31, RStudio + others)
+    round 2 b6755e9         M3 at target; check exit 1: history CLI + 2 indexer timeouts (load avg 69); different untouched tests each round, no code change between
+    round 3 5da96ea         exit 0: 110 passed (110), M3 precision 100% (3/3), recall 100% (3/3), unseen listed 0
+    INFERENCE flakes        timing-budget tests in packages I did not edit, under outside load; my new CLI tests add ~10 short node spawns to the parallel run
+```
