@@ -9,4 +9,5 @@ ledger (newest last, nothing deleted)
     2026-10-29 18:38      running → submitted      report: fixed review round 1 P0/P1 findings: real prior-art.md written (real web_search/web_extract fetches, committed in worktree, dated correction added to a13-mole-builder-9.md handoff note for the prior false claim),
     2026-10-29 18:38      checks ran: npm run check && node packages/server/dist/bench/m25.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T33-team-server → exit 0 (})
     2026-10-29 18:46      submitted → blocked      cause: Review round 2/2 (final, capped per R5): round-1 P0/P1s (missing prior-art.md, broken question routing, no HTTP entrypoint, silent cross-org misattribution, missing OTel on request paths) were all genuinely fixed 
+    2026-10-29 18:48      blocked → ready      Raymond 22:08: 'go full ahead' on T33 Postgres team server. Unblocking to fix the review-round-2 root cause (stale pg-boss job replay + git-error-swallowing in rebuild.ts silently wiping the Postgres index) rather than a
 ```
