@@ -107,3 +107,29 @@ results (round 3, ff21589)
                          ' > ' test that used to be skipped now runs. Per repo mean share: mole 36.0% (above 1/3), excalidraw 1.1%
     npm run check        189 passed (189) incl. the 3 new review-1 tests; exit 0
 ```
+
+```notes
+review-2 fixes (round 4, 2026-10-29 09:25-09:45, last fix round)
+    red first            packages/verify/test/review-2.test.ts (c7b74b5, new file; older tests untouched, R2): 5 failed, then 5 passed
+    P1-A fixed           the test map reads skip modifiers from the AST: .skip/.todo on the test or any enclosing describe = static skip;
+                         .skipIf/.runIf, or a `.skip(` call in a test body taking a context arg = run-time skip. A selected test with
+                         no pass/fail outcome is RunResult.skippedByFile ("- skipped by the test file (.skip|todo|skipIf/runIf)",
+                         header ", N skipped by the test file", exit unaffected) when it is a static skip, or a run-time skip the
+                         runner reported skipped; everything else stays notRun = error, exit 1 (ghost test still errors)
+    assumption           a static .skip/.todo needs no matching outcome: a describe built by a helper called from another describe
+                         (Excalidraw frame.test.tsx commonTestCases) gets runner names the static map cannot know; such a test can
+                         never run, and a file that fails to load still reports a failed outcome (exit 1)
+    P1-A repro           Excalidraw copy, no-op refactor of normalizeElementOrder (sortElements.ts:118): before "0 failed, 14 passed,
+                         2 selected not run (error)", exit 1; after "0 failed, 14 passed, 2 skipped by the test file", exit 0
+    P2-A fixed           a test with a non-literal title (it(name), it('a' + b)) marks its file "whole": that file runs in a second
+                         vitest call without --testNamePattern; the non-literal title matches any runner title at its position.
+                         Cost: the whole file runs, and an unrelated failing test in it fails the run
+    P2-D fixed           an edit outside any test in a test file: named helpers (function decl / const f = () =>) holding the line,
+                         closed over helpers mentioning them; lines mentioning one name their tests (testsAtLine); none -> innermost
+                         describe or whole file. Excalidraw frame.test.tsx:53 (inside resizeFrameOverElement): 22 selected, 14 passed,
+                         8 skipped by the test file, exit 0 (was "no test reaches", nearest = another file). Over-selects through
+                         a shared helper (commonTestCases mentions the type `typeof resizeFrameOverElement`)
+    P2-B fixed           no hunk in a code file and no test selected -> "no code change to test (changed: …; none is code)", exit 0,
+                         no nearest test
+    P2-C noted           per-row shares unchanged from review-2 (bench frozen, R2); see results round 3
+```
