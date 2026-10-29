@@ -5,4 +5,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 05:44      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T17-agent-eval-inspect · branch ledger/t17-agent-eval-inspect · base d53d3bd
     2026-10-29 06:43      running → submitted      report: branch ledger/t17-agent-eval-inspect @1b0a35d (red 4dfd168): evals/inspect = Inspect AI task with Inspect SWE claude_code() in Docker (mole-t17-eval 1.16 GB), arms none / mole (T15 hooks + MCP), B3-tidy + B3-revi
     2026-10-29 06:43      checks ran: python3 -m pytest evals/inspect/tests -q && npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T17-agent-eval-inspect → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 06:49      submitted → verified      reviewer reviewer-T17-r1 · findings: no P0/P1. P2 (1-3 fix before paid run): 1 /opt/mole ships packages/history/bench/keys/m8-key.json naming 9e19c51 + idle clock, readable in both arms, 2 run.py does not check log.statu
+    2026-10-29 06:49      checks ran: python3 -m pytest evals/inspect/tests -q && npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T17-agent-eval-inspect → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
