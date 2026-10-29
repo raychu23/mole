@@ -2,5 +2,5 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": { "rootDir": "src", "outDir": "dist" },
   "include": ["src"],
-  "references": [{ "path": "../core" }, { "path": "../daemon" }, { "path": "../agentstate" }, { "path": "../telemetry" }, { "path": "../history" }, { "path": "../questions" }, { "path": "../decisions" }]
+  "references": [{ "path": "../core" }, { "path": "../daemon" }, { "path": "../agentstate" }, { "path": "../telemetry" }, { "path": "../history" }, { "path": "../questions" }, { "path": "../decisions" }, { "path": "../temporal" }]
 }
