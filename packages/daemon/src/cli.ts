@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 // mole daemon | map | impact | check | status | stop | reindex  — thin CLI over the daemon (offerings F1.9).
 // mole note add <file#Symbol> "text" | mole memory [--json]  — L2 notes on code (T11), no daemon needed.
+// mole since [--json] | mole seen <file#Symbol>... | mole seen --stdin  — L1 what changed since you last looked (T13), no daemon needed.
 import { defaultSources } from './detect.js';
 import { resolve } from 'node:path';
 import { formatNeighborhood } from '@mole/core';
-import type { MemoryEntry } from '@mole/memory';
+import type { MemoryEntry, SeenInput } from '@mole/memory';
+import { readFileSync } from 'node:fs';
 import type { Change } from '@mole/history';
 import { ensureDaemon, MoleClient } from './client.js';
 // heavy modules (TypeScript compiler, SQLite, git history) load only in the subcommand that needs them:
@@ -54,6 +56,13 @@ async function main(): Promise<number> {
     const { addNote } = await import('@mole/memory');
     const n = addNote(root, target, words.join(' '), { author: str(flags.author) });
     console.log(`wrote ${n.file} on ${n.symbol} (hash ${n.hash})`);
+    // writing a note is a look (L1, T13): `mole since` then reports changes after it
+    try {
+      const { appendSeen } = await import('@mole/memory');
+      appendSeen(root, [{ path: n.path, tail: n.symbol.slice(n.symbol.indexOf('#') + 1), how: 'note' }]);
+    } catch {
+      // the note is written; a seen log that cannot be written must not fail it
+    }
     return 0;
   }
   if (cmd === 'memory') {
@@ -62,8 +71,37 @@ async function main(): Promise<number> {
     console.log(flags.json ? JSON.stringify(list, null, 2) : formatMemory(list));
     return 0;
   }
-  if (cmd === 'since' || cmd === 'seen') {
-    throw new Error(`${cmd}: not implemented`);
+  if (cmd === 'since') {
+    // L1 (T13): the symbols you looked at whose body changed after your last look
+    const { formatSince, since } = await import('@mole/memory');
+    const r = since(root);
+    console.log(flags.json ? JSON.stringify(r, null, 2) : formatSince(r));
+    return 0;
+  }
+  if (cmd === 'seen') {
+    // record looks: `mole seen <file#Symbol>... [--how visible|hover|note]`, or a JSON batch on stdin (the VS Code extension's sink)
+    const { appendSeen, splitTarget } = await import('@mole/memory');
+    let inputs: SeenInput[];
+    if (flags.stdin) {
+      const raw = readFileSync(0, 'utf8').trim();
+      const parsed: unknown = raw.startsWith('[') ? JSON.parse(raw) : raw.split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l));
+      inputs = Array.isArray(parsed) ? (parsed as SeenInput[]) : [];
+    } else {
+      const how = (str(flags.how) ?? 'visible') as SeenInput['how'];
+      if (pos.length === 0 || !['visible', 'hover', 'note'].includes(how)) {
+        console.error('usage: mole seen <file#Symbol>... [--how visible|hover|note] [--root DIR] | mole seen --stdin  (JSON [{path, tail, how, time?, text?}])');
+        return 2;
+      }
+      inputs = [];
+      for (const t of pos) {
+        const s = splitTarget(root, t);
+        if (s) inputs.push({ ...s, how });
+        else console.error(`mole seen: not a file#Symbol target: ${t}`);
+      }
+    }
+    const ev = appendSeen(root, inputs);
+    if (!flags.stdin || flags.verbose) console.log(`recorded ${ev.length} look${ev.length === 1 ? '' : 's'} in .mole/local/seen.jsonl${ev.length < inputs.length ? ` (${inputs.length - ev.length} unknown symbol${inputs.length - ev.length === 1 ? '' : 's'} skipped)` : ''}`);
+    return ev.length === 0 && inputs.length > 0 && !flags.stdin ? 1 : 0;
   }
   const stateDir = str(flags['state-dir']);
   const common = { root, stateDir, ...defaultSources(root, str(flags.tsconfig), str(flags['src-dir'])) };
@@ -127,7 +165,7 @@ async function main(): Promise<number> {
       return 1;
     }
   }
-  console.error('usage: mole <daemon|map|impact|check|status|reindex|stop|note add|memory> [target] [--root DIR] [--state-dir DIR] [--tsconfig F] [--src-dir D] [--idle-minutes N] [--json]');
+  console.error('usage: mole <daemon|map|impact|check|status|reindex|stop|note add|memory|since|seen> [target] [--root DIR] [--state-dir DIR] [--tsconfig F] [--src-dir D] [--idle-minutes N] [--json]');
   return cmd === 'help' ? 0 : 2;
 }
 

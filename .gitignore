@@ -13,3 +13,5 @@ dist/
 *.tsbuildinfo
 .mole/cache/
 dist-tsc/
+# Mole personal seen log (T13): never leaves the machine
+.mole/local/
