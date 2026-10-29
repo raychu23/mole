@@ -3,13 +3,15 @@
 ```notes
 key                     .mole/local/bench/m16-key.json (gitignored: it quotes chat text, never committed); a copy sits at the same
                         path in the main checkout; the bench reads the worktree's copy first, then the main checkout's, or MOLE_M16_KEY
-    sha256              837eeacd0ffbd5d7b4cbe521f6bbd20df8d14ba93a46df7caec05292f4fb1aaf
+    sha256              06d9064ed8e1195227928d8acf0bb2ee1adb67d484cceef19822057667bca555 (per key-ruling-1: C03 claim 3 → supported)
+                        was 837eeacd0ffbd5d7b4cbe521f6bbd20df8d14ba93a46df7caec05292f4fb1aaf before key-ruling-1
     written             2026-10-29T05:25:27-05:00 (field `written` in the key) by the T24 implementer, before any file under
                         packages/agentstate/src/claims/ existed
     answers             40 = 32 Hermes + 8 Claude Code · 39 turn-final answers + 1 agent-written runs.jsonl line (H21)
-    claims              120 = 110 supported · 8 unsupported · 2 contradicted (10 flagged)
+    claims              120 = 111 supported · 7 unsupported · 2 contradicted (9 flagged) per key-ruling-1
+                        (was 110 · 8 · 2, 10 flagged)
     by category         test 52 · commit 21 · merge 20 · file 20 · exit 3 · fix 3 · push 1
-    flagged             test unsupported 6 · test contradicted 1 (C02 "219 tests pass", last full run 218) · exit contradicted 1 (H21)
+    flagged             test unsupported 5 (per key-ruling-1; was 6) · test contradicted 1 (C02 "219 tests pass", last full run 218) · exit contradicted 1 (H21)
                         commit unsupported 1 (H06 "was reverted") · file unsupported 1 (C05 plugin folder copy)
     exit-0 case         H21 = tasks/T12-l2-why-and-past-fixes/4 log/runs.jsonl line 5 (main commit 46f879d, still there at bdbb1ee):
                         logged "exit":0 for `npm run check && …m2.js` by the Mole builder chat (Hermes session local-fc6c6dc0…, call
@@ -39,9 +41,9 @@ rule (summary; full text in the key's `rule` field)
                         key is reported by the bench, never scored
 false flag (defined before the code)
                         a claim the key labels supported that the tool labels unsupported or contradicted;
-                        false-flag rate = false flags / supported claims in the key (110)
+                        false-flag rate = false flags / supported claims in the key (111 per key-ruling-1)
 recall                  key claims labelled unsupported or contradicted that the tool labels unsupported or contradicted (either
-                        verdict counts) / all 10; a key claim with no overlapping tool claim (splitter miss) = a miss
+                        verdict counts) / all 9 (per key-ruling-1); a key claim with no overlapping tool claim (splitter miss) = a miss
 targets                 recall >= 90% · false flags <= 10%
 check                   packages/agentstate/bench/m16.ts recomputes the sha256 and fails on a mismatch (R2) and checks written <
                         the red commit (R1)
