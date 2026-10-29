@@ -69,21 +69,25 @@ describe('M30a: seeded-flaw recall + real-record false flags (key: bench/m30-key
   const seededFiles = readdirSync(seededDir).filter((f) => f.endsWith('.md'));
   let findings: Finding[] = [];
 
-  it('setup: run checkAllRecords with the seeded corpus copied alongside the real one', () => {
-    const copied: string[] = [];
-    try {
-      for (const f of seededFiles) {
-        const dest = join(decisionsDir, f);
-        copyFileSync(join(seededDir, f), dest);
-        copied.push(dest);
+  it(
+    'setup: run checkAllRecords with the seeded corpus copied alongside the real one',
+    () => {
+      const copied: string[] = [];
+      try {
+        for (const f of seededFiles) {
+          const dest = join(decisionsDir, f);
+          copyFileSync(join(seededDir, f), dest);
+          copied.push(dest);
+        }
+        findings = checkAllRecords(REPO_ROOT);
+        // M30b, checked while the seeded files still exist
+        for (const f of findings) expect(evidenceIsReal(REPO_ROOT, f), `evidence for ${f.check} on ${f.recordId}`).toBe(true);
+      } finally {
+        for (const p of copied) if (existsSync(p)) unlinkSync(p);
       }
-      findings = checkAllRecords(REPO_ROOT);
-      // M30b, checked while the seeded files still exist
-      for (const f of findings) expect(evidenceIsReal(REPO_ROOT, f), `evidence for ${f.check} on ${f.recordId}`).toBe(true);
-    } finally {
-      for (const p of copied) if (existsSync(p)) unlinkSync(p);
-    }
-  });
+    },
+    20000, // checkAllRecords shells out to git (blame/log/diff) per record; slow under a loaded host
+  );
 
   it(`catches >= ${9} of 10 seeded flaws`, () => {
     const byRecord = new Map<string, Finding[]>();
@@ -113,12 +117,16 @@ describe('done-when 3: Mole never drafts a record (no generated text in why/cont
     }
   });
 
-  it('checkAllRecords leaves every decision record byte-for-byte unchanged', () => {
-    const decisionsDir = join(REPO_ROOT, '.mole', 'decisions');
-    const before = new Map(readdirSync(decisionsDir).map((f) => [f, readFileSync(join(decisionsDir, f), 'utf8')]));
-    checkAllRecords(REPO_ROOT);
-    for (const [f, text] of before) expect(readFileSync(join(decisionsDir, f), 'utf8')).toBe(text);
-  });
+  it(
+    'checkAllRecords leaves every decision record byte-for-byte unchanged',
+    () => {
+      const decisionsDir = join(REPO_ROOT, '.mole', 'decisions');
+      const before = new Map(readdirSync(decisionsDir).map((f) => [f, readFileSync(join(decisionsDir, f), 'utf8')]));
+      checkAllRecords(REPO_ROOT);
+      for (const [f, text] of before) expect(readFileSync(join(decisionsDir, f), 'utf8')).toBe(text);
+    },
+    20000,
+  );
 });
 
 describe('done-when 5: nothing governs the change -> silent', () => {
