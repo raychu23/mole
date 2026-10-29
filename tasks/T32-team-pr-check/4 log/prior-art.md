@@ -95,3 +95,79 @@ T32 prior art (R0, options round 2)      (mole-builder-6 · 2026-10-29)      rea
                                practice and don't suggest a further code-only change. -> one option implemented and
                                bench-scored below (4 log/runs.jsonl); see 2 insights.md for the result.
 ```
+
+```notes
+T32 prior art (R0, options round 3)      (mole-builder-10 · 2026-10-29)      read before any round-3 option was built;
+                            round 2's prior-art.md (above) already covers IR/VSM, ROSE co-change, CODEOWNERS globs and
+                            ast-grep/drift symbol anchors -- this section extends only the genuinely new ground the
+                            task named: Dependabot/Renovate version-bump classifiers, and AST-level export-declaration
+                            detection as a generalization of the symbol-anchor precedent to a different TS construct.
+
+    5. dependency-bump classifiers (Dependabot, Renovate)
+       sources                 GitHub Docs, "Dependabot options reference" (docs.github.com/en/code-security/
+                               reference/supply-chain-security/dependabot-options-reference, retrieved 2026-10-29):
+                               `update-types` classifies a bump by SemVer level (`semver-patch`/`-minor`/`-major`),
+                               `dependency-type` by `development`/`production` · Renovate, "Automated Dependency
+                               Updates for Terraform" (docs.renovatebot.com/modules/manager/terraform, retrieved
+                               2026-10-29): the Terraform manager extracts a `depType` PER RESOURCE KIND the bump sits
+                               in -- `helm_release` is its own named depType, distinct from `provider`,
+                               `required_provider`, `required_version`, `tfe_workspace`, with NO depType at all for a
+                               bare `locals`/`variable`/`output` block (those aren't dependency declarations).
+       fits this case?         Confirms, from a second independent real tool (not just this bench's own title-term
+                               heuristic), that "which resource TYPE a change sits in" is the field's actual
+                               discriminator for whether a change is about a named dependency/technology at all --
+                               exactly the gi-0006 false hit (an RBAC `locals` block in the same folder as, but not
+                               the same resource as, the `helm_release` the ADR is about). Renovate's classifier is
+                               per-FILE-TYPE (its Terraform manager only has these depTypes inside `.tf`/`.tofu`
+                               files), matching this round's choice to scope option 6 to `.tf` files only, never TS.
+       borrowed                the file-scoped, resource-kind-aware distinction itself (a `resource "type" {}` block
+                               names a dependency/technology, a bare `locals`/`variable`/`output` block never does) ->
+                               option 6 (`isTfBareBlock` + `fileHasTitledResource`): a folder/file scope anchor on a
+                               technology-named record only requires a title-term match inside an untyped block, and
+                               only when the FILE doesn't already declare a resource of that technology elsewhere
+                               (the same file-level allowance a `helm_release` sitting beside unrelated `locals` in
+                               one file would get from a human reviewer, or from Renovate's own per-manager grouping).
+
+    6. AST-level declaration detection (generalizing source 4's symbol-anchor precedent to export statements)
+       sources                 ast-grep structural anchors and drift (both already cited in round 2's source 4, re-
+                               read for this specific question): an anchor is trusted only when the AST proves the
+                               construct is actually there, never a text-position guess -- the same standard applied
+                               here to a DIFFERENT TS construct than `path#Symbol` (a function/class/variable): the
+                               `ExportDeclaration` node (`export { ... } from`, `export type { ... } from`,
+                               `export * from`) and a top-level declaration carrying the `export` modifier.
+       fits this case?         Directly: round 2 found the 14 misses are codebase-wide conventions with no path
+                               anchor (bs-adr003/004, scope: [] by the overlay's own design, R2-frozen) and confirmed
+                               title-term literal matching can't reach them (the title says "exports", the diff's
+                               added lines are often just a bare identifier inside an already-open `export {` list,
+                               with no literal "export" token on the changed line itself -- checked directly against
+                               the real backstage diffs, e.g. #34892's `alpha.ts` adds
+                               `MarketplaceAiResourceEntityV1alpha1,` to an export list whose `export type {` header
+                               predates the PR). An AST pass finds this a different way: not by matching text, but by
+                               asking the compiler "is this line part of an export statement, and if it's a whole
+                               declaration, did its name exist before this diff." This needs the TypeScript compiler
+                               (already a dependency, already used by `@mole/memory`'s symbol anchors) parsing the
+                               file's OLD and NEW text -- no new authored per-record data, the same two AST shapes
+                               checked for ANY record whose own title is itself about exports (reusing
+                               `titleTermsOf`, source 1's already-approved generic IR extraction).
+       checked against noise   before implementing, the candidate backstage PRs labeled NOT governed by bs-adr003/004
+                               (#35205, #33441, #32593, #36254, #36475, #36472, #36489, #36501) were read diff-by-diff
+                               (git show against the real clone) specifically for exported declarations: every one
+                               only EDITS the body of an export that already existed before the PR (`export function
+                               compileCatalogModel(` extended, `export class AzureBlobStoragePublish` methods
+                               changed, etc.) -- confirming the "name already in the old file" exclusion is required,
+                               not optional, before writing a line of the detector.
+       borrowed                `exportConventionRanges` (options.ts): the two-shape AST detector above, gated to
+                               records whose title itself names the export convention (`isExportConventionTitle`),
+                               never to scope or an authored `match:` (content anchor) record, which stay strictly
+                               more specific and always win.
+
+    conclusion going into round 3      three code-only levers, none touching the frozen key/overlay (R2): option 4
+                               (export-declaration AST detector, source 6) for recall on the scope:[] convention
+                               misses; option 5 (comment-only-hunk and test-path exclusion for ANY folder/file/symbol
+                               scope anchor -- a generic "decisions aren't about comments or test files" rule, not
+                               tied to any one record, needed no further prior-art search beyond round 2's source 3/4
+                               conclusion that the field's own fix for a too-coarse pattern is more specificity, and
+                               the most generic specificity available without new scope data is "is this even
+                               production code"); option 6 (source 5, Terraform resource-kind file gate) for the
+                               remaining folder-anchor false hits. Results and the bench table: 4 log/runs.jsonl.
+```
