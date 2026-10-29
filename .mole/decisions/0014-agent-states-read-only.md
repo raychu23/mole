@@ -15,8 +15,8 @@ rules:
   - forbid: call
     callee: [writeFileSync, appendFileSync, writeFile, appendFile, rmSync, unlinkSync, renameSync, truncateSync, createWriteStream, mkdirSync]
     from: packages/agentstate/src/
-    except: [packages/agentstate/src/langgraph.ts]
-    why: harness transcripts are opened read-only; the one write path is the explicit LangGraph export (langgraph.ts), into a file the user names
+    except: [packages/agentstate/src/langgraph.ts, packages/agentstate/src/collisions.ts]
+    why: harness transcripts are opened read-only; the write paths are the explicit LangGraph export (langgraph.ts), into a file the user names, and T21's own temp tsconfig in collisions.ts (never a transcript)
 ---
 
 ## Decision
