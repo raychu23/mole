@@ -61,12 +61,12 @@ export function buildFixtureRepo(orgId: string, numCommits: number): { dir: stri
   );
   const commits: string[] = [];
   for (let i = 0; i < numCommits; i++) {
-    const decId = `d${i}`;
+    const decId = `${orgId}-d${i}`;
     writeFileSync(
       path.join(dir, '.mole', 'decisions', `${decId}.md`),
-      `---\nid: ${decId}\nkind: decision\nstatus: accepted\ntitle: Decision ${i} for ${orgId}\nscope: [src/file${i}.ts]\nowner: owner-${i % 3}\n---\nWhy: bench fixture decision ${i}.\n`
+      `---\nid: ${decId}\nkind: decision\nstatus: accepted\ntitle: Decision ${i} for ${orgId}\nscope: [src/${orgId}-file${i}.ts]\nowner: owner-${i % 3}\n---\nWhy: bench fixture decision ${i}.\n`
     );
-    writeFileSync(path.join(dir, 'src', `file${i}.ts`), `export const value${i} = ${i};\n`);
+    writeFileSync(path.join(dir, 'src', `${orgId}-file${i}.ts`), `export const value${i} = ${i};\n`);
     git(dir, ['add', '-A']);
     git(dir, ['commit', '-q', '-m', `decision ${i}`]);
     commits.push(git(dir, ['rev-parse', 'HEAD']));

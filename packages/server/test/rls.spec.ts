@@ -16,8 +16,8 @@ describe('row-level security permission leak (M25 leak test, key: 4 log/prior-ar
     pool = createPool(dbUrl);
     await runMigrations(pool);
     await pool.query("insert into orgs(id, name) values ('org-a','A'),('org-b','B') on conflict (id) do nothing");
-    const a = buildFixtureRepo('rls-a', 2);
-    const b = buildFixtureRepo('rls-b', 2);
+    const a = buildFixtureRepo('org-a', 2);
+    const b = buildFixtureRepo('org-b', 2);
     dirA = a.dir;
     dirB = b.dir;
     await rebuildIndexFromGit(pool, 'org-a', dirA, a.commits[a.commits.length - 1]!, undefined);
@@ -30,13 +30,13 @@ describe('row-level security permission leak (M25 leak test, key: 4 log/prior-ar
     if (pool) await closePool(pool);
   });
 
-  it.runIf(!!process.env.M25_DATABASE_URL)('org-b sees 0 of org-a records for a shared-looking path', async () => {
-    const rows = await getGoverningDecisions(pool, 'org-b', 'src/file0.ts', { forOrg: 'org-a' });
+  it.runIf(!!process.env.M25_DATABASE_URL)('org-b sees 0 of org-a records for a path that only exists in org-a', async () => {
+    const rows = await getGoverningDecisions(pool, 'org-b', 'src/org-a-file0.ts', { forOrg: 'org-a' });
     expect(rows.length).toBe(0);
   });
 
-  it.runIf(!!process.env.M25_DATABASE_URL)('org-a still sees its own records for the same path', async () => {
-    const rows = await getGoverningDecisions(pool, 'org-a', 'src/file0.ts', { forOrg: 'org-a' });
+  it.runIf(!!process.env.M25_DATABASE_URL)('org-a still sees its own records for its own path', async () => {
+    const rows = await getGoverningDecisions(pool, 'org-a', 'src/org-a-file0.ts', { forOrg: 'org-a' });
     expect(rows.length).toBeGreaterThan(0);
   });
 });

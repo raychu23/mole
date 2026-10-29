@@ -111,14 +111,15 @@ async function main() {
 
   // --- permission leak test ---
   const leak = (key as any).permissionLeak;
-  const leakRows = await getGoverningDecisions(pool, leak.viewerOrg, 'src/file0.ts', { forOrg: leak.targetOrg });
+  const targetFile = `src/${leak.targetOrg}-file0.ts`;
+  const leakRows = await getGoverningDecisions(pool, leak.viewerOrg, targetFile, { forOrg: leak.targetOrg });
   const leakedRecords = leakRows.length;
 
   // --- MCP leak test over streamable HTTP with OAuth 2.1 bearer ---
   const issuer = createTestIssuer();
   const mcp = await createMcpHttpServer({ pool, issuer });
   const tokenForB = await issuer.mintToken(leak.viewerOrg);
-  const mcpLeakRows = await mcp.callToolAsOrg(tokenForB, 'governing_decisions', { org: leak.targetOrg, file: 'src/file0.ts' });
+  const mcpLeakRows = await mcp.callToolAsOrg(tokenForB, 'governing_decisions', { org: leak.targetOrg, file: targetFile });
 
   await mcp.close();
   await fakeGithub.close();

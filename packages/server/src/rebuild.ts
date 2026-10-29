@@ -1,0 +1,145 @@
+// Index rebuild from `.mole/` files in git (R0 prior-art.md §3 Backstage processors, §4
+// zoekt/Sourcegraph: the index is a rebuildable derived artifact of the versioned source;
+// git stays the source of truth). Parses a minimal front-matter record format.
+import { execFileSync } from 'node:child_process';
+import crypto from 'node:crypto';
+import type { Pool } from './db.js';
+
+export interface MoleRecord {
+  id: string;
+  kind: 'tenet' | 'decision' | 'exception';
+  status: string;
+  title: string;
+  scope: string[];
+  owner?: string;
+}
+
+function git(cwd: string, args: string[]): string {
+  return execFileSync('git', args, { cwd, encoding: 'utf8' });
+}
+
+function listMoleFilesAtRef(repoDir: string, ref: string): string[] {
+  try {
+    return git(repoDir, ['ls-tree', '-r', '--name-only', ref, '--', '.mole'])
+      .split('\n')
+      .map((s) => s.trim())
+      .filter((s) => s.endsWith('.md'));
+  } catch {
+    return [];
+  }
+}
+
+function readFileAtRef(repoDir: string, ref: string, file: string): string {
+  return git(repoDir, ['show', `${ref}:${file}`]);
+}
+
+/** Minimal YAML-front-matter parser for the fixture `.mole/decisions/*.md` shape used here. */
+export function parseMoleRecord(text: string, fallbackId: string): MoleRecord {
+  const m = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/.exec(text);
+  const fm: Record<string, string> = {};
+  if (m) {
+    for (const line of m[1]!.split('\n')) {
+      const kv = /^(\w+):\s*(.*)$/.exec(line);
+      if (kv) fm[kv[1]!] = kv[2]!.trim();
+    }
+  }
+  const scopeRaw = fm.scope ?? '[]';
+  const scope = scopeRaw
+    .replace(/^\[|\]$/g, '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return {
+    id: fm.id ?? fallbackId,
+    kind: (fm.kind as MoleRecord['kind']) ?? 'decision',
+    status: fm.status ?? 'accepted',
+    title: fm.title ?? fallbackId,
+    scope,
+    owner: fm.owner,
+  };
+}
+
+export interface RebuildOptions {
+  shadow?: boolean; // write to a shadow org id, never touch the live org's rows
+}
+
+/**
+ * Rebuilds the index for orgId from `.mole/` files at `ref` inside repoDir. Idempotent by
+ * commit sha: calling this twice for the same (orgId, ref) logs the attempt but performs
+ * the same deterministic replace, so duplicate webhook-triggered rebuilds have 0 extra
+ * effect on the resulting index (only index_rebuild_log grows, which the M25 bench reads
+ * to measure "duplicate effects", not the index itself).
+ */
+export async function rebuildIndexFromGit(
+  pool: Pool,
+  orgId: string,
+  repoDir: string,
+  ref: string,
+  telemetry: { withSpan: <T>(name: string, attrs: Record<string, unknown>, fn: () => Promise<T>) => Promise<T> } | undefined,
+  opts: RebuildOptions = {}
+): Promise<string> {
+  const run = async () => {
+    const files = listMoleFilesAtRef(repoDir, ref);
+    const records = files.map((f) => parseMoleRecord(readFileAtRef(repoDir, ref, f), f));
+
+    const client = await pool.connect();
+    try {
+      await client.query('begin');
+      await client.query('set local role mole_app');
+      await client.query('select set_config($1, $2, true)', ['app.current_org_id', orgId]);
+      // deterministic replace: delete then insert, in one transaction, so the index always
+      // matches exactly what's in git at ref (never an accumulation of stale rows).
+      await client.query('delete from nodes where org_id = $1', [orgId]);
+      await client.query('delete from relations where org_id = $1', [orgId]);
+      for (const rec of records) {
+        await client.query(
+          'insert into nodes(id, org_id, kind, title, file_path, commit_sha) values ($1,$2,$3,$4,$5,$6)',
+          [rec.id, orgId, rec.kind, rec.title, rec.scope[0] ?? null, ref]
+        );
+        for (const file of rec.scope) {
+          const codeId = `code:${file}`;
+          await client.query(
+            `insert into nodes(id, org_id, kind, title, file_path, commit_sha) values ($1,$2,'code',$3,$3,$4)
+             on conflict (org_id, id) do nothing`,
+            [codeId, orgId, file, ref]
+          );
+          await client.query(
+            `insert into relations(org_id, from_id, to_id, type) values ($1,$2,$3,'applies_to')
+             on conflict do nothing`,
+            [orgId, rec.id, codeId]
+          );
+        }
+      }
+      if (!opts.shadow) {
+        await client.query('insert into index_rebuild_log(org_id, commit_sha) values ($1,$2)', [orgId, ref]);
+      }
+      await client.query('commit');
+    } catch (e) {
+      await client.query('rollback').catch(() => undefined);
+      throw e;
+    } finally {
+      client.release();
+    }
+    return snapshotHash(pool, orgId);
+  };
+  if (telemetry) return telemetry.withSpan('index.rebuild', { 'mole.org_id': orgId, 'mole.ref': ref }, run);
+  return run();
+}
+
+/** A content hash of the current index for orgId, used to compare "live" vs "freshly rebuilt". */
+export async function snapshotHash(pool: Pool, orgId: string): Promise<string> {
+  const client = await pool.connect();
+  try {
+    await client.query('set role mole_app');
+    await client.query('select set_config($1, $2, false)', ['app.current_org_id', orgId]);
+    const nodes = await client.query('select id, kind, title, file_path from nodes where org_id = $1 order by id', [orgId]);
+    const relations = await client.query('select from_id, to_id, type from relations where org_id = $1 order by from_id, to_id, type', [orgId]);
+    const hash = crypto.createHash('sha256');
+    hash.update(JSON.stringify(nodes.rows));
+    hash.update(JSON.stringify(relations.rows));
+    return hash.digest('hex');
+  } finally {
+    await client.query('reset role').catch(() => undefined);
+    client.release();
+  }
+}

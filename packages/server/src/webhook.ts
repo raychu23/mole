@@ -1,0 +1,74 @@
+// Webhook ingest (R0 prior-art.md §1 GitHub docs + §2 Probot): verify -> dedupe -> enqueue,
+// ack fast, nothing slow on the request path (the queue drains rebuild/check-run jobs).
+// Dedupe is enforced by a DB unique constraint (R0 §1: not an in-memory set), and downstream
+// jobs are themselves idempotent (deterministic index replace + a unique outbox row per
+// (org, kind, ref)), so even a best-effort at-least-once enqueue after commit cannot produce
+// a duplicate *effect* (M25's bar), only possibly a duplicate *attempt* that collapses.
+import { verifyGithubSignature } from './crypto.js';
+import type { Pool } from './db.js';
+import type { Boss } from './queue.js';
+
+export interface WebhookRequest {
+  headers: Record<string, string | undefined>;
+  rawBody: string;
+}
+
+export interface WebhookResponse {
+  status: number;
+  body: { status: string; [k: string]: unknown };
+}
+
+export interface WebhookHandlerOptions {
+  secret: string;
+  pool: Pool;
+  boss: Boss;
+  /** org id -> local git repo dir standing in for "the repo GitHub would push from" */
+  orgRepoDirs: Record<string, string>;
+}
+
+export function createWebhookHandler(opts: WebhookHandlerOptions) {
+  return async function handle(req: WebhookRequest): Promise<WebhookResponse> {
+    const sig = req.headers['x-hub-signature-256'];
+    const deliveryId = req.headers['x-github-delivery'];
+    const event = req.headers['x-github-event'] ?? 'unknown';
+
+    if (!verifyGithubSignature(opts.secret, req.rawBody, sig)) {
+      return { status: 401, body: { status: 'bad-signature' } };
+    }
+    if (!deliveryId) {
+      return { status: 400, body: { status: 'missing-delivery-id' } };
+    }
+
+    let payload: any;
+    try {
+      payload = JSON.parse(req.rawBody);
+    } catch {
+      return { status: 400, body: { status: 'bad-json' } };
+    }
+    const orgLogin: string | undefined = payload?.repository?.owner?.login;
+    const orgId = orgLogin && opts.orgRepoDirs[orgLogin] ? orgLogin : Object.keys(opts.orgRepoDirs)[0];
+    const commitSha: string | undefined = payload?.after;
+
+    const client = await opts.pool.connect();
+    let isNew = false;
+    try {
+      // dedupe on X-GitHub-Delivery via a unique-key insert: the DB enforces it, not an
+      // in-memory set, so dedupe survives a restart and works across instances.
+      const ins = await client.query(
+        `insert into deliveries(delivery_id, org_id, event, commit_sha) values ($1,$2,$3,$4)
+         on conflict (delivery_id) do nothing returning delivery_id`,
+        [deliveryId, orgId ?? 'unknown', event, commitSha ?? null]
+      );
+      isNew = ins.rowCount === 1;
+    } finally {
+      client.release();
+    }
+
+    if (isNew && orgId && commitSha) {
+      await opts.boss.send('rebuild-index', { orgId, ref: commitSha });
+      await opts.boss.send('compute-check-run', { orgId, ref: commitSha });
+      return { status: 202, body: { status: 'queued' } };
+    }
+    return { status: 202, body: { status: isNew ? 'queued' : 'duplicate' } };
+  };
+}
