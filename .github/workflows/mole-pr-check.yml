@@ -2,6 +2,9 @@
 # scope covers the changed lines, the CODEOWNERS owners, past fixes and up to 3 questions; silent (neutral, no annotations)
 # when nothing governs. Posted with the workflow's own token (checks: write); never a PR comment, never a bot account.
 # Note: pull requests from forks get a read-only token, so the POST is refused there (GitHub's rule, not Mole's).
+# One "mole" check run per push (review 1 P1-2): GitHub Actions itself creates a check run for this job, named after the
+# job's `name:` ('mole-pr-check (runner)'); the action POSTs the ONE check run named "mole" that carries the annotations.
+# The names differ on purpose, so a required-check rule on "mole" is unambiguous.
 name: mole pr-check
 
 on:
@@ -19,6 +22,7 @@ concurrency:
 
 jobs:
   mole:
+    name: mole-pr-check (runner)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -26,6 +30,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # the PR's code (npm ci scripts, the PR-built mole) runs next; git reads need no token in .git/config
+          persist-credentials: false
 
       - name: setup node
         uses: actions/setup-node@v4

@@ -59,5 +59,18 @@ for i in $(seq 0 $((n-1))); do
   [ "$rc" = 0 ] || exit "$rc"
 done
 echo "## gh calls (stub log)"; sed 's/^/   /' "$OUT/gh-calls.txt"
-echo "## check runs POSTed: $(grep -c 'check-runs' "$OUT/gh-calls.txt")"
+POSTS=$(grep -c 'check-runs' "$OUT/gh-calls.txt" || true)
+echo "## check runs POSTed: $POSTS"
 echo "## comment calls: $(grep -cE 'comment|/comments' "$OUT/gh-calls.txt" || true)"
+# review 1 P1-2: at most 1 check run named "mole" per push = the one POST + a job check run under a DIFFERENT name
+[ "$POSTS" = 1 ] || { echo "FAIL: expected exactly 1 check-runs POST, got $POSTS"; exit 1; }
+POSTED=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$OUT/check-run-post-body.json','utf8')).name)")
+node --input-type=module -e "
+import { readFileSync } from 'node:fs';
+import { parse } from '$WT/node_modules/yaml/dist/index.js';
+const wf = parse(readFileSync('.github/workflows/mole-pr-check.yml', 'utf8'));
+const names = Object.entries(wf.jobs).map(([id, j]) => j.name ?? id);
+console.log('## job name(s) (GitHub creates one check run each): ' + names.map((n) => JSON.stringify(n)).join(', ') + '; posted check run: ' + JSON.stringify('$POSTED'));
+if (names.includes('$POSTED')) { console.log('FAIL: a job name equals the posted check-run name: 2 check runs named $POSTED per push'); process.exit(1); }
+console.log('## check runs named ' + JSON.stringify('$POSTED') + ' per push: 1');
+"

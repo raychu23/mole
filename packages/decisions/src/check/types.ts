@@ -1,5 +1,5 @@
 // Types of `mole pr-check` (T32).
-import type { Flag } from '../types.js';
+import type { Flag, Problem } from '../types.js';
 
 export interface PrCheckOptions {
   /** the git repository (any path inside it) */
@@ -7,7 +7,9 @@ export interface PrCheckOptions {
   /** PR base and head commit-ish; the diff is merge-base(base, head)..head, as GitHub shows it */
   base: string;
   head: string;
-  /** where the .mole records live (default: root's working tree) */
+  /** where the .mole records live (default: root). When it is inside the checked repository, records (and notes) are read
+   *  at the merge base from git objects, never from the working tree (review 1 P1-1); a folder outside the repository
+   *  (the M24 bench overlays) is read as it is on disk. */
   recordsRoot?: string;
   /** plain ADR folders to load too (they carry no scope, so they never govern lines) */
   adrDirs?: string[];
@@ -82,9 +84,23 @@ export interface PrCheckResult {
   codeownersFile: string | null;
   pastFixes: Array<{ file: string; line: number; sha: string; subject: string }>;
   questions: PrQuestion[];
+  /** review 1 P1-1: records the PR itself adds / edits / deletes (they never govern this check; the merge-base copy does) */
+  recordsChanged: RecordChange[];
+  /** review 1 P2-3: record problems that stop a record from governing (invalid or nested-quantifier `match:` patterns) */
+  problems: Problem[];
   silent: boolean;
   checkRun: CheckRunPayload;
   ms: number;
+}
+
+export interface RecordChange {
+  id: string;
+  title: string;
+  /** the record file relative to the records root (head name; base name for a deletion) */
+  file: string;
+  change: 'added' | 'edited' | 'deleted';
+  statusBase?: string;
+  statusHead?: string;
 }
 
 export interface CodeOwners {

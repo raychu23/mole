@@ -1,16 +1,16 @@
 // prCheck: which decision records govern a pull request's changed lines, who owns them, what broke there before, and ONE
 // GitHub check-run payload built from those facts. Code only: git plumbing + the record files, no model, no network.
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { computeFlags } from '../flags.js';
-import { loadGraph } from '../graph.js';
-import type { Flag, GraphNode } from '../types.js';
+import { loadGraph, MOLE_DIR } from '../graph.js';
+import type { Flag, GraphNode, Problem } from '../types.js';
 import { codeownersAt, parseCodeowners } from './codeowners.js';
 import { parseGitDiff, type ChangedFile, type Hunk } from './diff.js';
-import { contentAnchorsOf, isVersionOnlyHunk, type ContentAnchor } from './options.js';
-import type { CheckAnnotation, CheckRunPayload, GovernedRecord, PrCheckOptions, PrCheckResult, PrQuestion, UnanchoredRecord } from './types.js';
+import { contentAnchorsOf, isVersionOnlyHunk, MAX_MATCH_LINE, type ContentAnchor } from './options.js';
+import type { CheckAnnotation, CheckRunPayload, GovernedRecord, PrCheckOptions, PrCheckResult, PrQuestion, RecordChange, UnanchoredRecord } from './types.js';
 
 export const CHECK_NAME = 'mole';
 export const MAX_ANNOTATIONS = 50; // GitHub accepts at most 50 annotations per check-run request
@@ -99,6 +99,17 @@ const levelOf = (flag: Flag): CheckAnnotation['annotation_level'] => (flag === '
 const fmtRanges = (rs: Range[]) => rs.map(([a, b]) => (a === b ? `${a}` : `${a}-${b}`)).join(', ');
 
 export async function prCheck(opts: PrCheckOptions): Promise<PrCheckResult> {
+  const snapDirs: string[] = []; // merge-base / head snapshots of the records, removed when the check is done
+  try {
+    return await prCheckIn(opts, snapDirs);
+  } finally {
+    for (const d of snapDirs) rmSync(d, { recursive: true, force: true });
+  }
+}
+
+const posixRel = (from: string, to: string) => relative(from, to).split(sep).join('/');
+
+async function prCheckIn(opts: PrCheckOptions, snapDirs: string[]): Promise<PrCheckResult> {
   const t0 = performance.now();
   const root = git(resolve(opts.root), ['rev-parse', '--show-toplevel']).trim();
   const head = git(root, ['rev-parse', '--verify', `${opts.head}^{commit}`]).trim();
@@ -109,22 +120,71 @@ export async function prCheck(opts: PrCheckOptions): Promise<PrCheckResult> {
   const files = changed.map((f) => (f.newPath ?? f.oldPath)!).filter(Boolean);
   const existsAtHead = (path: string) => (gitOrNull(root, ['cat-file', '-e', `${head}:${path}`]) ?? null) !== null;
 
-  // ---- records (working tree of the records root) and their flags
-  const recordsRoot = resolve(opts.recordsRoot ?? root);
+  // ---- records and their flags (review 1 P1-1): when the records root is inside the checked repository, the records (and
+  // notes, .mole/notes) are read AT THE MERGE BASE from git objects, so a PR cannot silence its own check by editing,
+  // superseding or deleting a record, and the result does not depend on what is checked out. A records folder outside the
+  // repository (the M24 overlays) is read from disk as before.
+  const recordsRootAbs = (() => {
+    const p = resolve(opts.recordsRoot ?? root);
+    try {
+      return realpathSync(p);
+    } catch {
+      return p;
+    }
+  })();
+  const recTop = gitOrNull(recordsRootAbs, ['rev-parse', '--show-toplevel'])?.trim();
+  const inRepo = recTop === root;
+  const sameRepo = inRepo && recordsRootAbs === root;
+  const prefix = inRepo ? posixRel(root, recordsRootAbs) : '';
+  const recordPaths = [join(prefix, MOLE_DIR), ...(opts.adrDirs ?? []).filter((d) => d && !isAbsolute(d)).map((d) => join(prefix, d))].map((p) => p.split(sep).join('/'));
+  const snapshot = (rev: string): string => {
+    const dir = mkdtempSync(join(tmpdir(), 'mole-pr-records-'));
+    snapDirs.push(dir);
+    for (const p of recordPaths) {
+      const ls = gitOrNull(root, ['ls-tree', '-r', '-z', '--full-tree', rev, '--', p]) ?? '';
+      for (const entry of ls.split('\0')) {
+        const m = /^\d+ blob ([0-9a-f]+)\t(.+)$/.exec(entry);
+        if (!m) continue;
+        const dest = join(dir, m[2]!);
+        mkdirSync(dirname(dest), { recursive: true });
+        writeFileSync(dest, execFileSync('git', ['-C', root, 'cat-file', 'blob', m[1]!], { maxBuffer: 64 * 1024 * 1024 }));
+      }
+    }
+    return join(dir, prefix);
+  };
+  const recordsRoot = inRepo ? snapshot(mergeBase) : recordsRootAbs;
   const graph = loadGraph(recordsRoot, { adrDirs: opts.adrDirs });
-  const recTop = gitOrNull(recordsRoot, ['rev-parse', '--show-toplevel'])?.trim();
-  const sameRepo = recTop === root && resolve(recordsRoot) === root;
   const flags = new Map<string, Flag>();
   if (sameRepo) for (const f of computeFlags(graph)) flags.set(f.id, f.flag);
   const symbols = new Symbols(root);
 
+  // records the PR itself adds / edits / deletes: listed, never governing (their merge-base copy governs)
+  const recordsChanged: RecordChange[] = [];
+  if (inRepo) {
+    const isRecord = (p: string | null) => p !== null && recordPaths.some((r) => p === r || p.startsWith(`${r}/`));
+    const touched = changed.filter((f) => isRecord(f.oldPath) || isRecord(f.newPath));
+    if (touched.length) {
+      const headGraph = loadGraph(snapshot(head), { adrDirs: opts.adrDirs });
+      const rel = (p: string | null) => (p === null ? null : prefix ? posixRel(prefix, p) : p);
+      for (const f of touched) {
+        const b = graph.nodes.find((n) => n.file === rel(f.oldPath));
+        const h = headGraph.nodes.find((n) => n.file === rel(f.newPath));
+        const n = h ?? b;
+        if (!n) continue;
+        recordsChanged.push({ id: n.id, title: n.title, file: n.file, change: !b ? 'added' : !h ? 'deleted' : 'edited', ...(b ? { statusBase: b.status } : {}), ...(h ? { statusHead: h.status } : {}) });
+      }
+      recordsChanged.sort((a, b) => a.id.localeCompare(b.id));
+    }
+  }
+  const problems: Problem[] = [];
   const governed: GovernedRecord[] = [];
   const unanchored: UnanchoredRecord[] = [];
   const useContent = opts.contentAnchors !== false;
   const versionRule = opts.versionBumpRule === true; // off by default: it cost recall on both keys (options round, 2 insights)
   const versionOnly = (h: Hunk) => isVersionOnlyHunk(h.del ?? [], h.add ?? []);
   const content = new Map<string, ContentAnchor[]>();
-  if (useContent) for (const n of graph.nodes) if (n.kind === 'decision') content.set(n.id, contentAnchorsOf(recordsRoot, n));
+  if (useContent) for (const n of graph.nodes) if (n.kind === 'decision') content.set(n.id, contentAnchorsOf(recordsRoot, n, NOT_GOVERNING.has(n.status) ? undefined : problems));
+  const fits = (s: string) => s.length <= MAX_MATCH_LINE; // review 1 P2-3: bound regex work per line
   const candidates = graph.nodes.filter((n) => n.kind === 'decision' && (n.scope.length > 0 || (content.get(n.id)?.length ?? 0) > 0) && !NOT_GOVERNING.has(n.status));
   for (const n of candidates) {
     const hits: GovernedRecord['hits'] = [];
@@ -137,12 +197,12 @@ export async function prCheck(opts: PrCheckOptions): Promise<PrCheckResult> {
         for (const h of f.hunks) {
           const add = h.add ?? [];
           // a version-only hunk names its dependency in the enclosing block, not on the changed line (option 2)
-          if (versionRule && h.newLines > 0 && c.re.test(h.context ?? '') && versionOnly(h)) {
+          if (versionRule && h.newLines > 0 && fits(h.context ?? '') && c.re.test(h.context ?? '') && versionOnly(h)) {
             rs.push([h.newStart, h.newStart + h.newLines - 1]);
             continue;
           }
           add.forEach((line, i) => {
-            if (c.re.test(line)) rs.push([h.newStart + i, h.newStart + i]);
+            if (fits(line) && c.re.test(line)) rs.push([h.newStart + i, h.newStart + i]);
           });
         }
         if (rs.length) hits.push({ anchor: `match:${c.pattern}`, path: f.newPath, side: 'new', ranges: merge(rs) });
@@ -198,7 +258,7 @@ export async function prCheck(opts: PrCheckOptions): Promise<PrCheckResult> {
   for (const f of changed) for (const p of [f.oldPath, f.newPath]) if (p && !(p in ownersByFile)) ownersByFile[p] = owners ? owners.ownersOf(p) : [];
   const allOwners = [...new Set(Object.values(ownersByFile).flat())].sort();
 
-  const silent = governed.length === 0 && unanchored.length === 0;
+  const silent = governed.length === 0 && unanchored.length === 0 && recordsChanged.length === 0 && problems.length === 0;
 
   // ---- past fixes (T12) + questions (T14): only when something governs, so a silent check stays cheap and quiet
   let pastFixes: PrCheckResult['pastFixes'] = [];
@@ -226,8 +286,8 @@ export async function prCheck(opts: PrCheckOptions): Promise<PrCheckResult> {
     }
   }
 
-  const checkRun = buildCheckRun({ head, governed, unanchored, owners: allOwners, ownersByFile, codeownersFile: co?.path ?? null, pastFixes, questions, silent, changed });
-  return { base, head, mergeBase, files, governed, unanchored, owners: allOwners, ownersByFile, codeownersFile: co?.path ?? null, pastFixes, questions, silent, checkRun, ms: Math.round(performance.now() - t0) };
+  const checkRun = buildCheckRun({ head, governed, unanchored, owners: allOwners, ownersByFile, codeownersFile: co?.path ?? null, pastFixes, questions, recordsChanged, problems, silent, changed });
+  return { base, head, mergeBase, files, governed, unanchored, owners: allOwners, ownersByFile, codeownersFile: co?.path ?? null, pastFixes, questions, recordsChanged, problems, silent, checkRun, ms: Math.round(performance.now() - t0) };
 }
 
 function buildCheckRun(r: {
@@ -239,6 +299,8 @@ function buildCheckRun(r: {
   codeownersFile: string | null;
   pastFixes: PrCheckResult['pastFixes'];
   questions: PrQuestion[];
+  recordsChanged: RecordChange[];
+  problems: Problem[];
   silent: boolean;
   changed: ChangedFile[];
 }): CheckRunPayload {
@@ -273,6 +335,14 @@ function buildCheckRun(r: {
     s.push(`### Unanchored (${r.unanchored.length}, grey)`);
     for (const u of r.unanchored) s.push(`- **${u.id}** ${u.title}: ${u.reason}`);
   }
+  if (r.recordsChanged.length) {
+    s.push(`### Records this PR changes (${r.recordsChanged.length})`, '_this check applies the records as they are at the merge base; these edits take effect after merge_');
+    for (const c of r.recordsChanged) s.push(`- **${c.id}** ${c.title} · ${c.file}: ${c.change}${c.change === 'edited' && c.statusBase !== c.statusHead ? `, ${c.statusBase} → ${c.statusHead}` : c.change === 'added' ? ` (${c.statusHead})` : ''}`);
+  }
+  if (r.problems.length) {
+    s.push(`### Record problems (${r.problems.length})`);
+    for (const p of r.problems) s.push(`- ${p.file}:${p.line} ${p.message}`);
+  }
   s.push(`### Owners`, r.codeownersFile ? (r.owners.length ? r.owners.join(' ') : `no owners in ${r.codeownersFile} for these files`) : 'no CODEOWNERS file');
   if (r.pastFixes.length) {
     s.push(`### Past fixes on these lines (${r.pastFixes.length})`);
@@ -284,6 +354,8 @@ function buildCheckRun(r: {
   }
   const parts = [`${r.governed.length} decision${r.governed.length === 1 ? '' : 's'} govern these lines`];
   if (r.unanchored.length) parts.push(`${r.unanchored.length} unanchored`);
+  if (r.recordsChanged.length) parts.push(`${r.recordsChanged.length} record${r.recordsChanged.length === 1 ? '' : 's'} changed by this PR`);
+  if (r.problems.length) parts.push(`${r.problems.length} record problem${r.problems.length === 1 ? '' : 's'}`);
   return { name: CHECK_NAME, head_sha: r.head, status: 'completed', conclusion: 'neutral', output: { title: `mole: ${parts.join(', ')}`, summary: s.join('\n').slice(0, 65000), annotations } };
 }
 
