@@ -91,8 +91,8 @@ function listAll(o: RunsOptions, skipped: Skipped[], filter?: (cwd: string | nul
   const out: Listed[] = [];
   for (const sum of hermesSummaries(s.hermesDb, skipped)) if (!filter || filter(sum.cwd)) out.push({ summary: sum, load: () => hermesRun(s.hermesDb, sum, skipped) });
   for (const r of jsonlOrSkip('claude-code', s.claudeDir, skipped)) {
-    if (filter && !filter(claudeCwd(r).cwd)) continue;
     try {
+      if (filter && !filter(claudeCwd(r).cwd)) continue;
       const run = claudeRun(r);
       if (run) out.push({ summary: run.summary, load: () => run });
     } catch (e) {
@@ -130,6 +130,7 @@ function listJsonl(dir: string): string[] | undefined {
       }
     };
     if (!isDir(dir)) return undefined;
+    readdirSync(dir); // an unreadable folder throws here (EACCES) -> skipped, not silently empty
     walk(dir, 0);
     return out.sort();
   } catch {
@@ -193,7 +194,8 @@ interface Timeline {
 const timelines = new Map<string, Timeline | null>();
 function timeline(repo: string): Timeline | null {
   if (timelines.has(repo)) return timelines.get(repo)!;
-  const log = git(repo, ['log', '--all', '--format=%H %ct']);
+  // that checkout's own HEAD history (not every branch: a parallel task's branch was never this run's context)
+  const log = git(repo, ['log', 'HEAD', '--format=%H %ct']);
   const tl = log === undefined ? null : { repo, commits: log.split('\n').filter(Boolean).map((l) => ({ sha: l.slice(0, 40), t: Number(l.slice(41)) * 1000 })).sort((a, b) => a.t - b.t), objects: new Map() };
   timelines.set(repo, tl);
   return tl;
@@ -286,9 +288,11 @@ function triedOf(s: Step): TriedItem | undefined {
   return { command, kind: s.kind, outcome: s.outcome ?? 'unknown', at: s.time, segment: s.segment, run: s.run, step: s.id };
 }
 
+/** the checkout the run worked in: the repo dir (root or one of its worktrees) holding its cwd, else the cwd's git toplevel */
 function repoOf(raw: RawRun, root: string | undefined): string | null {
   const cwd = raw.summary.cwd;
-  if (root && inScope(cwd, scopeDirs(root))) return resolve(root);
+  const hit = root ? scopeDirs(root).find((d) => under(cwd, d)) : undefined;
+  if (hit) return hit;
   if (!cwd) return null;
   return git(cwd, ['rev-parse', '--show-toplevel']) ?? null;
 }
@@ -360,7 +364,7 @@ function graphOf(raw: RawRun, o: RunsOptions, skipped: Skipped[], hermesAll: () 
   const steps = buildSteps(raw);
   const kids = children(raw, steps, o, skipped, hermesAll);
   const repo = repoOf(raw, o.root);
-  const dirs = repo ? (o.root && repo === resolve(o.root) ? scopeDirs(o.root) : [repo]) : [];
+  const dirs = repo ? (o.root && scopeDirs(o.root).includes(repo) ? scopeDirs(o.root) : [repo]) : [];
   const tl = repo ? timeline(repo) : null;
   flagSteps(steps, repo, dirs, tl);
   const checkpoints: Checkpoint[] = [];
@@ -473,28 +477,27 @@ function agentsIn(target: string, o: RunsOptions & { root: string }, skipped: Sk
   }
   const edits: AgentEdit[] = [];
   const raws = new Map<string, RawRun>();
-  const commitFiles = new Map<string, string[]>();
-  for (const raw of candidateRuns({ ...o, root }, skipped)) {
-    const steps = buildSteps(raw);
-    for (const s of steps) {
-      if (s.kind === 'edit' && s.files.edited.some((f) => toRel(f, dirs) === rel)) {
-        if (body) {
-          const call = raw.calls.find((c) => `${raw.summary.id}:${c.callId}` === s.id);
-          const touched = editText(call?.args ?? {}).some((t) => t.split('\n').some((l) => meaningful(l) && body!.has(l.trim())));
-          if (!touched) continue;
-        }
-        edits.push({ run: raw.summary.id, harness: raw.summary.harness, step: s.id, time: s.time, tool: s.tool, via: 'edit', commit: null });
-        raws.set(raw.summary.id, raw);
-      } else if (!body && s.commits.length) {
-        for (const c of s.commits) {
-          let files = commitFiles.get(c);
-          if (!files) commitFiles.set(c, (files = (git(root, ['show', '--name-only', '--format=', c]) ?? '').split('\n').filter(Boolean)));
-          if (files.includes(rel)) {
-            edits.push({ run: raw.summary.id, harness: raw.summary.harness, step: s.id, time: s.time, tool: s.tool, via: 'commit', commit: c });
-            raws.set(raw.summary.id, raw);
-          }
-        }
+  const all = candidateRuns({ ...o, root }, skipped);
+  for (const raw of all) {
+    for (const s of buildSteps(raw)) {
+      if (s.kind !== 'edit' || !s.files.edited.some((f) => toRel(f, dirs) === rel)) continue;
+      if (body) {
+        const call = raw.calls.find((c) => `${raw.summary.id}:${c.callId}` === s.id);
+        const touched = editText(call?.args ?? {}).some((t) => t.split('\n').some((l) => meaningful(l) && body!.has(l.trim())));
+        if (!touched) continue;
       }
+      edits.push({ run: raw.summary.id, harness: raw.summary.harness, step: s.id, time: s.time, tool: s.tool, via: 'edit', commit: null });
+      raws.set(raw.summary.id, raw);
+    }
+  }
+  if (!body) {
+    // the steps that committed this file (same evidence as attribution: printed sha, or a quiet commit named by its subject)
+    const byId = new Map(all.map((r) => [r.summary.id, r]));
+    for (const l of linkCommits(root, commitsIn(root, ['HEAD', '--', rel]), indexRuns(all, dirs), rel)) {
+      if (l.kind !== 'commit' || !l.hit || edits.some((e) => e.step === l.hit!.step && e.commit === l.commit)) continue;
+      edits.push({ run: l.hit.run, harness: l.hit.harness, step: l.hit.step, time: new Date(l.hit.stepTime).toISOString(), tool: l.hit.tool, via: 'commit', commit: l.commit.slice(0, 7) });
+      const r = byId.get(l.hit.run);
+      if (r) raws.set(l.hit.run, r);
     }
   }
   edits.sort((a, b) => Date.parse(b.time) - Date.parse(a.time) || b.step.localeCompare(a.step));
@@ -507,22 +510,31 @@ export function agents(target: string, opts: RunsOptions & { root: string }): Ag
   return r;
 }
 
-/** M6: every file edit of every non-merge commit in range, linked to the run step that edited it (or committed it). */
-export function attribute(root: string, range: string, opts: Sources = {}): Attribution[] {
-  root = resolve(root);
-  const dirs = scopeDirs(root);
-  const log = git(root, ['log', '--no-merges', '--reverse', '--format=%H %ct', range]) ?? '';
-  const commits = log.split('\n').filter(Boolean).map((l) => ({ sha: l.slice(0, 40), t: Number(l.slice(41)) * 1000 }));
-  const edits = new Map<string, Array<{ t: number; run: string; step: string; ref: Step['ref'] }>>();
-  const made = new Map<string, Array<{ t: number; run: string; step: string; ref: Step['ref'] }>>();
-  const committers: Array<{ t: number; rt: number; command: string; run: string; step: string; ref: Step['ref'] }> = [];
-  for (const raw of candidateRuns({ ...opts, root }, [])) {
+interface Hit {
+  t: number; // when the evidence happened (edit call / commit output)
+  stepTime: number;
+  run: string;
+  step: string;
+  ref: Step['ref'];
+  harness: RunSummary['harness'];
+  tool: string | null;
+}
+interface RunIndex {
+  edits: Map<string, Hit[]>; // repo-relative path -> edit steps
+  made: Map<string, Hit[]>; // 7-char sha -> commit-making steps whose output printed it
+  committers: Array<Hit & { rt: number; command: string }>; // every commit-making step, for quiet commits
+}
+
+function indexRuns(raws: RawRun[], dirs: string[]): RunIndex {
+  const idx: RunIndex = { edits: new Map(), made: new Map(), committers: [] };
+  for (const raw of raws) {
     for (const s of buildSteps(raw)) {
       const t = Date.parse(s.time);
+      const base = { stepTime: t, run: s.run, step: s.id, harness: raw.summary.harness, tool: s.tool };
       if (s.kind === 'edit' && s.outcome !== 'fail')
         for (const f of s.files.edited) {
           const rel = toRel(f, dirs);
-          if (rel) edits.set(rel, [...(edits.get(rel) ?? []), { t, run: s.run, step: s.id, ref: s.ref }]);
+          if (rel) idx.edits.set(rel, [...(idx.edits.get(rel) ?? []), { ...base, t, ref: s.ref }]);
         }
       if ((s.kind === 'command' || s.kind === 'test') && isCommitCommand(s.command)) {
         const call = raw.calls.find((c) => `${raw.summary.id}:${c.callId}` === s.id);
@@ -535,20 +547,25 @@ export function attribute(root: string, range: string, opts: Sources = {}): Attr
         for (const o of outs)
           for (const m of o.text.matchAll(/\b[0-9a-f]{7,40}\b/g)) {
             const k = m[0].slice(0, 7);
-            const l = made.get(k) ?? [];
-            if (!l.some((x) => x.step === s.id)) l.push({ t: o.time, run: s.run, step: s.id, ref: { ...s.ref, resultRow: o.row } });
-            made.set(k, l);
+            const l = idx.made.get(k) ?? [];
+            if (!l.some((x) => x.step === s.id)) l.push({ ...base, t: o.time, ref: { ...s.ref, resultRow: o.row } });
+            idx.made.set(k, l);
           }
-        if (outs.length) committers.push({ t, rt: outs[0]!.time, command: s.command ?? '', run: s.run, step: s.id, ref: { ...s.ref, resultRow: outs[0]!.row } });
+        if (outs.length) idx.committers.push({ ...base, t, rt: outs[0]!.time, command: s.command ?? '', ref: { ...s.ref, resultRow: outs[0]!.row } });
       }
     }
   }
+  return idx;
+}
+
+/** commits oldest first; each file edit -> the edit step (after the file's previous commit, not after this one), else the
+ * step that made the commit: it printed the sha, or (quiet `git commit -q`) it named the commit and was running when it happened */
+function linkCommits(root: string, commits: Array<{ sha: string; t: number }>, idx: RunIndex, only?: string): Array<{ commit: string; path: string; hit: Hit | null; kind: 'edit' | 'commit' }> {
   const lastTouch = new Map<string, number>();
-  const out: Attribution[] = [];
+  const out: Array<{ commit: string; path: string; hit: Hit | null; kind: 'edit' | 'commit' }> = [];
   for (const c of commits) {
     const files = (git(root, ['diff-tree', '--no-commit-id', '-r', '--name-only', '--root', c.sha]) ?? '').split('\n').filter(Boolean);
-    // 1) the commit-making command printed the sha; 2) it ran `git commit -q` (prints nothing): its -m message is the subject
-    const bySha = (made.get(c.sha.slice(0, 7)) ?? []).filter((m) => m.t >= c.t - 120_000 && m.t <= c.t + 1_800_000).sort((a, b) => a.t - b.t)[0];
+    const bySha = (idx.made.get(c.sha.slice(0, 7)) ?? []).filter((m) => m.t >= c.t - 120_000 && m.t <= c.t + 1_800_000).sort((a, b) => a.t - b.t)[0];
     const full = git(root, ['log', '-1', '--format=%s', c.sha]) ?? '';
     const subject = full.split(/["'`$\\]/)[0]!.slice(0, 50);
     // the ledger writes its own subject ('ledger move: tasks/T2-x verified → integrated'): match the command that asked for it
@@ -556,18 +573,32 @@ export function attribute(root: string, range: string, opts: Sources = {}): Attr
     const said = (cmd: string): boolean =>
       lm ? /\bledger\b/.test(cmd) && cmd.includes(lm[1]!.split('/').pop()!) && (!lm[2] || new RegExp(`\\b${lm[2]}\\b`).test(cmd)) : subject.length >= 12 && cmd.includes(subject);
     // the commit must have happened while that call ran (git %ct is whole seconds): a failed retry right after doesn't count
-    const bySubject = committers.filter((m) => m.t <= c.t + 2_000 && m.rt >= c.t - 1_000 && said(m.command)).sort((a, b) => b.t - a.t)[0];
-    const viaCommit = bySha ?? bySubject;
+    const bySubject = idx.committers.filter((m) => m.t <= c.t + 2_000 && m.rt >= c.t - 1_000 && said(m.command)).sort((a, b) => b.t - a.t)[0];
+    const viaCommit = bySha ?? bySubject ?? null;
     for (const path of files) {
       const prev = lastTouch.get(path) ?? -Infinity;
-      const e = (edits.get(path) ?? []).filter((x) => x.t > prev && x.t <= c.t + 60_000).sort((a, b) => b.t - a.t)[0];
-      out.push({
-        commit: c.sha,
-        path,
-        link: e ? { kind: 'edit', run: e.run, step: e.step, ref: e.ref } : viaCommit ? { kind: 'commit', run: viaCommit.run, step: viaCommit.step, ref: viaCommit.ref } : null,
-      });
       lastTouch.set(path, c.t);
+      if (only !== undefined && path !== only) continue;
+      const e = (idx.edits.get(path) ?? []).filter((x) => x.t > prev && x.t <= c.t + 60_000).sort((a, b) => b.t - a.t)[0];
+      out.push(e ? { commit: c.sha, path, hit: e, kind: 'edit' } : { commit: c.sha, path, hit: viaCommit, kind: 'commit' });
     }
   }
   return out;
+}
+
+const commitsIn = (root: string, args: string[]): Array<{ sha: string; t: number }> =>
+  (git(root, ['log', '--no-merges', '--reverse', '--format=%H %ct', ...args]) ?? '')
+    .split('\n')
+    .filter(Boolean)
+    .map((l) => ({ sha: l.slice(0, 40), t: Number(l.slice(41)) * 1000 }));
+
+/** M6: every file edit of every non-merge commit in range, linked to the run step that edited it (or committed it). */
+export function attribute(root: string, range: string, opts: Sources = {}): Attribution[] {
+  root = resolve(root);
+  const idx = indexRuns(candidateRuns({ ...opts, root }, []), scopeDirs(root));
+  return linkCommits(root, commitsIn(root, [range]), idx).map((l) => ({
+    commit: l.commit,
+    path: l.path,
+    link: l.hit ? { kind: l.kind, run: l.hit.run, step: l.hit.step, ref: l.hit.ref } : null,
+  }));
 }

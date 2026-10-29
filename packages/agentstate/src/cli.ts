@@ -12,7 +12,17 @@ const short = (s: string, n: number): string => {
   const one = s.replace(/\s+/g, ' ').trim();
   return one.length > n ? `${one.slice(0, n - 1)}…` : one;
 };
-const when = (iso: string): string => iso.replace('T', ' ').slice(0, 16);
+/** local time, as the transcripts' owner reads it */
+const when = (iso: string): string => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const p = (n: number): string => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+const zone = (): string => {
+  const m = -new Date().getTimezoneOffset();
+  return `UTC${m >= 0 ? '+' : '-'}${String(Math.floor(Math.abs(m) / 60)).padStart(2, '0')}:${String(Math.abs(m) % 60).padStart(2, '0')}`;
+};
 const skippedLines = (s: Skipped[]): string[] => s.map((x) => `skipped ${x.harness} ${x.path}: ${x.reason}`);
 const seg = (k: number | null): string => (k === null ? 'after last compaction' : `before compaction ${k}`);
 
@@ -28,7 +38,7 @@ function stepLine(s: Step): string {
 function formatRun(g: RunGraph): string {
   const r = g.run;
   const head = [
-    `${r.harness} run ${r.id}${r.title ? `  "${r.title}"` : ''}`,
+    `${r.harness} run ${r.id}${r.title ? `  "${r.title}"` : ''}  (times ${zone()})`,
     `  cwd ${r.cwd ?? '?'} · ${when(r.start)} → ${r.end ? when(r.end) : '?'} · ${r.steps} steps · ${g.compactions.length} compaction${g.compactions.length === 1 ? '' : 's'}${r.parent ? ` · parent ${r.parent}` : ''}`,
   ];
   const last = g.checkpoints.at(-1)?.values.context;
@@ -60,6 +70,7 @@ export async function agentCli(cmd: string, pos: string[], flags: Record<string,
     const r = listRuns({ ...src, root, all: flags.all === true });
     print(r, () =>
       [
+        `times ${zone()}`,
         ...(r.runs.length ? r.runs.map((x) => `${x.harness.padEnd(11)} ${x.id}  ${when(x.start)}  steps ${String(x.steps).padStart(4)}  compactions ${x.compactions}${x.parent ? `  parent ${x.parent}` : ''}  ${x.cwd ?? ''}`) : [`mole: no runs${flags.all ? '' : ` in ${root} (try --all)`}`]),
         ...skippedLines(r.skipped),
       ].join('\n'),

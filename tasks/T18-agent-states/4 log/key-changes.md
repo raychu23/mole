@@ -3,13 +3,13 @@
 Nothing here is applied. The benches and tests from the red commit 9add41d stay as they are until a reviewer (or Raymond) rules.
 
 ```notes
-KC-1  M6 commit-link evidence when `git commit -q` printed no sha      PROPOSED 2026-10-29 00:58 · mole-agent-states
+KC-1  M6 commit-link evidence when `git commit -q` printed no sha      PROPOSED 2026-10-29 00:58 · mole-agent-states · RULED: accepted with changes (key-ruling-1.md), applied 005e362
     bench rule now      commit link verified only if the commit-making call's RESULT contains the commit's 7-char sha
     problem             agents commit with `git commit -qm "<subject>"` (quiet: prints nothing) · the sha then appears only in
                         later, unrelated `git log` outputs, so the true step can never satisfy the rule
-    evidence            hermes messages.id 34064 (session local-fc6c6dc0…, builder chat) at 21:41:08 = bff4ba9's commit second:
-                        `cd …/Mole-worktrees/T11-l2-memory-notes && git add "…/runs.jsonl" && git commit -qm "T11 run log: round 4 after review fixes (M1 at target, 77/77)"`
-                        result 34065 has no sha (quiet commit + an unrelated grep) · same pattern for 8 more commits, 26 file edits
+    evidence            hermes messages.id 34064 (builder chat local-fc6c6dc0…) at 21:41:08 = bff4ba9's commit second: a `git add` + quiet
+                        `git commit -qm` whose -m text is bff4ba9's subject; its result 34065 has no sha · same pattern for 8 more commits, 26 file edits
+                        (review-1 F7: the command itself is no longer quoted here; ids + shas only)
                         ledger moves with empty output: 637956f (T2 verified → integrated) from ledger call 19208, output ""
     effect now         M6 94.8% (514/542) under the frozen rule · 28 edits fail only on "result does not contain the sha"
     proposed rule       ALSO verified when the commit-making call's ARGUMENTS name the commit: its -m subject prefix

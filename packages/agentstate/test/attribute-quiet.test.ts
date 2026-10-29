@@ -2,15 +2,19 @@
 // call that was running when the commit happened counts (a failed retry right after must not be linked). Background
 // commands (Hermes proc_*) report their output in a later poll: the commit sha found there links the launching call.
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { afterAll, expect, it } from 'vitest';
-import { attribute, tried } from '../src/index.js';
+import { agents, attribute, listRuns, tried } from '../src/index.js';
 
 const base = mkdtempSync(join(tmpdir(), 'mole-attr-q-'));
-afterAll(() => rmSync(base, { recursive: true, force: true }));
+const locked: string[] = [];
+afterAll(() => {
+  for (const p of locked) chmodSync(p, 0o755);
+  rmSync(base, { recursive: true, force: true });
+});
 
 it('links a quiet commit by its subject, not the failed retry after it; a background commit by the sha in its later poll', () => {
   const root = join(base, 'repo');
@@ -54,4 +58,28 @@ it('links a quiet commit by its subject, not the failed retry after it; a backgr
   expect(byCommit.get(b)?.link).toMatchObject({ kind: 'commit', step: 'S:b1' });
   // the background launch's outcome comes from the later poll
   expect(tried('S', src).items.find((i) => i.step === 'S:b1')).toMatchObject({ kind: 'test', outcome: 'pass' });
+  // review-1 F2: `mole agents <file>` uses the same commit evidence (the quiet commit's step, not the failed retry)
+  expect(agents('log.jsonl', { ...src, root }).edits).toEqual([expect.objectContaining({ run: 'S', step: 'S:q1', via: 'commit', commit: q.slice(0, 7) })]);
+  expect(agents('b.txt', { ...src, root }).edits.map((e) => e.step)).toEqual(['S:b1']);
+});
+
+it('review-1 F1 + F3: an unreadable transcript or transcript folder is skipped with a reason in root mode, not a crash', () => {
+  const root = join(base, 'r2');
+  mkdirSync(root);
+  const claude = join(base, 'claude2', 'p');
+  mkdirSync(claude, { recursive: true });
+  const line = (id: string) => JSON.stringify({ type: 'user', cwd: root, sessionId: id, timestamp: '2026-10-01T00:00:00Z', message: { role: 'user', content: 'hi' } }) + '\n';
+  writeFileSync(join(claude, 's1.jsonl'), line('s1'));
+  writeFileSync(join(claude, 's2.jsonl'), line('s2'));
+  chmodSync(join(claude, 's2.jsonl'), 0o000);
+  locked.push(join(claude, 's2.jsonl'));
+  const r = listRuns({ hermesDb: join(base, 'none.db'), claudeDir: join(base, 'claude2'), codexDir: join(base, 'none'), root });
+  expect(r.runs.map((x) => x.id)).toEqual(['s1']);
+  expect(r.skipped).toContainEqual(expect.objectContaining({ harness: 'claude-code', path: join(claude, 's2.jsonl') }));
+  const shut = join(base, 'claude3');
+  mkdirSync(shut);
+  chmodSync(shut, 0o000);
+  locked.push(shut);
+  const r3 = listRuns({ hermesDb: join(base, 'none.db'), claudeDir: shut, codexDir: join(base, 'none'), all: true });
+  expect(r3.skipped).toContainEqual(expect.objectContaining({ harness: 'claude-code', path: shut }));
 });
