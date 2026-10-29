@@ -51,6 +51,14 @@
    "measured_by": [
     "M5"
    ]
+  },
+  {
+   "id": "E5",
+   "goal": "you can see each agent run as states: what context (and which version of it) the agent had, what it already tried, what it changed, across compaction and across agents, linked to the code it touched (3C1 lines 171, 177, 232, 289)",
+   "measured_by": [
+    "M6",
+    "M7"
+   ]
   }
  ],
  "metrics": [
@@ -88,6 +96,20 @@
    "how": "wall time of mole check on each benchmark change (excalidraw clone, Mole repo); model calls counted",
    "target": "p95 < 2 s per change without a model; 0 model calls needed for any metric above",
    "task": "T12"
+  },
+  {
+   "id": "M6",
+   "name": "agent-edit attribution",
+   "how": "file edits in agent-made commits of the Mole repo (T1-T15) linked to a run step from Hermes / Claude Code / Codex sessions",
+   "target": ">= 95% linked",
+   "task": "T18"
+  },
+  {
+   "id": "M7",
+   "name": "already-tried recall across compaction",
+   "how": "key written before the code by a separate subagent: commands/tests tried before each compaction in the 7 Hermes + 4 Claude Code sessions that compacted",
+   "target": "recall 100%, wrong items <= 5%",
+   "task": "T18"
   }
  ],
  "benchmarks": [
@@ -110,6 +132,16 @@
    "id": "B4",
    "what": "excalidraw clone used by the trial and impact runs (read-only)",
    "path": "~/.hermes/cache/scratch/impact/excalidraw"
+  },
+  {
+   "id": "B5",
+   "what": "local agent sessions, read-only: Hermes state.db (818 sessions, 7 with a compaction, 216 in Mole), Claude Code transcripts (47, 4 with a compaction), Codex sessions (14)",
+   "path": "~/.hermes/state.db"
+  },
+  {
+   "id": "B6",
+   "what": "Mole repo git history T1-T15 (agent-made commits) for attribution",
+   "path": "tasks/HANDOFF.md"
   }
  ],
  "graph": [
@@ -146,6 +178,11 @@
     "T14-l3-questions"
    ],
    "why": "shows it inline on touched lines (D23), in the panel, and to agents (MCP + Claude Code hooks)"
+  },
+  {
+   "task": "T18-agent-states",
+   "needs": [],
+   "why": "parallel with T13-T15: reads agent sessions + git; uses T11 (integrated) to flag stale context; T15 later shows it"
   }
  ],
  "checkpoints": [
@@ -173,6 +210,11 @@
    "id": "C5",
    "when": "after T15",
    "pass": "hover on touched lines in a clean VS Code profile (T9's selftest style) + Claude Code Stop hook prints the check; npm run check passes"
+  },
+  {
+   "id": "C6",
+   "when": "after T18",
+   "pass": "M6 and M7 at target, reviewed, integrated; mole tried answers the 3C1 line 289 case on a real compacted session"
   }
  ],
  "never": [
@@ -195,5 +237,6 @@
    "state": "proposed, waits for D26 + API spend go",
    "why": "Inspect + Docker end-to-end: does an agent with Mole's hooks repeat the planted regression less often"
   }
- ]
+ ],
+ "asked_10_28_2210": "USER: \"huh what the fuck. werent we supposed to include as part of the observe and verify aspects of the project include stuff like langraph all that agent states as a way to mange context verisoning all that.\""
 }
