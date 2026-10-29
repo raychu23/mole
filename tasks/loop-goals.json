@@ -336,6 +336,30 @@
    "state": "proposed, waits for D29",
    "metric": "M15",
    "why": "decision traces from Slack/meetings/PRs → approved .mole/ records; the one place a model is needed"
+  },
+  {
+   "task": "T25-hand-back-verify-gate",
+   "state": "proposed, waits for D30",
+   "metric": "M17",
+   "why": "one verdict at the hand-back; needs T15, T22, T24, T21"
+  },
+  {
+   "task": "T26-big-picture-view",
+   "state": "proposed, waits for D30 (vs D23)",
+   "metric": "M18",
+   "why": "meaning map: purpose + risk + your understanding + agent activity; junior test"
+  },
+  {
+   "task": "T27-decisions-as-rules",
+   "state": "proposed, waits for D30",
+   "metric": "M19",
+   "why": "decisions compiled to dependency-cruiser rules, violations cite the why"
+  },
+  {
+   "task": "T28-runtime-flows-from-tests",
+   "state": "proposed, waits for D30",
+   "metric": "M20",
+   "why": "runtime edges from test runs fill the static graph's dynamic gaps"
   }
  ]
 }
