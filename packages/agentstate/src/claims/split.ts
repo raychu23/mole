@@ -22,8 +22,23 @@ const FILE_VERB = /\b(?:wrote|written|writes|updated|created|added|saved|logged|
 
 // a plan, a negative, a condition, a question or someone else's word: not a claim of the agent's own done work
 const NOT_DONE =
-  /\b(?:not|never|no longer|nothing|none|neither|nor|without|until|unless|if|whether|will|won't|would|could|should|might|may|cannot|can't|isn't|aren't|wasn't|weren't|hasn't|haven't|didn't|doesn't|don't|i'll|we'll|it'll|going to|next|later|once|pending|waiting|todo|plan(?:ned)?|propos\w*)\b/i;
-const OTHERS = /\b(?:reviewers?|review found|the review|subagents?|sub-agent|builder|they|he|she|user)\b/i;
+  /\b(?:not|never|no longer|nothing|none|neither|nor|until|unless|if|whether|will|won't|would|could|should|might|may|cannot|can't|isn't|aren't|wasn't|weren't|hasn't|haven't|didn't|doesn't|don't|i'll|we'll|it'll|going to|next|later|once|pending|waiting|todo|plan(?:ned)?|propos\w*)\b/i;
+// 'they' / 'user' alone are not attribution ('They all pass now.', 'the user-facing tests pass'); 'they found …' is
+const OTHERS = /\b(?:reviewers?|review found|the review|subagents?|sub-agent|builder|they|he|she)\b|\buser\b(?![-\w])/i;
+// a description of how things were or behave, not something done in the run ('notes were being passed into the command')
+const DESCRIBES = /\b(?:was|were) being\b|\bused to\b/i;
+// a metric value or score ('M2 is 5/5 on the test cases', 'kept the full score (18/18)', 'recall 9/10') is not a test count
+const METRIC = /\bM\d+\b|\btargets?\b|\bscor(?:e|ed|es|ing)\b|\brecall\b|\bprecision\b|\baccuracy\b|\bfalse flags?\b/i;
+// 'They all pass now.', 'they're now fixed': a result whose subject stands for the tests/bugs just named (other 'they'
+// clauses are someone else's word or a description: 'They fail on method calls')
+const PRONOUN_PASS = /^(?:they|these|those|all|both|everything)(?:'re|\s+are)?\s+(?:(?:all|now|still)\s+)*(?:pass(?:es|ed)?|fixed)\b/i;
+const FIRST_PERSON = /\b(?:I|we)\b/;
+// present-tense file verbs describe what a tool does ('`brain export` writes items.jsonl') unless 'now' or 'I' makes them a change
+const FILE_PRESENT = /\b(?:writes|deletes)\b/i;
+// bullets introduced by someone else's findings or a list of bugs/issues describe those, not the agent's own results
+const LIST_INTRO =
+  /(?:\b(?:reviewers?|review|subagents?|it|they)\b[^\n]*\b(?:found|confirmed|flagged|checked|verified|reported|noted)\b[^\n]*|\b(?:bugs?|issues?|problems?|findings?)\b[^\n:]*):\s*$/i;
+const BULLET = /^\s*(?:[-*•]|\d+[.)])\s+/;
 const LEDGER = /\bledger\b/i;
 
 const SHA = /(?<![\w#/.=-])`?([0-9a-f]{7,40})`?(?![\w/-])/g;
@@ -72,17 +87,29 @@ export function pathsIn(s: string): string[] {
   return [...out];
 }
 
+/** an exit statement that reports a run, not behaviour: 'exits 1' needs I/we, 'exited 1 when/if …' is a description */
+function exitClaim(clause: string): boolean {
+  const m = EXIT.exec(clause);
+  if (!m) return false;
+  if (/^exits\b/i.test(m[0]) && !FIRST_PERSON.test(clause)) return false;
+  return !/^\s*(?:when|whenever|if|unless|on (?:a|an|any|every)\b)/i.test(clause.slice(m.index + m[0].length));
+}
+
 export function categoriesOf(clause: string): ClaimCategory[] {
   const out = new Set<ClaimCategory>();
-  if (EXIT.test(clause)) out.add('exit');
+  if (exitClaim(clause)) out.add('exit');
   if (PUSH.test(clause)) out.add('push');
   if (MERGE.test(clause)) out.add('merge');
   if (shasIn(clause).length || COMMIT_WORD.test(clause)) out.add('commit');
   const count = COUNT.test(clause);
-  if ((count && (TEST_NOUN.test(clause) || TEST_VERB.test(clause))) || (TEST_NOUN.test(clause) && TEST_VERB.test(clause)) || SAME.test(clause)) out.add('test');
+  const metric = count && METRIC.test(clause);
+  const countClaim = count && !metric && (TEST_VERB.test(clause) || /\b\d[\d,]* tests?\b|\btests?\)/i.test(clause));
+  const pronounPass = PRONOUN_PASS.test(clause) && /\bpass/i.test(clause);
+  if (countClaim || (!metric && TEST_NOUN.test(clause) && TEST_VERB.test(clause)) || SAME.test(clause) || pronounPass) out.add('test');
   if (FIX.test(clause)) out.add('fix');
   const prose = clause.replace(/`[^`]*`|\[[^\]]*\]\([^)]*\)|\S*[/.]\S*/g, ' ');
-  if ((FILE_VERB.test(prose) && pathsIn(clause).length) || KNOWN_PLACES.some(([re]) => re.test(clause))) out.add('file');
+  const fileVerb = FILE_VERB.test(prose.replace(FILE_PRESENT, ' ')) || (FILE_PRESENT.test(prose) && (/\bnow\b/i.test(prose) || FIRST_PERSON.test(prose)));
+  if ((fileVerb && pathsIn(clause).length) || KNOWN_PLACES.some(([re]) => re.test(clause))) out.add('file');
   return CATEGORY_ORDER.filter((c) => out.has(c));
 }
 
@@ -127,19 +154,54 @@ export interface Clause extends ClaimSpan {
   sentence: string;
 }
 
+/** spans that quote rather than state: fenced code blocks and the value of a "metrics" object (a quoted runs.jsonl line) */
+function quotedSpans(text: string): Array<[number, number]> {
+  const out: Array<[number, number]> = [];
+  for (const m of text.matchAll(/```[\s\S]*?(?:```|$)/g)) out.push([m.index!, m.index! + m[0].length]);
+  for (const m of text.matchAll(/\\*"metrics\\*"\s*:\s*\{/g)) {
+    let depth = 0;
+    let i = m.index! + m[0].length - 1;
+    for (; i < text.length; i++) {
+      if (text[i] === '{') depth++;
+      else if (text[i] === '}' && --depth === 0) break;
+    }
+    out.push([m.index!, i + 1]);
+  }
+  return out;
+}
+/** line spans of bullets under an intro that reports someone else's findings or lists bugs ('It also confirmed:') */
+function attributedLists(text: string): Array<[number, number]> {
+  const out: Array<[number, number]> = [];
+  let at = 0;
+  let intro = '';
+  for (const line of text.split('\n')) {
+    const end = at + line.length;
+    if (BULLET.test(line)) {
+      if (LIST_INTRO.test(intro) && !/\b(?:I|we|my|our)\b/.test(line)) out.push([at, end]);
+    } else if (line.trim()) intro = line;
+    at = end + 1;
+  }
+  return out;
+}
+
 /** every checkable clause, in text order */
 export function clauses(text: string): Clause[] {
   const out: Clause[] = [];
+  const skip = [...quotedSpans(text), ...attributedLists(text)];
+  const skipped = (i: number): boolean => skip.some(([a, b]) => i >= a && i < b);
   for (const sp of cut(text, 0, text.length, SENTENCE)) {
     const s = trim(text, sp);
     if (s.end - s.start < 4) continue;
     const sentence = text.slice(s.start, s.end);
     const question = /\?\s*$/.test(text.slice(sp.start, sp.end).trim());
+    let conditional = false; // after 'if …,' the rest of the sentence states the condition's effect, not a result
     for (const cp of cut(text, s.start, s.end, CLAUSE)) {
       const c = trim(text, cp);
       const t = text.slice(c.start, c.end);
-      if (t.length < 4 || question) continue;
-      if (NOT_DONE.test(t) || OTHERS.test(t) || LEDGER.test(t)) continue;
+      const afterIf = conditional && !FIRST_PERSON.test(t);
+      if (/\b(?:if|unless|whenever)\b/i.test(t)) conditional = true;
+      if (t.length < 4 || question || afterIf || skipped(c.start)) continue;
+      if (NOT_DONE.test(t) || (OTHERS.test(t) && !PRONOUN_PASS.test(t)) || LEDGER.test(t) || DESCRIBES.test(t)) continue;
       const cats = categoriesOf(t);
       if (!cats.length) continue;
       out.push({ text: t, start: c.start, end: c.end, category: cats[0]!, categories: cats, sentence });

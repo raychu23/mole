@@ -1,5 +1,5 @@
 // `mole claims <run> [--at ROW] [--json]`: a light entry (no LangGraph / TypeScript compiler load), so the Stop hook can
-// run it on every stop. agentCli('claims') calls the same function.
+// run it on every stop. The only route: packages/daemon/src/cli.ts imports this file directly (agentCli has no 'claims').
 import type { Skipped } from '../types.js';
 import { claims, formatClaims } from './index.js';
 

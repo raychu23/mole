@@ -17,7 +17,7 @@ describe('not claims: metric values, behaviour and bug descriptions, quoted log 
   const none: Array<[string, string]> = [
     ['H01 metric value', 'T12 past fixes: M2 is 5/5 on the five test cases and 1 on your planted case (target ≥4/5 and 1).'],
     ['H04 metric value', "- M2 (finds the past fix behind the lines a change edits): 5/5 on the test cases, and 1 on Raymond's planted case."],
-    ['H06 metric value', '1. T16 (traces, runs, CI): merged, met. Every `mole check` stage is traced (9 of 9), MLflow holds 34 runs for 34 log lines.'],
+    ['H06 metric value', 'Every `mole check` stage is traced (9 of 9), MLflow holds 34 runs for 34 log lines.'],
     ['C04 eval score', '- **Startup test:** replacing AGENTS.md\'s 48-line block with a one-line rule kept the full score (18/18) with 11.5% less startup text.'],
     ['C05 eval score', 'AGENTS.md went from 67 lines to 21 and still scored 18/18 on the startup test.'],
     ['metric recall', 'M16 is at target: recall 9/10, false flags 0/110.'],

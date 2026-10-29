@@ -5,6 +5,7 @@
 // It informs and never blocks Claude from stopping. MOLE_STOP_CONTINUE=1 also hands the questions to Claude as
 // hookSpecificOutput.additionalContext (which makes Claude continue once; skipped when stop_hook_active is true).
 // Output: https://code.claude.com/docs/en/hooks#stop-decision-control . Nothing to say = no output, exit 0.
+import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -46,9 +47,16 @@ export function format(r, label) {
 }
 
 // T24: one line per claim in the session's last answer that its own tool calls don't back (unsupported / contradicted)
+// Quiet and short: an unknown session (`mole claims` exits 1), a timeout (10 s) or a crash prints nothing, every stop.
 function claimLines(mole, root, sessionId) {
   if (!sessionId) return [];
-  const r = moleJson(mole, root, ['claims', String(sessionId), '--json']);
+  let r;
+  try {
+    const out = execFileSync(mole[0], [...mole[1], 'claims', String(sessionId), '--json', '--root', root], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 10_000, maxBuffer: 64 * 1024 * 1024 });
+    r = JSON.parse(out);
+  } catch {
+    return [];
+  }
   return (r?.claims ?? []).filter((c) => c.verdict !== 'supported').map((c) => `mole claims: ${c.verdict}: "${one(c.text, 200)}" (${one(c.why, 160)})`);
 }
 

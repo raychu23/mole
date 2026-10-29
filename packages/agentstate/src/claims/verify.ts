@@ -165,6 +165,13 @@ function commandHint(clause: string): string | undefined {
   return v.split(/\s*&&\s*/)[0]!.toLowerCase();
 }
 const has = (e: Ev, w: string): boolean => e.input.toLowerCase().includes(w);
+// a run in a throwaway copy (/tmp, the OS temp dir, mktemp) outside the run's own directory, e.g. the new tests run on the
+// old code on purpose: it does not speak for the branch when the run also tested the branch itself
+const SCRATCH = /(?:^|[\s="'(])(?:\/private)?\/tmp\/|\/var\/folders\/|\$\{?TMPDIR\b|\bmktemp\b/;
+const scratch = (e: Ev, cwd: string | null | undefined): boolean => {
+  const c = e.command ?? '';
+  return SCRATCH.test(c) && !(cwd && c.includes(cwd));
+};
 const FULL_CMD = /unittest\s+discover|\bpytest\b(?![^|;&\n]*\.py)|\bnpm (?:run )?(?:test|check)\b|\bvitest run\b(?![^|;&\n]*\.test\.)|go test \.\/\.\.\.|cargo test|make (?:test|check)\b|run-check|check-task|\bledger\b[^|;&\n]*\bmove\b/;
 /** a whole-suite run: some segment of the command runs a suite runner without naming a test file / filter */
 function fullRun(command: string): boolean {
@@ -215,7 +222,7 @@ function showsCount(out0: string, n: number, m: number | null): boolean {
 }
 const hasCount = (out: string): boolean => /\b\d+ (?:passed|failed)\b|\bRan \d+ tests?\b|\b\d+ pass\b|\bTests?\s+\d/i.test(out);
 
-function checkTest(cl: Clause, evs: Ev[]): Result {
+function checkTest(cl: Clause, evs: Ev[], cwd?: string | null): Result {
   const t = cl.text;
   const failClaim = /\bfail(?:s|ed|ing)?\b/i.test(t) && !/\b0 fail/i.test(t) && !/\bno fail/i.test(t);
   const full = /\bfull\b[^.]*\b(?:suite|tests?|check)\b|\bwhole suite\b|\bentire suite\b/i.test(t);
@@ -244,6 +251,11 @@ function checkTest(cl: Clause, evs: Ev[]): Result {
     }
   }
   if (!rel.length) return R('unsupported', cands.length ? 'no check run of this kind in the run' : 'no test or check ran in the run');
+  // 'the earlier ones passed': any matching pass backs it; a later run cannot contradict an earlier result
+  if (!failClaim && /\b(?:earlier|previous(?:ly)?|first)\b|\b(?:without|before) the (?:fix|change)\b/i.test(t)) {
+    const p = [...rel].reverse().find((e) => e.outcome === 'pass' || (!FAILS_OUT.test(e.out) && /\bpass(?:ed)?\b|\bOK\b/i.test(e.out)));
+    return p ? R('supported', 'an earlier matching run passed', [item(p, lineOf(p.out))]) : R('unsupported', 'no matching run passed', [item(rel[rel.length - 1]!, lineOf(rel[rel.length - 1]!.out))]);
+  }
   const latest = rel[rel.length - 1]!;
   if (c && !failClaim) {
     for (let i = rel.length - 1; i >= 0; i--) if (showsCount(rel[i]!.out, c.n, c.m)) return R('supported', `a run shows ${c.m && c.m !== c.n ? `${c.n} of ${c.m}` : c.n} passing`, [item(rel[i]!, lineOf(rel[i]!.out, new RegExp(`\\b${c.n}\\b`)))]);
@@ -266,8 +278,10 @@ function checkTest(cl: Clause, evs: Ev[]): Result {
     if (bad.length && !ok.length) return R('contradicted', 'the run reports it failing', [item(e, short(bad[0]!, 140))]);
     if (ok.length || bad.length) break;
   }
+  const branchRun = rel.some((e) => !scratch(e, cwd));
   for (let i = rel.length - 1; i >= 0; i--) {
     const e = rel[i]!;
+    if (e.outcome === 'fail' && branchRun && scratch(e, cwd)) continue; // a deliberate failing run in a throwaway copy
     if (e.outcome === 'pass') {
       const later = editedAfter(e, evs);
       return later
@@ -429,7 +443,7 @@ export function checkClause(cl: Clause, text: string, raw: RawRun, evs: Ev[]): C
   const results: Array<[ClaimCategory, Result]> = cl.categories.map((cat) => [
     cat,
     cat === 'test'
-      ? checkTest(cl, evs)
+      ? checkTest(cl, evs, raw.summary.cwd)
       : cat === 'exit'
         ? checkExit(cl, text, evs)
         : cat === 'commit'
