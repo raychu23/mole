@@ -10,6 +10,7 @@
     "bench": "node dist/bench/m6.js && node dist/bench/m7.js"
   },
   "dependencies": {
+    "@mole/indexer": "*",
     "@mole/memory": "*"
   }
 }

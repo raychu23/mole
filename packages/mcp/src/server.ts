@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { formatNeighborhood } from '@mole/core';
 import { ensureDaemon, MoleClient, type EnsureOptions } from '@mole/daemon';
 import { defaultSources, tried } from '@mole/agentstate';
+import { registerCollisionsTool } from './collisions-tool.js';
 
 export interface MoleMcpOptions extends EnsureOptions {
   /** Do not spawn a daemon if none runs (tests). */
@@ -48,5 +49,6 @@ export function createServer(opts: MoleMcpOptions): McpServer {
     },
     async ({ target }) => ({ content: [{ type: 'text' as const, text: JSON.stringify(tried(target, { ...defaultSources(), root: opts.root }), null, 2) }] }),
   );
+  registerCollisionsTool(server, opts); // T21: parallel-agent collisions
   return server;
 }
