@@ -8,4 +8,5 @@ ledger (newest last, nothing deleted)
     2026-10-29 05:44      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T19-rename-proof-anchors · branch ledger/t19-rename-proof-anchors · base 1dc06c4
     2026-10-29 06:43      running → blocked      cause: M9 NOT MET after the D33 'try options' round (builder 3): held-out key 2 built first (honojs/hono src, bac1cf7, 21 re-anchors / 10 stay), option 1 (2e62f8e) frozen 69.4% wrong 0 · held-out-1 77.3% wrong 1 · held-o
     2026-10-29 10:04      blocked → ready      Raymond 10-29 10:04 confirmed the D33 fallback: merge the 0-wrong body-only version at its real number (frozen 88.9% 32/36, 0 wrong), fresh review, then integrate, a10 adds a reworded resume line below the existing one. 
+    2026-10-29 10:07      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T19-rename-proof-anchors · branch ledger/t19-rename-proof-anchors · base 0032278
 ```
