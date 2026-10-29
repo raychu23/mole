@@ -1,21 +1,22 @@
 ---
-state: ready
+state: integrated
 owner: mole-builder-4
 repo: /Users/a1/Desktop/CS Code/Project/Mole
-branch:
-worktree:
-base:
-reviewer:
-updated: 2026-10-29 05:03
-status: ledger ready
-next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+branch: ledger/t29-decision-graph-core
+worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T29-decision-graph-core
+base: 491dd7e
+reviewer: t29-reviewer-r2 (fresh subagent deleg_a14ad4d1; r1 deleg_c3935487)
+updated: 2026-10-29 07:33
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
+claimed: 2026-10-29 05:08
 ---
 ```notes
 T29-decision-graph-core      ledger task (rules.md §3 code features)      project tasks
     goal                    The decision graph behind the code: .mole/tenets.md, .mole/decisions/*.md (MADR front matter: status, door, traces_to, scope paths/symbols, Kruchten relations, overridden_by, evidence, approver, source), .mole/intent/<folder>.md and .mole/incidents/*.md loaded into the context graph; citator-style flags computed by code (red superseded or orphaned; yellow conflicting proposal, scope changed since the approver last confirmed, evidence missing or failing, or a parent tenet/decision yellow/red; green accepted + anchored + evidence passing; grey proposed) and propagated along traces_to/overrides/cites; build_graph.py on decisions.jsonl is the working sample
     done-when               1) mole decisions [--json] lists every decision with flag + reasons + file:line; 2) M21 bench, key labeled before the code: 20 planted changes across Mole (.mole records for the daemon idle rules + 5 others) and two public decision-record folders (backstage/backstage docs/architecture-decisions, alphagov/govuk-aws docs/architecture/decisions) → flag recall >= 90%, false flags <= 10%; 3) flag recompute for 1,000 decisions after a commit <= 1 s, 0 model calls; 4) failure case: a record with a scope path that no longer exists → red 'orphaned', never silently green; 5) npm run check passes
-    status                  2026-10-29 ready      owner mole-builder-4
-    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+    status                  2026-10-29 integrated      merge bc56382 · combined checks exit 0 · note: npm run check && node packages/decisions/dist/bench/m21.js on main bc5638
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    code
     boundary                packages/decisions/** (new), .mole/ (Mole's own tenets, decisions, intent records: the bench fixtures), packages/daemon/src/cli.ts (register the subcommand with one import + one call only), packages/mcp/src (new mole_decisions tool only), tasks/T29-decision-graph-core/**

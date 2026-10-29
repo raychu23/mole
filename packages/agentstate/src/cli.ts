@@ -1,6 +1,6 @@
 // `mole runs | run <id> | tried <run|file#Symbol> | agents <file[#Symbol]>` (registered in packages/daemon/src/cli.ts).
 // --json prints the library result unchanged; without it a short human view. Missing sources are listed, exit 0.
-import { agents, getRun, listRuns, tried } from './index.js';
+import { agents, collisions, formatCollisions, getRun, listRuns, tried } from './index.js';
 import { exportLangGraph } from './langgraph.js';
 import { defaultSources } from './sources.js';
 import type { RunGraph, Skipped, Step, TriedItem } from './types.js';
@@ -8,6 +8,7 @@ import type { RunGraph, Skipped, Step, TriedItem } from './types.js';
 const USAGE =
   'usage: mole runs [--all] [--json] | mole run <id> [--json] [--export langgraph <file.sqlite>] | mole tried <run | file#Symbol> [--json] | mole agents <file[#Symbol]> [--json]   [--root DIR]\n' +
   '  --export langgraph <file.sqlite>: write the run as a LangGraph thread (one checkpoint per step) with LangGraph\'s SqliteSaver; the file quotes commands, keep it local\n' +
+  '       mole collisions [--json] [--run ID] [--since HOURS (default 24) | --all] [--window MIN (default 15)]: parallel runs whose functions meet\n' +
   '  sources: MOLE_HERMES_DB, MOLE_CLAUDE_DIR, MOLE_CODEX_DIR (default ~/.hermes/state.db, ~/.claude/projects, ~/.codex/sessions), opened read-only';
 
 const short = (s: string, n: number): string => {
@@ -77,6 +78,19 @@ export async function agentCli(cmd: string, pos: string[], flags: Record<string,
         ...skippedLines(r.skipped),
       ].join('\n'),
     );
+    return 0;
+  }
+  if (cmd === 'collisions') {
+    const num = (v: string | true | undefined): number | undefined => (typeof v === 'string' && Number.isFinite(Number(v)) ? Number(v) : undefined);
+    const hours = num(flags.since);
+    const r = collisions({
+      ...src,
+      root,
+      run: typeof flags.run === 'string' ? flags.run : undefined,
+      since: flags.all === true ? 0 : hours !== undefined ? Date.now() - hours * 3600_000 : undefined,
+      windowMinutes: num(flags.window),
+    });
+    print(r, () => formatCollisions(r));
     return 0;
   }
   const target = pos[0];

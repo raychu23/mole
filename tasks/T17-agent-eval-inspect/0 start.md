@@ -1,21 +1,22 @@
 ---
-state: ready
+state: integrated
 owner: mole-builder-2 (Hermes chat)
 repo: /Users/a1/Desktop/CS Code/Project/Mole
-branch:
-worktree:
-base:
-reviewer:
-updated: 2026-10-29 01:06
-status: ledger ready
-next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+branch: ledger/t17-agent-eval-inspect
+worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T17-agent-eval-inspect
+base: d53d3bd
+reviewer: reviewer-T17-r1
+updated: 2026-10-29 06:57
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
+claimed: 2026-10-29 05:44
 ---
 ```notes
 T17-agent-eval-inspect      ledger task (rules.md §3 code features)      project tasks
     goal                    End-to-end agent eval: with Inspect AI + Inspect SWE's claude_code() in a Docker sandbox, measure whether Claude Code with Mole's hooks (T15) repeats a planted regression less often than without, on the B1/B3 cases
     done-when               1) an Inspect task set built from B1 + B3 (task prompt that tempts the regression + a scorer that runs the guarding test); 2) two arms (no Mole · Mole hooks + MCP) × n runs each, n set before running; 3) report: regression rate per arm with a 95% interval, tokens and time per run, in tasks/T17-agent-eval-inspect/4 log/; 4) failure case: sandbox can't reach the model → clear error, no partial score; 5) needs Raymond's go on API spend before the full run
-    status                  2026-10-29 ready      owner mole-builder-2 (Hermes chat)
-    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+    status                  2026-10-29 integrated      merge bfd34fa · combined checks exit 0 · note: python3 -m pytest evals/inspect/tests -q && npm run check on main bfd34fa
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    code
     boundary                evals/inspect/** (new, Python), tasks/T17-agent-eval-inspect/**

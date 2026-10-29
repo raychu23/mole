@@ -14,7 +14,13 @@
       "path": "packages/indexer"
     },
     {
+      "path": "packages/flows"
+    },
+    {
       "path": "packages/memory"
+    },
+    {
+      "path": "packages/decisions"
     },
     {
       "path": "packages/questions"
