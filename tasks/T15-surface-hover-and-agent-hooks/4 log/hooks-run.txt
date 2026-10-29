@@ -1,0 +1,59 @@
+# fixture: 6 commits in a scratch repo; plugin ~/Desktop/CS Code/Project/Mole-worktrees/T15-surface-hover-and-agent-hooks/plugins/claude-code
+ee6b287 b returns two
+7fb1db9 add b + notes
+d545743 fix: negative input returned a negative double
+d6685fe add a
+9b9fe84 note on c
+dc4612f add c
+
+## 1. SessionStart (source startup)
+$ echo '{"session_id":"s1","cwd":"~/.hermes/cache/scratch/mole-t15-hooks/repo","hook_event_name":"SessionStart","source":"startup"}' | node plugins/claude-code/scripts/session-start.mjs
+exit=0
+{
+ "hookSpecificOutput": {
+  "hookEventName": "SessionStart",
+  "additionalContext": "Mole notes on the files in play (2 of 3 notes in .mole/notes; files in play = uncommitted + last 3 commits). These are the team's own notes on these symbols:\n- [fresh] src/a.ts#a line 1: NOTE-A callers sum these, keep 0 for negatives  (.mole/notes/src-a.ts-a.md, Raymond Chu 2026-10-29)\n- [STALE (stale: the code changed since this note was written; verify before relying on it)] src/b.ts#b line 1: NOTE-B returns one on purpose  (.mole/notes/src-b.ts-b.md, Raymond Chu 2026-10-29)"
+ }
+}
+
+## 2. the session edits the fix line (if (x < 0) -> if (x <= 0)); Stop
+$ git diff
+diff --git a/src/a.ts b/src/a.ts
+index 3ee8d40..140b0ea 100644
+--- a/src/a.ts
++++ b/src/a.ts
+@@ -1,5 +1,5 @@
+ export function a(x: number) {
+   // negative input must give 0: the caller sums these
+-  if (x < 0) return 0;
++  if (x <= 0) return 0;
+   return x * 2;
+ }
+
+$ echo '{"session_id":"s1","cwd":"~/.hermes/cache/scratch/mole-t15-hooks/repo","hook_event_name":"Stop","stop_hook_active":false}' | node plugins/claude-code/scripts/stop.mjs
+exit=0
+{
+ "systemMessage": "Mole check on the uncommitted change (working tree vs HEAD): 1 edited hunk, 1 on lines a past fix wrote.\nquestions (2):\n  1. [past-fix] You edit src/a.ts:3, lines d545743 \"fix: negative input returned a negative double\" wrote as a fix (why: negative input must give 0: the caller sums these…). Does your change keep that fix working? Its guarding test: test/a.test.ts » \"negative input gives 0\". (source: d545743 src/a.ts:3)\n     source: d545743 src/a.ts:3\n  2. [note] Your note on src/a.ts#a says: \"NOTE-A callers sum these, keep 0 for negatives\". This change edits src/a.ts:3 inside it; does the note still hold, or should it change with the code? (source: .mole/notes/src-a.ts-a.md:10)\n     source: .mole/notes/src-a.ts-a.md:10\npast fixes on the edited lines:\n  src/a.ts:3\n    d545743 fix: negative input returned a negative double\n      why: negative input must give 0: the caller sums these (src/a.ts:2)\n      tests: test/a.test.ts (negative input gives 0)\n      source: d545743 src/a.ts:3"
+}
+
+## 3. the session commits its edit; Stop still checks it (base = HEAD at SessionStart)
+$ echo '{"session_id":"s1","cwd":"~/.hermes/cache/scratch/mole-t15-hooks/repo","hook_event_name":"Stop","stop_hook_active":false}' | node plugins/claude-code/scripts/stop.mjs
+exit=0
+{
+ "systemMessage": "Mole check on this session's diff (since ee6b287, commits + uncommitted): 1 edited hunk, 1 on lines a past fix wrote.\nquestions (2):\n  1. [past-fix] You edit src/a.ts:3, lines d545743 \"fix: negative input returned a negative double\" wrote as a fix (why: negative input must give 0: the caller sums these…). Does your change keep that fix working? Its guarding test: test/a.test.ts » \"negative input gives 0\". (source: d545743 src/a.ts:3)\n     source: d545743 src/a.ts:3\n  2. [note] Your note on src/a.ts#a says: \"NOTE-A callers sum these, keep 0 for negatives\". This change edits src/a.ts:3 inside it; does the note still hold, or should it change with the code? (source: .mole/notes/src-a.ts-a.md:10)\n     source: .mole/notes/src-a.ts-a.md:10\npast fixes on the edited lines:\n  src/a.ts:3\n    d545743 fix: negative input returned a negative double\n      why: negative input must give 0: the caller sums these (src/a.ts:2)\n      tests: test/a.test.ts (negative input gives 0)\n      source: d545743 src/a.ts:3"
+}
+
+## 4. a new session that changes nothing: Stop is silent
+$ echo '{"session_id":"s2","cwd":"~/.hermes/cache/scratch/mole-t15-hooks/repo","hook_event_name":"SessionStart","source":"startup"}' | node plugins/claude-code/scripts/session-start.mjs
+exit=0
+{
+ "hookSpecificOutput": {
+  "hookEventName": "SessionStart",
+  "additionalContext": "Mole notes on the files in play (2 of 3 notes in .mole/notes; files in play = uncommitted + last 3 commits). These are the team's own notes on these symbols:\n- [STALE (stale: the code changed since this note was written; verify before relying on it)] src/a.ts#a line 1: NOTE-A callers sum these, keep 0 for negatives  (.mole/notes/src-a.ts-a.md, Raymond Chu 2026-10-29)\n- [STALE (stale: the code changed since this note was written; verify before relying on it)] src/b.ts#b line 1: NOTE-B returns one on purpose  (.mole/notes/src-b.ts-b.md, Raymond Chu 2026-10-29)"
+ }
+}
+
+$ echo '{"session_id":"s2","cwd":"~/.hermes/cache/scratch/mole-t15-hooks/repo","hook_event_name":"Stop","stop_hook_active":false}' | node plugins/claude-code/scripts/stop.mjs
+exit=0
+(no output)
+
