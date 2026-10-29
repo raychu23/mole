@@ -20,7 +20,12 @@ runs:
       shell: bash
       run: |
         npm ci --no-audit --no-fund
-        npx tsc -b packages/daemon
+        npx tsc -b
+        # review (fresh reviewer, this round): `tsc -b packages/daemon` alone fails on a clean checkout because
+        # packages/daemon/tsconfig.json has no project reference to packages/flows, which packages/daemon/src/cli.ts
+        # imports dynamically at runtime for the pre-existing `flows` subcommand (T28, unrelated to T32) -- `dist/`
+        # is gitignored so nothing pre-builds it. `tsc -b` with no path builds the whole referenced graph (the same
+        # command as the repo's own `npm run build`), so every runtime-imported workspace package is actually built.
 
     - name: mole pr-check
       shell: bash
