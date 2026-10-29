@@ -9,4 +9,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 07:47      running → submitted      report: review-1 fixes: P1-1 fixed (name pattern from the regex-escaped titles array, selected-but-not-run → '✗ NOT RUN', exit 1, new red tests 3e62e1c review-1.test.ts → fix ff21589), P2-3 nearest guarding test by impor
     2026-10-29 07:47      checks ran: npm run check && node packages/verify/dist/bench/m14.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T22-hand-back-test-selection → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 08:10      submitted → running      changes requested: reviewer-T22-r2 (4 log/review-2.md @4810ae7): review-1 P1-1 fixed, NEW P1-A: a selected it.skip/it.todo test is reported '✗ NOT RUN (error)' and exits 1 on a correct change (repro: no-op refactor of ex
+    2026-10-29 09:40      running → submitted      report: review-2 fixes: red c7b74b5 (P1-A, P2-A/B/D) → 92270ee + f067661: source-skipped selected tests (skip/todo/describe.skip/skipIf/runIf/ctx.skip) reported 'skipped by the test file', not an error, non-literal title
+    2026-10-29 09:40      checks ran: npm run check && node packages/verify/dist/bench/m14.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T22-hand-back-test-selection → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
