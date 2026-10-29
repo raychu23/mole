@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 01:49      checks ran: npm run check && node packages/agentstate/dist/bench/m10.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T20-langgraph-checkpoint-export → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 01:57      submitted → verified      reviewer reviewer-T20-r1 · findings: P0 none, P1 none. P2: (1) re-export deleteThread silently drops user forks in that thread, (2) relies on protected SqliteSaver.setup() via cast, (3) key is a 15-run sample (reviewer p
     2026-10-29 01:57      checks ran: npm run check && node packages/agentstate/dist/bench/m10.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T20-langgraph-checkpoint-export → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 02:29      verified → integrated      merge b2e2851 · combined checks exit 0 · note: npm run check && node packages/agentstate/dist/bench/m10.js on main b2e2851 → 150/150, M10 round-trip 100% (15/15), fork 3/3, empty 2/2
+    2026-10-29 02:29      combined checks ran: npm run check && node packages/agentstate/dist/bench/m10.js in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```

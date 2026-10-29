@@ -1,22 +1,22 @@
 ---
-state: verified
+state: integrated
 owner: mole-builder-2 (Hermes chat)
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t20-langgraph-checkpoint-export
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T20-langgraph-checkpoint-export
 base: 24cf82c
 reviewer: reviewer-T20-r1
-updated: 2026-10-29 01:57
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+updated: 2026-10-29 02:29
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-10-29 01:37
 ---
 ```notes
 T20-langgraph-checkpoint-export      ledger task (rules.md §3 code features)      project tasks
     goal                    Export the agent runs T18 reconstructs as real LangGraph checkpoints, written with LangGraph.js's SQLite checkpointer (@langchain/langgraph-checkpoint-sqlite), so any run can be opened, replayed or forked with LangGraph's own tooling (getStateHistory, time travel, LangGraph Studio) and compared across runs
     done-when               1) mole run <id> --export langgraph <file.sqlite> writes one thread per run, one checkpoint per step, parent links, values = {context version, files read, tried, changed}; 2) M10 round-trip: for every run in the B5 sample, LangGraph's getStateHistory on the exported file returns the same steps in the same order with equal values (100%); 3) a fork test: fork from a mid-run checkpoint with LangGraph's API works on the exported file; 4) failure case: a run with 0 steps exports an empty thread with a note, no crash; 5) npm run check passes
-    status                  2026-10-29 verified      reviewer reviewer-T20-r1 · findings: P0 none, P1 none. P2: (1) re-export deleteThread silently drops user forks in that
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-10-29 integrated      merge b2e2851 · combined checks exit 0 · note: npm run check && node packages/agentstate/dist/bench/m10.js on main b2e28
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    code
     boundary                packages/agentstate/** (export module only), package.json workspace deps (@langchain/langgraph, @langchain/langgraph-checkpoint-sqlite), tasks/T20-langgraph-checkpoint-export/**
