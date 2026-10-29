@@ -70,6 +70,32 @@
     "M12",
     "M13"
    ]
+  },
+  {
+   "id": "E7",
+   "goal": "verify at the hand-back (3C1 'verificatn: sure thing u tell it to do actually done'): the tests that matter run, an agent's claims are checked against its transcript, one verdict",
+   "measured_by": [
+    "M14",
+    "M16",
+    "M17"
+   ]
+  },
+  {
+   "id": "E8",
+   "goal": "the decisions behind the code (D31, his 3C1 268/301/652/676): records with citator flags, rules that cite the why, on the file tree, in one team check",
+   "measured_by": [
+    "M19",
+    "M21",
+    "M22",
+    "M24"
+   ]
+  },
+  {
+   "id": "E9",
+   "goal": "what actually runs: runtime call edges from tests where the static graph is blind",
+   "measured_by": [
+    "M20"
+   ]
   }
  ],
  "metrics": [
@@ -156,6 +182,62 @@
    "how": "every mole check stage emits an OpenTelemetry span (GenAI names where they apply); MLflow runs = runs.jsonl lines; CI fails when a frozen key changes",
    "target": "100% stage coverage, counts equal, CI red on a key edit and green otherwise",
    "task": "T16"
+  },
+  {
+   "id": "M14",
+   "name": "hand-back test selection",
+   "how": "10 planted regressions in Mole + Excalidraw, key written before the code; select by past-fix lineage (T12) + call-graph reachability, run with vitest",
+   "target": "catches >= 9 of 10 while running <= 1/3 of the tests that transitively reach the change; baselines 'run all' and 'run none' (Meta predictive test selection: >99.9% of regressions at 1/3 of tests)",
+   "task": "T22"
+  },
+  {
+   "id": "M16",
+   "name": "agent claim check",
+   "how": "40 final answers from Hermes + Claude Code sessions, labeled before the code; each claim → evidence (tool call id, exit code, commit) → supported / unsupported / contradicted; deterministic matchers",
+   "target": "recall >= 90% of unsupported/contradicted claims, false flags <= 10%",
+   "task": "T24"
+  },
+  {
+   "id": "M17",
+   "name": "hand-back verify gate",
+   "how": "20 recorded hand-backs (Mole builder history replay + 6 planted bad ones), truth = a later fix commit, failing CI or a planted defect, labeled before the code",
+   "target": "verdict agrees >= 90%, 0 'verified' on a planted defect, gate p95 <= 20 s",
+   "task": "T25"
+  },
+  {
+   "id": "M19",
+   "name": "decisions as rules",
+   "how": "10 planted violations across Mole + Excalidraw; decision front matter 'rules:' compiled to dependency-cruiser + call rules",
+   "target": "10/10 caught, each citing its decision; 0 false positives on Mole's last 13 changes",
+   "task": "T27"
+  },
+  {
+   "id": "M20",
+   "name": "runtime flows from tests",
+   "how": "50 call edges sampled from Mole + Excalidraw, half dynamic, truth from manual trace, labeled before the code",
+   "target": "recover >= 80% of the dynamic edges the static graph misses, 0 invented edges, test overhead <= 2x",
+   "task": "T28"
+  },
+  {
+   "id": "M21",
+   "name": "decision graph flags",
+   "how": "20 planted changes across Mole .mole records + backstage/backstage and alphagov/govuk-aws decision folders, key labeled before the code; citator flags computed by code",
+   "target": "flag recall >= 90%, false flags <= 10%, recompute 1,000 decisions <= 1 s, 0 model calls",
+   "task": "T29"
+  },
+  {
+   "id": "M22",
+   "name": "annotated file tree",
+   "how": "decorations + intent cards; proxy tonight: 5 'why' questions about an unfamiliar folder answered by fresh subagents with vs without the tree's output (key before), 3 runs each; the 3+ junior study waits for people (D7)",
+   "target": "proxy: more correct answers with the tree than without; decorations p95 <= 50 ms per folder; junior study: time to 5 correct answers",
+   "task": "T30"
+  },
+  {
+   "id": "M24",
+   "name": "team PR check (phase A)",
+   "how": "30 replayed merged PRs of 2 public repos with CODEOWNERS, key labeled before code: which records/notes/owners each PR should surface; run locally, never pushed",
+   "target": "precision >= 0.9 and recall >= 0.8 for 'record governs these lines', owners exact, silent when nothing governed",
+   "task": "T32"
   }
  ],
  "benchmarks": [
@@ -271,6 +353,59 @@
     "T15-surface-hover-and-agent-hooks"
    ],
    "why": "A/B: Claude Code with vs without Mole's hooks; harness now, paid run on Raymond's go"
+  },
+  {
+   "task": "T22-hand-back-test-selection",
+   "needs": [],
+   "why": "run the guarding tests of touched past fixes + call-graph-reachable tests at hand-back (D29)"
+  },
+  {
+   "task": "T24-agent-claim-check",
+   "needs": [
+    "T18-agent-states"
+   ],
+   "why": "an agent's 'done' claims vs its own transcript + git (D29, 3C1 'verificatn: sure thing u tell it to do actually done')"
+  },
+  {
+   "task": "T25-hand-back-verify-gate",
+   "needs": [
+    "T22-hand-back-test-selection",
+    "T24-agent-claim-check",
+    "T21-parallel-agent-collisions",
+    "T15-surface-hover-and-agent-hooks"
+   ],
+   "why": "one verdict at the hand-back (D30)"
+  },
+  {
+   "task": "T29-decision-graph-core",
+   "needs": [],
+   "why": "the decision graph + citator flags everything else reads (D31)"
+  },
+  {
+   "task": "T27-decisions-as-rules",
+   "needs": [
+    "T29-decision-graph-core"
+   ],
+   "why": "decision records carry rules compiled to dependency-cruiser; violations cite the why (D30)"
+  },
+  {
+   "task": "T32-team-pr-check",
+   "needs": [
+    "T29-decision-graph-core"
+   ],
+   "why": "team phase A: one local check run with the records, owners and past fixes a change touches (D34)"
+  },
+  {
+   "task": "T30-annotated-file-tree",
+   "needs": [
+    "T29-decision-graph-core"
+   ],
+   "why": "the big picture on the file tree, where you already look (D31, 3C1 'annotating/tree diag overlay on file struct')"
+  },
+  {
+   "task": "T28-runtime-flows-from-tests",
+   "needs": [],
+   "why": "runtime edges from test runs fill the static graph's dynamic gaps (D30)"
   }
  ],
  "checkpoints": [
@@ -308,6 +443,11 @@
    "id": "C7",
    "when": "after T16, T19, T20, T21 (+ T17 harness)",
    "pass": "4 Resume + interview.html shows every target claim either true (with its number) or still open with its task; loop-report.md updated"
+  },
+  {
+   "id": "C8",
+   "when": "overnight 10-29: after T22 T24 T25 T27 T28 T29 T30 T32 + the T19 retry (D33) + T17 harness",
+   "pass": "every metric above at target or its miss logged with the real number; npm run check green on main after the last integration; tasks/loop-report.md block per task; overnight report at context/product-plan/systems/overnight/report.md"
   }
  ],
  "never": [
@@ -320,28 +460,10 @@
  "asked_10_28_2210": "USER: \"huh what the fuck. werent we supposed to include as part of the observe and verify aspects of the project include stuff like langraph all that agent states as a way to mange context verisoning all that.\"",
  "proposed_next": [
   {
-   "task": "T24-agent-claim-check",
-   "state": "proposed, waits for D29",
-   "metric": "M16",
-   "why": "verify agents' 'done' claims against their transcripts (3C1 line 672); needs T18"
-  },
-  {
-   "task": "T22-hand-back-test-selection",
-   "state": "proposed, waits for D29",
-   "metric": "M14",
-   "why": "run the guarding tests of touched past fixes at hand-back; needs T12 (built) + T15"
-  },
-  {
    "task": "T23-decision-traces-intake",
    "state": "proposed, waits for D29",
    "metric": "M15",
    "why": "decision traces from Slack/meetings/PRs → approved .mole/ records; the one place a model is needed"
-  },
-  {
-   "task": "T25-hand-back-verify-gate",
-   "state": "proposed, waits for D30",
-   "metric": "M17",
-   "why": "one verdict at the hand-back; needs T15, T22, T24, T21"
   },
   {
    "task": "T26-big-picture-view",
@@ -350,40 +472,10 @@
    "why": "meaning map: purpose + risk + your understanding + agent activity; junior test"
   },
   {
-   "task": "T27-decisions-as-rules",
-   "state": "proposed, waits for D30",
-   "metric": "M19",
-   "why": "decisions compiled to dependency-cruiser rules, violations cite the why"
-  },
-  {
-   "task": "T28-runtime-flows-from-tests",
-   "state": "proposed, waits for D30",
-   "metric": "M20",
-   "why": "runtime edges from test runs fill the static graph's dynamic gaps"
-  },
-  {
-   "task": "T29-decision-graph-core",
-   "state": "proposed, waits for D31",
-   "metric": "M21",
-   "why": "the decision graph + citator flags everything else reads"
-  },
-  {
-   "task": "T30-annotated-file-tree",
-   "state": "proposed, waits for D31 (replaces T26)",
-   "metric": "M22",
-   "why": "the big picture on the file tree, where you already look"
-  },
-  {
    "task": "T31-one-on-one-loop-readback",
    "state": "proposed, waits for D31",
    "metric": "M23",
    "why": "the 1:1 problem, measured; read-back = evidence of understanding"
-  },
-  {
-   "task": "T32-team-pr-check",
-   "state": "proposed, waits for D34 (+ T29)",
-   "metric": "M24",
-   "why": "team phase A: one PR check run with the decisions, owners and past fixes a change touches; no server"
   },
   {
    "task": "T33-team-server",
@@ -391,5 +483,6 @@
    "metric": "M25",
    "why": "team phase B: GitHub App + Postgres index rebuilt from git, question routing, remote MCP, outbox, row-level security"
   }
- ]
+ ],
+ "asked_10_29_0501": "now uy sure the agnets stuff fully updated with all this?if not update and if so can you continue with exisintg agents or new agents if needed to finish work also i want another agent dedicated to again further understaning trying out diff tools ineither to be integrated from agentic workflow or similar to som parts of my ideas. get them loaded evaluated, learn info from them etc. heres a part from that agent doing the trials if it helps add mroe info to how to test some tools out: waht were the metrics exactly how did you get them in first palce what is it measuring core do those tools themsleves advwerrtise those epsecialy in recent blogs lets say. and then whats the ucrrent result can you like use tables or something. also what do the results indicate exactly both themselves and larger implciations for usefulness of tools or ideas for my project or stuff to integrate within also ill leaving comupter several hours so just keep running until all tasks done got it loops same metrics vverify make sure stuff changed eval all that loop keep going in seuequence or try options got it"
 }
