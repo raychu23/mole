@@ -67,6 +67,17 @@ results (round 1, 92d6221)
     key label error         E16 (validate -> satisfiesRemoval) labelled not exercised, recorded in every test: see
                             4 log/key-changes.md; outside the denominator either way
 
+rounds 2-3 (900dc0a, same code; docs-only commit)
+    M20                     both 22/22, invented 0, overhead mole 0.89x / 1.16x, excalidraw 1.02x / 0.80x (median of 3)
+                            round 2 bench also flagged "instrumented runs broke tests in excalidraw": run 2 had 5 plain /
+                            7 instrumented failures, all `Test timed out in 5000ms` / "still loading" under load 40-80 in
+                            BOTH modes (the same bring forward / send back tests); runs 1 and 3 were 108/108 in both
+    npm run check           round 2: 26 timeouts across packages (load ~45); round 3: only
+                            agentstate/test/langgraph-export.test.ts "CLI: mole run <id> --export langgraph" (5 s timeout,
+                            7.3 s alone) - the same test fails on the untouched base 5b447f7 (first npm run check of
+                            this task, before any change) and in all 3 rounds -> R3 stop: blocked on a pre-existing,
+                            load-sensitive test outside the boundary (packages/agentstate is not T28's)
+
 risks / gaps
     subprocesses            code run by spawned processes (Mole's CLI/daemon tests, worker threads) is not instrumented:
                             formatRun -> stepLine (E25) stays invisible; a --import loader for child processes is the
