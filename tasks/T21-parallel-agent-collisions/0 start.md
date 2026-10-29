@@ -1,22 +1,22 @@
 ---
-state: verified
+state: integrated
 owner: mole-builder-2 (Hermes chat)
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t21-parallel-agent-collisions
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T21-parallel-agent-collisions
 base: 17d9862
 reviewer: reviewer-T21-r1
-updated: 2026-10-29 02:40
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+updated: 2026-10-29 06:40
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-10-29 01:49
 ---
 ```notes
 T21-parallel-agent-collisions      ledger task (rules.md §3 code features)      project tasks
     goal                    Warn parallel agents (and you) when their work collides: using T18's agent states and the call graph, detect when one agent run edits a function that another live run read, relies on (callers/callees within 2 hops) or also edits, and when a run edits code under one of your notes or decisions; deliver the warning through the MCP tool + the Claude Code hooks from T15 (session start: who else is touching this; stop: what you changed that others depend on)
     done-when               1) mole collisions [--json] lists live-run pairs with the shared functions, the edge path between them, and which run changed what; 2) MCP tool mole_collisions + hook output; 3) M11 bench: a key written before the code over replayed parallel sessions (the two Mole builder chats of 10-28/29 + 6 planted overlap pairs) → recall >= 90%, false alarms <= 10%; 4) no warning when two runs only touch unrelated files; 5) failure case: a run whose transcript is still being written is read up to its last complete step; 6) npm run check passes
-    status                  2026-10-29 verified      reviewer reviewer-T21-r1 · findings: no P0/P1. P2: (1) hop limit unguarded: BFS d<=hops+1 passes vitest 9/9 and M11 (FA
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-10-29 integrated      merge 2e92a98 · combined checks exit 0 · note: npm run check on main 9695ca5 (incl. 2e92a98 T21 merge + key-ruling-3 tes
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    code
     boundary                packages/agentstate/** (collisions module), packages/mcp/src (new tool only), plugins/claude-code/** (hook output only, after T15 lands), tasks/T21-parallel-agent-collisions/**

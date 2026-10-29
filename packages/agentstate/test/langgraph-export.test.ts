@@ -161,5 +161,5 @@ describe('T20 LangGraph export', () => {
     expect(e.stdout + e.stderr).toMatch(/0 steps|no steps|empty/i);
     const bad = spawnSync(process.execPath, ['--no-warnings', cli, 'run', R1, '--export', 'dot', file, '--root', root], { encoding: 'utf8', env });
     expect(bad.status).toBe(2);
-  });
+  }, 30_000); // key-ruling-3 (tasks/T21-parallel-agent-collisions/4 log)
 });

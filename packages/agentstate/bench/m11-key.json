@@ -1,0 +1,785 @@
+{
+ "written": "2026-10-29T02:05:00-05:00",
+ "task": "T21-parallel-agent-collisions",
+ "metric": "M11 parallel-agent collision recall >= 90%, false alarms <= 10%",
+ "definition": {
+  "window": "a run's window = [first complete step, last complete step]; two runs are parallel when a.first <= b.last + N and b.first <= a.last + N, N = 15 minutes",
+  "windowMinutes": 15,
+  "touched": "a run edits a function = an edit step whose edited text lies in that function (innermost function/method; a whole-file write edits every function in the file); a run reads a function = a read step whose line range overlaps it (a whole-file read reads every function in it). Only complete steps count: a tool call without a result yet, or a truncated last JSONL line, is ignored",
+  "collision": "two parallel runs, not ancestor/descendant of each other (a parent and its own subagent = delegation), where one run edits a function f and the other edited or read a function g with f == g, or a directed call chain f -> .. -> g or g -> .. -> f of at most 2 calls edges",
+  "notCollision": "siblings under a common caller, a common callee, 3+ hops, same file but unrelated functions, non-overlapping windows, unrelated files",
+  "hops": 2,
+  "graph": "T1 indexer call graph (calls edges) of the root checkout plus every worktree a compared run worked in, workspace packages @mole/* mapped to their src (cross-package calls), node = repo-relative path#Qualified.name",
+  "note": "also reported (not scored by M11): a run edits a function a .mole/notes note is anchored to"
+ },
+ "scoring": "candidate pairs = every unordered pair of the listed runs (real: real.runs, planted: planted runs); flagged = pairs collisions() reports. recall = flagged pairs labelled collision / pairs labelled collision; false alarms = flagged pairs not labelled collision (labelled not, or unlabelled) / flagged pairs. Real and planted are pooled for the target and also printed apart.",
+ "real": {
+  "source": "hermes ~/.hermes/state.db (read-only), root = the Mole main checkout and its worktrees",
+  "times": "UTC",
+  "runs": [
+   {
+    "id": "local-fc6c6dc0da730236e96ea4a4a86ba43a775068f4fa8a40f086ea5a02682ff5c3",
+    "harness": "hermes",
+    "firstStep": "2026-10-29T02:12:26Z",
+    "lastStep": "2026-10-29T03:54:11Z",
+    "parent": null,
+    "role": "B8 builder chat (T11-T15 orchestrator)"
+   },
+   {
+    "id": "20261028_211534_646a55",
+    "harness": "hermes",
+    "firstStep": "2026-10-29T02:15:38Z",
+    "lastStep": "2026-10-29T02:32:37Z",
+    "parent": "local-fc6c6dc0da730236e96ea4a4a86ba43a775068f4fa8a40f086ea5a02682ff5c3",
+    "role": "T11 builder subagent"
+   },
+   {
+    "id": "20261028_211534_0cfbfb",
+    "harness": "hermes",
+    "firstStep": "2026-10-29T02:15:39Z",
+    "lastStep": "2026-10-29T02:29:55Z",
+    "parent": "local-fc6c6dc0da730236e96ea4a4a86ba43a775068f4fa8a40f086ea5a02682ff5c3",
+    "role": "T12 builder subagent"
+   },
+   {
+    "id": "20261028_220600_39e9f9",
+    "harness": "hermes",
+    "firstStep": "2026-10-29T03:06:05Z",
+    "lastStep": "2026-10-29T03:24:27Z",
+    "parent": "local-fc6c6dc0da730236e96ea4a4a86ba43a775068f4fa8a40f086ea5a02682ff5c3",
+    "role": "T13 builder subagent"
+   },
+   {
+    "id": "20261028_220600_b6f243",
+    "harness": "hermes",
+    "firstStep": "2026-10-29T03:06:04Z",
+    "lastStep": "2026-10-29T03:24:15Z",
+    "parent": "local-fc6c6dc0da730236e96ea4a4a86ba43a775068f4fa8a40f086ea5a02682ff5c3",
+    "role": "T14 builder subagent"
+   },
+   {
+    "id": "20261028_223339_363331",
+    "harness": "hermes",
+    "firstStep": "2026-10-29T03:33:43Z",
+    "lastStep": "2026-10-29T03:43:56Z",
+    "parent": "local-fc6c6dc0da730236e96ea4a4a86ba43a775068f4fa8a40f086ea5a02682ff5c3",
+    "role": "T14 review-1 fixer subagent"
+   },
+   {
+    "id": "20261028_225411_409527",
+    "harness": "hermes",
+    "firstStep": "2026-10-29T03:54:14Z",
+    "lastStep": "2026-10-29T04:10:58Z",
+    "parent": "local-fc6c6dc0da730236e96ea4a4a86ba43a775068f4fa8a40f086ea5a02682ff5c3",
+    "role": "T15 builder subagent"
+   },
+   {
+    "id": "local-39d6ac0751f75d55686b0fbe9056212194b5c52410fd94c2369d8c6703eff27c",
+    "harness": "hermes",
+    "firstStep": "2026-10-29T05:13:20Z",
+    "lastStep": "2026-10-29T06:17:28Z",
+    "parent": null,
+    "role": "T18 agent-states chat (edits itself)"
+   },
+   {
+    "id": "local-a9e70b86cd9a66a4700b99d931a0a1d97a21fc2a4899ced542dee53c8c06e0ae",
+    "harness": "hermes",
+    "firstStep": "2026-10-29T06:11:08Z",
+    "lastStep": null,
+    "parent": null,
+    "role": "builder-2 orchestrator chat (T16/T19/T20/T21), still live; edits no code"
+   },
+   {
+    "id": "20261029_011331_269fbb",
+    "harness": "hermes",
+    "firstStep": "2026-10-29T06:13:34Z",
+    "lastStep": "2026-10-29T06:36:49Z",
+    "parent": "local-a9e70b86cd9a66a4700b99d931a0a1d97a21fc2a4899ced542dee53c8c06e0ae",
+    "role": "T19 builder subagent"
+   },
+   {
+    "id": "20261029_011331_1d49cc",
+    "harness": "hermes",
+    "firstStep": "2026-10-29T06:13:33Z",
+    "lastStep": "2026-10-29T06:31:18Z",
+    "parent": "local-a9e70b86cd9a66a4700b99d931a0a1d97a21fc2a4899ced542dee53c8c06e0ae",
+    "role": "T16 builder subagent"
+   },
+   {
+    "id": "20261029_013813_b9e17d",
+    "harness": "hermes",
+    "firstStep": "2026-10-29T06:38:16Z",
+    "lastStep": "2026-10-29T06:48:44Z",
+    "parent": "local-a9e70b86cd9a66a4700b99d931a0a1d97a21fc2a4899ced542dee53c8c06e0ae",
+    "role": "T20 builder subagent"
+   }
+  ],
+  "pairs": [
+   {
+    "a": "20261028_211534_646a55",
+    "b": "20261028_211534_0cfbfb",
+    "label": "collision",
+    "reason": "windows overlap (02:15-02:32Z both); 0cfbfb edited packages/daemon/src/cli.ts#main (patch 02:25Z) and main calls packages/memory/src/notes.ts#addNote / #memory, which 646a55 wrote (notes.ts write 02:27Z); the merge 7b47c51 \"daemon cli/deps combine T11 note/memory + T12 check\" had to reconcile them",
+    "evidence": {
+     "shared": [],
+     "path": [
+      "packages/daemon/src/cli.ts#main -> packages/memory/src/notes.ts#addNote"
+     ],
+     "commits": [
+      "32d033a",
+      "ddba63d",
+      "7b47c51"
+     ]
+    }
+   },
+   {
+    "a": "20261028_220600_39e9f9",
+    "b": "20261028_220600_b6f243",
+    "label": "collision",
+    "reason": "windows overlap (03:06-03:24Z both); both edited packages/daemon/src/cli.ts#main (39e9f9 patch 03:09Z, b6f243 patch 03:17Z); T13 89f015b and T14 8b8f725 both change the CLI dispatch",
+    "evidence": {
+     "shared": [
+      "packages/daemon/src/cli.ts#main"
+     ],
+     "path": [],
+     "commits": [
+      "89f015b",
+      "8b8f725"
+     ]
+    }
+   },
+   {
+    "a": "20261028_220600_b6f243",
+    "b": "20261028_223339_363331",
+    "label": "collision",
+    "reason": "b6f243 last step 03:24Z, 363331 first step 03:33Z (9 min < N=15); b6f243 wrote packages/questions/src/index.ts (03:17Z), 363331 patched functions in it incl. #questions and #why (03:37-03:41Z): same functions edited",
+    "evidence": {
+     "shared": [
+      "packages/questions/src/index.ts#questions",
+      "packages/questions/src/index.ts#why"
+     ],
+     "path": [],
+     "commits": [
+      "8b8f725",
+      "f233906"
+     ]
+    }
+   },
+   {
+    "a": "20261028_220600_39e9f9",
+    "b": "20261028_223339_363331",
+    "label": "collision",
+    "reason": "39e9f9 last step 03:24Z, 363331 first 03:33Z (9 min); 39e9f9 edited packages/daemon/src/cli.ts#main, which calls packages/questions/src/index.ts#questions that 363331 edited (1 hop)",
+    "evidence": {
+     "shared": [],
+     "path": [
+      "packages/daemon/src/cli.ts#main -> packages/questions/src/index.ts#questions"
+     ]
+    }
+   },
+   {
+    "a": "20261028_223339_363331",
+    "b": "20261028_225411_409527",
+    "label": "collision",
+    "reason": "363331 last step 03:43Z, 409527 first 03:54Z (11 min); 409527 edited packages/mcp/src/server.ts#createServer (03:58Z, 04:09Z), whose new mole_check tool calls #checkJson -> packages/questions/src/index.ts#questions, which 363331 was changing (2 hops)",
+    "evidence": {
+     "shared": [],
+     "path": [
+      "packages/mcp/src/server.ts#createServer -> packages/mcp/src/server.ts#checkJson",
+      "packages/mcp/src/server.ts#checkJson -> packages/questions/src/index.ts#questions"
+     ]
+    }
+   },
+   {
+    "a": "local-39d6ac0751f75d55686b0fbe9056212194b5c52410fd94c2369d8c6703eff27c",
+    "b": "20261029_011331_269fbb",
+    "label": "collision",
+    "reason": "windows overlap 06:13-06:17Z; T18 chat wrote packages/agentstate/src/index.ts (incl. #safeMemory, 05:38Z) which calls packages/memory/src/notes.ts#memory, which (T19 worktree) calls packages/memory/src/reanchor.ts#dirTree that 269fbb wrote (06:27-06:31Z): 2 hops; T19 changes what memory() reports, which T18 stale-note flags rely on",
+    "evidence": {
+     "shared": [],
+     "path": [
+      "packages/agentstate/src/index.ts#safeMemory -> packages/memory/src/notes.ts#memory",
+      "packages/memory/src/notes.ts#memory -> packages/memory/src/reanchor.ts#dirTree"
+     ]
+    }
+   },
+   {
+    "a": "local-39d6ac0751f75d55686b0fbe9056212194b5c52410fd94c2369d8c6703eff27c",
+    "b": "20261029_011331_1d49cc",
+    "label": "collision",
+    "reason": "windows overlap 06:13-06:17Z; 1d49cc edited packages/daemon/src/cli.ts#main (06:24Z), which calls packages/agentstate/src/cli.ts#agentCli that the T18 chat wrote (05:39Z): 1 hop",
+    "evidence": {
+     "shared": [],
+     "path": [
+      "packages/daemon/src/cli.ts#main -> packages/agentstate/src/cli.ts#agentCli"
+     ]
+    }
+   },
+   {
+    "a": "20261029_011331_269fbb",
+    "b": "20261029_011331_1d49cc",
+    "label": "collision",
+    "reason": "windows overlap (06:13-06:31Z); 1d49cc edited packages/daemon/src/cli.ts#main, main -> packages/memory/src/notes.ts#memory -> packages/memory/src/reanchor.ts#dirTree (269fbb wrote reanchor.ts): 2 hops",
+    "evidence": {
+     "shared": [],
+     "path": [
+      "packages/daemon/src/cli.ts#main -> packages/memory/src/notes.ts#memory",
+      "packages/memory/src/notes.ts#memory -> packages/memory/src/reanchor.ts#dirTree"
+     ]
+    }
+   },
+   {
+    "a": "20261029_011331_1d49cc",
+    "b": "20261029_013813_b9e17d",
+    "label": "collision",
+    "reason": "1d49cc last step 06:31Z, b9e17d first 06:38Z (7 min); main (edited by 1d49cc) -> packages/agentstate/src/cli.ts#agentCli -> packages/agentstate/src/langgraph.ts#exportLangGraph (b9e17d wrote langgraph.ts 06:46Z): 2 hops",
+    "evidence": {
+     "shared": [],
+     "path": [
+      "packages/daemon/src/cli.ts#main -> packages/agentstate/src/cli.ts#agentCli",
+      "packages/agentstate/src/cli.ts#agentCli -> packages/agentstate/src/langgraph.ts#exportLangGraph"
+     ]
+    }
+   },
+   {
+    "a": "20261029_011331_269fbb",
+    "b": "20261029_013813_b9e17d",
+    "label": "not",
+    "reason": "windows overlap (269fbb last 06:36Z, b9e17d first 06:38Z) but no shared function and no directed call chain <= 2 hops between memory reanchor/m9 functions and agentstate langgraph/m10 functions",
+    "evidence": {}
+   },
+   {
+    "a": "local-fc6c6dc0da730236e96ea4a4a86ba43a775068f4fa8a40f086ea5a02682ff5c3",
+    "b": "local-39d6ac0751f75d55686b0fbe9056212194b5c52410fd94c2369d8c6703eff27c",
+    "label": "not",
+    "reason": "the B8 pair named in the brief did NOT run in parallel: B8 builder last step 03:54Z (its last subagent 04:10Z), T18 chat first step 05:13Z, gap > N=15 min",
+    "evidence": {}
+   },
+   {
+    "a": "local-39d6ac0751f75d55686b0fbe9056212194b5c52410fd94c2369d8c6703eff27c",
+    "b": "local-a9e70b86cd9a66a4700b99d931a0a1d97a21fc2a4899ced542dee53c8c06e0ae",
+    "label": "not",
+    "reason": "windows overlap 06:11-06:17Z but the orchestrator chat edited and read no code (only ledger/delegate/terminal)",
+    "evidence": {}
+   },
+   {
+    "a": "local-fc6c6dc0da730236e96ea4a4a86ba43a775068f4fa8a40f086ea5a02682ff5c3",
+    "b": "20261028_211534_646a55",
+    "label": "not",
+    "reason": "parent and its own subagent (delegation, not parallel work), although both edited packages/memory/src/notes.ts / symbols.ts functions",
+    "evidence": {}
+   },
+   {
+    "a": "20261028_220600_39e9f9",
+    "b": "20261028_211534_0cfbfb",
+    "label": "not",
+    "reason": "both edited packages/daemon/src/cli.ts#main but 0cfbfb ended 02:29Z and 39e9f9 started 03:06Z (37 min > N)",
+    "evidence": {}
+   },
+   {
+    "a": "20261028_225411_409527",
+    "b": "local-39d6ac0751f75d55686b0fbe9056212194b5c52410fd94c2369d8c6703eff27c",
+    "label": "not",
+    "reason": "no overlap: 409527 ended 04:10Z, T18 chat started 05:13Z",
+    "evidence": {}
+   },
+   {
+    "a": "20261028_220600_b6f243",
+    "b": "20261028_225411_409527",
+    "label": "not",
+    "reason": "createServer -> checkJson -> questions chain exists, but b6f243 ended 03:24Z and 409527 started 03:54Z (30 min > N)",
+    "evidence": {}
+   }
+  ],
+  "labelledBy": "builder-2 T21 subagent from the sessions' tool-call file paths/times (read in scratch only), git log of the Mole repo and the T1 call graph edges, before any collision code existed"
+ },
+ "planted": {
+  "harness": "claude-code",
+  "window": "each pair sits in its own day slot so pairs never overlap each other",
+  "files": {
+   "src/a.ts": "export function top(): number {\n  return mid() + 1;\n}\n\nexport function mid(): number {\n  return leaf() * 2;\n}\n\nexport function leaf(): number {\n  return deep() - 3;\n}\n\nexport function deep(): number {\n  return 42;\n}\n\nexport function lonely(): string {\n  return 'lonely value';\n}\n\nexport function other(): string {\n  return 'other value';\n}\n",
+   "src/c.ts": "export function c1(): number {\n  return c2() + 1;\n}\n\nexport function c2(): number {\n  return c3() + 2;\n}\n\nexport function c3(): number {\n  return c4() + 3;\n}\n\nexport function c4(): number {\n  return 4;\n}\n",
+   "src/b.ts": "export function helper(n: number): number {\n  return n * 10;\n}\n",
+   "src/d.ts": "import { helper } from './b.js';\n\nexport function useB(): number {\n  return helper(7);\n}\n",
+   "src/e.ts": "export function gamma(): string {\n  return 'gamma';\n}\n",
+   "src/f.ts": "export function alpha(): string {\n  return 'alpha';\n}\n",
+   "src/g.ts": "export function hub(): number {\n  return sibA() + sibB();\n}\n\nexport function sibA(): number {\n  return 1;\n}\n\nexport function sibB(): number {\n  return 2;\n}\n\nexport function util(): number {\n  return 5;\n}\n\nexport function x1(): number {\n  return util() + 1;\n}\n\nexport function x2(): number {\n  return util() + 2;\n}\n"
+  },
+  "runs": [
+   {
+    "id": "p01a",
+    "start": "2026-10-01T10:00:00Z",
+    "steps": [
+     {
+      "at": 0,
+      "op": "edit",
+      "symbol": "src/a.ts#mid"
+     },
+     {
+      "at": 2,
+      "op": "edit",
+      "symbol": "src/a.ts#mid"
+     }
+    ]
+   },
+   {
+    "id": "p01b",
+    "start": "2026-10-01T10:00:00Z",
+    "steps": [
+     {
+      "at": 5,
+      "op": "edit",
+      "symbol": "src/a.ts#mid"
+     }
+    ]
+   },
+   {
+    "id": "p02a",
+    "start": "2026-10-02T10:00:00Z",
+    "steps": [
+     {
+      "at": 0,
+      "op": "read",
+      "symbol": "src/a.ts#top"
+     },
+     {
+      "at": 4,
+      "op": "read",
+      "symbol": "src/a.ts#top"
+     }
+    ]
+   },
+   {
+    "id": "p02b",
+    "start": "2026-10-02T10:00:00Z",
+    "steps": [
+     {
+      "at": 3,
+      "op": "edit",
+      "symbol": "src/a.ts#mid"
+     }
+    ]
+   },
+   {
+    "id": "p03a",
+    "start": "2026-10-03T10:00:00Z",
+    "steps": [
+     {
+      "at": 0,
+      "op": "edit",
+      "symbol": "src/c.ts#c1"
+     }
+    ]
+   },
+   {
+    "id": "p03b",
+    "start": "2026-10-03T10:00:00Z",
+    "steps": [
+     {
+      "at": 4,
+      "op": "edit",
+      "symbol": "src/c.ts#c3"
+     }
+    ]
+   },
+   {
+    "id": "p04a",
+    "start": "2026-10-04T10:00:00Z",
+    "steps": [
+     {
+      "at": 0,
+      "op": "edit",
+      "symbol": "src/d.ts#useB"
+     }
+    ]
+   },
+   {
+    "id": "p04b",
+    "start": "2026-10-04T10:00:00Z",
+    "steps": [
+     {
+      "at": 6,
+      "op": "edit",
+      "symbol": "src/b.ts#helper"
+     }
+    ]
+   },
+   {
+    "id": "p05a",
+    "start": "2026-10-05T10:00:00Z",
+    "steps": [
+     {
+      "at": 0,
+      "op": "read",
+      "symbol": "src/a.ts#leaf"
+     }
+    ]
+   },
+   {
+    "id": "p05b",
+    "start": "2026-10-05T10:00:00Z",
+    "steps": [
+     {
+      "at": 3,
+      "op": "edit",
+      "symbol": "src/a.ts#leaf"
+     }
+    ]
+   },
+   {
+    "id": "p06a",
+    "start": "2026-10-06T10:00:00Z",
+    "steps": [
+     {
+      "at": 0,
+      "op": "edit",
+      "symbol": "src/a.ts#deep"
+     }
+    ],
+    "tail": "truncated"
+   },
+   {
+    "id": "p06b",
+    "start": "2026-10-06T10:00:00Z",
+    "steps": [
+     {
+      "at": 2,
+      "op": "edit",
+      "symbol": "src/a.ts#leaf"
+     }
+    ]
+   },
+   {
+    "id": "p07a",
+    "start": "2026-10-07T10:00:00Z",
+    "steps": [
+     {
+      "at": 0,
+      "op": "edit",
+      "symbol": "src/a.ts#top"
+     },
+     {
+      "at": 2,
+      "op": "edit",
+      "symbol": "src/a.ts#top"
+     }
+    ]
+   },
+   {
+    "id": "p07b",
+    "start": "2026-10-07T10:00:00Z",
+    "steps": [
+     {
+      "at": 12,
+      "op": "edit",
+      "symbol": "src/a.ts#mid"
+     }
+    ]
+   },
+   {
+    "id": "p08a",
+    "start": "2026-10-08T10:00:00Z",
+    "steps": [
+     {
+      "at": 0,
+      "op": "edit",
+      "symbol": "src/c.ts#c1"
+     }
+    ]
+   },
+   {
+    "id": "p08b",
+    "start": "2026-10-08T10:00:00Z",
+    "steps": [
+     {
+      "at": 4,
+      "op": "edit",
+      "symbol": "src/c.ts#c4"
+     }
+    ]
+   },
+   {
+    "id": "p09a",
+    "start": "2026-10-09T10:00:00Z",
+    "steps": [
+     {
+      "at": 0,
+      "op": "edit",
+      "symbol": "src/a.ts#lonely"
+     }
+    ]
+   },
+   {
+    "id": "p09b",
+    "start": "2026-10-09T10:00:00Z",
+    "steps": [
+     {
+      "at": 3,
+      "op": "edit",
+      "symbol": "src/a.ts#other"
+     }
+    ]
+   },
+   {
+    "id": "p10a",
+    "start": "2026-10-10T10:00:00Z",
+    "steps": [
+     {
+      "at": 0,
+      "op": "edit",
+      "symbol": "src/a.ts#mid"
+     }
+    ]
+   },
+   {
+    "id": "p10b",
+    "start": "2026-10-10T10:00:00Z",
+    "steps": [
+     {
+      "at": 180,
+      "op": "edit",
+      "symbol": "src/a.ts#mid"
+     }
+    ]
+   },
+   {
+    "id": "p11a",
+    "start": "2026-10-11T10:00:00Z",
+    "steps": [
+     {
+      "at": 0,
+      "op": "edit",
+      "symbol": "src/f.ts#alpha"
+     }
+    ]
+   },
+   {
+    "id": "p11b",
+    "start": "2026-10-11T10:00:00Z",
+    "steps": [
+     {
+      "at": 2,
+      "op": "edit",
+      "symbol": "src/e.ts#gamma"
+     }
+    ]
+   },
+   {
+    "id": "p12a",
+    "start": "2026-10-12T10:00:00Z",
+    "steps": [
+     {
+      "at": 0,
+      "op": "edit",
+      "symbol": "src/g.ts#sibA"
+     }
+    ]
+   },
+   {
+    "id": "p12b",
+    "start": "2026-10-12T10:00:00Z",
+    "steps": [
+     {
+      "at": 2,
+      "op": "edit",
+      "symbol": "src/g.ts#sibB"
+     }
+    ]
+   },
+   {
+    "id": "p13a",
+    "start": "2026-10-13T10:00:00Z",
+    "steps": [
+     {
+      "at": 0,
+      "op": "edit",
+      "symbol": "src/g.ts#x1"
+     }
+    ]
+   },
+   {
+    "id": "p13b",
+    "start": "2026-10-13T10:00:00Z",
+    "steps": [
+     {
+      "at": 2,
+      "op": "edit",
+      "symbol": "src/g.ts#x2"
+     }
+    ]
+   },
+   {
+    "id": "p14a",
+    "start": "2026-10-14T10:00:00Z",
+    "steps": [
+     {
+      "at": 0,
+      "op": "edit",
+      "symbol": "src/a.ts#mid"
+     }
+    ]
+   },
+   {
+    "id": "p14b",
+    "start": "2026-10-14T10:00:00Z",
+    "steps": [
+     {
+      "at": 1,
+      "op": "edit",
+      "symbol": "src/e.ts#gamma"
+     },
+     {
+      "at": 3,
+      "op": "edit",
+      "symbol": "src/a.ts#mid",
+      "complete": false
+     }
+    ]
+   },
+   {
+    "id": "p15",
+    "start": "2026-10-15T10:00:00Z",
+    "steps": [
+     {
+      "at": 0,
+      "op": "edit",
+      "symbol": "src/a.ts#mid"
+     }
+    ]
+   },
+   {
+    "id": "agent-p15s",
+    "start": "2026-10-15T10:00:00Z",
+    "steps": [
+     {
+      "at": 3,
+      "op": "edit",
+      "symbol": "src/a.ts#mid"
+     }
+    ],
+    "parent": "p15"
+   },
+   {
+    "id": "p16a",
+    "start": "2026-10-16T10:00:00Z",
+    "steps": [
+     {
+      "at": 0,
+      "op": "edit",
+      "symbol": "src/a.ts#top"
+     }
+    ]
+   },
+   {
+    "id": "p16b",
+    "start": "2026-10-16T10:00:00Z",
+    "steps": [
+     {
+      "at": 20,
+      "op": "edit",
+      "symbol": "src/a.ts#top"
+     }
+    ]
+   }
+  ],
+  "pairs": [
+   {
+    "a": "p01a",
+    "b": "p01b",
+    "label": "collision",
+    "reason": "same function edited by both, overlapping windows"
+   },
+   {
+    "a": "p02a",
+    "b": "p02b",
+    "label": "collision",
+    "reason": "b edits a callee (mid) of a function a read (top -> mid, 1 hop)"
+   },
+   {
+    "a": "p03a",
+    "b": "p03b",
+    "label": "collision",
+    "reason": "2-hop path c1 -> c2 -> c3 between the two edited functions"
+   },
+   {
+    "a": "p04a",
+    "b": "p04b",
+    "label": "collision",
+    "reason": "cross-file callee: useB (d.ts) calls helper (b.ts)"
+   },
+   {
+    "a": "p05a",
+    "b": "p05b",
+    "label": "collision",
+    "reason": "b edits the very function a read"
+   },
+   {
+    "a": "p06a",
+    "b": "p06b",
+    "label": "collision",
+    "reason": "a transcript still being written (last JSONL line cut mid-record): its complete edit of deep still counts; leaf -> deep is 1 hop"
+   },
+   {
+    "a": "p07a",
+    "b": "p07b",
+    "label": "collision",
+    "reason": "windows 10 min apart (< N=15) and top -> mid"
+   },
+   {
+    "a": "p08a",
+    "b": "p08b",
+    "label": "not",
+    "reason": "3-hop path c1 -> c2 -> c3 -> c4 is beyond 2 hops"
+   },
+   {
+    "a": "p09a",
+    "b": "p09b",
+    "label": "not",
+    "reason": "same file, different unrelated functions"
+   },
+   {
+    "a": "p10a",
+    "b": "p10b",
+    "label": "not",
+    "reason": "same function but windows 3 h apart (not parallel)"
+   },
+   {
+    "a": "p11a",
+    "b": "p11b",
+    "label": "not",
+    "reason": "unrelated files"
+   },
+   {
+    "a": "p12a",
+    "b": "p12b",
+    "label": "not",
+    "reason": "siblings under a common caller (hub) are not a directed call chain"
+   },
+   {
+    "a": "p13a",
+    "b": "p13b",
+    "label": "not",
+    "reason": "both call the same util (common callee), no chain between x1 and x2"
+   },
+   {
+    "a": "p14a",
+    "b": "p14b",
+    "label": "not",
+    "reason": "b's only edit of mid is its last, in-progress step (tool call without a result yet): not counted"
+   },
+   {
+    "a": "p15",
+    "b": "agent-p15s",
+    "label": "not",
+    "reason": "parent session and its own subagent: delegation, not parallel work"
+   },
+   {
+    "a": "p16a",
+    "b": "p16b",
+    "label": "not",
+    "reason": "same function, windows 20 min apart (> N=15)"
+   }
+  ],
+  "steps": "at = minutes after start; edit = Edit tool call whose old/new string is the function text; read = Read tool call with offset/limit covering the function; complete=false = tool call without a result; tail=truncated = a final half-written JSONL line"
+ }
+}
