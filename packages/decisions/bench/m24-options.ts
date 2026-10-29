@@ -22,11 +22,16 @@ const cloneOf = (k: Key, repo: string) => resolve(process.env.MOLE_BENCH_T32_DIR
 const overlay = (k: Key, repo: string, v2: boolean) => resolve(repoRoot, v2 ? k.repos[repo]!.records.replace('/bench/m24/', '/bench/m24v2/') : k.repos[repo]!.records);
 
 const combos = [
-  { name: 'none', contentAnchors: false, versionBumpRule: false, titleBumpGate: false },
-  { name: '1', contentAnchors: true, versionBumpRule: false, titleBumpGate: false },
-  { name: '2', contentAnchors: false, versionBumpRule: true, titleBumpGate: false },
-  { name: '3', contentAnchors: false, versionBumpRule: false, titleBumpGate: true },
-  { name: '1+3', contentAnchors: true, versionBumpRule: false, titleBumpGate: true },
+  { name: 'none', contentAnchors: false, versionBumpRule: false, titleBumpGate: false, exportConventionGate: false, scopeNoiseFilter: false, tfBareBlockTitleGate: false },
+  { name: '1', contentAnchors: true, versionBumpRule: false, titleBumpGate: false, exportConventionGate: false, scopeNoiseFilter: false, tfBareBlockTitleGate: false },
+  { name: '2', contentAnchors: false, versionBumpRule: true, titleBumpGate: false, exportConventionGate: false, scopeNoiseFilter: false, tfBareBlockTitleGate: false },
+  { name: '3', contentAnchors: false, versionBumpRule: false, titleBumpGate: true, exportConventionGate: false, scopeNoiseFilter: false, tfBareBlockTitleGate: false },
+  { name: '1+3', contentAnchors: true, versionBumpRule: false, titleBumpGate: true, exportConventionGate: false, scopeNoiseFilter: false, tfBareBlockTitleGate: false },
+  { name: '4 (export)', contentAnchors: false, versionBumpRule: false, titleBumpGate: true, exportConventionGate: true, scopeNoiseFilter: false, tfBareBlockTitleGate: false },
+  { name: '5 (noise filter)', contentAnchors: false, versionBumpRule: false, titleBumpGate: true, exportConventionGate: false, scopeNoiseFilter: true, tfBareBlockTitleGate: false },
+  { name: '6 (tf bare block)', contentAnchors: false, versionBumpRule: false, titleBumpGate: true, exportConventionGate: false, scopeNoiseFilter: false, tfBareBlockTitleGate: true },
+  { name: '4+5+6 (round3)', contentAnchors: false, versionBumpRule: false, titleBumpGate: true, exportConventionGate: true, scopeNoiseFilter: true, tfBareBlockTitleGate: true },
+  { name: '1+3+4+5+6 (all)', contentAnchors: true, versionBumpRule: false, titleBumpGate: true, exportConventionGate: true, scopeNoiseFilter: true, tfBareBlockTitleGate: true },
 ];
 const sets = [
   { name: 'frozen key, frozen overlay', key: frozen, v2: false },
@@ -48,7 +53,19 @@ for (const s of sets)
       }
       n++;
       try {
-        const r = await prCheck({ root: clone, recordsRoot: overlay(s.key, p.repo, s.v2), base: p.base, head: p.head, history: false, contentAnchors: c.contentAnchors, versionBumpRule: c.versionBumpRule, titleBumpGate: c.titleBumpGate });
+        const r = await prCheck({
+          root: clone,
+          recordsRoot: overlay(s.key, p.repo, s.v2),
+          base: p.base,
+          head: p.head,
+          history: false,
+          contentAnchors: c.contentAnchors,
+          versionBumpRule: c.versionBumpRule,
+          titleBumpGate: c.titleBumpGate,
+          exportConventionGate: c.exportConventionGate,
+          scopeNoiseFilter: c.scopeNoiseFilter,
+          tfBareBlockTitleGate: c.tfBareBlockTitleGate,
+        });
         const got = new Set(r.governed.map((g) => g.id));
         const want = new Set(p.governs);
         const fh = [...got].filter((x) => !want.has(x)).sort();

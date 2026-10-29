@@ -25,6 +25,18 @@ export interface PrCheckOptions {
   /** option 3 (options round 2): a version-only hunk under a folder/file scope anchor governs only if its enclosing
    *  block or added text names a term from the record's own title (default true; ignored when versionBumpRule is on) */
   titleBumpGate?: boolean;
+  /** option 4 (options round 3): a scope:[] record whose own title is export-convention (e.g. "Avoid Default Exports
+   *  and Prefer Named Exports") is also given a generic, AST-detected content anchor: any added line that is part of
+   *  a NEW named export (a re-export list addition, or a whole new exported declaration) governs. Default true. */
+  exportConventionGate?: boolean;
+  /** option 5 (options round 3): a folder/file/symbol scope anchor never governs a comment-only hunk or a hunk in a
+   *  test file (`isCommentOnlyHunk` / `isTestPath`); a decision about code structure is not about what a comment
+   *  says or how its test is written. Default true. */
+  scopeNoiseFilter?: boolean;
+  /** option 6 (options round 3): extends option 3's title-term gate from version-only hunks to any hunk inside a
+   *  Terraform `locals`/`variable`/`output` block (no resource-type signal) under a folder/file scope anchor whose
+   *  title names a tool/resource. `resource "type" ...` blocks are unaffected. Default true. */
+  tfBareBlockTitleGate?: boolean;
 }
 
 export interface CheckAnnotation {

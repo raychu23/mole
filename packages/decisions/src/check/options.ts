@@ -8,6 +8,7 @@
 //     enclosing-block header still fires).
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import ts from 'typescript';
 import { frontMatter } from '../graph.js';
 import type { GraphNode, Problem } from '../types.js';
 
@@ -185,4 +186,115 @@ export function hasTitleTerm(text: string, terms: string[]): boolean {
   if (!text) return false;
   const lw = text.toLowerCase();
   return terms.some((t) => lw.includes(t));
+}
+
+// Options round 3 (T32): three more code-only levers, grounded in prior-art.md round 3 (ast-grep/drift AST anchoring,
+// Dependabot/Renovate classifier precedent, GitHub CODEOWNERS 'most specific pattern wins'). None touches the frozen
+// key or overlay (R2): every check below runs identically for any record whose title/scope already has this generic
+// shape, with no per-record authored pattern.
+
+/** generic test-file detector (not per-record data): a scope folder/file/symbol anchor governs production code, not
+ *  its own tests, the same distinction CODEOWNERS and ast-grep tooling draw between a symbol and its test double. */
+export function isTestPath(path: string): boolean {
+  return /(^|\/)(test|tests|__tests__)\//.test(path) || /\.(test|spec)\.[jt]sx?$/.test(path);
+}
+
+/** true when every added line of a hunk is comment/doc syntax only (JSDoc `/** ... *\/`, `*`-continuation, `//`): a
+ *  decision about code structure/behaviour is never about what a comment says, so this is safe to drop generically
+ *  for ANY folder/file/symbol scope anchor, not just the ones this round's bench happens to exercise. */
+export function isCommentOnlyHunk(add: string[]): boolean {
+  if (!add.length) return false;
+  return add.every((l) => {
+    const t = l.trim();
+    return t === '' || t.startsWith('/**') || t.startsWith('/*') || t.startsWith('*') || t.startsWith('//');
+  });
+}
+
+/** title -> generic IR trigger: true when the record's OWN title is itself about the export/named-export convention
+ *  (same titleTermsOf extraction as option 3, no new data). Scopes the option-4 detector below to records that are
+ *  actually about exports, so it never fires for an unrelated scope:[] convention record. */
+export function isExportConventionTitle(title: string): boolean {
+  return titleTermsOf(title).some((t) => t.startsWith('export'));
+}
+
+const scriptKindOf = (path: string) => (/\.tsx$/.test(path) ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+/** a TS/TSX source file, never a declaration file (exported: reused to skip the git-show lookups in pr-check.ts) */
+export const isTsSource = (path: string) => /\.tsx?$/.test(path) && !path.endsWith('.d.ts');
+
+/** Option 4: lines that newly introduce a named export, found generically with the TypeScript compiler (the same
+ *  AST-anchoring precedent ast-grep/drift use for symbol anchors, applied to export DECLARATIONS instead): (a) any
+ *  added line inside an `export { ... } from` / `export type { ... } from` / `export * from` re-export statement --
+ *  adding a name to a barrel list is always a new named export, whether the statement itself predates the PR or not
+ *  (bs-adr004's own "module export structure"); (b) a whole new top-level `export` declaration (function, class,
+ *  variable, interface, type alias) whose name is not present anywhere in the file's OLD text, so an edit to an
+ *  EXISTING export's body (same name already in the old file) never matches -- only a declaration that is genuinely
+ *  new does. Reused for ANY record whose own title is export-convention (isExportConventionTitle), never authored
+ *  per record: same two AST shapes, every file, every such record. */
+export function exportConventionRanges(path: string, newText: string, oldText: string | null, addedRanges: Array<[number, number]>): Array<[number, number]> {
+  if (!addedRanges.length || !isTsSource(path)) return [];
+  let sf: ts.SourceFile;
+  try {
+    sf = ts.createSourceFile(path, newText, ts.ScriptTarget.Latest, true, scriptKindOf(path));
+  } catch {
+    return [];
+  }
+  const lineOf = (pos: number) => sf.getLineAndCharacterOfPosition(pos).line + 1;
+  const clip = (lo: number, hi: number): Array<[number, number]> =>
+    addedRanges.map(([a, b]): [number, number] => [Math.max(a, lo), Math.min(b, hi)]).filter(([a, b]) => a <= b);
+  const hasExportMod = (n: ts.Node) => !!(ts.canHaveModifiers(n) && ts.getModifiers(n)?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword));
+  const hasDefaultMod = (n: ts.Node) => !!(ts.canHaveModifiers(n) && ts.getModifiers(n)?.some((m) => m.kind === ts.SyntaxKind.DefaultKeyword));
+  const out: Array<[number, number]> = [];
+  for (const st of sf.statements) {
+    const start = lineOf(st.getStart(sf));
+    const end = lineOf(st.getEnd());
+    if (ts.isExportDeclaration(st)) {
+      out.push(...clip(start, end));
+      continue;
+    }
+    if (!hasExportMod(st) || hasDefaultMod(st)) continue;
+    let name: string | undefined;
+    if (ts.isFunctionDeclaration(st) || ts.isClassDeclaration(st) || ts.isInterfaceDeclaration(st) || ts.isTypeAliasDeclaration(st)) name = st.name?.text;
+    else if (ts.isVariableStatement(st) && st.declarationList.declarations.length === 1) {
+      const d = st.declarationList.declarations[0]!;
+      if (ts.isIdentifier(d.name)) name = d.name.text;
+    }
+    if (name && (oldText === null || !oldText.includes(name))) out.push(...clip(start, end));
+  }
+  return merge2(out);
+}
+function merge2(rs: Array<[number, number]>): Array<[number, number]> {
+  const s = [...rs].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const out: Array<[number, number]> = [];
+  for (const r of s) {
+    const last = out[out.length - 1];
+    if (last && r[0] <= last[1] + 1) last[1] = Math.max(last[1], r[1]);
+    else out.push([r[0], r[1]]);
+  }
+  return out;
+}
+
+/** Option 5: a Terraform `locals`/`variable`/`output` block carries no resource-TYPE signal at all (unlike a typed
+ *  `resource "helm_release" "x" {` block, already handled by option 3's title gate on version-only hunks): any value
+ *  can live there, so a folder/file scope anchor on a technology-named record (title names a tool/resource, e.g.
+ *  "Use Helm...") governs a hunk inside one of these bare blocks only if the hunk's context or added text names a
+ *  term from the record's own title -- the same generic IR title-term check as option 3, just applied to a narrower,
+ *  generically-detected block KIND instead of only to version-only hunks. `resource "type" ...` blocks are untouched
+ *  (the resource type name is already a strong, correctly-handled signal); this only tightens the weak bare-block
+ *  case. Dependabot/Renovate-style classifiers draw the same line (a dependency manifest's named resource vs. a free-
+ *  form config block) -- see prior-art.md round 3. */
+export function isTfBareBlock(context: string): boolean {
+  return /^(locals|variable|output)\b/.test(context.trim());
+}
+
+/** true when `text` (a whole Terraform file) declares a `resource "type" "name" { ... }` whose type or name names a
+ *  term from the record's own title: the file as a whole is "about" that technology (e.g. a `helm_release` resource
+ *  sits beside a `locals` block in the same file), so option 6 leaves every other block in THIS file ungated -- it
+ *  only tightens a bare block in a file that names the title's technology nowhere at all (a different file under the
+ *  same folder anchor, e.g. an RBAC policy file with no Helm resource in it). File-scoped, not per-record authored. */
+export function fileHasTitledResource(text: string, terms: string[]): boolean {
+  if (!terms.length) return false;
+  const re = /resource\s+"([^"]+)"\s+"([^"]+)"/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) if (hasTitleTerm(`${m[1]} ${m[2]}`, terms)) return true;
+  return false;
 }

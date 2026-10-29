@@ -5,7 +5,13 @@
 // anchor governs only if its enclosing block or added text names a term from the record's own title (standard IR term
 // extraction over the title, no new authored data); default on, subsumed by option 2 when that is also on. All three are
 // switchable per run so the bench can score every combination.
-// (written with a terminal heredoc: write_file is approval-gated for test files in this unattended run)
+// Options round 3 (T32): option 4 = a scope:[] record whose own title is export-convention gets a generic AST content
+// anchor (a new named export, AST-detected: `exportConventionRanges`); option 5 = a folder/file/symbol scope anchor never
+// governs a comment-only hunk or a hunk in a test file; option 6 = extends option 3's title-term gate to any hunk inside a
+// Terraform `locals`/`variable`/`output` block (no resource-type signal), UNLESS the touched file itself already declares a
+// resource naming the record's title (file-scoped, not block-scoped, so an edit elsewhere in the SAME file as a titled
+// resource stays governed; only a DIFFERENT, unrelated file under the same folder anchor is gated).
+// (written with a terminal heredoc: write_file/patch are approval-gated for test files in this unattended run)
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -34,6 +40,11 @@ function pr(name: string, edit: () => void): string {
 }
 const HELM = `resource "helm_release" "csi" {\n  name    = "csi"\n  chart   = "aws-ebs-csi-driver"\n  version = "2.66.1"\n}\n\nlocals {\n  replicas = 2\n}\n`;
 const LIB = `import { a } from './a';\n\nfunction local(): number {\n  return a + 1;\n}\n`;
+const MIXED_TF = `resource "helm_release" "app" {\n  name  = "app"\n  chart = "app-chart"\n}\n\nlocals {\n  replicas = 2\n}\n`;
+const OTHER_TF = `locals {\n  policy = "p, role:x, apps, allow"\n}\n`;
+const WIDGET = `export function existing(): number {\n  return 1;\n}\n`;
+const WIDGET_NEW_IFACE = `export function existing(): number {\n  return 1;\n}\n\nexport interface WidgetOptions {\n  size: number;\n}\n`;
+const BARREL = `export {\n  existing,\n} from './widget';\n`;
 
 beforeAll(() => {
   root = mkdtempSync(join(tmpdir(), 'mole-pr-options-'));
@@ -59,6 +70,16 @@ beforeAll(() => {
     '.mole/decisions/old-convention.md',
     `---\nid: old-convention\ntitle: Old convention\nstatus: deprecated\nscope: []\nmatch:\n  - pattern: 'export'\n---\n`,
   );
+  // round 3 fixtures
+  write('.mole/decisions/prefer-named-exports.md', `---\nid: prefer-named-exports\ntitle: Avoid Default Exports and Prefer Named Exports\nstatus: accepted\nscope: []\n---\n`);
+  write('pkg2/src/widget.ts', WIDGET);
+  write('pkg2/src/barrel.ts', BARREL);
+  write('pkg2/src/widget.test.ts', `import { existing } from './widget';\ntest('x', () => existing());\n`);
+  write('.mole/decisions/doc-structure.md', `---\nid: doc-structure\ntitle: Public API document structure\nstatus: accepted\nscope:\n  - apidocs/\n---\n`);
+  write('apidocs/a.ts', 'export interface A {\n  x: number;\n}\n');
+  write('infra-two/mixed.tf', MIXED_TF);
+  write('infra-two/other.tf', OTHER_TF);
+  write('.mole/decisions/infra-two-folder.md', `---\nid: infra-two-folder\ntitle: Use Helm for infra package management\nstatus: accepted\nscope:\n  - infra-two/\n---\n`);
   git(root, 'add', '-A');
   git(root, 'commit', '-q', '-m', 'base');
   base = git(root, 'rev-parse', 'HEAD');
@@ -68,11 +89,22 @@ beforeAll(() => {
   heads.addExport = pr('add-export', () => write('pkg/src/lib.ts', `${LIB}\nexport function more(): number {\n  return 2;\n}\n`));
   heads.noExport = pr('no-export', () => write('pkg/src/lib.ts', LIB.replace('a + 1', 'a + 2')));
   heads.exportOutside = pr('export-outside', () => write('docs/x.ts', 'export const z = 1;\n'));
+  // option 4: a barrel re-export list gains a new name (bare "export {" header predates the PR, like bs#34892's
+  // alpha.ts), and a whole new exported interface is added; editing an EXISTING export's body never governs.
+  heads.barrelAdd = pr('barrel-add', () => write('pkg2/src/barrel.ts', `export {\n  existing,\n  brandNew,\n} from './widget';\n`));
+  heads.newInterface = pr('new-interface', () => write('pkg2/src/widget.ts', WIDGET_NEW_IFACE));
+  heads.editExisting = pr('edit-existing', () => write('pkg2/src/widget.ts', `export function existing(): number {\n  return 2;\n}\n`));
+  // option 5: a comment-only hunk and a test-file-only hunk never govern a folder/file scope anchor
+  heads.docComment = pr('doc-comment', () => write('apidocs/a.ts', 'export interface A {\n  /** a comment */\n  x: number;\n}\n'));
+  heads.widgetTestEdit = pr('widget-test-edit', () => write('pkg2/src/widget.test.ts', `import { existing } from './widget';\ntest('x', () => existing());\ntest('y', () => existing());\n`));
+  // option 6: a bare `locals` edit in the SAME file as a titled resource stays governed; the same edit in a
+  // DIFFERENT file under the folder that never declares that resource (an RBAC-style locals block) is gated
+  heads.sameFileLocals = pr('same-file-locals', () => write('infra-two/mixed.tf', MIXED_TF.replace('replicas = 2', 'replicas = 3')));
+  heads.otherFileLocals = pr('other-file-locals', () => write('infra-two/other.tf', OTHER_TF.replace('allow"', 'allow"\n  extra  = "y"')));
 });
 afterAll(() => rmSync(root, { recursive: true, force: true }));
 
-const ids = async (head: string, o: { contentAnchors?: boolean; versionBumpRule?: boolean; titleBumpGate?: boolean }) =>
-  (await prCheck({ root, base, head, history: false, ...o })).governed.map((g) => g.id).sort();
+const ids = async (head: string, o: Record<string, boolean | undefined> = {}) => (await prCheck({ root, base, head, history: false, ...o })).governed.map((g) => g.id).sort();
 
 describe('isVersionOnlyHunk (option 2)', () => {
   it('is true when old and new lines differ only in version-like tokens', () => {
@@ -104,17 +136,17 @@ describe('globToRegExp', () => {
 
 describe('content anchors (option 1)', () => {
   it('govern an added line matching the pattern inside the glob', async () => {
-    expect(await ids(heads.addExport!, { contentAnchors: true, versionBumpRule: false })).toEqual(['named-exports']);
+    expect(await ids(heads.addExport!, { contentAnchors: true, versionBumpRule: false, exportConventionGate: false })).toEqual(['named-exports']);
   });
   it('do not fire on lines without the construct, or outside the glob; deprecated records never govern', async () => {
-    expect(await ids(heads.noExport!, { contentAnchors: true, versionBumpRule: false })).toEqual([]);
-    expect(await ids(heads.exportOutside!, { contentAnchors: true, versionBumpRule: false })).toEqual([]);
+    expect(await ids(heads.noExport!, { contentAnchors: true, versionBumpRule: false, exportConventionGate: false })).toEqual([]);
+    expect(await ids(heads.exportOutside!, { contentAnchors: true, versionBumpRule: false, exportConventionGate: false })).toEqual([]);
   });
   it('are ignored when switched off (the round-1 behaviour)', async () => {
-    expect(await ids(heads.addExport!, { contentAnchors: false, versionBumpRule: false })).toEqual([]);
+    expect(await ids(heads.addExport!, { contentAnchors: false, versionBumpRule: false, exportConventionGate: false })).toEqual([]);
   });
   it('annotate the matched line with the pattern as the anchor', async () => {
-    const r = await prCheck({ root, base, head: heads.addExport!, history: false, contentAnchors: true });
+    const r = await prCheck({ root, base, head: heads.addExport!, history: false, contentAnchors: true, exportConventionGate: false });
     const g = r.governed.find((x) => x.id === 'named-exports')!;
     expect(g.hits[0]!.path).toBe('pkg/src/lib.ts');
     expect(g.hits[0]!.anchor).toMatch(/^match:/);
@@ -142,10 +174,47 @@ describe('title-term bump gate (option 3, options round 2)', () => {
   it('a bump whose enclosing block names a title term still governs (helm_release bump, title "Use Helm for infra package management")', async () => {
     expect(await ids(heads.chartBump!, { contentAnchors: false, titleBumpGate: true })).toEqual(['infra-folder']);
   });
-  it('a non-version change under the folder is unaffected by the gate', async () => {
-    expect(await ids(heads.realInfra!, { contentAnchors: true, titleBumpGate: true })).toEqual(['infra-folder']);
+  it('a non-version change under the folder is unaffected by the gate (option 3 only looks at version-only hunks)', async () => {
+    expect(await ids(heads.realInfra!, { contentAnchors: true, titleBumpGate: true, tfBareBlockTitleGate: false })).toEqual(['infra-folder']);
   });
   it('versionBumpRule (option 2) still wins when both are set: the bump is dropped even with a title-term match', async () => {
     expect(await ids(heads.chartBump!, { contentAnchors: false, titleBumpGate: true, versionBumpRule: true })).toEqual([]);
+  });
+});
+
+describe('export-convention AST detector (option 4, options round 3)', () => {
+  it('a new name added to an existing barrel re-export list governs (bs#34892 shape: the "export {" header predates the PR)', async () => {
+    expect(await ids(heads.barrelAdd!, { exportConventionGate: true })).toEqual(['prefer-named-exports']);
+  });
+  it('a whole new exported declaration governs (its name did not exist in the old file)', async () => {
+    expect(await ids(heads.newInterface!, { exportConventionGate: true })).toEqual(['prefer-named-exports']);
+  });
+  it('editing the BODY of an existing export never governs: the name already existed in the old file', async () => {
+    expect(await ids(heads.editExisting!, { exportConventionGate: true })).toEqual([]);
+  });
+  it('is off when switched off', async () => {
+    expect(await ids(heads.barrelAdd!, { exportConventionGate: false })).toEqual([]);
+  });
+});
+
+describe('scope noise filter (option 5, options round 3)', () => {
+  it('a comment/doc-only hunk never governs a folder/file scope anchor', async () => {
+    expect(await ids(heads.docComment!, { scopeNoiseFilter: true })).toEqual([]);
+    expect(await ids(heads.docComment!, { scopeNoiseFilter: false })).toEqual(['doc-structure']);
+  });
+  it('a hunk in a test file never governs a folder/file scope anchor (option 4 also skips test files)', async () => {
+    expect(await ids(heads.widgetTestEdit!, { scopeNoiseFilter: true, exportConventionGate: true })).toEqual([]);
+  });
+});
+
+describe('Terraform bare-block title gate (option 6, options round 3)', () => {
+  it('a bare-block (locals) edit in the SAME file as a titled resource stays governed', async () => {
+    expect(await ids(heads.sameFileLocals!, { tfBareBlockTitleGate: true })).toEqual(['infra-two-folder']);
+  });
+  it('the same kind of edit in a DIFFERENT file under the folder, with no titled resource in that file, is gated', async () => {
+    expect(await ids(heads.otherFileLocals!, { tfBareBlockTitleGate: true })).toEqual([]);
+  });
+  it('switched off: the other-file edit is governed again (round-2 behaviour)', async () => {
+    expect(await ids(heads.otherFileLocals!, { tfBareBlockTitleGate: false })).toEqual(['infra-two-folder']);
   });
 });

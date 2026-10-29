@@ -9,7 +9,7 @@ import { loadGraph, MOLE_DIR } from '../graph.js';
 import type { Flag, GraphNode, Problem } from '../types.js';
 import { codeownersAt, parseCodeowners } from './codeowners.js';
 import { parseGitDiff, type ChangedFile, type Hunk } from './diff.js';
-import { contentAnchorsOf, hasTitleTerm, isVersionOnlyHunk, MAX_MATCH_LINE, titleTermsOf, type ContentAnchor } from './options.js';
+import { contentAnchorsOf, exportConventionRanges, fileHasTitledResource, hasTitleTerm, isCommentOnlyHunk, isExportConventionTitle, isTestPath, isTfBareBlock, isTsSource, isVersionOnlyHunk, MAX_MATCH_LINE, titleTermsOf, type ContentAnchor } from './options.js';
 import type { CheckAnnotation, CheckRunPayload, GovernedRecord, PrCheckOptions, PrCheckResult, PrQuestion, RecordChange, UnanchoredRecord } from './types.js';
 
 export const CHECK_NAME = 'mole';
@@ -195,47 +195,98 @@ async function prCheckIn(opts: PrCheckOptions, cleanups: Array<() => void>): Pro
   const useContent = opts.contentAnchors !== false;
   const versionRule = opts.versionBumpRule === true; // off by default: it cost recall on both keys (options round, 2 insights)
   const titleGate = opts.titleBumpGate !== false && !versionRule; // option 3, on by default; versionRule (option 2) subsumes it
+  const exportGate = opts.exportConventionGate !== false; // option 4 (options round 3), on by default
+  const scopeNoise = opts.scopeNoiseFilter !== false; // option 5 (options round 3), on by default
+  const tfGate = opts.tfBareBlockTitleGate !== false; // option 6 (options round 3), on by default
   const versionOnly = (h: Hunk) => isVersionOnlyHunk(h.del ?? [], h.add ?? []);
   const content = new Map<string, ContentAnchor[]>();
-  if (useContent) for (const n of graph.nodes) if (n.kind === 'decision') content.set(n.id, contentAnchorsOf(recordsRoot, n, NOT_GOVERNING.has(n.status) ? undefined : problems));
+  // always computed (even when contentAnchors is off) so a record's AUTHORED match: data still counts as "has a
+  // content anchor" for the export-convention fallback below (option 4 must never double up with option 1's data)
+  for (const n of graph.nodes) if (n.kind === 'decision') content.set(n.id, contentAnchorsOf(recordsRoot, n, NOT_GOVERNING.has(n.status) ? undefined : problems));
   const fits = (s: string) => s.length <= MAX_MATCH_LINE; // review 1 P2-3: bound regex work per line
-  const candidates = graph.nodes.filter((n) => n.kind === 'decision' && (n.scope.length > 0 || (content.get(n.id)?.length ?? 0) > 0) && !NOT_GOVERNING.has(n.status));
+  // option 4: a scope:[] record with no content anchor but an export-convention title gets a generic AST content
+  // anchor (exportConventionRanges) instead; cache each file's head/merge-base text once, not per record.
+  const tsTextCache = new Map<string, { newText: string | null; oldText: string | null }>();
+  const tsTexts = (path: string) => {
+    let t = tsTextCache.get(path);
+    if (!t) {
+      t = { newText: gitOrNull(root, ['show', `${head}:${path}`]), oldText: gitOrNull(root, ['show', `${mergeBase}:${path}`]) };
+      tsTextCache.set(path, t);
+    }
+    return t;
+  };
+  const candidates = graph.nodes.filter(
+    (n) =>
+      n.kind === 'decision' &&
+      !NOT_GOVERNING.has(n.status) &&
+      (n.scope.length > 0 || (content.get(n.id)?.length ?? 0) > 0 || (exportGate && isExportConventionTitle(n.title))),
+  );
   for (const n of candidates) {
     const hits: GovernedRecord['hits'] = [];
     const lost: UnanchoredRecord[] = [];
     // content anchors (option 1): added lines whose text matches, in files the glob covers
-    for (const c of content.get(n.id) ?? [])
-      for (const f of changed) {
-        if (f.newPath === null || (c.inRe && !c.inRe.test(f.newPath))) continue;
-        const rs: Range[] = [];
-        for (const h of f.hunks) {
-          const add = h.add ?? [];
-          // a version-only hunk names its dependency in the enclosing block, not on the changed line (option 2)
-          if (versionRule && h.newLines > 0 && fits(h.context ?? '') && c.re.test(h.context ?? '') && versionOnly(h)) {
-            rs.push([h.newStart, h.newStart + h.newLines - 1]);
-            continue;
+    if (useContent)
+      for (const c of content.get(n.id) ?? [])
+        for (const f of changed) {
+          if (f.newPath === null || (c.inRe && !c.inRe.test(f.newPath))) continue;
+          const rs: Range[] = [];
+          for (const h of f.hunks) {
+            const add = h.add ?? [];
+            // a version-only hunk names its dependency in the enclosing block, not on the changed line (option 2)
+            if (versionRule && h.newLines > 0 && fits(h.context ?? '') && c.re.test(h.context ?? '') && versionOnly(h)) {
+              rs.push([h.newStart, h.newStart + h.newLines - 1]);
+              continue;
+            }
+            add.forEach((line, i) => {
+              if (fits(line) && c.re.test(line)) rs.push([h.newStart + i, h.newStart + i]);
+            });
           }
-          add.forEach((line, i) => {
-            if (fits(line) && c.re.test(line)) rs.push([h.newStart + i, h.newStart + i]);
-          });
+          if (rs.length) hits.push({ anchor: `match:${c.pattern}`, path: f.newPath, side: 'new', ranges: merge(rs) });
         }
-        if (rs.length) hits.push({ anchor: `match:${c.pattern}`, path: f.newPath, side: 'new', ranges: merge(rs) });
+    // option 4: export-convention records (scope:[], no content anchor, title is itself about exports) govern a new
+    // named export anywhere in a non-test TS/TSX file (AST-detected, see options.ts); never fires when scope or a
+    // content anchor already exists for this record (both already more specific than this generic fallback).
+    if (n.scope.length === 0 && (content.get(n.id)?.length ?? 0) === 0 && exportGate && isExportConventionTitle(n.title)) {
+      for (const f of changed) {
+        const path = f.newPath;
+        if (!path || !isTsSource(path) || (scopeNoise && isTestPath(path))) continue;
+        const { added } = changedRanges(f, (h) => scopeNoise && isCommentOnlyHunk(h.add ?? []));
+        if (!added.length) continue;
+        const { newText, oldText } = tsTexts(path);
+        if (newText === null) continue;
+        const ranges = exportConventionRanges(path, newText, oldText, added);
+        if (ranges.length) hits.push({ anchor: 'export-convention', path, side: 'new', ranges });
       }
+    }
     for (const a of n.scope) {
       const an = parseAnchor(a.target);
-      const titleTerms = titleGate && (an.kind === 'file' || an.kind === 'folder') ? titleTermsOf(n.title) : [];
-      const perHunkSkip = (h: Hunk): boolean => {
+      const titleTerms = (titleGate || tfGate) && (an.kind === 'file' || an.kind === 'folder') ? titleTermsOf(n.title) : [];
+      const tfFileCache = new Map<string, string | null>();
+      const tfFileRelevant = (path: string): boolean => {
+        if (!tfFileCache.has(path)) tfFileCache.set(path, gitOrNull(root, ['show', `${head}:${path}`]));
+        const text = tfFileCache.get(path) ?? null;
+        return !!text && fileHasTitledResource(text, titleTerms);
+      };
+      const perHunkSkip = (h: Hunk, path: string): boolean => {
+        if (scopeNoise && isCommentOnlyHunk(h.add ?? [])) return true; // option 5: a comment/doc-only hunk is never governed
         if (versionRule) return versionOnly(h); // option 2: unconditional drop
-        if (titleTerms.length && versionOnly(h)) {
-          const ctx = h.context ?? '';
-          const add = (h.add ?? []).join('\n');
-          const mentions = (fits(ctx) && hasTitleTerm(ctx, titleTerms)) || hasTitleTerm(add, titleTerms);
-          return !mentions; // option 3: drop only when the bump names none of the record's own title vocabulary
-        }
-        return false;
+        if (!titleTerms.length) return false;
+        const vOnly = versionOnly(h);
+        // option 6: a Terraform bare block (locals/variable/output, no resource-type signal) in a file that never
+        // names the title's technology in any of its OWN resource blocks is gated the same way a version bump is;
+        // a file that does (e.g. the helm_release sits beside a `locals` block in the same file) stays ungated.
+        const bareBlock = !vOnly && tfGate && /\.tf$/.test(path) && isTfBareBlock(h.context ?? '') && !tfFileRelevant(path);
+        if (vOnly ? !titleGate : !bareBlock) return false;
+        const ctx = h.context ?? '';
+        const add = (h.add ?? []).join('\n');
+        const mentions = (fits(ctx) && hasTitleTerm(ctx, titleTerms)) || hasTitleTerm(add, titleTerms);
+        return !mentions; // drop only when the hunk names none of the record's own title vocabulary
       };
       for (const f of changed) {
-        const { added, removed, deletionPoints } = changedRanges(f, perHunkSkip);
+        // option 5: a scope anchor governs production code, not its own tests
+        if (scopeNoise && ((f.newPath && isTestPath(f.newPath)) || (f.oldPath && isTestPath(f.oldPath)))) continue;
+        const skip = (h: Hunk) => perHunkSkip(h, f.newPath ?? f.oldPath ?? '');
+        const { added, removed, deletionPoints } = changedRanges(f, skip);
         if (versionRule && f.hunks.length > 0 && f.hunks.every(versionOnly)) continue; // only dependency bumps in this file
         const push = (side: 'new' | 'old', path: string, ranges: Range[]) => {
           if (ranges.length) hits.push({ anchor: a.target, path, side, ranges });
