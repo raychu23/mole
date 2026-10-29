@@ -1,22 +1,22 @@
 ---
-state: submitted
+state: verified
 owner: mole-builder-5
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t22-hand-back-test-selection
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T22-hand-back-test-selection
 base: 70a2989
-reviewer:
-updated: 2026-10-29 09:40
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+reviewer: reviewer-T22-r3
+updated: 2026-10-29 09:45
+status: ledger verified
+next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
 claimed: 2026-10-29 05:08
 ---
 ```notes
 T22-hand-back-test-selection      ledger task (rules.md §3 code features)      project tasks
     goal                    At hand-back (Claude Code Stop hook / mole check), run only the tests that matter for this change: the guarding tests of every past fix whose lines it edits (T12) plus tests that reach the edited functions through the call graph, and report pass/fail beside the past-fix lines; the model never decides which tests run
     done-when               1) mole check --run-tests selects tests by fix lineage + call-graph reachability and runs them with the repo's runner (vitest first); 2) M14 bench: 10 planted regressions in Mole + Excalidraw (key written before the code) → catches >= 9 of 10 while running <= 1/3 of the tests that transitively reach the change (Meta's predictive test selection reference point: >99.9% of regressions at 1/3 of tests); baseline rows for 'run all' and 'run none'; 3) failure case: no test reaches the change → says so, suggests the nearest guarding test, exit 0; 4) npm run check passes
-    status                  2026-10-29 submitted      report: review-2 fixes: red c7b74b5 (P1-A, P2-A/B/D) → 92270ee + f067661: source-skipped selected tests (skip/todo/descr
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    status                  2026-10-29 verified      reviewer reviewer-T22-r3 · findings: confirmation after 2 review rounds (4 log/review-3.md @6f8c59e): review-2 P1-A fixe
+    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
     pinned
     mode                    code
     boundary                packages/verify/** (new: test selection), packages/history/src (read-only use, export a helper only if needed), packages/daemon/src/cli.ts (register the subcommand with one import + one call only), plugins/claude-code/** (Stop hook output line only), tasks/T22-hand-back-test-selection/**
