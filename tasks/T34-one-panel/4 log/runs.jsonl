@@ -1,0 +1,1 @@
+{"time": "2026-10-29T20:51:10.826757Z", "commit": "486aea0ea6b642be7a6744f22f9644953a824a50", "cmd": "npx vitest run apps/vscode/test/panel.test.ts", "exit": 1, "metrics": {"M26": "red (src/panelData.ts not implemented yet)"}}
