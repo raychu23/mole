@@ -7,4 +7,5 @@ ledger (newest last, nothing deleted)
     2026-10-29 10:04      blocked → ready      Raymond 10-29 10:04 'ok use better ways': an options round on record → lines matching, prior-art.md first (traceability link recovery, co-change mining, scope globs, symbol anchors), frozen key and targets unchanged, max
     2026-10-29 10:09      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T32-team-pr-check · branch ledger/t32-team-pr-check · base d3e834c
     2026-10-29 10:32      running → blocked      cause: Options round 2 (prior-art.md, 2 insights §3 cont.): title-term bump gate (option 3, IR/VSM-style) kept, precision 0.63->0.75 (fp 9->5), recall 0.52 unchanged, owners 30/30, silent 27/30, p95 0.62s. Still FAILS M2
+    2026-10-29 15:39      blocked → ready      USER 10-29 15:30 'make it work': round 3 options (up to 3) with prior art (traceability link recovery: IR + structural, co-change mining such as Zimmermann ROSE, scope globs), targets unchanged, if none passes, integrate
 ```
