@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { applySchema, asOf, closeFact, diff, insertFact, openPool, type FactInput } from '../src/index.js';
+import { loadDecisionsJsonl } from '../src/loader.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const keyPath = join(here, '../bench/m32-key.json');
@@ -80,13 +81,11 @@ describe('schema integrity (done-when 2: 0 overlapping validity rows, enforced b
 
 describe('M32 as-of accuracy vs a latest-only baseline (done-when 1)', () => {
   it(`answers >= ${key.targets.asOfAccuracyPct}% of the frozen key's as-of questions correctly, reporting the baseline beside it`, async () => {
-    for (const q of key.questions) {
-      await insertFact(pool, { factId: q.decisionId, kind: 'decision', attr: 'status', value: 'seed-not-loaded', validFrom: '2026-01-01T00:00:00Z', validTo: null });
-    }
+    await loadDecisionsJsonl(pool, join(here, '../bench/decisions-fixture.jsonl'));
     let right = 0;
     let baselineRight = 0;
     for (const q of key.questions) {
-      const got = await asOf(pool, q.decisionId, 'status', q.asOf);
+      const got = (await asOf(pool, q.decisionId, 'status', q.asOf)) ?? 'not yet proposed';
       if (got === q.expected) right++;
       if (q.baselineLatestOnly === q.expected) baselineRight++;
     }

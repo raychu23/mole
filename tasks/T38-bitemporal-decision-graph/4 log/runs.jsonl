@@ -1,0 +1,1 @@
+{"time":"2026-10-29T23:09:23.877Z","commit":"working-tree","cmd":"node packages/temporal/dist/bench/m32.js","exit":0,"metrics":{"M32":"as-of 100.0% (64 q) vs latest-only 45.3% · overlaps 0/1000 · p95 0.26 ms indexed vs 13.73 ms seq (53.0x) at 100000 · model calls 0"}}

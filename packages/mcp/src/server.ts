@@ -133,6 +133,42 @@ export function createServer(opts: MoleMcpOptions): McpServer {
       }
     },
   );
+  // T38: as-of answers from the bitemporal decision graph in Postgres (what held on a given date),
+  // beside what a latest-only store would answer. Same engine @mole/temporal uses for its M32 bench.
+  server.registerTool(
+    'mole_decisions_asof',
+    {
+      title: 'Mole decisions as-of',
+      description:
+        "What a decision's status held on a given date (application/valid time), from the bitemporal store in Postgres " +
+        '(EXCLUDE USING gist enforces 0 overlapping validity rows; history is append-only). Needs MOLE_TEMPORAL_PG ' +
+        '(a Postgres connection string) in the environment; returns an error, not a guess, if it is unset or unreachable. ' +
+        '0 model calls.',
+      inputSchema: {
+        decisionId: z.string().describe("a decision id, e.g. 'D24'"),
+        attr: z.string().optional().describe("the fact attribute (default 'status')"),
+        asOf: z.string().describe('an ISO timestamp: what held at that instant'),
+      },
+    },
+    async (args) => {
+      const connectionString = process.env.MOLE_TEMPORAL_PG;
+      if (!connectionString) {
+        return { content: [{ type: 'text' as const, text: 'mole_decisions_asof: set MOLE_TEMPORAL_PG (a Postgres connection string) to use this tool' }], isError: true };
+      }
+      try {
+        const { openPool, asOf } = await import('@mole/temporal');
+        const pool = openPool(connectionString);
+        try {
+          const value = await asOf(pool, args.decisionId, args.attr ?? 'status', args.asOf);
+          return { content: [{ type: 'text' as const, text: value ?? 'not yet proposed' }] };
+        } finally {
+          await pool.end();
+        }
+      } catch (e) {
+        return { content: [{ type: 'text' as const, text: `mole_decisions_asof: ${(e as Error).message}` }], isError: true };
+      }
+    },
+  );
   return server;
 }
 
