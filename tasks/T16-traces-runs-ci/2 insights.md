@@ -59,4 +59,9 @@ open
     key-changes.md      the red-commit bench + 2 tests await `mole check` with spawnSync while the OTLP receiver is in-process, so the
                         CLI's spans cannot be received (proposal + evidence there); waiting for a ruling (R2) — until then M13 reads
                         22.2% and npm run check has 1 failing test
+    key ruling 1        APPROVE with changes (reviewer-T16-ruling-1, 4 log/key-ruling-1.md, f8468f6); applied verbatim in b23abcb:
+                        spawn + await on 'close' in both tests and the bench (stderr drained, utf8 stdout, bench 240 s timeout kept),
+                        off test waits 500 ms before counting requests; no assertion or target changed, no implementation change needed
+                        -> npm run check 137/137, M13 at target (9/9 stages, off 0, mlflow 24/24, ci green 0 red 1)
+    runs.jsonl scope    only T16's own runs.jsonl differs from base (append-only); no other task's lines were reformatted
 ```
