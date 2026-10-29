@@ -1,22 +1,22 @@
 ---
-state: submitted
+state: running
 owner: mole-builder (Hermes chat)
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t11-l2-memory-notes
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T11-l2-memory-notes
 base: bdeff14
 reviewer:
-updated: 2026-10-28 21:34
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+updated: 2026-10-28 21:39
+status: ledger running
+next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
 claimed: 2026-10-28 21:13
 ---
 ```notes
 T11-l2-memory-notes      ledger task (rules.md §3 code features)      project Mole
     goal                    L2 memory store: your notes on code as repo files (.mole/notes/*.md, YAML front matter: symbol qualifiedName, normalized-body hash, author, written date; body = plain words), anchored to symbols not lines, with a stale flag when the code under a note changes
     done-when               1) mole note add <file#Symbol> "text" writes .mole/notes/<slug>.md; mole memory [--json] lists every note with fresh | stale | moved | orphaned; 2) stale when the symbol's normalized body (whitespace + comments stripped) differs from the hash at writing; whitespace/comment-only edits stay fresh; 3) a file move or rename keeps the note attached (moved, re-anchored by qualifiedName tail + body hash); a deleted symbol → orphaned, never silently dropped; 4) M1 bench (packages/memory/bench): notes placed on symbols before replayed real commits of the Mole repo (and excalidraw clone if present) → recall 100%, false flags <= 5%, written to tasks/T11-l2-memory-notes/4 log/runs.jsonl; 5) failure case: a note whose YAML is malformed is reported with file:line, not crash; 6) npm run check passes
-    status                  2026-10-28 submitted      report: branch ledger/t11-l2-memory-notes @c2bedb8: new @mole/memory (symbols via TS parser, normalized-body hash = sha2
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    status                  2026-10-28 running      changes requested: P1-1 deleted symbol reported moved* to an unrelated same-named symbol in another file (locate() re-an
+    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
     pinned
     mode                    code
     boundary                packages/memory/** (new), packages/daemon/src/cli.ts (new subcommands only), packages/core/src/schema.ts (additive types only), tsconfig/package.json workspace wiring, tasks/T11-l2-memory-notes/**
