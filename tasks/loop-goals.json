@@ -345,7 +345,7 @@
   },
   {
    "task": "T26-big-picture-view",
-   "state": "proposed, waits for D30 (vs D23)",
+   "state": "proposed, replaced by T30 if D31 = yes",
    "metric": "M18",
    "why": "meaning map: purpose + risk + your understanding + agent activity; junior test"
   },
@@ -360,6 +360,24 @@
    "state": "proposed, waits for D30",
    "metric": "M20",
    "why": "runtime edges from test runs fill the static graph's dynamic gaps"
+  },
+  {
+   "task": "T29-decision-graph-core",
+   "state": "proposed, waits for D31",
+   "metric": "M21",
+   "why": "the decision graph + citator flags everything else reads"
+  },
+  {
+   "task": "T30-annotated-file-tree",
+   "state": "proposed, waits for D31 (replaces T26)",
+   "metric": "M22",
+   "why": "the big picture on the file tree, where you already look"
+  },
+  {
+   "task": "T31-one-on-one-loop-readback",
+   "state": "proposed, waits for D31",
+   "metric": "M23",
+   "why": "the 1:1 problem, measured; read-back = evidence of understanding"
   }
  ]
 }
