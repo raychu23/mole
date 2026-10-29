@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mole prototype</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo">◖</span> Mole <small>prototype</small></div>
+  <nav id="tabs">
+    <button data-tab="how" class="on">How it's used</button>
+    <button data-tab="vscode">Editor sidebar <i>stage 1</i></button>
+    <button data-tab="cli">Agent in terminal <i>stage 2</i></button>
+    <button data-tab="panel">Agent panel <i>stage 2</i></button>
+    <button data-tab="pr">Pull request <i>stage 3</i></button>
+    <button data-tab="settings">Settings</button>
+  </nav>
+  <div class="meta" id="meta"></div>
+</header>
+<div id="truth" class="truth"></div>
+<main>
+  <section id="tab-how" class="tab on"></section>
+  <section id="tab-vscode" class="tab">
+    <div class="ide">
+      <aside class="explorer" tabindex="0" id="explorer"></aside>
+      <div class="editor">
+        <div class="etabs" id="etabs"></div>
+        <div class="crumbs" id="ecrumbs"></div>
+        <div class="code" id="code"></div>
+      </div>
+      <aside class="mole" id="mole"></aside>
+    </div>
+  </section>
+  <section id="tab-cli" class="tab"></section>
+  <section id="tab-panel" class="tab"></section>
+  <section id="tab-pr" class="tab"></section>
+  <section id="tab-settings" class="tab"></section>
+</main>
+<div id="modal" class="modal hidden"></div>
+<div id="toast" class="toast hidden"></div>
+<script src="../data/ui-tui.js"></script>
+<script src="../core/mole-core.js"></script>
+<script src="../sample/sample.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -56,3 +56,35 @@ T30 insights      (a6 · mole-builder-4 · 2026-10-29 06:50)      INFERENCE = ch
     a6 action       none on this task: one worker per task (ledger never-list); front matter not hand-edited (ledger: no hand edits)
     fix wanted      the ready move / a9's claim should set --owner mole-builder-6, or the watchdog should read the registry queue, not the owner field
 ```
+
+```notes
+6 integration + submit      (subagent · 2026-10-29 18:00)      D39 Raymond 'make it work': integrate the working part at its real number
+    decision            M22b hit R3 (3 rounds, same failure category: 16-ADR corpus + claude-sonnet-5 answers correctly from either
+                        arm, 25% tool-call reduction vs required >= 50%) before this hand-off and is NOT re-run here (R3 says stop).
+                        Decorations (M22) met every target. Per D39: ship the decorations, log the M22b miss honestly, do not
+                        loosen the bar or fake a pass.
+    T35 check            git log main --oneline | grep T35 -> state: blocked (not integrated: `ledger move tasks/T35-agent-coverage
+                        running -> blocked`). Per the task's own instruction ('if T35 integrated'), the agent-coverage tint on
+                        the tree is skipped entirely and left for a future task once T35 lands.
+    proof artifact       no new Electron/Chromium download (disk ~2.2 GB free, load avg 131-220 at submit time): added a small
+                        additive MOLE_TREE_CHECK probe (apps/vscode/src/tree-provider.ts + a public FolderTree.folders getter in
+                        tree.ts, same pattern as the existing MOLE_HOVER_CHECK/MOLE_SELFTEST probes) that dumps every decorated
+                        folder's {badge, color, tooltip=intent card} straight from the live, registered FileDecorationProvider
+                        (not re-derived) plus a no-record folder (done-when 4). apps/vscode/scripts/tree-check.mjs spawns the
+                        already-installed /usr/local/bin/code --extensionDevelopmentPath on the Mole repo itself (it already has
+                        real .mole/decisions + .mole/incidents), waits for the dump, then screencaptures the real window.
+                        Result: 4 log/tree-check.json (real tooltip/intent-card text, e.g. packages/daemon's full card with 0007/
+                        0008/0009) + 4 log/tree-check.png (real VS Code Extension Development Host window; the Explorer's
+                        "packages" folder shows the badge "9" in yellow, matching the JSON dump exactly). This is real captured
+                        state, not a mock-up or invented content.
+    npm run check        237/238 vitest tests pass + tsc -b clean on first run. The 1 failure (packages/agentstate/test/
+                        langgraph-export.test.ts, a 5s CLI-spawn timeout) is unrelated to this task's boundary; reran that file
+                        alone twice in isolation and it passed both times in ~2.1-2.4s -- confirmed flaky-under-load (machine
+                        load avg 131-220 at the time), not a T30 regression.
+    runs.jsonl           appended the 3 M22b rounds (previously only committed in the worktree's own tasks/ copy, not yet in the
+                        main checkout's copy -- the two had diverged since the branch point) + one final summary line with the
+                        real M22/M22b numbers and the check result.
+    resume/product page  owned by the planning chat, not edited here. It should eventually be reworded from "tied/ceiling" framing
+                        to the real M22b number: harder-questions proxy MISSED its target (27/27 both arms, 25% tool-call
+                        reduction vs required >= 2x), after 3 rounds of genuine attempts to separate the arms.
+```
