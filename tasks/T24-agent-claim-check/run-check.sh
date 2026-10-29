@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# One check round (loop rule R4): runs the contract's checks row
+#   npm run check && node packages/agentstate/dist/bench/m16.js
+# and appends ONE line to 4 log/runs.jsonl. The bench runs even when npm run check fails, so the line carries M16;
+# exit stays the && chain's exit. Bench details (they quote chat text) go to .mole/local/bench/, never committed.
+set -u
+cd "$(git rev-parse --show-toplevel)"
+T="${TMPDIR:-/tmp}/t24-check.$$"
+D=".mole/local/bench"; mkdir -p "$D"
+npm run check >"$T.check" 2>&1; c=$?
+grep -E '^\s*(Test Files|Tests)\s' "$T.check" | tail -2
+[ $c -ne 0 ] && grep -E 'FAIL|error TS|✗|×' "$T.check" | head -20
+node packages/agentstate/dist/bench/m16.js --metrics-out "$T.m16.json" --details "$D/m16-details.json" >"$T.m16" 2>&1; m=$?
+head -25 "$T.m16"
+# round 8 (review-2 P1-1): held-out key outside the frozen bench (4 log/heldout-key.md); reported, not part of exit
+node --no-warnings tasks/T24-agent-claim-check/heldout.mjs --json "$T.ho.json" --details "$D/m16-heldout-details.json" 2>&1 | tail -1
+if [ $c -ne 0 ]; then ex=$c; else ex=$m; fi
+TIME="$(date +%Y-%m-%dT%H:%M:%S%z)" COMMIT="$(git rev-parse --short HEAD)" EX=$ex C=$c M16="$T.m16.json" HO="$T.ho.json" CHK="$T.check" node -e '
+const fs = require("fs");
+const rd = (f, k) => { try { return JSON.parse(fs.readFileSync(f, "utf8"))[k]; } catch { return "bench did not produce metrics"; } };
+const chk = fs.readFileSync(process.env.CHK, "utf8");
+const tests = (chk.match(/^\s*Tests\s+(\d[^\n]*)$/m) || [])[1] || "build failed before tests";
+// review-1 P1-1: flags outside the key (reported, never scored by the frozen bench) + how many a hand judgement calls wrong
+// (.mole/local/bench/m16-outside-judged.json, gitignored: quotes chat text). Unjudged flags are counted, not guessed.
+let outside = "";
+try {
+  const det = JSON.parse(fs.readFileSync(".mole/local/bench/m16-details.json", "utf8"));
+  const flags = det.flatMap((a) => (a.flaggedOutsideKey || []).map((c) => a.id + "\u0000" + c.text));
+  let judged = [];
+  try { judged = JSON.parse(fs.readFileSync(".mole/local/bench/m16-outside-judged.json", "utf8")).rows; } catch {}
+  const verdict = new Map(judged.map((r) => [r.id + "\u0000" + r.text, r.judged]));
+  const wrong = flags.filter((f) => verdict.get(f) === "wrong").length;
+  const unjudged = flags.filter((f) => !verdict.has(f)).length;
+  outside = ` · outside-key flags ${flags.length}: judged wrong ${wrong}, unjudged ${unjudged} (before review-1 fix: ${judged.length}, ${judged.filter((r) => r.judged === "wrong").length} judged wrong)`;
+} catch { outside = " · outside-key flags: no details"; }
+const line = { time: process.env.TIME, commit: process.env.COMMIT,
+  cmd: "npm run check && node packages/agentstate/dist/bench/m16.js", exit: Number(process.env.EX),
+  metrics: { M16: rd(process.env.M16, "M16") + outside + " · " + (rd(process.env.HO, "heldout") || "held-out: not run") }, check: (Number(process.env.C) === 0 ? "pass: " : "fail: ") + tests.trim() };
+fs.appendFileSync("tasks/T24-agent-claim-check/4 log/runs.jsonl", JSON.stringify(line) + "\n");
+console.log(JSON.stringify(line));
+'
+exit $ex

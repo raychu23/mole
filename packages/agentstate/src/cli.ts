@@ -6,7 +6,8 @@ import { defaultSources } from './sources.js';
 import type { RunGraph, Skipped, Step, TriedItem } from './types.js';
 
 const USAGE =
-  'usage: mole runs [--all] [--json] | mole run <id> [--json] [--export langgraph <file.sqlite>] | mole tried <run | file#Symbol> [--json] | mole agents <file[#Symbol]> [--json]   [--root DIR]\n' +
+  'usage: mole runs [--all] [--json] | mole run <id> [--json] [--export langgraph <file.sqlite>] | mole tried <run | file#Symbol> [--json] | mole agents <file[#Symbol]> [--json] | mole claims <run> [--at ROW] [--json]   [--root DIR]\n' +
+  '  claims: each claim in the run\'s last answer (tests pass, committed <sha>, exit 0, merged, pushed, wrote <file>, fixed) checked against the run\'s own tool calls + git: supported / unsupported / contradicted\n' +
   '  --export langgraph <file.sqlite>: write the run as a LangGraph thread (one checkpoint per step) with LangGraph\'s SqliteSaver; the file quotes commands, keep it local\n' +
   '       mole collisions [--json] [--run ID] [--since HOURS (default 24) | --all] [--window MIN (default 15)]: parallel runs whose functions meet\n' +
   '  sources: MOLE_HERMES_DB, MOLE_CLAUDE_DIR, MOLE_CODEX_DIR (default ~/.hermes/state.db, ~/.claude/projects, ~/.codex/sessions), opened read-only';

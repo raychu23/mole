@@ -6,6 +6,7 @@
 // It informs and never blocks Claude from stopping. MOLE_STOP_CONTINUE=1 also hands the questions to Claude as
 // hookSpecificOutput.additionalContext (which makes Claude continue once; skipped when stop_hook_active is true).
 // Output: https://code.claude.com/docs/en/hooks#stop-decision-control . Nothing to say = no output, exit 0.
+import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -46,6 +47,21 @@ export function format(r, label) {
   return out.join('\n');
 }
 
+// T24: one line per claim in the session's last answer that its own tool calls don't back (unsupported / contradicted)
+// Quiet and short: an unknown session (`mole claims` exits 1), a timeout (10 s) or a crash prints nothing, every stop.
+function claimLines(mole, root, sessionId) {
+  if (!sessionId) return [];
+  let r;
+  try {
+    const out = execFileSync(mole[0], [...mole[1], 'claims', String(sessionId), '--json', '--root', root], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 10_000, maxBuffer: 64 * 1024 * 1024 });
+    r = JSON.parse(out);
+  } catch {
+    return [];
+  }
+  // round-8 precision guard: only the flags `mole claims` marks hook-worthy (strong reasons, success claims)
+  return (r?.claims ?? []).filter((c) => c.verdict !== 'supported' && c.hook !== false).map((c) => `mole claims: ${c.verdict}: "${one(c.text, 200)}" (${one(c.why, 160)})`);
+}
+
 function checkResult(root, mole, input) {
   const head = git(root, ['rev-parse', '--verify', '-q', 'HEAD'])?.trim() ?? '';
   const sess = loadSession(input.session_id);
@@ -54,7 +70,7 @@ function checkResult(root, mole, input) {
   let label;
   if (base) {
     const diff = git(root, ['diff', '--no-color', '--no-ext-diff', base]);
-    if (!diff?.trim()) return;
+    if (!diff?.trim()) return done();
     const dir = mkdtempSync(join(tmpdir(), 'mole-stop-'));
     try {
       const file = join(dir, 'session.diff');
@@ -83,7 +99,8 @@ function main() {
   const check = checkResult(root, mole, input);
   // T21: what this session edited that another parallel run relies on
   const coll = collisionsStopText(sessionCollisions(mole, root, input, 35_000), input.session_id);
-  const parts = [check ? format(check.r, check.label) : '', coll].filter(Boolean);
+  const claims = claimLines(mole, root, input.session_id); // T24: unsupported / contradicted claims in the last answer
+  const parts = [check ? format(check.r, check.label) : '', coll, claims.join('\n')].filter(Boolean);
   if (!parts.length) return;
   const msg = { systemMessage: clip(parts.join('\n\n')) };
   if (check && process.env.MOLE_STOP_CONTINUE === '1' && input.stop_hook_active !== true && check.r.questions?.length) {
