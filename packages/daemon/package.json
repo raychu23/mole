@@ -20,6 +20,7 @@
     "@mole/agentstate": "*",
     "@mole/telemetry": "*",
     "@mole/decisions": "*",
-    "@mole/verify": "*"
+    "@mole/verify": "*",
+    "@mole/coverage": "*"
   }
 }
