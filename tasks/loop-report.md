@@ -137,3 +137,12 @@ next
                    → T17 harness + scorer tests + 2-sample dry run (no paid run)
     Raymond     T19: integrate as is + reword the phrase to the measured number, or a new task for a stronger matcher (AST-shape similarity, fresh held-out key)
 ```
+
+## status 2026-10-29 03:26: stalled
+
+```notes
+running now     nothing (no vitest / mole / ledger process)
+T15             ledger running since 22:53 · red commit a11b256 (23:07) · uncommitted impl edits in its worktree (hover.ts, webview since list, mcp server.ts, plugins/claude-code hooks) · no run logged since
+why stalled     builder turn ended mid-T15 (interrupted), worker stopped ~23:07; nothing resumed it for 4 h
+next            resume T15 from the worktree as is: commit the edits, run checks, log runs.jsonl, fresh review, integrate, then C5
+```
