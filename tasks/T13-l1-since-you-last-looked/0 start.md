@@ -1,21 +1,22 @@
 ---
-state: ready
+state: running
 owner: mole-builder (Hermes chat)
 repo: /Users/a1/Desktop/CS Code/Project/Mole
-branch:
-worktree:
-base:
+branch: ledger/t13-l1-since-you-last-looked
+worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T13-l1-since-you-last-looked
+base: b91c6a9
 reviewer:
-updated: 2026-10-28 21:10
-status: ledger ready
-next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+updated: 2026-10-28 22:05
+status: ledger running
+next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+claimed: 2026-10-28 22:05
 ---
 ```notes
 T13-l1-since-you-last-looked      ledger task (rules.md §3 code features)      project Mole
     goal                    L1 observe, personal: record what you've looked at (VS Code: a symbol visible in the editor >= 5 s, hovered, or noted) into .mole/local/seen.jsonl (gitignored, never leaves the machine), and mole since lists the symbols you saw whose normalized body changed after your last look, with the commit, author and agent (Co-authored-by trailer when present) that changed them
     done-when               1) seen events written by the extension (apps/vscode) with a setting to turn it off; 2) mole since [--json] lists exactly the seen-then-changed symbols, newest first, grouped by file; unseen symbols never listed; looking again clears an entry; 3) M3 fixture (5 seen + 2 unseen symbols, commits change 3 seen + 2 unseen) → precision 100%, recall 100%; 4) failure case: no seen log yet → 'nothing seen yet' with how to start, exit 0; 5) .mole/local/ added to .gitignore; 6) npm run check passes
-    status                  2026-10-28 ready      owner mole-builder (Hermes chat)
-    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+    status                  2026-10-28 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T13-l1-since-you-last-looked · branch ledger/t13-l1-since-you-
+    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
     pinned
     mode                    code
     boundary                packages/memory/** (seen + since, reusing T11's anchor), apps/vscode/src (seen events + setting only), packages/daemon/src/cli.ts (since subcommand), .gitignore, tasks/T13-l1-since-you-last-looked/**
