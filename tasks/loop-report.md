@@ -263,3 +263,15 @@ open follow-ups (all P2, none blocks)
   the file tree and the T34 panel's "agent coverage" section both correctly show "not available yet".
 - Cleaned up integrated T19's worktree node_modules + `git worktree remove` to free disk (was down to
   ~1.7GB free at one point from concurrent builders' npm installs + a worktree node_modules pile-up).
+
+## 2026-10-29 22:40 mole-builder-7 (a11): resumed after gateway disconnect, queue confirmed complete
+
+Resumed per Raymond's re-check request after a Hermes gateway disconnect cut the ~16:00 run. Re-verified:
+git log/status clean on main (no uncommitted work lost), T34-one-panel and T30-annotated-file-tree both
+`integrated` in python3 -B tasks/loop_status.py, both tasks' 4 log/runs.jsonl end with their final
+check lines, context/agents/a11-mole-builder-7.md Handoff notes already carry the full account, and
+raychu23.mole-code-map@0.3.0 is still installed (`code --list-extensions --show-versions`). My queue
+(T34 -> T30 -> package+install) was already fully done before the disconnect; nothing to redo.
+Noted and left untouched per this message: T33-team-server (owner builder 9 / a13, Postgres go-ahead
+from Raymond 22:08) and T38-bitemporal-decision-graph (new builder a16, packages/temporal, Postgres
+database mole_t38) — neither is in my queue.
