@@ -8,6 +8,10 @@
 //   commit link  the call is a shell/code tool whose arguments run a commit-making command (git commit|merge|cherry-pick|
 //                revert|am|rebase, or the ledger), its result contains the commit's 7-char sha, and the result time is in
 //                [commit time - 120 s, commit time + 1800 s]
+//                or (key ruling 1, `git commit -q` prints no sha): the result lacks the sha but the call's args name the
+//                commit (subject prefix up to the first " ' ` $ \, 12-50 chars; ledger 'move: <task> <a> → <b>' / 'new: <task>
+//                proposed' = `ledger` + the task's last path part + <b> as a word) and the commit happened while the call ran:
+//                call time <= commit time + 2 s and result time >= commit time - 1 s
 // A link that fails the re-check counts as unlinked. Exit 0 only when verified links >= 95%.
 // usage: node packages/agentstate/dist/bench/m6.js [--metrics-out FILE] [--details FILE]
 import { execFileSync } from 'node:child_process';
@@ -117,6 +121,26 @@ function rawResult(ref: SourceRef): { text: string; time: number } | undefined {
   return o ? { text: JSON.stringify(o), time: sec(o.timestamp) } : undefined;
 }
 
+/** key ruling 1, rule (a): the call's args name the commit by its -m subject prefix, or (ledger commits) by task + target state */
+function namesCommit(subject: string, args: string): boolean {
+  let parsed = '';
+  try {
+    const o = JSON.parse(args) as Record<string, unknown>;
+    parsed = [o.command, o.code, o.cmd].filter((v) => typeof v === 'string').join('\n');
+  } catch {
+    // raw args only
+  }
+  const texts = [args, parsed];
+  const lm = /^ledger move: (\S+) \S+ → (\S+)/.exec(subject) ?? /^ledger new: (\S+) (proposed)/.exec(subject);
+  if (lm) {
+    const task = lm[1]!.split('/').pop()!;
+    const word = new RegExp(`\\b${lm[2]!.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+    return texts.some((t) => /\bledger\b/.test(t) && t.includes(task) && (lm[2] === 'proposed' || word.test(t)));
+  }
+  const prefix = subject.split(/["'`$\\]/)[0]!.slice(0, 50);
+  return prefix.length >= 12 && texts.some((t) => t.includes(prefix));
+}
+
 const inRepo = (d: string | null): boolean => !!d && repoDirs.some((r) => d === r || d.startsWith(`${r}/`));
 function verify(e: Edit, a: Attribution | undefined): { ok: boolean; why: string } {
   const link = a?.link;
@@ -136,7 +160,10 @@ function verify(e: Edit, a: Attribution | undefined): { ok: boolean; why: string
   const res = rawResult(link.ref);
   if (!res) return { ok: false, why: 'raw result record not found' };
   if (!call.tools.some((t) => SHELL_TOOLS.has(t.name) && COMMIT_CMD.test(t.args))) return { ok: false, why: 'call is not a commit-making command' };
-  if (!res.text.includes(e.short)) return { ok: false, why: 'result does not contain the sha' };
+  if (!res.text.includes(e.short)) {
+    const named = call.tools.some((t) => SHELL_TOOLS.has(t.name) && COMMIT_CMD.test(t.args) && namesCommit(e.subject, t.args));
+    if (!(named && call.time <= e.time + 2 && res.time >= e.time - 1)) return { ok: false, why: 'result does not contain the sha' };
+  }
   if (res.time < e.time - 120 || res.time > e.time + 1800) return { ok: false, why: 'result time outside the commit window' };
   return { ok: true, why: 'commit' };
 }
