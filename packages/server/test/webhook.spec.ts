@@ -47,4 +47,22 @@ describe('webhook dedupe by X-GitHub-Delivery (M25 "0 duplicate effects")', () =
     const r = await handler({ headers: { 'x-hub-signature-256': 'sha256=bad', 'x-github-delivery': 'x', 'x-github-event': 'push' }, rawBody: '{}' });
     expect(r.status).toBe(401);
   });
+
+  it.runIf(!!process.env.M25_DATABASE_URL)('rejects an unrecognized repo owner instead of silently attributing it to another org', async () => {
+    // Review round 1 P1 #4: this used to silently fall back to Object.keys(orgRepoDirs)[0]
+    // (whichever org happened to be first), a real cross-org mis-attribution risk.
+    const handler = createWebhookHandler({ secret, pool, boss, orgRepoDirs: { 'org-dedupe': repoDir } });
+    const payload = JSON.stringify({
+      ref: 'refs/heads/main',
+      after: 'deadbeef',
+      repository: { full_name: 'unknown-org/repo', owner: { login: 'unknown-org' } },
+    });
+    const sig = 'sha256=' + crypto.createHmac('sha256', secret).update(payload).digest('hex');
+    const headers = { 'x-hub-signature-256': sig, 'x-github-delivery': 'unknown-org-delivery-1', 'x-github-event': 'push' };
+    const r = await handler({ headers, rawBody: payload });
+    expect(r.status).toBe(404);
+    expect(r.body.status).toBe('unknown-org');
+    const rows = await pool.query('select count(*)::int as c from deliveries where delivery_id = $1', ['unknown-org-delivery-1']);
+    expect(rows.rows[0].c).toBe(0); // never recorded under org-dedupe (or any org)
+  });
 });

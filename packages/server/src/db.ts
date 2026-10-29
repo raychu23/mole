@@ -41,10 +41,15 @@ create table if not exists nodes (
   title text not null,
   file_path text,
   commit_sha text,
+  owner text, -- CODEOWNERS/front-matter owner for this node, persisted by rebuild.ts so
+              -- questions.ts routeQuestion can resolve "records first, else CODEOWNERS owner"
+              -- (review round 1 P0 #2) without re-parsing CODEOWNERS on every read.
   primary key (org_id, id)
 );
 alter table nodes enable row level security;
 alter table nodes force row level security;
+-- Migration for pre-existing tables created before the owner column existed.
+alter table nodes add column if not exists owner text;
 
 create table if not exists relations (
   org_id text not null,

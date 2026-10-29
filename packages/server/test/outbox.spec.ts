@@ -17,6 +17,11 @@ describe('transactional outbox (M25 "0 lost notifications")', () => {
   });
 
   afterAll(async () => {
+    // Clean up this test's own row: the suite reuses a long-lived shared Postgres instance
+    // across runs/tasks (never a fresh-per-run DB in this environment), and the unique
+    // (org_id, kind, ref) index means a leftover delivered row from a prior run makes the
+    // next run's insert a no-op, silently masking "relayed" as 0 instead of 1.
+    if (pool) await pool.query("delete from outbox where org_id = 'org-outbox'").catch(() => undefined);
     if (fakeGithub) await fakeGithub.close();
     if (pool) await closePool(pool);
   });

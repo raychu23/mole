@@ -16,6 +16,7 @@ import { computeCheckRun } from '../src/checkrun.js';
 import { createTestIssuer } from '../src/oauth.js';
 import { createMcpHttpServer } from '../src/mcpServer.js';
 import { initTelemetry } from '../src/telemetry.js';
+import { routeQuestion } from '../src/questions.js';
 import { appendRunsJsonl, writeMlflowRun } from '../src/mlflow.js';
 
 const WEBHOOK_SECRET = 'bench-secret-2026-10-29';
@@ -45,7 +46,7 @@ async function main() {
   }
   console.error('[m25] fixture repos built', orgs.map((o) => o.commits.length));
 
-  const handler = createWebhookHandler({ secret: WEBHOOK_SECRET, pool, boss, orgRepoDirs: Object.fromEntries(orgs.map((o) => [o.id, o.repoDir])) });
+  const handler = createWebhookHandler({ secret: WEBHOOK_SECRET, pool, boss, orgRepoDirs: Object.fromEntries(orgs.map((o) => [o.id, o.repoDir])), telemetry });
 
   // --- replay 1000 deliveries, 10% duplicates, shuffled ---
   const deliveries = buildDeliveries(orgs, WEBHOOK_SECRET);
@@ -165,11 +166,29 @@ async function main() {
 
   // --- MCP leak test over streamable HTTP with OAuth 2.1 bearer ---
   const issuer = createTestIssuer();
-  const mcp = await createMcpHttpServer({ pool, issuer });
+  const mcp = await createMcpHttpServer({ pool, issuer, telemetry });
   console.error('[m25] mcp server up', mcp.url);
   const tokenForB = await issuer.mintToken(leak.viewerOrg);
   const mcpLeakRows = await mcp.callToolAsOrg(tokenForB, 'governing_decisions', { org: leak.targetOrg, file: targetFile });
   console.error('[m25] mcp leak check done', mcpLeakRows.length);
+
+  // --- question routing (done-when #3: "question -> answer-or-route < 2s") ---
+  // Exercises the real `routeQuestion` contract end to end against the already-built fixture
+  // repos: one file with a governing decision record (routes to the record's owner) and one
+  // file with no record but covered by the frozen `codeownersOrgB` CODEOWNERS fixture (routes
+  // to the CODEOWNERS owner). codeownersOrgB was previously defined in key.json but never
+  // actually exercised by the bench (review round 1 P0 #2) — fixtures.ts already writes it
+  // into every fixture repo's CODEOWNERS file, so this just calls the real code path against it.
+  const questionOrg = orgs[0]!;
+  const questionRouteTimes: number[] = [];
+  const tRecord0 = performance.now();
+  const routedToRecord = await routeQuestion(pool, questionOrg.id, questionOrg.repoDir, `src/${questionOrg.id}-file0.ts`);
+  questionRouteTimes.push(performance.now() - tRecord0);
+  const tCodeowners0 = performance.now();
+  const routedToCodeowners = await routeQuestion(pool, questionOrg.id, questionOrg.repoDir, 'src/no-such-file.ts');
+  questionRouteTimes.push(performance.now() - tCodeowners0);
+  const questionRouteMsMax = Math.max(...questionRouteTimes);
+  console.error('[m25] question routing', { routedToRecord, routedToCodeowners, questionRouteMsMax });
 
   await mcp.close();
   await fakeGithub.close();
@@ -189,6 +208,10 @@ async function main() {
       ack_p95_ms: Number(ackP95.toFixed(2)),
       check_run_compute_ms_max: checkRunTimes.length ? Math.max(...checkRunTimes) : null,
       check_run_runs: checkRunTimes.length,
+      question_route_ms_max: Number(questionRouteMsMax.toFixed(2)),
+      question_routed_to_record_via: routedToRecord.via,
+      question_routed_to_codeowners_via: routedToCodeowners.via,
+      question_routed_to_codeowners_owner: routedToCodeowners.owner,
       target: {
         duplicate_effects: 0,
         index_mismatches: 0,
@@ -196,6 +219,7 @@ async function main() {
         leaked_records: 0,
         ack_p95_ms_lt: 1000,
         check_run_compute_ms_lt: 60000,
+        question_route_ms_lt: 2000,
       },
     },
   };
@@ -207,7 +231,10 @@ async function main() {
     metrics.M25.leaked_records_api === 0 &&
     metrics.M25.leaked_records_mcp === 0 &&
     metrics.M25.ack_p95_ms < 1000 &&
-    (metrics.M25.check_run_compute_ms_max === null || metrics.M25.check_run_compute_ms_max < 60000);
+    (metrics.M25.check_run_compute_ms_max === null || metrics.M25.check_run_compute_ms_max < 60000) &&
+    metrics.M25.question_route_ms_max < 2000 &&
+    routedToRecord.via === 'record' &&
+    routedToCodeowners.via === 'codeowners';
 
   console.log(JSON.stringify(metrics, null, 2));
   console.log(pass ? 'M25 PASS' : 'M25 FAIL');

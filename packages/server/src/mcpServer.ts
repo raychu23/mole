@@ -22,8 +22,12 @@ export interface McpHttpServer {
   callToolAsOrg(token: string, tool: string, args: { org: string; file: string }): Promise<unknown[]>;
 }
 
-export async function createMcpHttpServer(opts: { pool: Pool; issuer: TestIssuer }): Promise<McpHttpServer> {
-  const { pool, issuer } = opts;
+export interface McpTelemetry {
+  withSpan<T>(name: string, attrs: Record<string, unknown>, fn: () => Promise<T>): Promise<T>;
+}
+
+export async function createMcpHttpServer(opts: { pool: Pool; issuer: TestIssuer; telemetry?: McpTelemetry }): Promise<McpHttpServer> {
+  const { pool, issuer, telemetry } = opts;
 
   const verifier = {
     async verifyAccessToken(token: string) {
@@ -45,8 +49,21 @@ export async function createMcpHttpServer(opts: { pool: Pool; issuer: TestIssuer
         // used for the query — `org` in args is what the caller is asking ABOUT, which may
         // legitimately differ (and then RLS returns nothing, per the M25 leak test).
         const viewerOrg = (extra as any)?.authInfo?.extra?.org ?? (extra as any)?.authInfo?.clientId;
-        const rows = await getGoverningDecisions(pool, viewerOrg, file, { forOrg: org });
-        return { content: [{ type: 'text', text: JSON.stringify(rows) }] };
+        const run = async (): Promise<{ content: { type: 'text'; text: string }[] }> => {
+          const rows = await getGoverningDecisions(pool, viewerOrg, file, { forOrg: org });
+          return { content: [{ type: 'text', text: JSON.stringify(rows) }] };
+        };
+        // Review round 1 P1 #5: mcpServer.ts had zero telemetry calls (only the job side,
+        // rebuild.ts/checkrun.ts, emitted spans) — this is the "request" side for MCP, named
+        // `execute_tool {tool.name}` per the GenAI span-naming convention (R0 §9).
+        if (telemetry) {
+          return telemetry.withSpan(
+            'execute_tool governing_decisions',
+            { 'mole.viewer_org': viewerOrg, 'mole.for_org': org, 'mole.file': file },
+            run
+          );
+        }
+        return run();
       }
     );
     return srv;

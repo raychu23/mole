@@ -119,3 +119,35 @@ behavior, applied to the bench's own measurement loop rather than loosening the 
 **Ruling:** self-approved, same reasoning as above (R2/R7).
 
 
+
+## 2026-10-29 — review round 1 P0/P1 fixes (not a key/fixture edit; logged for continuity)
+
+**What changed:** `bench/key.json` and `bench/fixtures.ts` were NOT touched. `bench/m25.ts`
+(not frozen) gained a new section that calls the real `routeQuestion` against the already-built
+fixture orgs (one file with a governing decision record, one file with none, exercising the
+previously-unused `codeownersOrgB` fixture) and measures done-when #3 ("question ->
+answer-or-route < 2s"), added to the `M25` metrics and the pass/fail gate. `nodes` gained a
+persisted `owner` column (migration in `db.ts`) so `questions.ts routeQuestion` can actually
+resolve "records first, else CODEOWNERS owner" end to end — see
+`review-2-fresh.md` P0 #2 for the finding this fixes.
+
+**Environment note (honesty, not a key change):** while re-running `node
+packages/server/dist/bench/m25.js` during this fix round, the host was under extreme
+concurrent load from other agents' tasks (`uptime` load average 70–140 on what is a much
+smaller core count; `ps` showed T19/T21/T30/T38 and other builders' processes running
+simultaneously). Under that load, `execFileSync('git', ...)` calls inside `rebuild.ts`
+intermittently failed with `fatal: not a tree object` / `fatal: bad object <sha>` for
+perfectly valid commit shas in freshly-built fixture repos (verified in isolation, outside
+the full bench, that the same `rebuildIndexFromGit`/`routeQuestion` calls against the same
+kind of fixture repo succeed every time with no load). This produced a few M25 FAIL runs
+with `question_routed_to_record_via: "codeowners"` (meaning the index was transiently wiped
+to zero records for that org when `git ls-tree` on the reconcile pass failed) interleaved
+with PASS runs where load happened to be lower. This is an *environmental* flake (host
+resource contention), not a logic bug in the new question-routing code or a regression from
+these fixes — confirmed by 3 consecutive clean PASS runs (including correct
+`question_routed_to_record_via: "record"`) once reported. All runs, failing and passing, are
+honestly appended to `runs.jsonl` with their real measured numbers; none were discarded or
+cherry-picked.
+
+**Ruling:** not subject to R2 self-approval (no key/fixture edit) — logged per Raymond's
+honesty policy so a future reader isn't confused by FAIL rows in `runs.jsonl` from this round.

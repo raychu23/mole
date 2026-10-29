@@ -7,6 +7,7 @@ export interface GoverningDecision {
   id: string;
   kind: string;
   title: string;
+  owner: string | null;
 }
 
 /**
@@ -38,7 +39,7 @@ export async function getGoverningDecisions(
          from relations r
          join gov g on r.to_id = g.from_id
        )
-       select distinct n.id, n.kind, n.title
+       select distinct n.id, n.kind, n.title, n.owner
        from gov g
        join nodes n on n.id = g.from_id
        where n.org_id = current_setting('app.current_org_id', true)`,

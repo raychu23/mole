@@ -98,8 +98,8 @@ export async function rebuildIndexFromGit(
       await client.query('delete from relations where org_id = $1', [orgId]);
       for (const rec of records) {
         await client.query(
-          'insert into nodes(id, org_id, kind, title, file_path, commit_sha) values ($1,$2,$3,$4,$5,$6)',
-          [rec.id, orgId, rec.kind, rec.title, rec.scope[0] ?? null, ref]
+          'insert into nodes(id, org_id, kind, title, file_path, commit_sha, owner) values ($1,$2,$3,$4,$5,$6,$7)',
+          [rec.id, orgId, rec.kind, rec.title, rec.scope[0] ?? null, ref, rec.owner ?? null]
         );
         for (const file of rec.scope) {
           const codeId = `code:${file}`;

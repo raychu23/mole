@@ -42,8 +42,8 @@ export interface QuestionRoute {
 
 export async function routeQuestion(pool: Pool, orgId: string, repoDir: string, filePath: string): Promise<QuestionRoute> {
   const rows = await getGoverningDecisions(pool, orgId, filePath, { forOrg: orgId });
-  const withOwner = rows.find((r) => (r as any).owner);
-  if (withOwner) return { owner: (withOwner as any).owner, via: 'record' };
+  const withOwner = rows.find((r) => r.owner);
+  if (withOwner) return { owner: withOwner.owner as string, via: 'record' };
   const owner = codeownersOwnerFor(repoDir, filePath);
   if (owner) return { owner, via: 'codeowners' };
   return { owner: 'unassigned', via: 'none' };
