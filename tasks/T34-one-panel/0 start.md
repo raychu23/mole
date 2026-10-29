@@ -1,21 +1,21 @@
 ---
-state: proposed
-owner:
+state: ready
+owner: mole-builder-7
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch:
 worktree:
 base:
 reviewer:
 updated: 2026-10-29 15:39
-status: ledger proposed
-next: fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+status: ledger ready
+next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
 ---
 ```notes
 T34-one-panel      ledger task (rules.md §3 code features)      project tasks
     goal                    Everything Mole knows about the code you're on, inside VS Code where you already work, never the terminal (USER 10-29 15:30 'why arent that stuff in the panel in vscode'). A Mole view in the Activity Bar (WebviewViewProvider, like GitLens or Copilot side views) follows the cursor's function and shows, decisions first: 1 decisions that govern it (T29 flag + why + evidence, click opens the record) · 2 past fixes behind its lines (T12) + their guarding tests · 3 your notes + an add-note box (T11) · 4 since you last looked (T13) · 5 up to 3 questions (T14) + an 'explain it back' box saved privately in .mole/local (read-back stub for T31) · 6 tests that guard it with a Run button and pass/fail (T22) · 7 agents: who touched it, the last session's unbacked claims (T24), collisions (T21), already tried (T18), the gate verdict (T25 when present), agent coverage (T35 `mole coverage --json` when present) · 8 blast radius: impact + the decisions, tests and runtime callers (T28) it reaches. Decision-rule violations (T27) show in the Problems panel. Every CLI read command gets a command-palette entry. The existing map panel stays.
     done-when               1) M26a: every CLI read feature (map, impact, note add, memory, since, past fixes, questions, decisions, rules, run-tests, claims, flows, collisions, tried) has a non-terminal surface (view section, hover, diagnostic or command), checked by apps/vscode/scripts/m26.mjs over package.json contributes + a real-VS-Code DOM dump of the view on the Mole repo → 14/14; 2) M26b: view refresh on cursor move or file switch p95 <= 300 ms in real VS Code on the Mole repo, 3 runs (reads off the UI thread, cached per file + commit); 3) failure cases: a repo with no .mole and no git → each section says what to do in one line, no errors in the extension host log; one failing data source degrades only its section; 4) packaged: npm run package -w @mole/vscode + node apps/vscode/scripts/install-check.mjs (FIXTURE=$HOME/.hermes/hermes-agent/ui-tui) pass; 5) screenshots of the view on the Mole repo in tasks/T34-one-panel/4 log/; 6) npm run check passes
-    status                  2026-10-29 proposed
-    next                    fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+    status                  2026-10-29 ready      owner mole-builder-7
+    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
     pinned
     mode                    code
     boundary                apps/vscode/** (src, webview, media, package.json contributes, scripts, test, esbuild.mjs), packages/*/src read-only (import exported functions; export a helper with a one-line change only), packages/daemon/src/cli.ts (add --json only where a section needs it, one call each), tasks/T34-one-panel/**
