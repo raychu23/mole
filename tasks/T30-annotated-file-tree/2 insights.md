@@ -48,3 +48,11 @@ T30 insights      (a6 · mole-builder-4 · 2026-10-29 06:50)      INFERENCE = ch
                       yellow + card tooltip, scripts / apps/vscode/media undefined. Not verified: a real VS Code window
     open              M22 proxy not run (coordinator: 3 fresh subagents per arm); junior kit not run (D7)
 ```
+
+```notes
+5 owner note      (a6 · 2026-10-29 10:27)
+    fact            since Raymond's 10:00 answers this task is a9's (mole-builder-6, HANDOFF 'Added 10:05'); a9 claimed it ~10:10 and is committing (last 10:26)
+    mismatch        front matter still says owner: mole-builder-4 after blocked → ready → running, so the overnight watchdog resumes a6 for it (twice so far)
+    a6 action       none on this task: one worker per task (ledger never-list); front matter not hand-edited (ledger: no hand edits)
+    fix wanted      the ready move / a9's claim should set --owner mole-builder-6, or the watchdog should read the registry queue, not the owner field
+```
