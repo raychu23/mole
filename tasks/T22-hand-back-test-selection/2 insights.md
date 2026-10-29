@@ -53,3 +53,22 @@ process notes
     load sensitivity     Mole's CLI tests have 5 s timeouts; truth runs and npm run check under parallel load show timeout failures. The key
                          maker filters them; a check round that fails only on such a timeout is logged as-is (R4) and rerun as a new line
 ```
+
+```notes
+results (round 2, 2dfd1d3)
+    M14                  caught 10/10 · mean share 18.4% of reaching tests (aggregate 1.3%, 162/12159) · run all 10/10 at 1347.5% · run none 0/10
+                         target >= 9/10 at <= 33.3%: MET. Worst rows: m11 3/3 (100%: reach is core.test.ts only, the selection also runs the
+                         two indexer tests that call missingEvidence), m12 26/67 (38.8%: per-branch nearest pulls in the questions tests)
+    round 1              same M14, exit 1 only from the pre-existing langgraph-export CLI test (5 s timeout under load average ~50);
+                         rerun = round 2, all 186 tests pass
+    policy change        nearest-only (one depth per symbol) missed m12 in a scratch trial: the failing test calls symbolsOfText through
+                         symbolsInFile (depth 2) while since.test.ts calls it directly (depth 1). Nearest per caller BRANCH fixed it
+    runner change        vitest `file:line` failed whole files on it.each rows (vitest places them on another line): selection now runs the
+                         selected files with --testNamePattern built from the full names (placeholders -> .*)
+known gaps
+    static only          tests reaching code through a spawned CLI or JSX rendering are invisible to the call graph (x05 chunk and several
+                         invalid Mole candidates had no static path); the fix-lineage half covers some of these (m13 was caught via 9e19c51)
+    stale graph          the SQLite graph is reused while HEAD is unchanged; uncommitted edits that add new calls are not seen until a commit
+    details file         m14-details.json shows status undefined for it.each templates (display lookup by exact name); the metric counts
+                         vitest's own outcomes, so it is unaffected; the bench is frozen (R2), so this stays
+```
