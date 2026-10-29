@@ -11,4 +11,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 17:21      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T30-annotated-file-tree · branch ledger/t30-annotated-file-tree · base 4b3104e
     2026-10-29 18:06      running → submitted      report: Decorations + intent cards integrated as-is at their real numbers (D39 'make it work'): M22 decorations p95 0.001-0.004ms per folder (target <=50ms) MET, empty/no-record folder shows nothing (done-when 4) MET, re
     2026-10-29 18:06      checks ran: npm run check && node packages/decisions/dist/bench/m22.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T30-annotated-file-tree → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 18:11      submitted → verified      reviewer mole-builder-7-reviewer · findings: No P0/P1. Verified: decorations p95 0.001-0.004ms per folder (<=50ms target) MET, empty/no-record folder shows no decoration/card (done-when 4) MET, confirmed via screenshot o
+    2026-10-29 18:11      checks ran: npm run check && node packages/decisions/dist/bench/m22.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T30-annotated-file-tree → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
