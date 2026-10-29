@@ -1,21 +1,22 @@
 ---
-state: ready
+state: running
 owner: mole-builder-5
 repo: /Users/a1/Desktop/CS Code/Project/Mole
-branch:
-worktree:
-base:
+branch: ledger/t28-runtime-flows-from-tests
+worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T28-runtime-flows-from-tests
+base: 5b447f7
 reviewer:
-updated: 2026-10-29 05:03
-status: ledger ready
-next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+updated: 2026-10-29 05:08
+status: ledger running
+next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+claimed: 2026-10-29 05:08
 ---
 ```notes
 T28-runtime-flows-from-tests      ledger task (rules.md §3 code features)      project tasks
     goal                    What actually runs: record call sequences while the test suite runs (V8 coverage + OpenTelemetry spans around exported functions, AppMap-style), and add runtime edges to the context graph so the picture and the gate see calls the static graph can't resolve (dynamic dispatch, callbacks, plugin registries)
     done-when               1) mole flows record runs vitest with instrumentation and stores per-test flows; mole flows <file#Symbol> lists the tests and call paths that exercise it; 2) M20 bench: 50 call edges sampled from Mole + Excalidraw, half dynamic, truth from manual trace, labeled before the code → runtime flows recover >= 80% of the dynamic ones the static graph misses, 0 invented edges; 3) instrumentation overhead on the test suite <= 2x; 4) npm run check passes
-    status                  2026-10-29 ready      owner mole-builder-5
-    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+    status                  2026-10-29 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T28-runtime-flows-from-tests · branch ledger/t28-runtime-flows
+    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
     pinned
     mode                    code
     boundary                packages/flows/** (new), packages/daemon/src/cli.ts (register the subcommand with one import + one call only), tasks/T28-runtime-flows-from-tests/**
