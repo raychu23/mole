@@ -7,7 +7,7 @@ You are new to the Backstage repository. You have been asked 9 "why" questions a
   checkout: only `docs/architecture-decisions` and `plugins/notifications` are on disk. Work inside that clone.
 - Every question's answer is written down somewhere in `docs/architecture-decisions/*.md` (16 ADR files). The code
   itself does not explain any of these decisions in a comment -- you must read the ADR text, not guess from the code
-  or the file/folder names and the annotated file tree below.
+  or the file/folder names and the annotated file tree below. The tree's cards are generated from the real decision records and are accurate: if a card already states the fact a question asks for, you do not need to re-open the ADR file to double-check it -- citing the card itself as your source is enough. Only open an ADR file when the tree does not cover the folder or the specific fact at all.
 - No web search, no network, no `git log`, `git grep` or anything that fetches more of the repository than what is
   already on disk.
 - Read ONE file per shell command (one `cat`, one `Read`); do not use wildcards, `cat *`, shell loops, or anything
