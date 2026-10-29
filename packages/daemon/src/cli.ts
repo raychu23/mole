@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 // mole daemon | map | impact | status | stop | reindex  — thin CLI over the daemon (offerings F1.9).
+// mole note add <file#Symbol> "text" | mole memory [--json]  — L2 notes on code (T11), no daemon needed.
 import { defaultSources } from './detect.js';
 import { resolve } from 'node:path';
 import { formatNeighborhood } from '@mole/core';
+import { addNote, memory, type MemoryEntry } from '@mole/memory';
 import { ensureDaemon, MoleClient } from './client.js';
 import { Daemon } from './server.js';
 
@@ -25,9 +27,37 @@ function parse(argv: string[]): { cmd: string; pos: string[]; flags: Record<stri
 
 const str = (v: string | true | undefined): string | undefined => (typeof v === 'string' ? v : undefined);
 
+function formatMemory(list: MemoryEntry[]): string {
+  if (list.length === 0) return 'mole: no notes (.mole/notes is empty)';
+  return list
+    .map((e) => {
+      if (e.status === 'invalid') return `invalid   ${e.problem ?? e.file}`;
+      const status = e.status === 'moved' && e.changed ? 'moved*' : e.status;
+      const where = e.newPath ? ` -> ${e.newPath}${e.line ? `:${e.line}` : ''}` : e.line ? `:${e.line}` : '';
+      const text = e.text.split('\n')[0] ?? '';
+      return `${status.padEnd(9)} ${e.symbol}${where}  ${text.length > 80 ? `${text.slice(0, 77)}...` : text}  (${e.file})`;
+    })
+    .join('\n') + (list.some((e) => e.status === 'moved' && e.changed) ? '\n(moved* = moved and its body changed since the note)' : '');
+}
+
 async function main(): Promise<number> {
   const { cmd, pos, flags } = parse(process.argv.slice(2));
   const root = resolve(str(flags.root) ?? process.cwd());
+  if (cmd === 'note') {
+    const [sub, target, ...words] = pos;
+    if (sub !== 'add' || !target || words.length === 0) {
+      console.error('usage: mole note add <file#Symbol> "text" [--root DIR] [--author NAME]');
+      return 2;
+    }
+    const n = addNote(root, target, words.join(' '), { author: str(flags.author) });
+    console.log(`wrote ${n.file} on ${n.symbol} (hash ${n.hash})`);
+    return 0;
+  }
+  if (cmd === 'memory') {
+    const list = memory(root);
+    console.log(flags.json ? JSON.stringify(list, null, 2) : formatMemory(list));
+    return 0;
+  }
   const stateDir = str(flags['state-dir']);
   const common = { root, stateDir, ...defaultSources(root, str(flags.tsconfig), str(flags['src-dir'])) };
 
@@ -74,7 +104,7 @@ async function main(): Promise<number> {
       return 1;
     }
   }
-  console.error('usage: mole <daemon|map|impact|status|reindex|stop> [target] [--root DIR] [--state-dir DIR] [--tsconfig F] [--src-dir D] [--idle-minutes N] [--json]');
+  console.error('usage: mole <daemon|map|impact|status|reindex|stop|note add|memory> [target] [--root DIR] [--state-dir DIR] [--tsconfig F] [--src-dir D] [--idle-minutes N] [--json]');
   return cmd === 'help' ? 0 : 2;
 }
 
