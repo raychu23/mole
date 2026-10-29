@@ -111,10 +111,13 @@ async function main(): Promise<number> {
     // a background process nobody asked for must not outlive its editor: stop after 30 idle minutes (0 = never)
     const idleMinutes = Number(str(flags['idle-minutes']) ?? 30);
     const { Daemon } = await import('./server.js');
+    const otel = await import('@mole/telemetry'); // T16: RPC spans when MOLE_OTEL=1, flushed on stop
+    await otel.startTelemetry('mole-daemon');
     const d = new Daemon({ ...common, idleMs: Number.isFinite(idleMinutes) && idleMinutes > 0 ? idleMinutes * 60_000 : 0, log: (l) => console.error(`[mole] ${l}`) });
     await d.start();
     for (const sig of ['SIGINT', 'SIGTERM'] as const) process.on(sig, () => void d.stop());
     await d.closed;
+    await otel.shutdownTelemetry();
     return 0;
   }
   if (cmd === 'map' || cmd === 'impact') {
@@ -142,15 +145,25 @@ async function main(): Promise<number> {
       return 2;
     }
     const change: Change = diffFile !== undefined ? { diffFile: resolve(diffFile), base: str(flags.base) } : sha !== undefined ? { sha } : { worktree: true };
+    // T16: with MOLE_OTEL=1 one span per stage under a root mole.check span, flushed before exit; otherwise no-ops, nothing loaded
+    const otel = await import('@mole/telemetry');
+    await otel.startTelemetry('mole-cli');
+    try {
+      return await otel.withSpan('mole.check', { 'mole.change.kind': 'sha' in change ? 'sha' : 'diffFile' in change ? 'diff' : 'worktree', 'mole.change.ref': sha ?? diffFile ?? 'working tree' }, async (span) => {
     // L3 (T14): at most 3 questions from templates over those facts (+ notes); T12's output fields stay as they were
     const [{ formatCheck }, { questions, formatQuestions }] = await Promise.all([import('@mole/history'), import('@mole/questions')]);
     const notesRoot = str(flags['notes-root']);
-    const q = await questions(root, change, { fixRule: str(flags['fix-rule']), notesRoot: notesRoot ? resolve(notesRoot) : undefined, reword: flags.reword === true });
+    const q = await otel.withSpan('mole.questions', {}, () => questions(root, change, { fixRule: str(flags['fix-rule']), notesRoot: notesRoot ? resolve(notesRoot) : undefined, reword: flags.reword === true }));
+    span({ 'mole.hunks': q.facts.hunks.length, 'mole.past_fixes': q.facts.hunks.reduce((n, h) => n + h.pastFixes.length, 0), 'mole.questions.count': q.questions.length });
     for (const n of q.notices) console.error(`mole: ${n}`);
     const { notes: _notes, guards: _guards, ...r } = q.facts;
     if (flags.json) console.log(JSON.stringify({ ...r, questions: q.questions }, null, 2));
     else console.log(formatCheck(r) + (q.questions.length ? `\n\n${formatQuestions(q.questions)}` : ''));
     return 0;
+      });
+    } finally {
+      await otel.shutdownTelemetry();
+    }
   }
   const client = new MoleClient({ root, stateDir });
   if (cmd === 'status') {

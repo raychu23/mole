@@ -73,7 +73,8 @@
   "scripts": {
     "build": "tsc -b",
     "bundle": "node esbuild.mjs",
-    "package": "node scripts/package.mjs"
+    "package": "node scripts/package.mjs",
+    "hover-check": "node scripts/hover-check.mjs"
   },
   "devDependencies": {
     "@types/vscode": "^1.90.0",
@@ -84,7 +85,10 @@
   "dependencies": {
     "@mole/core": "*",
     "@mole/daemon": "*",
-    "@mole/layout": "*"
+    "@mole/history": "*",
+    "@mole/layout": "*",
+    "@mole/memory": "*",
+    "@mole/questions": "*"
   },
   "categories": [
     "Visualization",

@@ -103,3 +103,67 @@ real example (3C1 line 289: "it gets compacted, and the agent forgets which fix 
 next
     T20 (LangGraph checkpoint export) and T21 (parallel-agent collisions) need T18: both now unblocked
 ```
+
+## E6 builder 2 (2026-10-29 03:10): T16, T19, T20, T21 (resume = plan)
+
+```notes
+task        state           metric (latest)                                                              target                                   verdict
+    T16         integrated      M13 stage coverage 100% (9/9) · off requests 0 · MLflow 34/34 runs, 2nd load 0 · CI key guard red 1 / green 0      100% · counts equal · red on key edit       MET
+    T20         integrated      M10 round-trip 100% (15/15 runs, 3,747 checkpoints) · fork 3/3 · empty 2/2              100% same steps/order/values · fork works MET
+    T21         verified        M11 recall 100% (16/16) · false alarms 0% (0/16) · real 9/9, planted 7/7                recall >= 90% · false <= 10%              MET, not merged
+    T19         blocked         M9 88.9% right (32/36) · 0 wrong · synthetic 10/10                                      >= 95% right · 0 wrong                    MISSED
+    T17         ready           waits for T15 (harness + 2-sample dry run only; paid A/B waits for Raymond)
+on main     6463b51 + run logs      npm run check 159/159 · m10 + m13 at target after both merges · key guard 7 keys green
+how it went
+    T16         red d81d48d → impl → bench red: frozen harness used spawnSync with the OTLP receiver in the same process (no impl could pass)
+                → key ruling 1 (fresh reviewer, probe-checked, approved async spawn + stricter off wait) b23abcb → green round 1 → review 1 verified
+    T20         red 626a462 → impl 8d3d596 green round 1 → review 1 verified (6 exporter mutations all turned the bench red; 897/897 local runs round-trip)
+    T21         red acd2737 → impl green → review 1 verified (7 detector mutations all red)
+    T19         red b19fd8a → impl: 4 rewrites at similarity 0.40-0.50 below the key's 0.55, one negative at 0.51 → no body threshold reaches 95% with 0 wrong
+                → key ruling 1: caller-evidence path allowed only if it passes a held-out key labelled first (hermes ui-tui, 22 re-anchors)
+                → held-out 81.8%, 3 wrong (all from the body-only path) → reverted 00951ab → ledger refused submit (checks red) → blocked, decision Raymond
+    merge       T16 x T18 conflicts in daemon/mcp package.json, tsconfig, mcp server.ts imports → kept both
+what missed / risks
+    T19         the resume phrase "rename-proof anchors" is not true at its bar; per Resume + interview §6 the phrase changes, the metric doesn't
+                held-out also shows the body-only path can re-anchor wrong on another repo (3 of 22): today's 0 wrong is repo-specific
+                fetching history wrote missing objects into ~/.hermes/hermes-agent/.git (no working tree / branch change)
+    T16 P2s     key guard accepts a ruling the implementer writes alone, and matches APPROVE anywhere in it → the guard is a speed bump, not a lock
+                MLflow loader lets an env var turn MLflow's own telemetry back on
+    T21 P2s     labels follow the detector's rule (100% = code matches rule, not rule is right) · 2-hop limit not pinned by a check
+                · shell-command edits invisible · ~22 s per call (no call-graph cache; T15 hooks need one)
+    T20 P2s     re-export deletes user forks in that thread · SqliteSaver.setup() via a cast
+next
+    T15 integrates → T21 hook output (spec in tasks/T21-parallel-agent-collisions/2 insights.md) → re-review the small diff → integrate T21
+                   → T17 harness + scorer tests + 2-sample dry run (no paid run)
+    Raymond     T19: integrate as is + reword the phrase to the measured number, or a new task for a stronger matcher (AST-shape similarity, fresh held-out key)
+```
+
+## status 2026-10-29 03:26: stalled
+
+```notes
+running now     nothing (no vitest / mole / ledger process)
+T15             ledger running since 22:53 · red commit a11b256 (23:07) · uncommitted impl edits in its worktree (hover.ts, webview since list, mcp server.ts, plugins/claude-code hooks) · no run logged since
+why stalled     builder turn ended mid-T15 (interrupted), worker stopped ~23:07; nothing resumed it for 4 h
+next            resume T15 from the worktree as is: commit the edits, run checks, log runs.jsonl, fresh review, integrate, then C5
+```
+
+## C5 (2026-10-29 03:50): T15 integrated, loop done
+
+```notes
+result          T11-T15 all integrated · main 79520b5 · npm run check 181/181 · M1 M2 M3 M4 M5 benches all at target on main
+stall           03:26 status above resolved: T15 resumed from its worktree 03:27, done 03:35
+T15 proof       hover on a touched line (server.ts:210) shows fix 9e19c51 + "editing counts as use" + test "idle shutdown (T9)" + source, opens commit + file
+                clean VS Code profile 8/8 on dev build and installed .vsix (tasks/T15-surface-hover-and-agent-hooks/4 log/hover-check-*.json) · T9 selftest on .vsix 857/857
+                daemon down → 0 hovers, 0 marks, 0 popups · MCP mole_check JSON == CLI (3 modes) · Claude Code SessionStart + Stop hooks on a fixture session (4 log/hooks-run.txt)
+                reviewer-T15-r1 verified, 0 P0/P1, also reran the hover check itself 8/8
+merge           conflict with T16/T18 (also on main) in packages/mcp: deps unioned · T15's exact tool-list test → arrayContaining per fresh key ruling (4 log/key-ruling-1.md)
+missed / risks
+    hooks       prefer any `mole` on PATH (a Mac cleaner app ships one → hooks go silent) · Stop repeats the whole-session check every turn
+    hover       mole.showCommit passes its arg to git show unchecked (only real shas reach it today) · check+since run on every save/focus, not timed on a big repo
+    not real    hover link clicks replayed via the hover's command args, not a mouse · plugin never installed into a real ~/.claude
+open follow-ups (all P2, none blocks)
+    T15         resolve the repo's own mole first · hex-check showCommit · Stop: only new hunks since last stop
+    T14         guard question outranks a note when its fix isn't asked · why-clips from JSDoc
+    T13         newline before append on a torn seen.jsonl
+    C4          default fix rule's bare "regression" catches non-fix subjects (b903a6f) · task-goal "why" for fd7ed34
+```

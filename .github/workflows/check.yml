@@ -1,0 +1,62 @@
+# T16: every push / PR runs the repo's checks, the self-contained benches and the R2 key guard.
+# Benches that need local clones or paid agents are skipped here with the reason printed (tasks/T16-traces-runs-ci/2 insights.md).
+name: check
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: checkout (full history, the key guard and mole check read past commits)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: setup python (MLflow loader, M13)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: install
+        run: |
+          npm ci
+          python -m pip install -r scripts/mlflow/requirements.txt
+
+      - name: key guard
+        run: node scripts/ci/key-guard.mjs
+
+      - name: npm run check
+        run: npm run check
+
+      - name: bench M3 (T13, since-you-last-looked, scripted temp repo)
+        run: node packages/memory/dist/bench/m3.js
+
+      - name: bench M13 (T16, traces + MLflow runs + this workflow's key guard red/green)
+        env:
+          MOLE_MLFLOW_PYTHON: python
+        run: |
+          git config --global user.name ci
+          git config --global user.email ci@localhost
+          node packages/telemetry/dist/bench/m13.js
+
+      - name: benches skipped in CI
+        run: |
+          echo "skip M1 (packages/memory/dist/bench/m1.js): replays commits from a local excalidraw clone (~/.hermes/cache/scratch/impact/excalidraw)"
+          echo "skip M2/M5 (packages/history/dist/bench/m2.js): B1 rows R1-R5 need the local excalidraw clone (MOLE_BENCH_EXCALIDRAW)"
+          echo "skip M4 (packages/questions/dist/bench/m4.js): cases on the local excalidraw clone (MOLE_BENCH_EXCALIDRAW)"
+          echo "skip M0 engines (packages/indexer/bench/run.mjs): needs the ui-tui fixture (FIXTURE) and engine downloads"
+          echo "skip M1 stability (packages/daemon/bench/m1.mjs): needs a FIXTURE TypeScript repo copy"
+          echo "skip M1.5 agent cost (packages/daemon/bench/m15): runs paid agent sessions"

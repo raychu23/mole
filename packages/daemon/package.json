@@ -17,6 +17,7 @@
     "@mole/memory": "*",
     "@mole/history": "*",
     "@mole/questions": "*",
-    "@mole/agentstate": "*"
+    "@mole/agentstate": "*",
+    "@mole/telemetry": "*"
   }
 }

@@ -4,6 +4,9 @@ import { formatNeighborhood } from '@mole/core';
 import { ensureDaemon, MoleClient, type EnsureOptions } from '@mole/daemon';
 import { defaultSources, tried } from '@mole/agentstate';
 import { registerCollisionsTool } from './collisions-tool.js';
+import { executeTool, GEN_AI } from '@mole/telemetry';
+import type { Change } from '@mole/history';
+import { resolve } from 'node:path';
 
 export interface MoleMcpOptions extends EnsureOptions {
   /** Do not spawn a daemon if none runs (tests). */
@@ -26,15 +29,18 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         impact: z.boolean().optional().describe('also mark transitive callers (what breaks if this changes) with !impact'),
       },
     },
-    async ({ target, impact }) => {
+    // T16: OTel GenAI execute_tool span per call (no-op unless MOLE_OTEL=1)
+    async ({ target, impact }, extra) =>
+      executeTool('mole_map', { [GEN_AI.toolCallId]: String(extra.requestId), [GEN_AI.mcpMethod]: 'tools/call', 'mole.target': target }, async (span) => {
       const client = opts.noStart ? new MoleClient(opts) : await ensureDaemon(opts);
       let n = await client.map(target, impact === true);
       for (let i = 0; i < 50 && n.state === 'indexing'; i++) {
         await new Promise((r) => setTimeout(r, 200));
         n = await client.map(target, impact === true);
       }
+      span({ 'mole.map.state': n.state });
       return { content: [{ type: 'text' as const, text: formatNeighborhood(n) }], isError: n.state === 'index-unavailable' };
-    },
+    }),
   );
   // T18: what agents already tried (commands, tests, fixes + outcome), including before a context compaction
   server.registerTool(
@@ -50,5 +56,57 @@ export function createServer(opts: MoleMcpOptions): McpServer {
     async ({ target }) => ({ content: [{ type: 'text' as const, text: JSON.stringify(tried(target, { ...defaultSources(), root: opts.root }), null, 2) }] }),
   );
   registerCollisionsTool(server, opts); // T21: parallel-agent collisions
+  server.registerTool(
+    'mole_check',
+    {
+      title: 'Mole check',
+      description:
+        'Before or after editing: for a change (the working tree vs HEAD, a commit sha, or a diff file + base), the past fix commits that last ' +
+        'wrote the edited lines (git blame on the base), each with its reason (commit text, comments, task/note files), the tests that guard it ' +
+        'and a source file:line in the fix; plus at most 3 questions about them. Same JSON as `mole check ... --json`. Git history only: no index, ' +
+        'no daemon, no model calls. Give exactly one of sha, diff, worktree.',
+      inputSchema: {
+        root: z.string().optional().describe('repository root (default: the server root, MOLE_ROOT or cwd)'),
+        sha: z.string().optional().describe('a commit: check what it changed against its parent'),
+        diff: z.string().optional().describe('a unified diff file (relative to root or absolute)'),
+        base: z.string().optional().describe('with diff: the commit the diff applies to (default HEAD)'),
+        worktree: z.boolean().optional().describe('check the uncommitted working-tree change vs HEAD'),
+        fixRule: z.string().optional().describe('regex for which commits count as fixes (default: fix/revert/regression/review fixes, or .mole/config.json)'),
+        notesRoot: z.string().optional().describe('read .mole/notes from this directory instead of the root'),
+      },
+    },
+    async (args) => {
+      const modes = [args.sha !== undefined, args.diff !== undefined, args.worktree === true].filter(Boolean).length;
+      if (modes !== 1) return { content: [{ type: 'text' as const, text: 'mole_check: give exactly one of sha, diff (+ base) or worktree: true' }], isError: true };
+      const root = resolve(opts.root, args.root ?? '.');
+      try {
+        const json = await checkJson(root, args);
+        return { content: [{ type: 'text' as const, text: JSON.stringify(json.result, null, 2) }, ...json.notices.map((n) => ({ type: 'text' as const, text: `mole: ${n}` }))] };
+      } catch (e) {
+        return { content: [{ type: 'text' as const, text: `mole_check: ${(e as Error).message}` }], isError: true };
+      }
+    },
+  );
   return server;
+}
+
+export interface CheckArgs {
+  sha?: string;
+  diff?: string;
+  base?: string;
+  worktree?: boolean;
+  fixRule?: string;
+  notesRoot?: string;
+}
+
+/**
+ * Exactly what `mole check <change> --json` prints (packages/daemon/src/cli.ts): T12's CheckResult with T14's questions, the
+ * questions' internal facts (notes, guards) left out. Loaded lazily: git history + questions only, never the indexer.
+ */
+export async function checkJson(root: string, args: CheckArgs): Promise<{ result: Record<string, unknown>; notices: string[] }> {
+  const { questions } = await import('@mole/questions');
+  const change: Change = args.diff !== undefined ? { diffFile: resolve(root, args.diff), base: args.base } : args.sha !== undefined ? { sha: args.sha } : { worktree: true };
+  const q = await questions(root, change, { fixRule: args.fixRule, notesRoot: args.notesRoot ? resolve(root, args.notesRoot) : undefined });
+  const { notes: _notes, guards: _guards, ...r } = q.facts;
+  return { result: { ...r, questions: q.questions }, notices: q.notices };
 }
