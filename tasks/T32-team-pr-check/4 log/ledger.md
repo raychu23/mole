@@ -9,4 +9,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 10:32      running → blocked      cause: Options round 2 (prior-art.md, 2 insights §3 cont.): title-term bump gate (option 3, IR/VSM-style) kept, precision 0.63->0.75 (fp 9->5), recall 0.52 unchanged, owners 30/30, silent 27/30, p95 0.62s. Still FAILS M2
     2026-10-29 15:39      blocked → ready      USER 10-29 15:30 'make it work': round 3 options (up to 3) with prior art (traceability link recovery: IR + structural, co-change mining such as Zimmermann ROSE, scope globs), targets unchanged, if none passes, integrate
     2026-10-29 15:46      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T32-team-pr-check · branch ledger/t32-team-pr-check · base dbfdc52
+    2026-10-29 17:27      running → submitted      report: Options round 3 (options 4/5/6): export-declaration AST detector, comment/test-path noise filter, Terraform bare-block title gate (file-scoped). Frozen key/overlay untouched. M24 bar now PASSES. · checks exit 0 ·
+    2026-10-29 17:27      checks ran: npm run check && node packages/decisions/dist/bench/m24.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T32-team-pr-check → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
