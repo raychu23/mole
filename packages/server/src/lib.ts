@@ -10,7 +10,7 @@ export { createQueue, closeQueue, type Boss } from './queue.js';
 export { createWebhookHandler } from './webhook.js';
 export { writeOutboxInTx, relayOutboxOnce } from './outbox.js';
 export { startFakeGithubApi } from './fakeGithub.js';
-export { rebuildIndexFromGit, snapshotHash, parseMoleRecord } from './rebuild.js';
+export { rebuildIndexFromGit, snapshotHash, parseMoleRecord, GitReadError } from './rebuild.js';
 export { getGoverningDecisions } from './graph.js';
 export { computeCheckRun } from './checkrun.js';
 export { routeQuestion } from './questions.js';

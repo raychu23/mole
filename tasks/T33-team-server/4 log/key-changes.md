@@ -151,3 +151,81 @@ cherry-picked.
 
 **Ruling:** not subject to R2 self-approval (no key/fixture edit) — logged per Raymond's
 honesty policy so a future reader isn't confused by FAIL rows in `runs.jsonl` from this round.
+
+## 2026-10-29 — root-cause fix for the review round 2 BLOCKING finding (data-loss bug)
+
+**This is a new root-cause fix, not a loosening of the M25 key/targets** — logged per R2
+because it changes non-frozen application code (`src/rebuild.ts`, `src/queue.ts`,
+`bench/m25.ts`'s job-handler wiring), not `bench/key.json` or `bench/fixtures.ts`, and the
+acceptance bar (0 index_mismatches, etc., R7) is untouched/unchanged.
+
+**Root cause (restated from the blocked ledger entry):** (a) `rebuild.ts`'s
+`listMoleFilesAtRef` caught ANY git failure (missing ref, missing/torn-down repo dir, `fatal:
+not a tree object`, `fatal: bad object`) and returned `[]`, indistinguishable from "this ref
+legitimately has zero `.mole/` files". `rebuildIndexFromGit` then deleted the org's
+`nodes`/`relations` rows and inserted nothing from that empty list, silently wiping the
+Postgres index. (b) pg-boss jobs referencing already-deleted temp fixture dirs from earlier
+(crashed/interrupted) bench runs had no bound on retries or table growth, so stale jobs could
+sit in and replay against the same long-lived local Postgres (`/tmp/mole-pg-1OjR`, port 5544)
+indefinitely.
+
+**Fix (a), `src/rebuild.ts`:** added `export class GitReadError extends Error` and changed
+`listMoleFilesAtRef` to throw it instead of swallowing the git failure into `[]`. Because this
+call happens BEFORE `rebuildIndexFromGit` opens its DB transaction, the throw now happens
+before any `delete from nodes`/`delete from relations` runs — the existing index is left
+completely untouched on a git read failure, never delete-then-fail-to-insert. The thrown error
+propagates through `telemetry.withSpan` (`src/telemetry.ts`, pre-existing, unchanged), which
+already calls `span.recordException(e)` before rethrowing, so the failure is recorded as an
+OTel exception event on the `index.rebuild` span. `bench/m25.ts`'s `rebuild-index` job handler
+now: (1) uses `batchSize: 1` (not 10) — pg-boss resolves an entire batch's jobs as a single
+unit (`this.complete`/`this.fail` by the full `jobIds` array, confirmed in
+`node_modules/pg-boss/src/manager.js` `work()`), so a batch >1 would have wrongly marked an
+unrelated, already-succeeded job in the same batch as failed; (2) wraps the call in try/catch,
+logs the failure with org/ref/job id via `console.error` for observability outside the
+in-memory OTel exporter, then rethrows so pg-boss marks that job failed (not completed).
+`src/lib.ts` re-exports `GitReadError` for consumers.
+
+**Fix (b), `src/queue.ts`:** per pg-boss 10.x's own docs/type definitions
+(`node_modules/pg-boss/types.d.ts` `RetryOptions`/`RetentionOptions`/`MaintenanceOptions`;
+upstream docs at https://github.com/timgit/pg-boss, docs.pgboss.run "Queues" and
+"Maintenance" sections): every queue is now created with `retryLimit: 3, retryDelay: 5,
+retryBackoff: true, expireInSeconds: 60` (bounds how many times a permanently-failing job,
+e.g. one referencing a deleted fixture dir, is retried — pg-boss's own default `retryLimit` is
+0, so without this a throwing handler just marks the job `failed` once and it sits there) and
+`deadLetter: '<queue>-dlq'` (on exhausting retries pg-boss moves the job to the named
+dead-letter queue instead of leaving it as a candidate the next `boss.work(...)` call has to
+look at again). The `PgBoss` constructor also now sets `archiveCompletedAfterSeconds: 600`
+and `deleteAfterDays: 1` (pg-boss's own built-in maintenance job performs this; no app-level
+cron needed) so completed/failed/dead-lettered jobs are archived quickly and purged within a
+day, bounding job-table growth across many reruns against this one persistent instance instead
+of letting it grow unbounded.
+
+**Regression test:** `test/rebuild-git-failure.spec.ts` (new) reproduces the exact scenario
+from the blocked finding: builds a fixture repo, does one real successful
+`rebuildIndexFromGit` (populating the index), records the row count + snapshot hash, enqueues
+a `rebuild-index` job via the real `createQueue`/`boss.send` for that ref, deletes the repo dir
+(simulating a finished bench run's fixture teardown), then processes the job via
+`boss.work(..., {batchSize: 1})` the same way `bench/m25.ts` does. Asserts: (1)
+`listMoleFilesAtRef`/`rebuildIndexFromGit` reject with `GitReadError`, never resolve; (2) the
+job is observably failed, not completed; (3) the `index.rebuild` OTel span recorded an
+`exception` event; (4) the `nodes` row count and `snapshotHash` for the org are byte-for-byte
+UNCHANGED after the stale job runs — the actual regression this bug caused.
+
+**Verification:** `npm run check` green (49/49 test files, 342/342 tests, including the 2 new
+regression tests) against the real `/tmp/mole-pg-1OjR` Postgres instance (LC_ALL=C,
+`M25_DATABASE_URL=postgresql://a1@/postgres?host=/tmp/mole-pg-1OjR&port=5544` — note: this
+instance only listens on its Unix socket, `-h ''`, not TCP, so a `localhost:5544` connection
+string fails with ECONNREFUSED; the socket-path query-param form above is required). Then `npm
+run build --workspace=packages/server && node packages/server/dist/bench/m25.js` was run 6
+times in a row against this SAME instance with no restart/clear between runs, directly
+querying `select count(*) from nodes` before and after each run (not just the bench's own
+self-report): row count went 182 → 334 on run 1 (new orgs inserted) then stayed exactly 334
+before AND after every one of runs 2–6 (deterministic replace of the same fixed fixture org
+ids each time), `index_mismatches: 0` and `M25 PASS` (exit 0) on all 6 runs. All 6 runs are
+appended honestly to `runs.jsonl` with their real metrics; none were cherry-picked.
+
+**Ruling:** this IS the root-cause fix the task was blocked on. Self-approved under the "allowed
+since it's fixing the blocking defect itself, not loosening the M25 key/targets" carve-out —
+`bench/key.json` and `bench/fixtures.ts` are untouched; only `src/rebuild.ts`, `src/queue.ts`,
+`src/lib.ts`, and the (non-frozen) job-handler wiring in `bench/m25.ts` changed, plus a new
+regression test.

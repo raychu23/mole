@@ -71,11 +71,26 @@ async function main() {
 
   // drain the queue: rebuild-index jobs + compute-check-run jobs
   const lastProcessedRef: Record<string, string> = {};
-  await boss.work('rebuild-index', { batchSize: 10 }, async (jobs) => {
+  // batchSize: 1 (not 10) for rebuild-index: pg-boss resolves/fails an entire batch as one
+  // unit (this.complete/this.fail by the whole jobIds array - see pg-boss src/manager.js
+  // `work()`), so a batch of >1 would mark an unrelated, already-succeeded job in the same
+  // batch as "failed" merely because a later job in that batch threw a GitReadError. Root-
+  // cause fix (T33 review round 2): each rebuild-index job must succeed or fail on its own.
+  await boss.work('rebuild-index', { batchSize: 1 }, async (jobs) => {
     for (const job of jobs) {
       const { orgId, ref } = job.data as any;
-      await rebuildIndexFromGit(pool, orgId, orgs.find((o) => o.id === orgId)!.repoDir, ref, telemetry);
-      lastProcessedRef[orgId] = ref;
+      try {
+        await rebuildIndexFromGit(pool, orgId, orgs.find((o) => o.id === orgId)!.repoDir, ref, telemetry);
+        lastProcessedRef[orgId] = ref;
+      } catch (e) {
+        // Never silently drop this: log it so a failed rebuild is observable outside the
+        // in-memory OTel exporter too, then rethrow so pg-boss marks THIS job failed (and,
+        // per the retryLimit/deadLetter policy in queue.ts, eventually dead-letters it
+        // instead of retrying forever). The index itself is untouched because
+        // rebuildIndexFromGit threw before its transaction began (see rebuild.ts).
+        console.error('[m25] rebuild-index job failed, index left untouched', { orgId, ref, jobId: job.id, error: e instanceof Error ? e.message : String(e) });
+        throw e;
+      }
     }
   });
   await boss.work('compute-check-run', { batchSize: 10 }, async (jobs) => {

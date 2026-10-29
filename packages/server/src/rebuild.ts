@@ -18,15 +18,42 @@ function git(cwd: string, args: string[]): string {
   return execFileSync('git', args, { cwd, encoding: 'utf8' });
 }
 
-function listMoleFilesAtRef(repoDir: string, ref: string): string[] {
-  try {
-    return git(repoDir, ['ls-tree', '-r', '--name-only', ref, '--', '.mole'])
-      .split('\n')
-      .map((s) => s.trim())
-      .filter((s) => s.endsWith('.md'));
-  } catch {
-    return [];
+/**
+ * Distinct error type for "git failed to read `.mole/` at this ref/dir" (missing ref,
+ * missing/torn-down worktree dir, 'fatal: not a tree object', 'fatal: bad object', etc.).
+ *
+ * Root-cause fix (T33 review round 2 blocking finding, 2026-10-29): `listMoleFilesAtRef`
+ * used to swallow ANY git failure with a bare `catch { return [] }`, which is
+ * indistinguishable from "this ref legitimately has zero `.mole/` files". `rebuildIndexFromGit`
+ * then treated that [] as ground truth and deleted the org's `nodes`/`relations` rows before
+ * inserting nothing, silently wiping the decision index whenever a stale pg-boss job replayed
+ * against a since-deleted temp fixture repo dir. A git failure and an empty tree are different
+ * facts and must never be conflated: this type lets callers (rebuildIndexFromGit, job
+ * handlers) treat "I can't tell what's in git" as a hard failure that leaves the existing
+ * index untouched, never as "git says there's nothing here".
+ */
+export class GitReadError extends Error {
+  constructor(repoDir: string, ref: string, cause: unknown) {
+    super(`git failed to read .mole/ at ${ref} in ${repoDir}: ${cause instanceof Error ? cause.message : String(cause)}`);
+    this.name = 'GitReadError';
+    this.cause = cause;
   }
+}
+
+function listMoleFilesAtRef(repoDir: string, ref: string): string[] {
+  let out: string;
+  try {
+    out = git(repoDir, ['ls-tree', '-r', '--name-only', ref, '--', '.mole']);
+  } catch (e) {
+    // NEVER return [] here: that's indistinguishable from "ref has no .mole/ files" and
+    // would make rebuildIndexFromGit wipe the index on a missing ref/dir (the review
+    // round 2 blocking bug). Throw a distinct, clearly-labeled error instead.
+    throw new GitReadError(repoDir, ref, e);
+  }
+  return out
+    .split('\n')
+    .map((s) => s.trim())
+    .filter((s) => s.endsWith('.md'));
 }
 
 function readFileAtRef(repoDir: string, ref: string, file: string): string {
