@@ -378,6 +378,18 @@
    "state": "proposed, waits for D31",
    "metric": "M23",
    "why": "the 1:1 problem, measured; read-back = evidence of understanding"
+  },
+  {
+   "task": "T32-team-pr-check",
+   "state": "proposed, waits for D34 (+ T29)",
+   "metric": "M24",
+   "why": "team phase A: one PR check run with the decisions, owners and past fixes a change touches; no server"
+  },
+  {
+   "task": "T33-team-server",
+   "state": "proposed, waits for D34 and a passing pilot",
+   "metric": "M25",
+   "why": "team phase B: GitHub App + Postgres index rebuilt from git, question routing, remote MCP, outbox, row-level security"
   }
  ]
 }
