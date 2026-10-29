@@ -22,10 +22,11 @@ const cloneOf = (k: Key, repo: string) => resolve(process.env.MOLE_BENCH_T32_DIR
 const overlay = (k: Key, repo: string, v2: boolean) => resolve(repoRoot, v2 ? k.repos[repo]!.records.replace('/bench/m24/', '/bench/m24v2/') : k.repos[repo]!.records);
 
 const combos = [
-  { name: 'none', contentAnchors: false, versionBumpRule: false },
-  { name: '1', contentAnchors: true, versionBumpRule: false },
-  { name: '2', contentAnchors: false, versionBumpRule: true },
-  { name: '1+2', contentAnchors: true, versionBumpRule: true },
+  { name: 'none', contentAnchors: false, versionBumpRule: false, titleBumpGate: false },
+  { name: '1', contentAnchors: true, versionBumpRule: false, titleBumpGate: false },
+  { name: '2', contentAnchors: false, versionBumpRule: true, titleBumpGate: false },
+  { name: '3', contentAnchors: false, versionBumpRule: false, titleBumpGate: true },
+  { name: '1+3', contentAnchors: true, versionBumpRule: false, titleBumpGate: true },
 ];
 const sets = [
   { name: 'frozen key, frozen overlay', key: frozen, v2: false },
@@ -47,7 +48,7 @@ for (const s of sets)
       }
       n++;
       try {
-        const r = await prCheck({ root: clone, recordsRoot: overlay(s.key, p.repo, s.v2), base: p.base, head: p.head, history: false, contentAnchors: c.contentAnchors, versionBumpRule: c.versionBumpRule });
+        const r = await prCheck({ root: clone, recordsRoot: overlay(s.key, p.repo, s.v2), base: p.base, head: p.head, history: false, contentAnchors: c.contentAnchors, versionBumpRule: c.versionBumpRule, titleBumpGate: c.titleBumpGate });
         const got = new Set(r.governed.map((g) => g.id));
         const want = new Set(p.governs);
         const fh = [...got].filter((x) => !want.has(x)).sort();

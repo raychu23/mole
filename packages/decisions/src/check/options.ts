@@ -150,3 +150,39 @@ export function isVersionOnlyHunk(del: string[], add: string[]): boolean {
   }
   return differs;
 }
+
+// Option 3 (options round 2, T32): title-term bump gate. A standard IR/VSM preprocessing step (tokenize + drop a fixed
+// stopword list), applied to the record's OWN title (already in the frozen overlay, no new authored data) rather than to
+// a codebase corpus. A version-only hunk (a dependency/provider bump) under a folder or file scope anchor is governed
+// only when the hunk's enclosing-block context or added text literally names the record's own title vocabulary (e.g. a
+// `helm_release` resource block for "Use Helm..."); a bump that names no part of the title (a routine provider-version
+// line next to it in the same folder) is not. Distinct from option 2 (`versionBumpRule`, off by default), which drops
+// every version-only hunk unconditionally and so also drops true bumps of the decided component (2 insights round 1).
+/** a small, fixed, corpus-independent English stopword list (standard IR practice; not tuned to any record's title) */
+const STOPWORDS = new Set([
+  'the', 'and', 'for', 'with', 'from', 'into', 'this', 'that', 'these', 'those', 'use', 'uses', 'using', 'used',
+  'avoid', 'prefer', 'default', 'defaults', 'proper', 'non', 'policy', 'record', 'records', 'architecture', 'decision',
+  'about', 'over', 'under', 'than', 'then', 'when', 'what', 'which', 'where', 'will', 'shall', 'should', 'would',
+  'have', 'has', 'had', 'are', 'was', 'were', 'been', 'being', 'not', 'but', 'via', 'per', 'each', 'all', 'any',
+  'some', 'such', 'only', 'instead', 'retire', 'restructure', 'maintain', 'give', 'expose', 'split', 'replace',
+]);
+/** title -> distinctive lowercase terms: tokens >=4 chars, not a stopword, deduped. Pure IR query-term extraction
+ *  (no corpus IDF, no per-record curation): applies identically to every record's title. */
+export function titleTermsOf(title: string): string[] {
+  const toks = title.match(/[A-Za-z][A-Za-z0-9+.#-]{2,}/g) ?? [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const t of toks) {
+    const lw = t.toLowerCase();
+    if (lw.length < 4 || STOPWORDS.has(lw) || seen.has(lw)) continue;
+    seen.add(lw);
+    out.push(lw);
+  }
+  return out;
+}
+/** true when any of `terms` occurs (case-insensitive substring) in `text` */
+export function hasTitleTerm(text: string, terms: string[]): boolean {
+  if (!text) return false;
+  const lw = text.toLowerCase();
+  return terms.some((t) => lw.includes(t));
+}

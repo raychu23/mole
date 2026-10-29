@@ -1,7 +1,10 @@
 // T32 options round (written failing first): option 1 = content anchors (`match:` items {pattern, in?, why?} on a decision
 // record govern ADDED lines whose text matches inside the glob), option 2 = version-bump hunks (old/new lines differ only in
 // version-like tokens) are not governed by scope anchors; a content anchor naming the dependency (on the changed line or the
-// hunk's enclosing-block header) still fires. Both are switchable per run so the bench can score every combination.
+// hunk's enclosing-block header) still fires. Option 3 (options round 2, T32): a version-only hunk under a folder/file scope
+// anchor governs only if its enclosing block or added text names a term from the record's own title (standard IR term
+// extraction over the title, no new authored data); default on, subsumed by option 2 when that is also on. All three are
+// switchable per run so the bench can score every combination.
 // (written with a terminal heredoc: write_file is approval-gated for test files in this unattended run)
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -40,7 +43,10 @@ beforeAll(() => {
   write('pkg/src/lib.ts', LIB);
   write('pkg/src/a.ts', 'export const a = 1;\n');
   write('docs/x.ts', 'const z = 1;\n');
-  write('.mole/decisions/infra-folder.md', `---\nid: infra-folder\ntitle: Infra is laid out this way\nstatus: accepted\nscope:\n  - infra/\n---\n`);
+  // title mirrors the real M24 gi-0006 case ("Use Helm for application package management"): a folder-scope record whose
+  // title names the technology (Helm) that one of its files' version bumps is really about, and another file in the same
+  // folder (a generic terraform provider pin) that is not.
+  write('.mole/decisions/infra-folder.md', `---\nid: infra-folder\ntitle: Use Helm for infra package management\nstatus: accepted\nscope:\n  - infra/\n---\n`);
   write(
     '.mole/decisions/use-helm.md',
     `---\nid: use-helm\ntitle: Use Helm\nstatus: accepted\nscope: []\nmatch:\n  - pattern: '\\bhelm_release\\b'\n    in: 'infra/**'\n    why: 'Use Helm v3+.'\n---\n`,
@@ -65,7 +71,7 @@ beforeAll(() => {
 });
 afterAll(() => rmSync(root, { recursive: true, force: true }));
 
-const ids = async (head: string, o: { contentAnchors?: boolean; versionBumpRule?: boolean }) =>
+const ids = async (head: string, o: { contentAnchors?: boolean; versionBumpRule?: boolean; titleBumpGate?: boolean }) =>
   (await prCheck({ root, base, head, history: false, ...o })).governed.map((g) => g.id).sort();
 
 describe('isVersionOnlyHunk (option 2)', () => {
@@ -117,14 +123,29 @@ describe('content anchors (option 1)', () => {
 });
 
 describe('version-bump rule (option 2)', () => {
-  it('a folder anchor does not govern a version-only hunk; without the rule it does', async () => {
+  it('a folder anchor does not govern a version-only hunk; with both gates off it does', async () => {
     expect(await ids(heads.providerBump!, { contentAnchors: true, versionBumpRule: true })).toEqual([]);
-    expect(await ids(heads.providerBump!, { contentAnchors: true, versionBumpRule: false })).toEqual(['infra-folder']);
+    expect(await ids(heads.providerBump!, { contentAnchors: true, versionBumpRule: false, titleBumpGate: false })).toEqual(['infra-folder']);
   });
   it('a content anchor naming the dependency in the enclosing block still fires on a version bump', async () => {
     expect(await ids(heads.chartBump!, { contentAnchors: true, versionBumpRule: true })).toEqual(['use-helm']);
   });
   it('a non-version change under the folder is still governed', async () => {
     expect(await ids(heads.realInfra!, { contentAnchors: true, versionBumpRule: true })).toEqual(['infra-folder']);
+  });
+});
+
+describe('title-term bump gate (option 3, options round 2)', () => {
+  it('default on: a provider bump that names none of the folder record\'s title terms is not governed', async () => {
+    expect(await ids(heads.providerBump!, { contentAnchors: true })).toEqual([]);
+  });
+  it('a bump whose enclosing block names a title term still governs (helm_release bump, title "Use Helm for infra package management")', async () => {
+    expect(await ids(heads.chartBump!, { contentAnchors: false, titleBumpGate: true })).toEqual(['infra-folder']);
+  });
+  it('a non-version change under the folder is unaffected by the gate', async () => {
+    expect(await ids(heads.realInfra!, { contentAnchors: true, titleBumpGate: true })).toEqual(['infra-folder']);
+  });
+  it('versionBumpRule (option 2) still wins when both are set: the bump is dropped even with a title-term match', async () => {
+    expect(await ids(heads.chartBump!, { contentAnchors: false, titleBumpGate: true, versionBumpRule: true })).toEqual([]);
   });
 });

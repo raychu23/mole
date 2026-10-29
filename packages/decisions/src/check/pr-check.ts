@@ -9,7 +9,7 @@ import { loadGraph, MOLE_DIR } from '../graph.js';
 import type { Flag, GraphNode, Problem } from '../types.js';
 import { codeownersAt, parseCodeowners } from './codeowners.js';
 import { parseGitDiff, type ChangedFile, type Hunk } from './diff.js';
-import { contentAnchorsOf, isVersionOnlyHunk, MAX_MATCH_LINE, type ContentAnchor } from './options.js';
+import { contentAnchorsOf, hasTitleTerm, isVersionOnlyHunk, MAX_MATCH_LINE, titleTermsOf, type ContentAnchor } from './options.js';
 import type { CheckAnnotation, CheckRunPayload, GovernedRecord, PrCheckOptions, PrCheckResult, PrQuestion, RecordChange, UnanchoredRecord } from './types.js';
 
 export const CHECK_NAME = 'mole';
@@ -194,6 +194,7 @@ async function prCheckIn(opts: PrCheckOptions, cleanups: Array<() => void>): Pro
   const unanchored: UnanchoredRecord[] = [];
   const useContent = opts.contentAnchors !== false;
   const versionRule = opts.versionBumpRule === true; // off by default: it cost recall on both keys (options round, 2 insights)
+  const titleGate = opts.titleBumpGate !== false && !versionRule; // option 3, on by default; versionRule (option 2) subsumes it
   const versionOnly = (h: Hunk) => isVersionOnlyHunk(h.del ?? [], h.add ?? []);
   const content = new Map<string, ContentAnchor[]>();
   if (useContent) for (const n of graph.nodes) if (n.kind === 'decision') content.set(n.id, contentAnchorsOf(recordsRoot, n, NOT_GOVERNING.has(n.status) ? undefined : problems));
@@ -222,8 +223,19 @@ async function prCheckIn(opts: PrCheckOptions, cleanups: Array<() => void>): Pro
       }
     for (const a of n.scope) {
       const an = parseAnchor(a.target);
+      const titleTerms = titleGate && (an.kind === 'file' || an.kind === 'folder') ? titleTermsOf(n.title) : [];
+      const perHunkSkip = (h: Hunk): boolean => {
+        if (versionRule) return versionOnly(h); // option 2: unconditional drop
+        if (titleTerms.length && versionOnly(h)) {
+          const ctx = h.context ?? '';
+          const add = (h.add ?? []).join('\n');
+          const mentions = (fits(ctx) && hasTitleTerm(ctx, titleTerms)) || hasTitleTerm(add, titleTerms);
+          return !mentions; // option 3: drop only when the bump names none of the record's own title vocabulary
+        }
+        return false;
+      };
       for (const f of changed) {
-        const { added, removed, deletionPoints } = changedRanges(f, versionRule ? versionOnly : undefined);
+        const { added, removed, deletionPoints } = changedRanges(f, perHunkSkip);
         if (versionRule && f.hunks.length > 0 && f.hunks.every(versionOnly)) continue; // only dependency bumps in this file
         const push = (side: 'new' | 'old', path: string, ranges: Range[]) => {
           if (ranges.length) hits.push({ anchor: a.target, path, side, ranges });

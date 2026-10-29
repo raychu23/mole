@@ -22,6 +22,9 @@ export interface PrCheckOptions {
   /** option 2: version-only hunks are not governed by scope anchors (default false: the M24 keys label bumps of a decided
    *  component as governed, so the rule cost recall 0.52 -> 0.31 on the frozen key; kept for the options bench) */
   versionBumpRule?: boolean;
+  /** option 3 (options round 2): a version-only hunk under a folder/file scope anchor governs only if its enclosing
+   *  block or added text names a term from the record's own title (default true; ignored when versionBumpRule is on) */
+  titleBumpGate?: boolean;
 }
 
 export interface CheckAnnotation {
