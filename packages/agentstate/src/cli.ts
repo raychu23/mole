@@ -1,6 +1,7 @@
 // `mole runs | run <id> | tried <run|file#Symbol> | agents <file[#Symbol]>` (registered in packages/daemon/src/cli.ts).
 // --json prints the library result unchanged; without it a short human view. Missing sources are listed, exit 0.
-import { agents, claims, formatClaims, getRun, listRuns, tried } from './index.js';
+import { agents, getRun, listRuns, tried } from './index.js';
+import { claimsCli } from './claims/cli.js';
 import { exportLangGraph } from './langgraph.js';
 import { defaultSources } from './sources.js';
 import type { RunGraph, Skipped, Step, TriedItem } from './types.js';
@@ -110,18 +111,7 @@ export async function agentCli(cmd: string, pos: string[], flags: Record<string,
     print(r, () => [formatTried(r.items), ...skippedLines(r.skipped)].join('\n'));
     return 0;
   }
-  if (cmd === 'claims') {
-    const at = typeof flags.at === 'string' && /^\d+$/.test(flags.at) ? Number(flags.at) : undefined;
-    let r;
-    try {
-      r = claims(target, { ...src, at });
-    } catch (e) {
-      console.error(`mole: ${e instanceof Error ? e.message : String(e)}`);
-      return 1;
-    }
-    print(r, () => [formatClaims(r), ...skippedLines(r.skipped)].join('\n'));
-    return 0;
-  }
+  if (cmd === 'claims') return claimsCli(pos, flags);
   if (cmd === 'agents') {
     const r = agents(target, { ...src, root });
     print(r, () =>

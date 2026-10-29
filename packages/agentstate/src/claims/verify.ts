@@ -10,6 +10,7 @@ import { COUNT, KNOWN_PLACES, pathsIn, shasIn, type Clause } from './split.js';
 import type { Claim, ClaimCategory, ClaimEvidence, Verdict } from './types.js';
 
 const AGENT = new Set(['delegate_task', 'Agent', 'Task', 'spawn_agent', 'SendMessage']);
+const EDIT_TOOLS = new Set(['write_file', 'patch', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'apply_patch']);
 const READ_TOOLS = new Set(['read_file', 'Read', 'NotebookRead', 'search_files', 'Grep', 'Glob', 'skill_view', 'web_search', 'web_extract', 'WebFetch', 'WebSearch']);
 
 /** one tool call, as evidence */
@@ -29,6 +30,7 @@ export interface Ev {
   edits: string[];
 }
 
+const HEREDOC = /<<-?\s*['"]?(\w+)['"]?[\s\S]*?\n\1\b/g;
 const ANSI = /\x1b\[[0-9;]*m/g;
 const parse = (s: string): unknown => {
   try {
@@ -96,7 +98,7 @@ export function evidenceOf(raw: RawRun, before: number | undefined): Ev[] {
       out: text,
       exit,
       outcome,
-      test: command !== null && isTest(command, c.name),
+      test: command !== null && isTest(command.replace(HEREDOC, ''), c.name),
       readOnly,
       agent,
       edits: editedFiles(c, cwd),
@@ -129,6 +131,10 @@ interface Result {
 }
 const R = (verdict: Verdict, why: string, evidence: ClaimEvidence[] = []): Result => ({ verdict, why, evidence });
 
+/** a test-run summary in the output of a command that is not itself a known test command */
+const SUMMARY = /\b\d+ (?:passed|failed)\b|\bTests?\s+\d+ (?:passed|failed)|\bRan \d+ tests?\b|^\s*(?:OK|FAILED)\b|^\s*exit[=: ]\s*-?\d+\s*$|\bexit=-?\d+\b|→ exit -?\d+ \((?:OK|FAILED)\)|\b\d+ pass\b|\bpass(?:ed)? \d+\/\d+|\b[1-9]\d* fail\b/m;
+const RUNNER = (e: Ev): boolean => !e.agent && e.call.resultText !== undefined && !READ_TOOLS.has(e.call.name) && !EDIT_TOOLS.has(e.call.name) && (e.command !== null || /process|tool_call|Monitor|BashOutput/.test(e.call.name));
+const testRun = (e: Ev): boolean => RUNNER(e) && (e.test || (!e.readOnly && SUMMARY.test(e.out)));
 const SIGNATURE = /\b\d+ (?:passed|failed|failing|passing)\b|\bTests?\s+\d|\bRan \d+ tests?\b|^\s*(?:OK|FAILED)\b|\bPASS(?:ED)?\b|\bFAIL(?:ED)?\b|\bexit[=:\s]+\d+\b|\bexit=\d|\b\d+ pass\b|\bpass(?:ed)? \d+\/\d+|[✓✔✗×]|exitCode|\bexit_code\b|\bsucceeded\b|\bCompiled successfully\b/im;
 const FAILS_OUT = /\b[1-9]\d* (?:failed|failing|errors?)\b|^\s*FAIL\b|\bFAILED\b|error TS\d+|Traceback \(most recent call last\)|AssertionError|\bexit[=:]\s*[1-9]\d*/m;
 
@@ -138,13 +144,16 @@ const STOP = new Set(
     'test tests suite full check checks pass passes passed passing green run ran runs npm main branch fixed clean whole every one two three ' +
     'four five six seven eight nine ten new old my our your their his her we i you after before again also only just still too so then than ' +
     'there now first last same other more less most into onto over under up down out off about across including include includes included ' +
-    'tested testing result results number numbers count total time times ok yes done work works working fine good well real each per'
+    'tested testing result results number numbers count total time times ok yes done work works working fine good well real each per ' +
+    'still checkout repo repository worktree local locally machine copy copies using used use now there reran rerun rerunning ' +
+    'fail fails failed failing failure failures error errors warning warnings across files file output outputs same tool tools agent agents ' +
+    'line lines from up down via against both again more'
   ).split(' '),
 );
 /** distinctive words of the clause that also occur somewhere in the run's own calls (prose words that occur nowhere are dropped) */
 function topics(clause: string, evs: Ev[]): string[] {
   const words = [...new Set((clause.toLowerCase().replace(/`[^`]*`/g, ' ').match(/[a-z][a-z0-9_-]{2,}|[a-z]\d+/g) ?? []).filter((w) => !STOP.has(w)))];
-  return words.filter((w) => evs.some((e) => !e.agent && (e.input.toLowerCase().includes(w) || e.out.toLowerCase().includes(w))));
+  return words.filter((w) => evs.some((e) => !e.agent && !EDIT_TOOLS.has(e.call.name) && e.input.toLowerCase().includes(w)));
 }
 const CMD_PHRASE = /`([^`]{3,})`|\b(npm (?:run [\w:-]+|test)|npx [\w-]+|pytest|vitest|python3? -m (?:unittest|pytest)|cargo test|go test|make \w+)\b/i;
 /** a command the clause names (backticked or a known test command) */
@@ -155,10 +164,30 @@ function commandHint(clause: string): string | undefined {
   if (m?.[1] && !/\s/.test(v) && !/^(?:npm|npx|pytest|vitest|make|node|python3?)$/.test(v)) return undefined; // a name, not a command
   return v.split(/\s*&&\s*/)[0]!.toLowerCase();
 }
-const has = (e: Ev, w: string): boolean => e.input.toLowerCase().includes(w) || e.out.toLowerCase().includes(w);
+const has = (e: Ev, w: string): boolean => e.input.toLowerCase().includes(w);
+const FULL_CMD = /unittest\s+discover|\bpytest\b(?![^|;&\n]*\.py)|\bnpm (?:run )?(?:test|check)\b|\bvitest run\b(?![^|;&\n]*\.test\.)|go test \.\/\.\.\.|cargo test|make (?:test|check)\b|run-check|check-task|\bledger\b[^|;&\n]*\bmove\b/;
+/** a whole-suite run: some segment of the command runs a suite runner without naming a test file / filter */
+function fullRun(command: string): boolean {
+  return command
+    .replace(HEREDOC, '')
+    .split(/&&|\|\||;|\||\n/)
+    .some((seg) => FULL_CMD.test(seg) && !TARGETED.test(seg));
+}
 const TARGETED = /\S+\.(?:test|spec)\.[cm]?[jt]sx?\b|\btest_\w+(?:\.py)?\b|\btests?\/\S+\.py\b|\s-k\s|::|--grep\b|\s-t\s|unittest\s+(?!discover)[\w.]+/;
 
 // ---------------------------------------------------------------- test claims
+const DOC = /\.(?:md|txt|json|jsonl|csv|html|log|png|jpg|svg)$/i;
+/** a code edit (not docs/logs/data): edit tools on non-doc files, shell writes that name a source file */
+function codeEdit(e: Ev): boolean {
+  if (e.agent || e.outcome === 'fail') return false;
+  if (e.edits.length) return e.edits.some((f) => !DOC.test(f));
+  if (!e.command || e.readOnly || e.test) return false;
+  const cmd = e.command.replace(HEREDOC, '');
+  return /(?:sed\s+-i|perl\s+-pi|>\s*["']?[\w./~$-]+\.(?:[cm]?[jt]sx?|py|sh|go|rs|java)\b|write_text\([^)]*\)|open\([^)]*\.(?:[cm]?[jt]sx?|py)['"][^)]*['"][wa])/.test(cmd);
+}
+/** the run's code edits after evidence e (the pass it shows may predate the change) */
+const editedAfter = (e: Ev, evs: Ev[]): Ev | undefined => evs.find((x) => x.row > e.row && codeEdit(x));
+
 function counts(clause: string): { n: number; m: number | null } | null {
   let x = /\b(\d[\d,]*)\s*\/\s*(\d[\d,]*)\b/.exec(clause);
   if (x) return { n: num(x[1]!), m: num(x[2]!) };
@@ -168,8 +197,18 @@ function counts(clause: string): { n: number; m: number | null } | null {
   if (x) return { n: num((x[1] ?? x[2] ?? x[3] ?? x[4] ?? x[5])!), m: null };
   return null;
 }
-function showsCount(out: string, n: number, m: number | null): boolean {
-  const pats = [`\\b${n} passed\\b`, `\\b${n} passing\\b`, `\\b${n} pass\\b`, `Ran ${n} tests?\\b[\\s\\S]{0,300}?\\bOK\\b`, `\\b${n}\\s*/\\s*${m ?? n}\\b`, `\\bpass(?:ed)? ${n}\\b`];
+function showsCount(out0: string, n: number, m: number | null): boolean {
+  const out = out0.replace(/^\s*Test Files\b.*$/gm, '');
+  const k = m ?? n;
+  const pats = [
+    `\\b${n} passed\\b`,
+    `\\b${n} passing\\b`,
+    `\\b${n} pass\\b`,
+    `Ran ${n} tests?\\b[\\s\\S]{0,300}?\\bOK\\b`,
+    `\\bpass(?:ed|es)?:? ${n}\\s*/\\s*${k}\\b`,
+    `\\b${n}\\s*/\\s*${k} (?:pass(?:ed)?|tests?|checks?|ok)\\b`,
+    `\\bpass(?:ed)? ${n}\\b`,
+  ];
   if (!pats.some((p) => new RegExp(p, 'i').test(out))) return false;
   if (m !== null && m !== n) return new RegExp(`\\(${m}\\)|\\b${m} tests?\\b|/${m}\\b`).test(out);
   return true;
@@ -180,8 +219,17 @@ function checkTest(cl: Clause, evs: Ev[]): Result {
   const t = cl.text;
   const failClaim = /\bfail(?:s|ed|ing)?\b/i.test(t) && !/\b0 fail/i.test(t) && !/\bno fail/i.test(t);
   const full = /\bfull\b[^.]*\b(?:suite|tests?|check)\b|\bwhole suite\b|\bentire suite\b/i.test(t);
-  let cands = evs.filter((e) => !e.agent && e.call.resultText !== undefined && (e.test || (!e.readOnly && SIGNATURE.test(e.out))));
-  if (full) cands = cands.filter((e) => !(e.command && TARGETED.test(e.command)));
+  const c = counts(t.replace(/\b\d+(?:\.\d+)? ?(?:ms|s|min|GB|MB|KB|%)\b|\(\d+m\d+s\)/g, ' '));
+  let cands = evs.filter(testRun);
+  if (full && !c) cands = cands.filter((e) => !!e.command && fullRun(e.command));
+  // a duration the claim quotes ('ran the full suite (3m47s)') must show in an output
+  const dur = /\((\d+)m(\d{1,2})s\)|\b(\d+)m(\d{1,2})s\b/.exec(t);
+  if (dur) {
+    const mm = dur[1] ?? dur[3] ?? ''; const ss = dur[2] ?? dur[4] ?? '';
+    const re = new RegExp(`\\b${mm}:${ss.padStart(2, '0')}(?:\\.\\d+)?\\b|\\b${mm}m ?${ss}(?:\\.\\d+)?s\\b`);
+    const e = [...evs].reverse().find((x) => !x.agent && re.test(x.out));
+    return e ? R('supported', `an output shows ${mm}m${ss}s`, [item(e, lineOf(e.out, re))]) : R('unsupported', `no output shows ${mm}m${ss}s`);
+  }
   const hint = commandHint(t);
   let rel = cands;
   let filtered = false;
@@ -197,7 +245,6 @@ function checkTest(cl: Clause, evs: Ev[]): Result {
   }
   if (!rel.length) return R('unsupported', cands.length ? 'no check run of this kind in the run' : 'no test or check ran in the run');
   const latest = rel[rel.length - 1]!;
-  const c = counts(t.replace(/\b\d+(?:\.\d+)? ?(?:ms|s|min|GB|MB|KB|%)\b/g, ' '));
   if (c && !failClaim) {
     for (let i = rel.length - 1; i >= 0; i--) if (showsCount(rel[i]!.out, c.n, c.m)) return R('supported', `a run shows ${c.m && c.m !== c.n ? `${c.n} of ${c.m}` : c.n} passing`, [item(rel[i]!, lineOf(rel[i]!.out, new RegExp(`\\b${c.n}\\b`)))]);
     const counted = filtered ? [...rel].reverse().find((e) => hasCount(e.out)) : undefined;
@@ -221,7 +268,12 @@ function checkTest(cl: Clause, evs: Ev[]): Result {
   }
   for (let i = rel.length - 1; i >= 0; i--) {
     const e = rel[i]!;
-    if (e.outcome === 'pass') return R('supported', 'the latest matching run passed', [item(e, lineOf(e.out))]);
+    if (e.outcome === 'pass') {
+      const later = editedAfter(e, evs);
+      return later
+        ? R('unsupported', 'the last passing run predates a code edit; nothing ran after it', [item(e, lineOf(e.out)), item(later, later.edits.length ? `edited ${short(later.edits[0]!, 100)}` : 'edit')])
+        : R('supported', 'the latest matching run passed', [item(e, lineOf(e.out))]);
+    }
     if (e.outcome === 'fail') return R('contradicted', 'the latest matching run failed', [item(e, lineOf(e.out, FAILS_OUT))]);
   }
   return R('unsupported', 'the matching runs have no known outcome', [item(latest, lineOf(latest.out))]);
@@ -341,8 +393,12 @@ function wrote(e: Ev, token: string): boolean {
 function checkFile(cl: Clause, evs: Ev[]): Result {
   const own = evs.filter((e) => !e.agent && e.outcome !== 'fail');
   const tokens = pathsIn(cl.text);
-  for (const [re, place] of KNOWN_PLACES) if (re.test(cl.text)) tokens.push(place);
-  if (!tokens.length) return R('unsupported', 'no file named');
+  const places = KNOWN_PLACES.filter(([re]) => re.test(cl.text)).map(([, p]) => p);
+  for (const p of places) {
+    const e = [...own].reverse().find((x) => x.command !== null && !x.readOnly && x.command.includes(p) && WRITE_SIG.test(x.command));
+    if (e) return R('supported', `the run wrote into ${p}`, [item(e, lineOf(e.out))]);
+  }
+  if (!tokens.length) return R('unsupported', places.length ? `no call in the run wrote into ${places.join(', ')}` : 'no file named');
   for (const t of tokens) {
     const e = [...own].reverse().find((x) => wrote(x, t));
     if (e) return R('supported', `the run wrote ${basename(t)}`, [item(e, e.edits.length ? `edited ${short(e.edits[0]!, 100)}` : lineOf(e.out))]);
