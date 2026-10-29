@@ -29,7 +29,7 @@
       "mole": [
         {
           "id": "mole.panelView",
-          "name": "Mole: the code behind this",
+          "name": "The code behind this",
           "type": "webview",
           "contextualTitle": "Mole"
         }

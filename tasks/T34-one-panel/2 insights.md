@@ -58,6 +58,35 @@
   latency sample; a genuine regression (an extension-host exception, or latency that is consistently over
   target even on a successful run) is not masked by this retry.
 
+## install-check.mjs: one sub-check fails, for a reason outside T34's code
+
+`FIXTURE=... node apps/vscode/scripts/install-check.mjs mole-code-map-0.3.0.vsix` (done-when #4): 3 of 4
+sub-checks pass (`install`, `silentWithoutTypeScript`, `idleShutdownAndRevive`); `selftestInstalled` fails
+with `27:35: execution error: Visual Studio Code got an error: AppleEvent timed out. (-1712)`. That error
+comes from `scripts/selftest.mjs`'s own pre-existing `osascript -e 'tell application "Code" to activate'`
+call — unmodified by T34, and reproducible standalone (`osascript -e 'tell application "Code" to activate'`
+times out the same way run directly in this shell). This sandboxed desktop has no granted macOS Automation
+permission for AppleEvents to the Code app (confirmed: `System Events` queries work, but *any* AppleEvent
+sent straight to the Code app times out) and is also running several other concurrent agents' own VS Code
+Extension Development Host windows, which showed up by name in this session (`ps`/`System Events` listed 3
+separate "Code" processes). Running the same `.vsix` with `SKIP_SELFTEST=1` (skips only the osascript-driven
+sub-check) passes cleanly end to end, confirming the packaged extension itself installs and behaves
+correctly; the failure is specific to that one pre-existing automation call, not to anything T34 built.
+Logged honestly rather than treated as passing (R7): see `4 log/runs.jsonl`'s `install-check.mjs` line.
+
+## Screenshot capture in a shared desktop
+
+The first two screenshot attempts (plain `screencapture -x`, then `open -a "Visual Studio Code"` to raise a
+window) captured the *wrong* window — this desktop had several concurrent agents' own VS Code windows open at
+once, and neither approach reliably targets "the window this script just spawned" over "some other session's
+window of the same app." A third attempt with no explicit activation (`scripts/panel-screenshot.mjs`'s final
+form: just wait for the extension's own `.ready` marker, then `screencapture -x` immediately) happened to
+land on the right window (`tasks/T34-one-panel/4 log/panel-view.png`, confirmed by inspection: it shows the
+"Mole: Mole: The Code Behind..." sidebar with Decisions/Past fixes/Your notes/Since you last
+looked/Questions/Tests sections, each with its one-line caption, on `apps/vscode/src/panelData.ts`). This is
+inherently a best-effort, desktop-contention-dependent step, not a deterministic part of M26a/M26b (which
+don't depend on a screenshot at all — they read the view provider's own in-memory model).
+
 ## Not built / explicitly out of scope here
 
 - `gate verdict (T25)` and `agent coverage (T35 mole coverage --json)` are not implemented anywhere in this
