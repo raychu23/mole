@@ -118,7 +118,7 @@ function locate(root: string, note: Note, repo: () => CodeSymbol[]): Pick<Memory
   const sameTail = elsewhere.filter((s) => s.tail === tail);
   const same = sameTail.find((s) => s.hash === note.hash);
   if (same) return { status: 'moved', newPath: same.path, line: same.startLine, changed: false };
-  if (sameTail.length === 1) return { status: 'moved', newPath: sameTail[0]!.path, line: sameTail[0]!.startLine, changed: true };
+  // a same-named symbol elsewhere with a different body is not this note's code: no name-only re-anchoring (T11 review P1-1)
   // a renamed container (class Foo -> Bar) keeps the member's last name segment and its body
   const last = tail.slice(tail.lastIndexOf('.') + 1);
   const renamed = [...symbolsInFile(root, note.path), ...elsewhere].filter((s) => s.tail.slice(s.tail.lastIndexOf('.') + 1) === last && s.hash === note.hash && s.kind === note.kind);

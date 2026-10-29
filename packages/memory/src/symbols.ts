@@ -35,7 +35,7 @@ export function normalizedHash(text: string): string {
 /** Symbols of one source text (path is only used for names and the TS/TSX choice). */
 export function symbolsOfText(path: string, text: string): CodeSymbol[] {
   const sf = parse(path, text);
-  const out: Array<CodeSymbol & { hasBody: boolean }> = [];
+  const out: Array<CodeSymbol & { hasBody: boolean; node: ts.Node }> = [];
   const line = (pos: number) => sf.getLineAndCharacterOfPosition(pos).line + 1;
   const push = (tail: string, node: ts.Node, kind: CodeSymbol['kind'], hasBody = true) =>
     out.push({
@@ -47,6 +47,7 @@ export function symbolsOfText(path: string, text: string): CodeSymbol[] {
       endLine: line(node.getEnd()),
       hash: digest(tokens(node, sf, [])),
       hasBody,
+      node,
     });
   for (const st of sf.statements) {
     if (ts.isFunctionDeclaration(st) && st.name) push(st.name.text, st, 'function', st.body !== undefined);
@@ -63,12 +64,20 @@ export function symbolsOfText(path: string, text: string): CodeSymbol[] {
     }
   }
   // overloads share a tail: keep the implementation (the one with a body), else the first
-  const keep = new Map<string, CodeSymbol & { hasBody: boolean }>();
+  // the hash covers every declaration of the tail, so an edited overload signature makes the note stale (T11 review P2-1)
+  const keep = new Map<string, CodeSymbol & { hasBody: boolean; node: ts.Node }>();
+  const all = new Map<string, ts.Node[]>();
   for (const s of out) {
     const prev = keep.get(s.tail);
     if (!prev || (!prev.hasBody && s.hasBody)) keep.set(s.tail, s);
+    all.set(s.tail, [...(all.get(s.tail) ?? []), s.node]);
   }
-  return out.filter((s) => keep.get(s.tail) === s).map(({ hasBody: _h, ...s }) => s);
+  return out
+    .filter((s) => keep.get(s.tail) === s)
+    .map(({ hasBody: _h, node: _n, ...s }) => {
+      const nodes = all.get(s.tail) ?? [];
+      return nodes.length > 1 ? { ...s, hash: digest(nodes.flatMap((n) => tokens(n, sf, []))) } : s;
+    });
 }
 
 const cache = new Map<string, { textHash: string; syms: CodeSymbol[] }>(); // parsed files, keyed by repo-relative path + content
