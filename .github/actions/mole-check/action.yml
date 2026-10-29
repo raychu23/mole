@@ -1,0 +1,42 @@
+# T32: reusable composite action behind .github/workflows/mole-pr-check.yml. Builds Mole from this checkout, runs
+# `mole pr-check` on the pull_request event, and POSTs the one check-run payload it wrote, authenticated with the
+# workflow's GITHUB_TOKEN (input `token`). It never comments on the PR.
+name: mole check
+description: Decision records, owners, past fixes and questions for the lines a pull request changes, as one check run.
+
+inputs:
+  token:
+    description: the workflow token (GITHUB_TOKEN) with checks write permission
+    required: true
+  records:
+    description: folder whose .mole/ holds the decision records (default the repository root)
+    required: false
+    default: '.'
+
+runs:
+  using: composite
+  steps:
+    - name: build mole
+      shell: bash
+      run: |
+        npm ci --no-audit --no-fund
+        npx tsc -b
+        # review (fresh reviewer, this round): `tsc -b packages/daemon` alone fails on a clean checkout because
+        # packages/daemon/tsconfig.json has no project reference to packages/flows, which packages/daemon/src/cli.ts
+        # imports dynamically at runtime for the pre-existing `flows` subcommand (T28, unrelated to T32) -- `dist/`
+        # is gitignored so nothing pre-builds it. `tsc -b` with no path builds the whole referenced graph (the same
+        # command as the repo's own `npm run build`), so every runtime-imported workspace package is actually built.
+
+    - name: mole pr-check
+      shell: bash
+      env:
+        MOLE_RECORDS: ${{ inputs.records }}
+      run: |
+        node packages/daemon/dist/cli.js pr-check --event "$GITHUB_EVENT_PATH" --root . --records "$MOLE_RECORDS" --out "$RUNNER_TEMP/mole-check-run.json"
+
+    - name: post the check run
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        gh api --method POST "repos/$GITHUB_REPOSITORY/check-runs" --input "$RUNNER_TEMP/mole-check-run.json" --jq '.html_url'
