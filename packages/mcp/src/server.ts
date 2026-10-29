@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { formatNeighborhood } from '@mole/core';
 import { ensureDaemon, MoleClient, type EnsureOptions } from '@mole/daemon';
 import { defaultSources, tried } from '@mole/agentstate';
+import { registerCollisionsTool } from './collisions-tool.js';
 import { executeTool, GEN_AI } from '@mole/telemetry';
 import type { Change } from '@mole/history';
 import { resolve } from 'node:path';
@@ -54,6 +55,7 @@ export function createServer(opts: MoleMcpOptions): McpServer {
     },
     async ({ target }) => ({ content: [{ type: 'text' as const, text: JSON.stringify(tried(target, { ...defaultSources(), root: opts.root }), null, 2) }] }),
   );
+  registerCollisionsTool(server, opts); // T21: parallel-agent collisions
   server.registerTool(
     'mole_check',
     {
