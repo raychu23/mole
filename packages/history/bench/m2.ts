@@ -218,6 +218,7 @@ async function contractChecks(): Promise<Array<{ name: string; ok: boolean; why:
       return (JSON.parse(j.stdout) as CheckResult).hunks[0]?.pastFixes[0]?.sha === fix ? true : 'json fix missing';
     });
     await t('dw1 worktree + diff-file modes', async () => {
+      git(root, 'checkout', '-q', fix); // key ruling 1 (reviewer-T12-k1, 4 log/key-ruling-1.md): regress a line the fix last wrote
       write(root, 'src/load.ts', 'export function load(x: string | null): string {\n  // null input used to crash the loader\n  const v = x;\n  return v.trim();\n}\n');
       const wt = await check(root, { worktree: true });
       const diffFile = join(tmp, 'wt.diff');
@@ -228,6 +229,7 @@ async function contractChecks(): Promise<Array<{ name: string; ok: boolean; why:
       if (c.status !== 0) return `cli --worktree exit ${c.status}`;
       const dc = cli('--diff', diffFile, '--base', 'HEAD', '--root', root);
       if (dc.status !== 0 || !dc.stdout.includes(fix.slice(0, 7))) return `cli --diff: ${dc.stdout}${dc.stderr}`;
+      git(root, 'checkout', '-q', 'main'); // key ruling 1
       return fixesOf(wt).some((f) => f.sha === fix) && fixesOf(d).some((f) => f.sha === fix) ? true : 'fix missing in worktree/diff mode';
     });
     await t('dw1 fix rule option + .mole/config.json + --fix-rule', async () => {
