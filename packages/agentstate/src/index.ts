@@ -35,7 +35,7 @@ import type {
 export * from './types.js';
 export { defaultSources } from './sources.js';
 export { agentCli } from './cli.js';
-export { exportLangGraph, type LangGraphExport } from './langgraph.js';
+export { exportLangGraph, runGraph, runValues, RunState, type LangGraphExport, type RunValues } from './langgraph.js';
 
 const srcOf = (o: Sources): Required<Sources> => ({ ...defaultSources(), ...Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) });
 const git = (cwd: string, args: string[]): string | undefined => {
