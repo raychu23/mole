@@ -1,0 +1,46 @@
+{
+  "answers": {
+    "q1": {
+      "answer": "No. ADR013 (node-fetch) is superseded by ADR014, which says frontend plugins and packages should prefer the fetchApiRef (an injected fetchApi), not node-fetch/cross-fetch, matching how NotificationsClient takes fetchApi in its constructor.",
+      "source": "docs/architecture-decisions/adr013-use-node-fetch.md and docs/architecture-decisions/adr014-use-fetch.md"
+    },
+    "q2": {
+      "answer": "ADR007 (Use MSW to mock http requests) requires any fetch or XMLHTTPRequest in tests to be mocked with msw's express-style route handlers, as react-testing-library suggests, instead of mocking fetch directly. This avoids each test having its own ad-hoc mocking implementation and avoids mocking fetch/XHR directly in a way that doesn't match real request/response behavior.",
+      "source": "docs/architecture-decisions/adr007-use-msw-to-mock-service-requests.md"
+    },
+    "q3": {
+      "answer": "ADR006 cites that React.FC implicitly adds a children prop and does not support generic types on children; it notes as a concrete fact that Facebook removed React.FC from the create-react-app TypeScript base template.",
+      "source": "docs/architecture-decisions/adr006-avoid-react-fc.md"
+    },
+    "q4": {
+      "answer": "The alternative is Moment.js; ADR010 gives two reasons it's being retired: it's affected by large bundle sizes and mutable state issues, and the Moment.js project itself is being sunset and recommends switching to a modern alternative.",
+      "source": "docs/architecture-decisions/adr010-luxon-date-library.md"
+    },
+    "q5": {
+      "answer": "ADR004 (Module Export Structure) requires every exported symbol to be traceable through index files down to src/index.ts; it was meant to make it easy to answer 'is this export (also) exported by the package?' / 'what is exported from this directory?'.",
+      "source": "docs/architecture-decisions/adr004-module-export-structure.md"
+    },
+    "q6": {
+      "answer": "No, under ADR004's rule they are not part of the public API: since there's no src/utils/index.ts re-exporting them and src/index.ts never mentions them, the chain of index files up to the package root is broken, so by ADR004's own test ('if there is any index file that doesn't export the previous one, the symbol is not publicly exported') these files are private even though nothing explicitly marks them so.",
+      "source": "docs/architecture-decisions/adr004-module-export-structure.md"
+    },
+    "q7": {
+      "answer": "ADR011 defines x-react as containing shared widgets, hooks and similar code that both the plugin itself and third-party frontend plugins can depend on; it would only become justified once other frontend plugins needed to reuse notifications' components/hooks, i.e. the plugin would need code worth sharing across plugin boundaries, which notifications currently doesn't have.",
+      "source": "docs/architecture-decisions/adr011-plugin-package-structure.md"
+    },
+    "q8": {
+      "answer": "ADR003 allows a default export only when 'absolutely necessary', giving React.lazy modules as the example; for teams wanting to avoid even that, it gives the workaround of using React.lazy with a .then(m => ({ default: m.Component })) mapping so the named export is wrapped into a default only at the lazy-import call site.",
+      "source": "docs/architecture-decisions/adr003-avoid-default-exports.md"
+    },
+    "q9": {
+      "answer": "ADR015 defines the loader/component option pattern for JSX elements and components. Its Consequences section says it will be applied to new APIs in the @backstage/frontend-* packages, but explicitly states existing APIs in the old frontend system (@backstage/core-* packages, which includes dev-app-style wiring like this) will NOT be updated/retrofitted to the new pattern.",
+      "source": "docs/architecture-decisions/adr015-jsx-loader-structure.md"
+    }
+  },
+  "meta": {
+    "arm": "with",
+    "run": 1,
+    "numTurns": 4,
+    "durationMs": 26565
+  }
+}
