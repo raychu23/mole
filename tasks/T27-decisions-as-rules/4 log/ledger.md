@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 07:40      checks ran: npm run check && node packages/decisions/dist/bench/m19.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T27-decisions-as-rules → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 07:54      submitted → verified      reviewer t27 fresh reviewers (r1 deleg_ecbe76ff, r2 deleg_5df60e1f, r2b deleg_86fc2156) · findings: r1: P1 emitted config rejected by the depcruise CLI + 6 P2 -> fixed 71603e8 with 12 new tests (each fails without its fi
     2026-10-29 07:54      checks ran: npm run check && node packages/decisions/dist/bench/m19.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T27-decisions-as-rules → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 07:55      verified → integrated      merge 2c05450 · combined checks exit 0 · note: npm run check && node packages/decisions/dist/bench/m19.js on main 2c05450 -> pass (ledger-run), merged branch 0e5de79: 271/271 tests, M19 caught 10/10 citing decision, 0 fa
+    2026-10-29 07:55      combined checks ran: npm run check && node packages/decisions/dist/bench/m19.js in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
