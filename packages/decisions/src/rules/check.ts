@@ -8,7 +8,7 @@ import { computeFlags } from '../flags.js';
 import { loadGraph } from '../graph.js';
 import type { Flag } from '../types.js';
 import { cruiseOptions, depcruiseRuleSet, entryPrefixes, EXCLUDE } from './compile.js';
-import { anyOf, loadRules, pathRegex } from './parse.js';
+import { anyOf, isModuleName, loadRules, pathRegex } from './parse.js';
 import type { RuleSpec, RulesOptions, RulesResult, Violation } from './types.js';
 
 type TSMod = typeof TS;
@@ -105,7 +105,7 @@ function walkFiles(root: string, prefix: string, out: Set<string>): void {
   rec(prefix);
 }
 
-type CruiseDep = { module: string; protocol?: string; resolved: string; dynamic: boolean; valid: boolean; rules?: Array<{ name: string }> };
+type CruiseDep = { module: string; protocol?: string; resolved: string; dynamic: boolean; valid: boolean; dependencyTypes?: string[]; rules?: Array<{ name: string }> };
 type CruiseModule = { source: string; dependencies: CruiseDep[] };
 
 /** Run every rule of root's decision records. */
@@ -115,6 +115,25 @@ export async function checkRules(root: string, opts: RulesOptions = {}): Promise
   const violations: Violation[] = [];
   const result = (): RulesResult => ({ root, ...load, violations: sortV(violations), ms: Date.now() - t0 });
   if (load.rules.length === 0) return result();
+
+  // a from: or path to: that matches no source file narrows the rule to nothing and reads as green (review 1 P2-2)
+  const filesUnder = new Map<string, Set<string>>();
+  const anyFile = (p: string): boolean => {
+    const re = new RegExp(pathRegex(p));
+    for (const pre of entryPrefixes([p])) {
+      if (!filesUnder.has(pre)) {
+        const s = new Set<string>();
+        walkFiles(root, pre, s);
+        filesUnder.set(pre, s);
+      }
+      for (const f of filesUnder.get(pre)!) if (re.test(f)) return true;
+    }
+    return false;
+  };
+  for (const r of load.rules) {
+    const dead = [r.from, ...r.to.filter((t) => !isModuleName(t))].filter((p) => !anyFile(p));
+    for (const p of dead) load.warnings.push({ file: r.file, line: r.line, message: `rule ${r.name}: ${p === r.from ? 'from' : 'to'}: '${p}' matches no source file (typo?)` });
+  }
 
   const flags = new Map<string, Flag>();
   try {
@@ -155,8 +174,9 @@ export async function checkRules(root: string, opts: RulesOptions = {}): Promise
       entries,
       {
         ...cruiseOptions(imports.map((r) => r.from)),
+        validate: true,
         baseDir: root,
-        ruleSet: depcruiseRuleSet(imports) as never,
+        ruleSet: depcruiseRuleSet(imports, { siteFilter: true }) as never,
         ...(tsConfigFile ? { tsConfig: { fileName: relative(root, tsConfigFile) } } : {}),
       },
       {},
@@ -167,17 +187,24 @@ export async function checkRules(root: string, opts: RulesOptions = {}): Promise
       for (const d of m.dependencies) {
         if (d.valid || !d.rules) continue;
         const sf = sources.get(m.source);
-        const sites = sf ? importSites(ts, sf) : [];
+        const sites = (sf ? importSites(ts, sf) : []).filter((s) => s.spec === d.module || s.spec === `${d.protocol ?? ''}${d.module}`);
         for (const hit of d.rules) {
           const r = byName.get(hit.name);
           if (!r) continue;
+          // each site judged on its own: dependency-cruiser merges a static and a dynamic import of one module into one
+          // {dynamic: false} dependency, so d.dynamic says nothing about a given site (review 1 P2-1)
           for (const s of sites) {
-            if (s.spec !== d.module && s.spec !== `${d.protocol ?? ''}${d.module}`) continue;
-            if ((s.kind === 'dynamic') !== d.dynamic) continue; // the other dependency entry of the same module covers it
             if (s.kind === 'type' && !r.types) continue; // erased at build: loads nothing
             if (r.dynamic === false && s.kind === 'dynamic') continue;
             if (r.dynamic === true && s.kind !== 'dynamic') continue;
             add(r, m.source, s.line, s.spec);
+          }
+          // no import site Mole's AST pass knows (/// <reference path>, ...): report dependency-cruiser's finding at line 1
+          // rather than drop it (review 1 P2-4)
+          if (sites.length === 0) {
+            if (r.dynamic !== undefined && r.dynamic !== d.dynamic) continue;
+            if (!r.types && d.dependencyTypes?.includes('type-only')) continue;
+            add(r, m.source, 1, d.module);
           }
         }
       }

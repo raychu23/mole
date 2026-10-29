@@ -16,7 +16,7 @@ export const cite = (r: RuleSpec): string =>
 /** One dependency-cruiser forbidden rule per import rule; its comment cites the decision, why and record file:line.
  * Type-only imports are NOT filtered here: dependency-cruiser reports an unresolved module's `import type` as
  * dependencyTypes ['unknown'], so Mole filters type-only sites with its own TS AST pass (see check.ts). */
-export function depcruiseRuleSet(rules: RuleSpec[]): { forbidden: DepcruiseRule[] } {
+export function depcruiseRuleSet(rules: RuleSpec[], opts: { siteFilter?: boolean } = {}): { forbidden: DepcruiseRule[] } {
   const forbidden: DepcruiseRule[] = [];
   for (const r of rules) {
     if (r.kind !== 'import') continue;
@@ -25,7 +25,9 @@ export function depcruiseRuleSet(rules: RuleSpec[]): { forbidden: DepcruiseRule[
       severity: 'error',
       comment: cite(r),
       from: { path: pathRegex(r.from), ...(r.except.length ? { pathNot: anyOf(r.except.map(pathRegex)) } : {}) },
-      to: { path: anyOf(r.to.map(toRegex)), ...(r.dynamic === undefined ? {} : { dynamic: r.dynamic }) },
+      // siteFilter (checkRules): dynamic: is applied per import site by Mole, because dependency-cruiser merges a static and a
+      // dynamic import of one module into a single {dynamic: false} dependency (review 1 P2-1)
+      to: { path: anyOf(r.to.map(toRegex)), ...(r.dynamic === undefined || opts.siteFilter ? {} : { dynamic: r.dynamic }) },
     });
   }
   return { forbidden };
@@ -42,12 +44,18 @@ export function cruiseOptions(froms: string[]) {
   // doNotFollow, not exclude: dependency-cruiser drops an excluded module as a dependency too, so excluding dist/ would hide
   // node_modules/@mole/indexer/dist/... imports. A doNotFollow module stays a dependency node; it is just never scanned
   // (and is not an initial source), which keeps node_modules, build output and code outside every rule's `from` unread.
+  // dependency-cruiser also tests every directory it gathers from an entry against doNotFollow (without a trailing '/'), so
+  // the outside-every-from part only matches source FILES: otherwise `src` itself, or `packages` under a `packages/*/src/`
+  // from, is pruned and the cruise reads 0 modules (review 1 P1-1). No `validate` here: it is a cruise() API flag and the
+  // depcruise CLI rejects a config whose options carry it (checkRules passes it to the API itself).
+  // (safe-regex refuses nested quantifiers here, so a folder named like a source file, e.g. `apps/x.js/`, outside every from
+  // is pruned too: a from under such a folder would cruise 0 modules; the dead-rule warning does not catch this case)
   const skip = '(^|/)(node_modules|dist|\\.git|\\.mole)/';
+  const file = '.*\\.(?:[cm]?[jt]sx?|vue|svelte|json)$';
   return {
-    validate: true,
     tsPreCompilationDeps: true,
     preserveSymlinks: true,
-    doNotFollow: { path: froms.length ? `${skip}|^(?!${anyOf(froms.map(pathRegex))})` : skip },
+    doNotFollow: { path: froms.length ? `${skip}|^(?!${anyOf(froms.map(pathRegex))})${file}` : skip },
   };
 }
 

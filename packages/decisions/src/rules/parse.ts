@@ -101,7 +101,8 @@ function readFrontMatter(text: string, file: string, errors: Problem[]): FM | un
 
 /** loadRules plus each record's metadata (id, title, status), for citations. */
 export function parseRules(root: string): RulesLoad & { meta: Map<string, RecordMeta> } {
-  const out: RulesLoad & { meta: Map<string, RecordMeta> } = { rules: [], errors: [], skipped: [], meta: new Map() };
+  const out: RulesLoad & { meta: Map<string, RecordMeta> } = { rules: [], errors: [], warnings: [], skipped: [], meta: new Map() };
+  const idFile = new Map<string, string>();
   const dir = join(root, MOLE_DIR, 'decisions');
   if (!existsSync(dir)) return out;
   for (const name of readdirSync(dir).filter((f) => f.endsWith('.md')).sort()) {
@@ -126,11 +127,17 @@ export function parseRules(root: string): RulesLoad & { meta: Map<string, Record
       continue;
     }
     const meta: RecordMeta = { id, title: str(get('title')) ?? id, status: normStatus(str(get('status'))), file };
-    out.meta.set(id, meta);
-    if (NOT_ENFORCED.has(meta.status)) {
-      out.skipped.push({ decision: id, reason: `record is ${meta.status}: its rules are not enforced`, file, line: rulesLine });
-      continue;
+    // a duplicate id keeps its own rules apart: names carry the file stem, so each violation cites the record it was written in
+    const dupOf = idFile.get(id);
+    const stem = dupOf ? `-${name.replace(/\.md$/, '').replace(/[^A-Za-z0-9_-]/g, '_')}` : '';
+    if (dupOf) out.warnings.push({ file, line: lineOf(get('id')?.key, rulesLine), message: `duplicate id ${id} (also ${dupOf}): its rules are named mole-${id}${stem}-<n>` });
+    else {
+      idFile.set(id, file);
+      out.meta.set(id, meta);
     }
+    // not enforced, but still syntax-checked: a broken rule must not wait for the record's reinstatement to surface
+    const enforced = !NOT_ENFORCED.has(meta.status);
+    if (!enforced) out.skipped.push({ decision: id, reason: `record is ${meta.status}: its rules are not enforced`, file, line: rulesLine });
     const seq = rulesPair.value;
     if (!seq || !isSeq(seq)) {
       out.errors.push({ file, line: rulesLine, message: 'rules: must be a list of {forbid: import | call, from, to | callee, ...}' });
@@ -206,6 +213,19 @@ export function parseRules(root: string): RulesLoad & { meta: Map<string, Record
         if (to) fail('to: belongs to forbid: import', lineOf(field('to')?.key, line));
         for (const k of ['dynamic', 'types']) if (field(k)) fail(`${k}: belongs to forbid: import`, lineOf(field(k)?.key, line));
       }
+      // repo-relative with forward slashes: an absolute, '..' or backslash path matches no repo file and would read as green
+      const paths: Array<[string, string[]]> = [['from', from ? [from] : []], ['except', except], ['to', to ?? []]];
+      for (const [k, vals] of paths)
+        for (const v of vals) {
+          const why = v.includes('\\')
+            ? "uses '\\' (write paths with /)"
+            : /^(?:\/|[A-Za-z]:)/.test(v)
+              ? 'is absolute (write a repo-relative path)'
+              : /(?:^|\/)\.\.(?:\/|$)/.test(v)
+                ? "leaves the repo ('..')"
+                : undefined;
+          if (why) fail(`${k}: '${v}' ${why}`, lineOf(field(k)?.key, line));
+        }
       const globs: Array<[string, string[]]> = [['from', from ? [from] : []], ['except', except], ['to', (to ?? []).filter((t) => !isModuleName(t))]];
       for (const [k, vals] of globs)
         for (const v of vals)
@@ -214,9 +234,9 @@ export function parseRules(root: string): RulesLoad & { meta: Map<string, Record
           } catch (e) {
             fail(`${k}: ${(e as Error).message}`, lineOf(field(k)?.key, line));
           }
-      if (bad || !kind || !from) return;
+      if (bad || !kind || !from || !enforced) return;
       out.rules.push({
-        name: `mole-${id.replace(/[^A-Za-z0-9_-]/g, '_')}-${i + 1}`,
+        name: `mole-${id.replace(/[^A-Za-z0-9_-]/g, '_')}${stem}-${i + 1}`,
         kind,
         decision: id,
         title: meta.title,
@@ -238,6 +258,6 @@ export function parseRules(root: string): RulesLoad & { meta: Map<string, Record
 
 /** Load every rule of every decision record under root/.mole/decisions. */
 export function loadRules(root: string): RulesLoad {
-  const { rules, errors, skipped } = parseRules(root);
-  return { rules, errors, skipped };
+  const { rules, errors, warnings, skipped } = parseRules(root);
+  return { rules, errors, warnings, skipped };
 }

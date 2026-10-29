@@ -50,6 +50,8 @@ export interface SkippedRules {
 export interface RulesLoad {
   rules: RuleSpec[];
   errors: Problem[];
+  /** suspect but runnable: a duplicate record id, a from/to path that matches no file (a typo would read as green) */
+  warnings: Problem[];
   skipped: SkippedRules[];
 }
 
