@@ -147,7 +147,7 @@ export function answersOf(loc: Located, src: Required<Sources>, skipped: Skipped
       const c = msg.content;
       if (o.type === 'user') {
         const prompt = typeof c === 'string' || (Array.isArray(c) && c.some((b) => (b as { type?: string }).type === 'text'));
-        if (prompt && o.isMeta !== true) flush();
+        if (prompt) flush(); // a prompt, or an injected message (subagent hand-back, wakeup): either starts a new turn
       } else if (o.type === 'assistant' && Array.isArray(c)) {
         const text = c.filter((b) => (b as { type?: string }).type === 'text').map((b) => String((b as { text?: unknown }).text ?? '')).join('');
         if (text.trim()) last = { run, harness: 'claude-code', row: n, time, text };
