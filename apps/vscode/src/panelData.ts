@@ -57,11 +57,11 @@ const CAPTIONS: Record<SectionId, string> = {
   decisions: 'Decisions: the record that governs this code and why it was made (@mole/decisions, T29).',
   pastFixes:
     'Past fixes: the decision that changed these lines before, its reason, and the test that still guards it (@mole/history PastFix, T12).',
-  notes: 'Your notes: what you decided about this code, kept beside it (@mole/memory note/memory, T11).',
-  since: 'Since you last looked: what changed in code you already read, so stale understanding never passes for current (@mole/memory SinceResult, T13).',
+  notes: 'Your notes: what you decided about this code, kept beside the decisions it belongs to (@mole/memory note/memory, T11).',
+  since: 'Since you last looked: what changed in the decisions and code you already read, so stale understanding never passes for current (@mole/memory SinceResult, T13).',
   questions: 'Questions: up to 3 aimed at the understanding a change to this code assumes, from the decisions and fixes above (@mole/questions, T14).',
   tests: 'Tests that guard it: the record proving a decision still holds, with a button to re-check it now (@mole/verify testsAtLine/testMap, T22).',
-  agents: 'Agents: who touched this code, what they already tried, and whether two agents collided here (@mole/agentstate, T18/T21/T24).',
+  agents: 'Agents: who touched this code and its governing decisions, what they already tried, and whether two agents collided here (@mole/agentstate, T18/T21/T24).',
   blastRadius: 'Blast radius: the decisions, tests and runtime callers this change would reach (daemon map/impact + @mole/flows, T28).',
 };
 
@@ -71,12 +71,20 @@ function toMessage(e: unknown): string {
   return msg.split('\n')[0]!.slice(0, 200);
 }
 
+/** Errors that mean "there is nothing to read here" rather than "this broke": distinguishes failure case a
+ *  (no .mole / no git -> a one-line instruction, not a reported bug) from failure case b (a real fault,
+ *  which must still surface as 'error' so it's visibly different from "nothing here"). */
+const UNAVAILABLE_PATTERN = /not a git repository|no \.mole|enoent|not (a |an )?mole repo|not initiali[sz]ed|run `?mole (reindex|init)/i;
+
 async function section<T>(id: SectionId, run: () => Promise<T> | T, isEmpty: (v: T) => boolean): Promise<Section<T>> {
   try {
     const data = await run();
-    return { status: isEmpty(data) ? 'empty' : 'ok', caption: CAPTIONS[id], data };
+    if (isEmpty(data)) return { status: 'empty', caption: CAPTIONS[id], data, message: 'nothing found here yet' };
+    return { status: 'ok', caption: CAPTIONS[id], data };
   } catch (e) {
-    return { status: 'error', caption: CAPTIONS[id], message: toMessage(e) || 'failed to load' };
+    const message = toMessage(e) || 'failed to load';
+    const status: SectionStatus = UNAVAILABLE_PATTERN.test(message) ? 'unavailable' : 'error';
+    return { status, caption: CAPTIONS[id], message };
   }
 }
 
