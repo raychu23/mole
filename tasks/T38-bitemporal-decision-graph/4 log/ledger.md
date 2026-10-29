@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 18:18      checks ran: npm run check && node packages/temporal/dist/bench/m32.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T38-bitemporal-decision-graph → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 18:34      submitted → verified      reviewer fresh subagent (R5, no prior transcript) · findings: 2 P0 + 1 P1, all fixed and rerun (tasks/T38-bitemporal-decision-graph/4 log/review-1.md): boundary doc (packages/mcp vs stale packages/server reference), .mol
     2026-10-29 18:34      checks ran: npm run check && node packages/temporal/dist/bench/m32.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T38-bitemporal-decision-graph → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 18:45      verified → integrated      merge ebe4825 · combined checks exit 0 · note: npm run build (tsc -b) on main: 0 errors, npx vitest run (temporal/mcp/decisions): 17 files 154 tests passed, node packages/temporal/dist/bench/m32.js on main: as-of 100.0% 
+    2026-10-29 18:45      combined checks ran: npm run check && node packages/temporal/dist/bench/m32.js in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
