@@ -1,22 +1,22 @@
 ---
-state: submitted
+state: verified
 owner: mole-agent-states (Hermes chat)
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t18-agent-states
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T18-agent-states
 base: 767f129
-reviewer:
-updated: 2026-10-29 01:04
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+reviewer: reviewer-T18-r2
+updated: 2026-10-29 01:11
+status: ledger verified
+next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
 claimed: 2026-10-29 00:13
 ---
 ```notes
 T18-agent-states      ledger task (rules.md §3 code features)      project tasks
     goal                    Agent states for observe + verify: read agent runs that already exist on this Mac (Hermes ~/.hermes/state.db, Claude Code ~/.claude/projects/*.jsonl, Codex ~/.codex/sessions/**/*.jsonl; LangGraph checkpointer tables and OpenTelemetry GenAI spans when a project has them) into one state graph per run, stored in LangGraph's checkpoint shape (thread_id, checkpoint_id, parent_checkpoint_id, values) with OpenTelemetry GenAI operation names (invoke_agent, execute_tool, plan). Each checkpoint records the context the agent had (files read; git sha + hash of .mole/, AGENTS.md, CLAUDE.md), what it tried (commands, tests, fixes + result) and what it changed (files, symbols, commits). From that: 'already tried' that survives compaction, 'ran on stale context', and per function 'which agent runs touched this and in what state'
     done-when               1) mole runs [--json] lists runs from the 3 local sources with harness, cwd, start, steps, compactions; mole run <id> [--json] prints the state graph (steps, subagent fan-out + merge, compaction points) and emits LangGraph-shaped checkpoints; 2) mole tried <run|file#Symbol> lists commands/tests/fixes already tried with their outcome, including ones before a compaction (3C1 lines 289-290: 'the agent forgets which fix it already tried, so it tries it again'); MCP tool mole_tried returns the same JSON; 3) every checkpoint records its context version; mole run flags steps that relied on a note T11 now marks stale or changed; 4) mole agents <file#Symbol> lists the runs and steps that edited it, newest first; 5) M6 attribution: >= 95% of file edits in agent-made commits of the Mole repo (T1-T15 history) link to a run step; 6) M7 tried-recall: a key written BEFORE the implementation by a separate subagent, over the 7 Hermes sessions + 4 Claude Code transcripts that contain a compaction, listing commands/tests tried before each compaction → recall 100%, wrong items <= 5%; 7) failure/empty case: a missing or unreadable source is listed as skipped with the reason, exit 0; sources are opened read-only; 8) privacy: run data and any key that quotes chat text live in .mole/local/ (gitignored); commit only counts + the key's sha256 in tasks/T18-agent-states/4 log/; 9) npm run check passes
-    status                  2026-10-29 submitted      report: review-1 fixes 39baf15: F1 unreadable transcript skipped in root mode, F2 mole agents uses attribution's commit
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    status                  2026-10-29 verified      reviewer reviewer-T18-r2 · findings: 0 P0/P1, review-1 F1 F2 F3 F5 F7 fixed (regression tests fail on 3262703 src, pass
+    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
     pinned
     mode                    code
     boundary                packages/agentstate/** (new), packages/daemon/src/cli.ts (register subcommands with one import + one call only), packages/mcp/src (new mole_tried tool only), .gitignore, tasks/T18-agent-states/**
