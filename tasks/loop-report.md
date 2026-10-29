@@ -103,3 +103,37 @@ real example (3C1 line 289: "it gets compacted, and the agent forgets which fix 
 next
     T20 (LangGraph checkpoint export) and T21 (parallel-agent collisions) need T18: both now unblocked
 ```
+
+## E6 builder 2 (2026-10-29 03:10): T16, T19, T20, T21 (resume = plan)
+
+```notes
+task        state           metric (latest)                                                              target                                   verdict
+    T16         integrated      M13 stage coverage 100% (9/9) · off requests 0 · MLflow 34/34 runs, 2nd load 0 · CI key guard red 1 / green 0      100% · counts equal · red on key edit       MET
+    T20         integrated      M10 round-trip 100% (15/15 runs, 3,747 checkpoints) · fork 3/3 · empty 2/2              100% same steps/order/values · fork works MET
+    T21         verified        M11 recall 100% (16/16) · false alarms 0% (0/16) · real 9/9, planted 7/7                recall >= 90% · false <= 10%              MET, not merged
+    T19         blocked         M9 88.9% right (32/36) · 0 wrong · synthetic 10/10                                      >= 95% right · 0 wrong                    MISSED
+    T17         ready           waits for T15 (harness + 2-sample dry run only; paid A/B waits for Raymond)
+on main     6463b51 + run logs      npm run check 159/159 · m10 + m13 at target after both merges · key guard 7 keys green
+how it went
+    T16         red d81d48d → impl → bench red: frozen harness used spawnSync with the OTLP receiver in the same process (no impl could pass)
+                → key ruling 1 (fresh reviewer, probe-checked, approved async spawn + stricter off wait) b23abcb → green round 1 → review 1 verified
+    T20         red 626a462 → impl 8d3d596 green round 1 → review 1 verified (6 exporter mutations all turned the bench red; 897/897 local runs round-trip)
+    T21         red acd2737 → impl green → review 1 verified (7 detector mutations all red)
+    T19         red b19fd8a → impl: 4 rewrites at similarity 0.40-0.50 below the key's 0.55, one negative at 0.51 → no body threshold reaches 95% with 0 wrong
+                → key ruling 1: caller-evidence path allowed only if it passes a held-out key labelled first (hermes ui-tui, 22 re-anchors)
+                → held-out 81.8%, 3 wrong (all from the body-only path) → reverted 00951ab → ledger refused submit (checks red) → blocked, decision Raymond
+    merge       T16 x T18 conflicts in daemon/mcp package.json, tsconfig, mcp server.ts imports → kept both
+what missed / risks
+    T19         the resume phrase "rename-proof anchors" is not true at its bar; per Resume + interview §6 the phrase changes, the metric doesn't
+                held-out also shows the body-only path can re-anchor wrong on another repo (3 of 22): today's 0 wrong is repo-specific
+                fetching history wrote missing objects into ~/.hermes/hermes-agent/.git (no working tree / branch change)
+    T16 P2s     key guard accepts a ruling the implementer writes alone, and matches APPROVE anywhere in it → the guard is a speed bump, not a lock
+                MLflow loader lets an env var turn MLflow's own telemetry back on
+    T21 P2s     labels follow the detector's rule (100% = code matches rule, not rule is right) · 2-hop limit not pinned by a check
+                · shell-command edits invisible · ~22 s per call (no call-graph cache; T15 hooks need one)
+    T20 P2s     re-export deletes user forks in that thread · SqliteSaver.setup() via a cast
+next
+    T15 integrates → T21 hook output (spec in tasks/T21-parallel-agent-collisions/2 insights.md) → re-review the small diff → integrate T21
+                   → T17 harness + scorer tests + 2-sample dry run (no paid run)
+    Raymond     T19: integrate as is + reword the phrase to the measured number, or a new task for a stronger matcher (AST-shape similarity, fresh held-out key)
+```

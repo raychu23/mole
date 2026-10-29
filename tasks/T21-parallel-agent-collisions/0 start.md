@@ -24,6 +24,9 @@ T21-parallel-agent-collisions      ledger task (rules.md §3 code features)     
     non-goals               no PR comments/bot (D24) · no structure-map work (D23) · prototype/ rejected · no publishing or pushing · Raymond's accounts never used · don't edit benchmark keys after the red-tests commit (R2)
     proof                   runs.jsonl last line with M11 + npm run check + red-tests commit sha
     stop                    same check failure 3 rounds in a row (R3) · needs Raymond's accounts, paid API spend or a product decision
+    assumptions             builder 2, 2026-10-29 · collision = windows within 15 min + same function or <=2 DIRECTED call hops (T1 indexer) or a note hit; parent/subagent never a pair
+                            hook output waits for T15 (spec in 2 insights.md); integrate after the hook lands · fc6c6dc0 vs 39d6ac07 did not overlap (79 min gap), labelled not
+                            open P2 (review-1): 2-hop limit not pinned by a check · real half reads today's checkouts · ~22 s per call, no graph cache
     came from               USER 2026-10-29 01:00 'no the resume is the plan. thats why im building it dummy … be daring ambitious pls' · Resume + interview.md target bullets · loop-goals E6
     links                   4 log/ledger.md (every transition + its evidence)
     harness                 hermes

@@ -24,6 +24,10 @@ T16-traces-runs-ci      ledger task (rules.md §3 code features)      project ta
     non-goals               no PR comments/bot (D24) · no structure-map work (D23) · prototype/ rejected · no publishing or pushing · Raymond's accounts never used · don't edit benchmark keys after the red-tests commit (R2) · no network, no accounts, MLflow local file store only
     proof                   M13 line in runs.jsonl (stage span coverage, MLflow run count = runs.jsonl lines, CI key-guard red/green proof) + npm run check
     stop                    same check failure 3 rounds in a row (R3) · needs Raymond's accounts, paid API spend or a product decision
+    assumptions             builder 2, 2026-10-29, Raymond not watching · 'index' stage = symbol resolution (mole check never opens the code index)
+                            MCP span calls in packages/mcp (outside listed boundary; goal names MCP tool calls) · CI runs only self-contained benches (M3, M13), the rest print why they skip
+                            MLflow = mlflow-skinny 3.17.2 in a venv outside the repo, needs MLFLOW_ALLOW_FILE_STORE=true (loader sets it) · key ruling 1: harness spawnSync → async spawn
+                            open P2 (review-1): key guard accepts a self-written ruling + matches APPROVE anywhere · loader lets env re-enable MLflow telemetry
     came from               USER 2026-10-28 21:25 'also whats the current tools being used maybe also use more advantaced current industry tools maybe the ml ops tools stuff actually relevant ot industry jobs. we;ll see .' · D26 OPEN · Agentic workflow + integrations.md §11
     links                   4 log/ledger.md (every transition + its evidence)
     harness                 hermes

@@ -24,6 +24,10 @@ T19-rename-proof-anchors      ledger task (rules.md §3 code features)      proj
     non-goals               no PR comments/bot (D24) · no structure-map work (D23) · prototype/ rejected · no publishing or pushing · Raymond's accounts never used · don't edit benchmark keys after the red-tests commit (R2)
     proof                   runs.jsonl last line with M9 + npm run check + red-tests commit sha
     stop                    same check failure 3 rounds in a row (R3) · needs Raymond's accounts, paid API spend or a product decision
+    assumptions             builder 2, 2026-10-29 · key labels = worker's judgment from diffs, written before code · thresholds 0.55 / tie 0.01 / >=16 tokens fixed in the key
+                            result: frozen key 88.9% right (32/36), 0 wrong · caller-evidence path failed the held-out gate (hermes ui-tui 81.8%, 3 wrong), reverted (ruling 1 §7)
+                            side effect: history reads fetched missing objects into ~/.hermes/hermes-agent/.git (no working-tree, branch or history change)
+                            NEEDS YOU: integrate as is + reword the resume phrase to the measured number (Resume + interview §6), or new task for a stronger matcher
     came from               USER 2026-10-29 01:00 'no the resume is the plan. thats why im building it dummy … be daring ambitious pls' · Resume + interview.md target bullets · loop-goals E6
     links                   4 log/ledger.md (every transition + its evidence)
     harness                 hermes

@@ -24,6 +24,9 @@ T20-langgraph-checkpoint-export      ledger task (rules.md §3 code features)   
     non-goals               no PR comments/bot (D24) · no structure-map work (D23) · prototype/ rejected · no publishing or pushing · Raymond's accounts never used · don't edit benchmark keys after the red-tests commit (R2)
     proof                   runs.jsonl last line with M10 + npm run check + red-tests commit sha
     stop                    same check failure 3 rounds in a row (R3) · needs Raymond's accounts, paid API spend or a product decision
+    assumptions             builder 2, 2026-10-29 · writes via SqliteSaver.put (not graph.invoke: invoke writes several checkpoints per step), uuid6 ids rising per step
+                            tried = that step's attempt only (T18 shape) · sample = 15 runs (T18 M7 sessions minus 3 still growing + local hermes/claude/codex)
+                            open P2 (review-1): re-export deletes user forks in that thread · SqliteSaver.setup() called through a cast
     came from               USER 2026-10-29 01:00 'no the resume is the plan. thats why im building it dummy … be daring ambitious pls' · Resume + interview.md target bullets · loop-goals E6
     links                   4 log/ledger.md (every transition + its evidence)
     harness                 hermes
