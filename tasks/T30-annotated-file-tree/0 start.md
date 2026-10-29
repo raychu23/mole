@@ -1,22 +1,22 @@
 ---
-state: running
+state: blocked
 owner: mole-builder-4
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t30-annotated-file-tree
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T30-annotated-file-tree
 base: fb240ab
 reviewer:
-updated: 2026-10-29 06:45
-status: ledger running
-next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+updated: 2026-10-29 07:19
+status: ledger blocked
+next: decision owner unblocks → ledger move <task> ready --note …
 claimed: 2026-10-29 06:45
 ---
 ```notes
 T30-annotated-file-tree      ledger task (rules.md §3 code features)      project tasks
     goal                    The big picture on the file tree (3C1 line 675): a VS Code FileDecorationProvider colors files and folders by decision flag with a short badge (decisions in force) propagated to parents, plus an intent card on hover per folder (purpose, end state, tenets it traces to, decisions + exceptions with evidence state, who to ask from approvers + read-backs, your own read state); replaces T26's separate meaning map (D31)
     done-when               1) decorations + intent cards on Mole and on a public repo with decision records (backstage/backstage or alphagov/govuk-aws), 2) M22 proxy tonight: 5 'why' questions about an unfamiliar folder, key labeled before the code, answered by fresh subagents with vs without the tree's output (cards + badges as text), 3 runs each → correct answers per arm, the 3+ junior study kit (questions, order, timing sheet from systems/tool-trials/you-10-min.md) written and left for Raymond (D7), 3) decorations p95 <= 50 ms per folder from cached flags, 4) failure case: a folder with no records shows nothing (no empty cards, no invented purpose), 5) npm run check passes
-    status                  2026-10-29 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T30-annotated-file-tree · branch ledger/t30-annotated-file-tre
-    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+    status                  2026-10-29 blocked      cause: M22 proxy target missed: with the tree 15/15 vs without 15/15 correct (tie, 3 fresh subagents per arm, 5 why-ques
+    next                    decision owner unblocks → ledger move <task> ready --note …
     pinned
     mode                    code
     boundary                packages/decisions/src/tree/** (pure: folder → flag, badge, intent card) + bench m22*, apps/vscode/src (FileDecorationProvider + folder hover card only), tasks/T30-annotated-file-tree/**
