@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@mole/core": "*",
-    "@mole/indexer": "*"
+    "@mole/indexer": "*",
+    "@mole/history": "*"
   }
 }
