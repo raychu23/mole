@@ -1,5 +1,5 @@
-// T21 parallel-agent collisions. Two runs collide when their windows come within N minutes of each other (both live at
-// once), neither is the other's parent/subagent, and one edits a function the other edited or read, or one within a
+// T21 parallel-agent collisions. Two runs collide when their activity comes within N minutes of each other (both live at
+// once; a run's activity = its complete steps split at idle gaps > N minutes, so a resumed chat is not live during its gap), neither is the other's parent/subagent, and one edits a function the other edited or read, or one within a
 // directed call chain of <= `hops` calls edges of it (T1 call graph). Also: a run that edits a function a note is on (T11).
 // Only complete steps count: a tool call with no result yet, or a half-written last JSONL line, is not evidence.
 // Definition + labels: packages/agentstate/bench/m11-key.json (written before this code).
@@ -304,7 +304,20 @@ interface R {
   info: CollisionRun;
   first: number;
   last: number;
+  /** activity segments [start, end]: complete steps split where none happened for more than N minutes (a resumed chat is not live during its idle gap) */
+  segs: Array<[number, number]>;
   touches: Touch[];
+}
+
+function segments(times: number[], gap: number): Array<[number, number]> {
+  const t = [...times].sort((x, y) => x - y);
+  const out: Array<[number, number]> = [];
+  for (const x of t) {
+    const cur = out.at(-1);
+    if (cur && x - cur[1] <= gap) cur[1] = x;
+    else out.push([x, x]);
+  }
+  return out;
 }
 
 /** `mole collisions`: pairs of parallel runs whose functions meet (same function, or a call chain <= hops), newest first. */
@@ -326,7 +339,7 @@ export function collisions(opts: CollisionsOptions): CollisionsResult {
     const last = Math.max(...done);
     if (last < since) continue;
     const sum = r.raw.summary;
-    runs.push({ info: { id: sum.id, harness: sum.harness, title: sum.title, parent: sum.parent ?? loaded.parents.get(sum.id) ?? null, first: iso(first), last: iso(last) }, first, last, touches: touchesOf(r, loaded.dirs) });
+    runs.push({ info: { id: sum.id, harness: sum.harness, title: sum.title, parent: sum.parent ?? loaded.parents.get(sum.id) ?? null, first: iso(first), last: iso(last) }, first, last, segs: segments(done, N * 60_000), touches: touchesOf(r, loaded.dirs) });
   }
   runs.sort((a, b) => b.last - a.last || a.info.id.localeCompare(b.info.id));
 
@@ -344,6 +357,7 @@ export function collisions(opts: CollisionsOptions): CollisionsResult {
       const b = runs[j]!;
       if (focusId && a.info.id !== focusId && b.info.id !== focusId) continue;
       if (a.first > b.last + win || b.first > a.last + win) continue; // not live at the same time
+      if (!a.segs.some(([s1, e1]) => b.segs.some(([s2, e2]) => s1 <= e2 + win && s2 <= e1 + win))) continue; // only one side's idle gap overlaps
       if (ancestor(a.info.id, b.info.id) || ancestor(b.info.id, a.info.id)) continue; // delegation, not parallel work
       if (!a.touches.some((t) => t.how === 'edit') && !b.touches.some((t) => t.how === 'edit')) continue;
       if (!a.touches.length || !b.touches.length) continue;
