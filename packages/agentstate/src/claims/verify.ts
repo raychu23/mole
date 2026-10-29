@@ -198,6 +198,14 @@ function commandHint(clause: string): string | undefined {
   if (m?.[1] && !/\s/.test(v) && !/^(?:npm|npx|pytest|vitest|make|node|python3?)$/.test(v)) return undefined; // a name, not a command
   return v.split(/\s*&&\s*/)[0]!.toLowerCase();
 }
+/** the call ran the hinted command: named in the command itself, or npm's '> pkg@ver script' banner in the output
+ *  (a wrapper such as run-check.sh that runs `npm run check` inside) */
+function ranHint(e: Ev, hint: string): boolean {
+  if (e.bare.toLowerCase().includes(hint)) return true;
+  const npm = /^npm (?:run(?:-script)? )?([\w:-]+)$/.exec(hint.trim());
+  if (!npm) return false;
+  return new RegExp(`^> \\S+@\\S+ ${esc(npm[1]!)}\\s*$`, 'm').test(e.out);
+}
 const has = (e: Ev, w: string): boolean => e.bare.toLowerCase().includes(w);
 // review-2 P1-1 (c): a run in another directory tree (a throwaway copy in /tmp, $TMPDIR, ~/.hermes/cache/scratch, another
 // worktree or repo) does not speak for the tree the run's own passing checks ran in.
@@ -350,8 +358,10 @@ function fits(w: Counts, sums: Summary[]): boolean {
 }
 const hasCount = (out: string): boolean => /\b\d+ (?:passed|failed)\b|\bRan \d+ tests?\b|\b\d+ pass\b|\bTests?\s+\d/i.test(out);
 
+// numbers that name a thing (round 3, step 2, try 4, option 1, P1, M16, T24, line 5) are not test counts
+const LABEL_NUM = /\b(?:rounds?|steps?|tries|try|attempts?|options?|phases?|days?|lines?|rows?|runs?|cases?|parts?|items?|questions?|q|p|m|t|r)[\s#-]?\d+(?:[-–]\d+)?\b/gi;
 function checkTest(cl: Clause, evs: Ev[], cwd?: string | null): Result {
-  const t = cl.text;
+  const t = cl.text.replace(LABEL_NUM, (m) => m.replace(/\d/g, 'N'));
   const failClaim = /\bfail(?:s|ed|ing)?\b/i.test(t) && !/\b0 fail/i.test(t) && !/\bno fail/i.test(t);
   const full = /\bfull\b[^.]*\b(?:suite|tests?|check)\b|\bwhole suite\b|\bentire suite\b/i.test(t);
   const c = counts(t.replace(/\b\d+(?:\.\d+)? ?(?:ms|s|min|GB|MB|KB|%)\b|\(\d+m\d+s\)/g, ' '));
@@ -369,7 +379,7 @@ function checkTest(cl: Clause, evs: Ev[], cwd?: string | null): Result {
   let rel = cands;
   let filtered = false;
   if (hint) {
-    rel = cands.filter((e) => e.bare.toLowerCase().includes(hint));
+    rel = cands.filter((e) => ranHint(e, hint));
     filtered = true;
   } else {
     const tw = topics(t.replace(COUNT, ' '), evs);
@@ -479,7 +489,7 @@ function checkExit(cl: Clause, text: string, evs: Ev[]): Result {
   const own = evs.filter((e) => !e.agent && !e.echoOnly && e.call.resultText !== undefined && !e.readOnly);
   const ws = words(cl.text.replace(/`[^`]*`/g, (q) => q.replace(/[`]/g, '')));
   let rel: Ev[];
-  if (hint) rel = own.filter((e) => e.bare.toLowerCase().includes(hint));
+  if (hint) rel = own.filter((e) => ranHint(e, hint));
   else {
     const runs = own.filter((e) => printedExits(e.out).length > 0 || e.test || (e.exit !== null && e.exit !== 0));
     const score = (e: Ev): number => {
@@ -560,7 +570,7 @@ function checkCommit(cl: Clause, raw: RawRun, evs: Ev[]): Result {
     return e ? R('supported', `the diffstat shows ${lines[1]} insertions`, [item(e, lineOf(e.out, /insertion/))]) : R('unsupported', `no diffstat shows ${lines[1]} insertions`);
   }
   if (/\breverted?\b/i.test(cl.text)) {
-    const e = [...own].reverse().find((x) => /\bgit\b[\s\S]*\brevert\b/.test(x.command ?? '') && x.outcome !== 'fail');
+    const e = [...own].reverse().find((x) => /\bgit\b[\s\S]*\brevert\b/.test(x.bare) && x.outcome !== 'fail');
     return e ? R('supported', 'the run ran git revert', [item(e, lineOf(e.out))]) : R('unsupported', 'no git revert in the run');
   }
   const e = [...own].reverse().find((x) => (isCommitCommand(x.command) && /\bcommit\b/.test(x.command ?? '') && x.outcome !== 'fail') || /^\[[^\]\s]+ [0-9a-f]{7,40}\]/m.test(x.out));
@@ -637,6 +647,27 @@ function checkFix(evs: Ev[], cwd?: string | null): Result {
   return R('supported', 'the run edited (no check ran after the edit)', [item(edit, edit.edits.length ? `edited ${short(edit.edits[0]!, 100)}` : 'edit')]);
 }
 
+// ---------------------------------------------------------------- precision guard (round 8)
+// Out of sample the verdicts are not reliable enough to push into an agent's session: review-2 found 0/18 flags right on
+// 8 new answers, and on the round-8 held-out key (4 log/heldout-key.md, 16 answers) every flag class was wrong after the
+// P1 fixes too, including 'contradicted' (5/5 wrong: a count or exit read off the wrong call). So the Stop hook only
+// sends the one class that does not depend on picking the right call: a success claim (a pass, exit 0, a commit,
+// merge, push, file write, fix) when the whole run has NO tool call of that kind (no test or check at all, no commit,
+// no push, no merge, no edit, no write to the named file, a sha in no repository). 'reverted' is left out: in prose it
+// is mostly a working-tree undo, not `git revert` (2/2 held-out flags wrong). Everything else stays visible in
+// `mole claims` (marked weak) and is not sent.
+const ABSENT = /^(?:no test or check ran in the run|the run made no commit|no git push in the run|no merge in the run|no edit in the run|no call in the run wrote\b|commit \S+ is in no repository)/;
+function hookWorthy(cl: Clause, cat: ClaimCategory, res: Result): boolean {
+  if (res.verdict === 'supported') return false;
+  const t = cl.text;
+  if (cat === 'exit') {
+    const m = /\bexit(?:ed|s)?(?:\s+(?:with\s+)?code)?"?\s*[:=]?\s*(-?\d+)/i.exec(t);
+    if (!m || Number(m[1]) !== 0) return false; // a failure claim
+  }
+  if (cat === 'test' && /\bfail(?:s|ed|ing|ures?)?\b|\bred\b/i.test(t) && !/\b(?:0|no|zero) fail/i.test(t)) return false;
+  return ABSENT.test(res.why);
+}
+
 // ---------------------------------------------------------------- one clause
 const RANK: Record<Verdict, number> = { supported: 0, unsupported: 1, contradicted: 2 };
 export function checkClause(cl: Clause, text: string, raw: RawRun, evs: Ev[]): Claim {
@@ -660,5 +691,5 @@ export function checkClause(cl: Clause, text: string, raw: RawRun, evs: Ev[]): C
   let [cat, res] = results[0]!;
   for (const [c, r] of results) if (RANK[r.verdict] > RANK[res.verdict]) [cat, res] = [c, r];
   const evidence = res.verdict === 'supported' ? results.flatMap(([, r]) => r.evidence) : res.evidence;
-  return { text: cl.text, start: cl.start, end: cl.end, category: cat, verdict: res.verdict, evidence, why: res.why };
+  return { text: cl.text, start: cl.start, end: cl.end, category: cat, verdict: res.verdict, evidence, why: res.why, hook: hookWorthy(cl, cat, res) };
 }

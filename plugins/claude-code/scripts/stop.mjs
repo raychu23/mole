@@ -57,7 +57,8 @@ function claimLines(mole, root, sessionId) {
   } catch {
     return [];
   }
-  return (r?.claims ?? []).filter((c) => c.verdict !== 'supported').map((c) => `mole claims: ${c.verdict}: "${one(c.text, 200)}" (${one(c.why, 160)})`);
+  // round-8 precision guard: only the flags `mole claims` marks hook-worthy (strong reasons, success claims)
+  return (r?.claims ?? []).filter((c) => c.verdict !== 'supported' && c.hook !== false).map((c) => `mole claims: ${c.verdict}: "${one(c.text, 200)}" (${one(c.why, 160)})`);
 }
 
 function main() {

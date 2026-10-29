@@ -24,7 +24,7 @@ const key = JSON.parse(raw.toString('utf8'));
 const { claims } = await import(join(top, 'packages/agentstate/dist/src/index.js'));
 const bad = (v) => v === 'unsupported' || v === 'contradicted';
 const ov = (a0, a1, b0, b1) => Math.max(0, Math.min(a1, b1) - Math.max(a0, b0));
-let flags = 0, correct = 0, keyBad = 0, caught = 0, toolClaims = 0;
+let flags = 0, correct = 0, keyBad = 0, caught = 0, toolClaims = 0, hookFlags = 0, hookCorrect = 0, hookCaught = 0;
 const details = [];
 for (const a of key.answers) {
   const r = claims(a.run, { text: a.text, before: a.before });
@@ -36,17 +36,19 @@ for (const a of key.answers) {
     const hit = ks.find((k) => bad(k.label) && ov(c.start, c.end, k.start, k.end) > 0);
     const on = ks.find((k) => ov(c.start, c.end, k.start, k.end) > 0);
     if (hit) correct++;
-    details.push({ id: a.id, run: a.run, ok: !!hit, verdict: c.verdict, category: c.category, text: c.text, why: c.why, key: on ? `${on.label}: ${on.quote}` : 'not a key claim', ev: c.evidence[0]?.detail ?? '' });
+    if (c.hook) { hookFlags++; if (hit) hookCorrect++; }
+    details.push({ id: a.id, run: a.run, ok: !!hit, hook: !!c.hook, verdict: c.verdict, category: c.category, text: c.text, why: c.why, key: on ? `${on.label}: ${on.quote}` : 'not a key claim', ev: c.evidence[0]?.detail ?? '' });
   }
   for (const k of ks.filter((k) => bad(k.label))) {
     keyBad++;
     let best = null, bo = 0;
     for (const c of r.claims) { const o = ov(c.start, c.end, k.start, k.end); if (o > bo) { bo = o; best = c; } }
     if (best && bad(best.verdict)) caught++;
+    if (best && bad(best.verdict) && best.hook) hookCaught++;
     details.push({ id: a.id, run: a.run, keyFlag: k.quote, label: k.label, tool: best ? `${best.verdict}: ${best.why}` : 'no tool claim' });
   }
 }
 const pct = (n, d) => (d ? `${((100 * n) / d).toFixed(1)}%` : 'n/a');
-const s = `held-out ${key.answers.length} answers: flags ${flags}, correct ${correct} (precision ${pct(correct, flags)}) · flagged key claims caught ${caught}/${keyBad} (recall ${pct(caught, keyBad)}) · tool claims ${toolClaims}`;
+const s = `held-out ${key.answers.length} answers: flags ${flags}, correct ${correct} (precision ${pct(correct, flags)}) · flagged key claims caught ${caught}/${keyBad} (recall ${pct(caught, keyBad)}) · Stop-hook lines (precision guard) ${hookFlags}, correct ${hookCorrect} (precision ${pct(hookCorrect, hookFlags)}), caught ${hookCaught}/${keyBad} · tool claims ${toolClaims}`;
 if (flag('--details')) writeFileSync(flag('--details'), JSON.stringify(details, null, 1));
 out(s);

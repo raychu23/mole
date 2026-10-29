@@ -72,7 +72,8 @@ export function formatClaims(r: ClaimsReport): string {
   const lines = r.claims.map((c) => {
     const e = c.evidence[0];
     const ev = e ? `${e.callId} ${e.tool}${e.exit !== null ? ` exit ${e.exit}` : ''}${e.commit ? ` commit ${e.commit}` : ''}: ${e.detail}` : 'no evidence';
-    return `  ${c.verdict.padEnd(12)} ${c.category.padEnd(6)} "${one(c.text, 110)}"\n      ${c.why} ← ${ev}`;
+    const weak = c.verdict !== 'supported' && !c.hook ? ' (weak: not sent by the Stop hook)' : '';
+    return `  ${c.verdict.padEnd(12)} ${c.category.padEnd(6)} "${one(c.text, 110)}"\n      ${c.why}${weak} ← ${ev}`;
   });
   const s = r.summary;
   return [head, ...lines, `${s.supported} supported · ${s.unsupported} unsupported · ${s.contradicted} contradicted`].join('\n');

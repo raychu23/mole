@@ -31,6 +31,11 @@ export interface Claim {
   evidence: ClaimEvidence[];
   /** why this verdict, one line */
   why: string;
+  /** round 8 precision guard: a flag the Stop hook prints. Only a success claim (pass, exit 0, commit, merge, push, file,
+   *  fix) with a concrete contradicting tool result, or with no tool call of that kind in the whole run. Weaker flags
+   *  (a count or a run of 'this kind' not found, a pass that predates an edit, failure claims) stay in `mole claims`
+   *  output but are not pushed into the agent's session. Always false for supported claims. */
+  hook: boolean;
 }
 
 /** A claim found by the splitter, before it is checked. */
