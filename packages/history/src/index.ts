@@ -6,6 +6,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseDiff, type Block, type FileDiff } from './diff.js';
 import { EMPTY_TREE, git, pool } from './git.js';
+import { withSpan } from '@mole/telemetry';
 
 export { parseDiff, type Block, type FileDiff } from './diff.js';
 
@@ -340,25 +341,37 @@ async function resolveChange(root: string, change: Change): Promise<{ kind: Chec
   return { kind: 'worktree', ref: 'working tree', base, diff: await git(root, ['diff', '-U0', '--no-color', '--no-ext-diff', 'HEAD']) };
 }
 
-export async function check(repoRoot: string, change: Change, opts: CheckOptions = {}): Promise<CheckResult> {
+// spans (T16): no-ops unless MOLE_OTEL=1 started @mole/telemetry in this process
+export function check(repoRoot: string, change: Change, opts: CheckOptions = {}): Promise<CheckResult> {
+  return withSpan('mole.history.check', {}, async (set) => {
+    const r = await checkInner(repoRoot, change, opts);
+    set({ 'mole.change.kind': r.change.kind, 'mole.hunks': r.hunks.length, 'mole.past_fixes': r.hunks.reduce((n, h) => n + h.pastFixes.length, 0) });
+    return r;
+  });
+}
+
+async function checkInner(repoRoot: string, change: Change, opts: CheckOptions): Promise<CheckResult> {
   const t0 = performance.now();
   const root = (await git(resolve(repoRoot), ['rev-parse', '--show-toplevel'])).trim();
   const ruleSrc = opts.fixRule ?? configRule(root) ?? DEFAULT_FIX_RULE;
   const rule = compileRule(ruleSrc);
-  const c = await resolveChange(root, change);
+  const c = await withSpan('mole.git.resolve_change', {}, () => resolveChange(root, change));
   const shallow = (await git(root, ['rev-parse', '--is-shallow-repository']).catch(() => 'false')).trim() === 'true';
   const run = new Run(root, c.base, rule, shallow);
   const files = parseDiff(c.diff).filter((f) => f.blocks.length > 0);
 
   // 1) blame the old side of every block, one call per file
-  const blamed = await pool(files, 8, async (f) => {
-    const ranges = f.blocks.filter((b) => b.oldLines > 0).map((b): [number, number] => [b.oldStart, b.oldStart + b.oldLines - 1]);
-    if (!f.oldPath || !ranges.length || c.base === EMPTY_TREE) return new Map<number, BlameLine>();
-    return blame(root, c.base, f.oldPath, ranges);
-  });
+  const blamed = await withSpan('mole.git.blame', { 'mole.files': files.length }, () =>
+    pool(files, 8, async (f) => {
+      const ranges = f.blocks.filter((b) => b.oldLines > 0).map((b): [number, number] => [b.oldStart, b.oldStart + b.oldLines - 1]);
+      if (!f.oldPath || !ranges.length || c.base === EMPTY_TREE) return new Map<number, BlameLine>();
+      return blame(root, c.base, f.oldPath, ranges);
+    }),
+  );
   const shas = new Set<string>();
   for (const m of blamed) for (const b of m.values()) if (!(b.boundary && shallow)) shas.add(b.sha);
-  await run.loadInfos([...shas]);
+  // fix lookup: commit info (subject vs fix rule) for every blamed sha
+  await withSpan('mole.history.fix_lookup', { 'mole.commits': shas.size }, () => run.loadInfos([...shas]));
 
   // 2) per block: fix commits among the blamed lines
   const hunks: Hunk[] = [];
@@ -380,8 +393,8 @@ export async function check(repoRoot: string, change: Change, opts: CheckOptions
     }
   });
 
-  // 3) reasons, tests and sources (fix details cached per sha)
-  await pool(pending, 8, async ({ hunk, block, groups, finals }) => {
+  // 3) reasons, tests and sources (fix details cached per sha); span = symbol resolution (enclosing symbol -> tests at the base)
+  await withSpan('mole.history.symbol_resolution', { 'mole.fix_hunks': pending.length }, () => pool(pending, 8, async ({ hunk, block, groups, finals }) => {
     const symbol = symbolOf(block.context);
     const symTests = symbol ? await run.testsReferencing(symbol) : [];
     for (const [sha, lines] of groups) {
@@ -421,7 +434,7 @@ export async function check(repoRoot: string, change: Change, opts: CheckOptions
       });
     }
     hunk.pastFixes.sort((a, b) => b.lines.length - a.lines.length || b.date.localeCompare(a.date));
-  });
+  }));
 
   return {
     change: { kind: c.kind, ref: c.ref, base: c.base },
