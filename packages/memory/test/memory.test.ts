@@ -113,7 +113,7 @@ describe('notes: add and list (done-when 1)', () => {
     const text = execFileSync('node', [cli, 'memory', '--root', root], { encoding: 'utf8' });
     expect(text).toMatch(/stale/);
     expect(text).toContain('src/a.ts#add');
-  });
+  }, 20_000); // key ruling 1 (tasks/T11-l2-memory-notes/4 log/key-ruling-1.md): wall-clock budget only
 });
 
 describe('stale flag (done-when 2)', () => {
