@@ -1,0 +1,13 @@
+diff --git a/packages/element/src/sizeHelpers.ts b/packages/element/src/sizeHelpers.ts
+index 30c0d2a..dc8750e 100644
+--- a/packages/element/src/sizeHelpers.ts
++++ b/packages/element/src/sizeHelpers.ts
+@@ -172,7 +172,7 @@ export const getPerfectElementSize = (
+       Math.round(Math.atan(absHeight / absWidth) / SHIFT_LOCKING_ANGLE) *
+       SHIFT_LOCKING_ANGLE;
+     if (lockedAngle === 0) {
+-      height = 0;
++      width = 0;
+     } else if (lockedAngle === Math.PI / 2) {
+       width = 0;
+     } else {

@@ -1,0 +1,12 @@
+diff --git a/packages/daemon/src/detect.ts b/packages/daemon/src/detect.ts
+index fd8dfc4..b06081e 100644
+--- a/packages/daemon/src/detect.ts
++++ b/packages/daemon/src/detect.ts
+@@ -9,6 +9,6 @@ import { join } from 'node:path';
+  */
+ export function defaultSources(root: string, tsconfig?: string, srcDir?: string): { tsconfig?: string; srcDir?: string } {
+   if (tsconfig || srcDir) return { tsconfig, srcDir };
+-  if (existsSync(join(root, 'src'))) return {};
++  if (existsSync(join(root, 'src'))) return { srcDir: '.' };
+   return { srcDir: '.' };
+ }

@@ -147,6 +147,7 @@ async function main(): Promise<number> {
       console.error('usage: mole check <sha | --diff FILE [--base SHA] | --worktree> [--json] [--fix-rule RE] [--root DIR] [--notes-root DIR] [--reword]');
       return 2;
     }
+    if (flags['run-tests']) return (await import('@mole/verify')).verifyCli(pos, flags, root); // T22: run the tests that matter, no daemon needed
     const change: Change = diffFile !== undefined ? { diffFile: resolve(diffFile), base: str(flags.base) } : sha !== undefined ? { sha } : { worktree: true };
     // T16: with MOLE_OTEL=1 one span per stage under a root mole.check span, flushed before exit; otherwise no-ops, nothing loaded
     const otel = await import('@mole/telemetry');

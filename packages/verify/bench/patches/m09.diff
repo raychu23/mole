@@ -1,0 +1,13 @@
+diff --git a/packages/questions/src/index.ts b/packages/questions/src/index.ts
+index 8859177..b7b5b4b 100644
+--- a/packages/questions/src/index.ts
++++ b/packages/questions/src/index.ts
+@@ -434,7 +434,7 @@ type Draft = Omit<Question, 'rank'>;
+  * Seen questions only fill free slots.
+  */
+ function rank(pastFix: Draft[], notes: Draft[], guards: Array<Draft & { guard: GuardFact }>, seen: Draft[], merge: (sha: string, g: GuardFact) => string): Draft[] {
+-  const picked: Draft[] = [...pastFix, ...notes].slice(0, MAX_QUESTIONS);
++  const picked: Draft[] = [...notes, ...pastFix].slice(0, MAX_QUESTIONS);
+   const merged = new Set<string>();
+   let replaced = false;
+   for (const { guard: g, ...q } of guards) {
