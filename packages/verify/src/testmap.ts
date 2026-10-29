@@ -14,6 +14,11 @@ export interface TestCase {
   end: number;
   /** indexes of enclosing describe blocks, outermost first */
   suites: number[];
+  /** the test file skips this test on purpose (own or an enclosing describe's modifier): 'skip' (.skip), 'todo' (.todo),
+   *  'if' (.skipIf/.runIf, or a ctx.skip() call in the body: decided at run time) */
+  skip?: 'skip' | 'todo' | 'if';
+  /** indexes (in `titles`) of titles that are not literals (it(name), it('a' + b)): no name filter can match them */
+  wild?: number[];
 }
 
 export interface Suite {
@@ -21,6 +26,8 @@ export interface Suite {
   titles: string[];
   start: number;
   end: number;
+  skip?: 'skip' | 'todo' | 'if';
+  wild?: number[];
 }
 
 export interface TestMap {
@@ -42,6 +49,26 @@ function calleeBase(e: ts.Expression): string | undefined {
     else return undefined;
   }
 }
+
+/** the skip modifier on a test/describe callee chain (`it.skip`, `describe.todo`, `it.skipIf(c)`, `test.concurrent.skip`) */
+function modifierOf(e: ts.Expression): TestCase['skip'] {
+  let cur: ts.Expression = e;
+  let found: TestCase['skip'];
+  for (;;) {
+    if (ts.isPropertyAccessExpression(cur)) {
+      const m = cur.name.text;
+      if (m === 'skip') found = 'skip';
+      else if (m === 'todo') found = found ?? 'todo';
+      else if ((m === 'skipIf' || m === 'runIf') && !found) found = 'if';
+      cur = cur.expression;
+    } else if (ts.isCallExpression(cur)) cur = cur.expression;
+    else if (ts.isTaggedTemplateExpression(cur)) cur = cur.tag;
+    else return found;
+  }
+}
+
+const isLiteralTitle = (arg: ts.Expression | undefined): boolean =>
+  !!arg && (ts.isStringLiteral(arg) || ts.isNoSubstitutionTemplateLiteral(arg) || ts.isTemplateExpression(arg));
 
 function titleOf(arg: ts.Expression | undefined, sf: ts.SourceFile): string {
   if (!arg) return '';
@@ -67,13 +94,22 @@ export function testMap(path: string, text: string): TestMap {
         const parents = stack.length ? suites[stack[stack.length - 1]!]!.titles : [];
         const start = lineOf(n.getStart(sf));
         const end = lineOf(n.getEnd());
+        const parent = stack.length ? suites[stack[stack.length - 1]!]! : undefined;
+        const own = modifierOf(n.expression);
+        // an enclosing describe.skip/todo wins over the test's own runtime condition
+        const skip = parent?.skip === 'skip' || parent?.skip === 'todo' ? parent.skip : own ?? parent?.skip;
+        const wild = [...(parent?.wild ?? []), ...(isLiteralTitle(n.arguments[0]) ? [] : [parents.length])];
+        const flags = { ...(skip ? { skip } : {}), ...(wild.length ? { wild } : {}) };
         if (SUITE_FN.has(base)) {
-          suites.push({ name: [...names, title].join(' > '), titles: [...parents, title], start, end });
+          suites.push({ name: [...names, title].join(' > '), titles: [...parents, title], start, end, ...flags });
           const idx = suites.length - 1;
           if (fnArg) ts.forEachChild(fnArg, (c) => visit(c, [...stack, idx]));
           return;
         }
-        tests.push({ name: [...names, title].join(' > '), title, titles: [...parents, title], line: start, start, end, suites: [...stack] });
+        // a ctx.skip() / context.skip() call in the body skips at run time
+        const runtimeSkip = !skip && fnArg && fnArg.parameters.length > 0 && /\.skip\s*\(/.test(fnArg.body.getText(sf));
+        const tflags = runtimeSkip ? { ...flags, skip: 'if' as const } : flags;
+        tests.push({ name: [...names, title].join(' > '), title, titles: [...parents, title], line: start, start, end, suites: [...stack], ...tflags });
         return;
       }
     }

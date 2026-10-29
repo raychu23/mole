@@ -50,6 +50,10 @@ export interface SelectedTest {
   fix?: string;
   /** edited symbol ids this test reaches (graph) */
   targets?: string[];
+  /** the test file skips this test on purpose (it.skip / it.todo / describe.skip / skipIf / runIf / ctx.skip()) */
+  skip?: 'skip' | 'todo' | 'if';
+  /** indexes of non-literal titles: the file runs without a name filter (review-2 P2-A) */
+  wild?: number[];
   reason: string;
 }
 
@@ -61,6 +65,8 @@ export interface Selection {
   /** test cases the call graph reaches at any depth <= maxDepth (diagnostic; the selection takes the nearest) */
   reachable: number;
   noTestReaches: boolean;
+  /** the change edits no code file (docs, config, clean worktree) and selects no test (review-2 P2-B) */
+  noCodeChange?: boolean;
   /** when no test reaches the change: the nearest guarding test to look at */
   nearest?: { file: string; name?: string; line?: number; why: string };
   /** guarding test files of past fixes that name no test the selection could run */
@@ -87,6 +93,8 @@ export interface RunResult {
   failed: number;
   /** selected tests the runner reported no pass/fail for: an error (exit 1), never a silent skip */
   notRun: SelectedTest[];
+  /** selected tests the test file skips on purpose and the runner reported skipped/todo: shown, not an error (review-2 P1-A) */
+  skippedByFile: SelectedTest[];
   ms: number;
   error?: string;
 }
@@ -128,11 +136,14 @@ export async function selectTests(rootIn: string, change: Change, opts: SelectOp
   const maxDepth = opts.maxDepth ?? DEFAULT_MAX_DEPTH;
   const maps = new Maps(root);
   const picked = new Map<string, SelectedTest>();
-  const add = (file: string, t: { name: string; titles?: string[]; line: number }, via: Via, extra: Partial<SelectedTest> & { reason: string }): void => {
+  const add = (file: string, t: { name: string; titles?: string[]; line: number; skip?: SelectedTest['skip']; wild?: number[] }, via: Via, extra: Partial<SelectedTest> & { reason: string }): void => {
     const k = `${file}\0${t.line}\0${t.name}`;
     const cur = picked.get(k);
     if (!cur) {
-      picked.set(k, { file, name: t.name, titles: t.titles ? [...t.titles] : undefined, line: t.line, via: [via], ...extra, targets: extra.targets ? [...extra.targets] : undefined });
+      picked.set(k, {
+        file, name: t.name, titles: t.titles ? [...t.titles] : undefined, line: t.line, via: [via], ...extra, targets: extra.targets ? [...extra.targets] : undefined,
+        ...(t.skip ? { skip: t.skip } : {}), ...(t.wild?.length ? { wild: [...t.wild] } : {}),
+      });
       return;
     }
     if (!cur.via.includes(via)) cur.via.push(via);
@@ -155,7 +166,19 @@ export async function selectTests(rootIn: string, change: Change, opts: SelectOp
     const lines = h.newLines > 0 ? Array.from({ length: h.newLines }, (_, i) => h.newStart + i) : [h.newStart, h.newStart + 1];
     if (RUNNER_TEST.test(h.file)) {
       const m = testMap(h.file, text);
-      for (const l of lines) for (const t of m.tests.filter((x) => x.start <= l && l <= x.end)) add(h.file, t, 'edited', { reason: 'the change edits this test' });
+      const tdecls = declarations(h.file, text);
+      const body = text.split('\n');
+      for (const l of lines) {
+        const own = m.tests.filter((x) => x.start <= l && l <= x.end);
+        for (const t of own) add(h.file, t, 'edited', { reason: 'the change edits this test' });
+        if (own.length) continue;
+        // review-2 P2-D: an edit outside any test. In a helper function of the file: the file's tests that use it; else
+        // (hook, describe body, imports) the tests of the innermost describe holding the line, or the whole file
+        const helpers = enclosing(tdecls, [l]).map((d) => d.name.slice(Math.max(d.name.lastIndexOf('.'), d.name.lastIndexOf(':')) + 1)).filter(Boolean);
+        const users = m.tests.filter((t) => helpers.some((w) => new RegExp(`\\b${w.replace(/[$]/g, '\\$')}\\b`).test(body.slice(t.start - 1, t.end).join('\n'))));
+        if (users.length) for (const t of users) add(h.file, t, 'edited', { reason: `uses ${helpers.join(', ')}, edited in this test file` });
+        else for (const t of testsAtLine(m, l)) add(h.file, t, 'edited', { reason: 'the change edits this test file outside any test' });
+      }
       continue;
     }
     const decls = declarations(h.file, text);
@@ -292,6 +315,7 @@ export async function selectTests(rootIn: string, change: Change, opts: SelectOp
     graph.close();
   }
 
+  const noCode = !facts.hunks.some((h) => SOURCE.test(h.file) || /\.[cm]?jsx?$/.test(h.file));
   const tests = [...picked.values()].sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
   const sel: Selection = {
     root,
@@ -299,7 +323,8 @@ export async function selectTests(rootIn: string, change: Change, opts: SelectOp
     edited,
     tests,
     reachable: Math.max(reachable, tests.length),
-    noTestReaches: tests.length === 0,
+    noTestReaches: tests.length === 0 && !noCode,
+    ...(tests.length === 0 && noCode ? { noCodeChange: true } : {}),
     unrunGuards,
     graph: { built: graph !== undefined, ms: 0 },
     ms: 0,
@@ -377,11 +402,12 @@ export function namePattern(name: string | string[]): string {
 const titlesOf = (t: { name: string; titles?: string[] }): string[] => t.titles ?? t.name.split(' > ');
 
 /** does a runner outcome belong to this selected test (same file, same titles or an it.each row of them) */
-export function sameTest(t: { file: string; name: string; titles?: string[] }, o: { file: string; name: string; titles?: string[] }): boolean {
+export function sameTest(t: { file: string; name: string; titles?: string[]; wild?: number[] }, o: { file: string; name: string; titles?: string[] }): boolean {
   if (t.file !== o.file) return false;
   if (t.titles && o.titles) {
     if (t.titles.length !== o.titles.length) return false;
-    return t.titles.every((x, i) => x === o.titles![i] || new RegExp(`^${titlePattern(x)}$`).test(o.titles![i]!));
+    // a non-literal title (review-2 P2-A) matches any runner title at its position
+    return t.titles.every((x, i) => t.wild?.includes(i) || x === o.titles![i] || new RegExp(`^${titlePattern(x)}$`).test(o.titles![i]!));
   }
   if (t.name === o.name) return true;
   return new RegExp(`^${namePattern(titlesOf(t))}$`).test(titlesOf(o).join(' '));
@@ -396,30 +422,48 @@ export async function runTests(root: string, sel: Selection, opts: { vitest?: st
   const entry = opts.vitest ?? vitestEntry(root);
   // by name, not by `file:line`: vitest places it.each/test.each rows on another line than the call, and one location it
   // cannot match fails the whole file. The pattern is anchored at the end and only loose before the outermost title.
-  const targets = [...new Set(sel.tests.map((t) => t.file))];
-  const pattern = `(?:^|\\s)(?:${[...new Set(sel.tests.map((t) => namePattern(titlesOf(t))))].join('|')})$`;
+  // review-2 P2-A: a file holding a selected test with a non-literal title runs whole (no name filter can match the title)
+  const whole = [...new Set(sel.tests.filter((t) => t.wild?.length).map((t) => t.file))];
+  const targets = [...new Set(sel.tests.map((t) => t.file))].filter((f) => !whole.includes(f));
+  const pattern = `(?:^|\\s)(?:${[...new Set(sel.tests.filter((t) => targets.includes(t.file)).map((t) => namePattern(titlesOf(t))))].join('|')})$`;
   const out = mkdtempSync(join(tmpdir(), 'mole-verify-'));
-  const report = join(out, 'report.json');
-  const command = [process.execPath, entry ?? 'vitest', 'run', ...targets, '--testNamePattern', pattern, '--root', root, '--config', vitestConfig(root), '--reporter=json', `--outputFile=${report}`];
-  const result: RunResult = { runner: 'vitest', command, outcomes: [], passed: 0, failed: 0, notRun: [], ms: 0 };
+  const base = (report: string): string[] => ['--root', root, '--config', vitestConfig(root), '--reporter=json', `--outputFile=${report}`];
+  const runs: Array<{ report: string; command: string[] }> = [];
+  if (targets.length) runs.push({ report: join(out, 'filtered.json'), command: [] });
+  if (whole.length) runs.push({ report: join(out, 'whole.json'), command: [] });
+  for (const r of runs) {
+    const files = r.report.endsWith('whole.json') ? whole : targets;
+    r.command = [process.execPath, entry ?? 'vitest', 'run', ...files, ...(files === targets ? ['--testNamePattern', pattern] : []), ...base(r.report)];
+  }
+  const command = runs.length === 1 ? runs[0]!.command : runs.flatMap((r, i) => (i ? ['&&', ...r.command] : r.command));
+  const result: RunResult = { runner: 'vitest', command, outcomes: [], passed: 0, failed: 0, notRun: [], skippedByFile: [], ms: 0 };
   try {
     if (!entry) throw new Error('vitest not found (node_modules/vitest)');
-    if (!targets.length) return result;
-    const r = spawnSync(command[0]!, command.slice(1), { cwd: root, encoding: 'utf8', maxBuffer: 1 << 28, env: { ...process.env, CI: '1' } });
-    if (!existsSync(report)) throw new Error(`vitest wrote no report (exit ${r.status}): ${(r.stderr || r.stdout).slice(-800)}`);
-    const j = JSON.parse(readFileSync(report, 'utf8')) as VitestJson;
-    for (const f of j.testResults) {
-      const file = relative(root, f.name).split('\\').join('/');
-      for (const a of f.assertionResults) {
-        const status = a.status === 'passed' ? 'passed' : a.status === 'failed' ? 'failed' : 'skipped';
-        result.outcomes.push({ file, name: [...a.ancestorTitles, a.title].join(' > '), titles: [...a.ancestorTitles, a.title], line: a.location?.line ?? null, status, message: a.failureMessages?.[0]?.split('\n')[0] });
+    if (!runs.length) return result;
+    for (const { report, command: cmd } of runs) {
+      const r = spawnSync(cmd[0]!, cmd.slice(1), { cwd: root, encoding: 'utf8', maxBuffer: 1 << 28, env: { ...process.env, CI: '1' } });
+      if (!existsSync(report)) throw new Error(`vitest wrote no report (exit ${r.status}): ${(r.stderr || r.stdout).slice(-800)}`);
+      const j = JSON.parse(readFileSync(report, 'utf8')) as VitestJson;
+      for (const f of j.testResults) {
+        const file = relative(root, f.name).split('\\').join('/');
+        for (const a of f.assertionResults) {
+          const status = a.status === 'passed' ? 'passed' : a.status === 'failed' ? 'failed' : 'skipped';
+          result.outcomes.push({ file, name: [...a.ancestorTitles, a.title].join(' > '), titles: [...a.ancestorTitles, a.title], line: a.location?.line ?? null, status, message: a.failureMessages?.[0]?.split('\n')[0] });
+        }
+        if (f.assertionResults.length === 0 && f.status === 'failed') result.outcomes.push({ file, name: '(file failed to load)', line: null, status: 'failed', message: f.message?.split('\n')[0] });
       }
-      if (f.assertionResults.length === 0 && f.status === 'failed') result.outcomes.push({ file, name: '(file failed to load)', line: null, status: 'failed', message: f.message?.split('\n')[0] });
     }
     result.passed = result.outcomes.filter((o) => o.status === 'passed').length;
     result.failed = result.outcomes.filter((o) => o.status === 'failed').length;
-    // a selected test with no pass/fail outcome did not run (name filter missed it, skipped, file failed to collect)
-    result.notRun = sel.tests.filter((t) => !result.outcomes.some((o) => o.status !== 'skipped' && sameTest(t, o)));
+    // a selected test with no pass/fail outcome did not run. If the test file skips it on purpose (it.skip, it.todo,
+    // describe.skip, skipIf/runIf, ctx.skip()) and the runner reported it skipped/todo, that is the file's choice: shown,
+    // not an error (review-2 P1-A). Anything else (name filter missed it, file failed to collect, no such test) is an error
+    for (const t of sel.tests) {
+      const os = result.outcomes.filter((o) => sameTest(t, o));
+      if (os.some((o) => o.status !== 'skipped')) continue;
+      if (t.skip && os.length) result.skippedByFile.push(t);
+      else result.notRun.push(t);
+    }
   } catch (e) {
     result.error = e instanceof Error ? e.message : String(e);
   } finally {
@@ -430,6 +474,8 @@ export async function runTests(root: string, sel: Selection, opts: { vitest?: st
 }
 
 const MARK: Record<string, string> = { passed: '✓ pass', failed: '✗ FAIL', skipped: '- skip' };
+export const NO_CODE_CHANGE = 'no code change to test';
+export const SKIPPED_BY_FILE = '- skipped by the test file';
 
 export function formatVerify(sel: Selection, run?: RunResult): string {
   const status = (t: SelectedTest): string => {
@@ -438,10 +484,16 @@ export function formatVerify(sel: Selection, run?: RunResult): string {
     const n = os.length > 1 ? ` ×${os.length}` : '';
     if (os.some((x) => x.status === 'failed')) return MARK.failed! + n;
     if (os.some((x) => x.status === 'passed')) return MARK.passed! + n;
+    if (run.skippedByFile.includes(t)) return `${SKIPPED_BY_FILE} (${t.skip === 'todo' ? 'todo' : t.skip === 'if' ? 'skipIf/runIf' : '.skip'})`;
     return '✗ NOT RUN'; // selected but the runner gave no pass/fail: an error, counted in the header and the exit code
   };
   const line = (t: SelectedTest): string => `${status(t)}  ${t.file}:${t.line}  ${t.name}  [${t.reason}]`;
   const out: string[] = [];
+  if (sel.noCodeChange) {
+    const files = [...new Set(sel.check.hunks.map((h) => h.file))];
+    out.push(`mole check --run-tests: ${NO_CODE_CHANGE} (${files.length ? `changed: ${files.slice(0, 5).join(', ')}${files.length > 5 ? ', …' : ''}; none is code` : 'no changed file'})`);
+    return out.join('\n');
+  }
   if (sel.noTestReaches) {
     out.push(`mole check --run-tests: ${NO_TEST_REACHES} (no guarding test of a past fix, no test calls the edited code within ${DEFAULT_MAX_DEPTH} calls)`);
     if (sel.edited.length) out.push(`edited: ${sel.edited.map((e) => `${e.file}#${e.name}:${e.line}`).join(', ')}`);
@@ -449,7 +501,7 @@ export function formatVerify(sel: Selection, run?: RunResult): string {
     return out.join('\n');
   }
   const head = run
-    ? `${run.error ? `runner error: ${run.error}` : `vitest: ${run.failed} failed, ${run.passed} passed${run.notRun.length ? `, ${run.notRun.length} selected not run (error)` : ''}`} (${(run.ms / 1000).toFixed(1)} s)`
+    ? `${run.error ? `runner error: ${run.error}` : `vitest: ${run.failed} failed, ${run.passed} passed${run.skippedByFile.length ? `, ${run.skippedByFile.length} skipped by the test file` : ''}${run.notRun.length ? `, ${run.notRun.length} selected not run (error)` : ''}`} (${(run.ms / 1000).toFixed(1)} s)`
     : 'not run';
   out.push(`mole check --run-tests: ${sel.tests.length} test${sel.tests.length === 1 ? '' : 's'} selected (past-fix lineage + call graph; ${sel.reachable} reachable) · ${head}`);
   const shown = new Set<SelectedTest>();
