@@ -104,6 +104,7 @@ async function main(): Promise<number> {
     return ev.length === 0 && inputs.length > 0 && !flags.stdin ? 1 : 0;
   }
   if (['runs', 'run', 'tried', 'agents'].includes(cmd)) return (await import('@mole/agentstate')).agentCli(cmd, pos, flags, root); // agent states (T18), no daemon needed
+  if (cmd === 'flows') return (await import('@mole/flows')).flowsCli(pos, flags, root); // runtime call flows recorded from tests (T28), no daemon needed
   const stateDir = str(flags['state-dir']);
   const common = { root, stateDir, ...defaultSources(root, str(flags.tsconfig), str(flags['src-dir'])) };
 

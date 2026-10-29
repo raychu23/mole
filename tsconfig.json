@@ -14,6 +14,9 @@
       "path": "packages/indexer"
     },
     {
+      "path": "packages/flows"
+    },
+    {
       "path": "packages/memory"
     },
     {
@@ -30,9 +33,6 @@
     },
     {
       "path": "packages/layout"
-    },
-    {
-      "path": "packages/flows"
     },
     {
       "path": "apps/vscode"
