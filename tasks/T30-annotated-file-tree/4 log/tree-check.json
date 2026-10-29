@@ -1,0 +1,100 @@
+{
+  "generatedAt": "2026-10-29T22:56:29.124Z",
+  "what": "T30: decision-tree FileDecorationProvider output (badges/colors/tooltips=intent cards) read live from a real VS Code window on the Mole repo itself, not fabricated",
+  "vscode": [
+    "1.141.1",
+    "7baac39ec3ca969dab74ac12c097f6a486e46593"
+  ],
+  "extension": {
+    "developmentPath": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T30-annotated-file-tree/apps/vscode"
+  },
+  "workspace": "/Users/a1/Desktop/CS Code/Project/Mole",
+  "screenshot": {
+    "path": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T30-annotated-file-tree/tasks/T30-annotated-file-tree/4 log/tree-check.png",
+    "note": "window id lookup failed; captured full screen instead"
+  },
+  "result": {
+    "generatedAt": "2026-10-29T22:56:25.611Z",
+    "what": "T30: every decorated folder (badge/color/tooltip=intent card) from the live FileDecorationProvider, plus a no-record folder (done-when 4: must be undefined)",
+    "folderCount": 12,
+    "decorations": [
+      {
+        "path": "packages",
+        "badge": "9",
+        "tooltip": "packages\nTraces to: tenet-1 \"Facts come from code and git, never from a model guess\" · tenet-2 \"A background process nobody asked for must not outlive its editor\" · tenet-3 \"The map stays usable while you work\" · tenet-4 \"What you read and what your agents did stays on your machine\"\nDecisions in force (9):\n  ! 0007 Stop the daemon after 30 idle minutes · tested · exceptions: 0008, 0009 · packages/daemon/src/cli.ts, packages/daemon/src/server.ts\n      why: `mole daemon` stops itself after 30 minutes without a request (`--idle-minutes`, 0 = never). The lock and socket are removed on the way out. Indexing and editing are exceptions, decided in 0008 and 0009.\n      ! code in packages/daemon/src/cli.ts changed since 53aafc6 (record last committed) (.mole/decisions/0007-idle-shutdown.md:8)\n  ! 0008 Indexing never counts as idle · tested · packages/daemon/src/server.ts\n      why: While a worker job (full index or file update) runs, the idle clock does not tick, however long the job takes; the clock restarts when the job is done. An exception to 0007: a large first index must not be killed half way.\n      ! overrides 0007, which is yellow (scope_changed: code in packages/daemon/src/cli.ts changed since 53aafc6 (record last committed)) (.mole/decisions/0007-idle-shutdown.md:10)\n  ! 0009 Editing counts as use · tested · packages/daemon/src/server.ts\n      why: A file change seen by the watcher resets the idle clock, like a request does. An exception to 0007: a person typing in one file for an hour must not lose the map.\n      ! overrides 0007, which is yellow (scope_changed: code in packages/daemon/src/cli.ts changed since 53aafc6 (record last committed)) (.mole/decisions/0007-idle-shutdown.md:10)\n  ✓ 0010 TypeScript Compiler API + SQLite is the v1 engine · no test · packages/indexer/src/ts-engine.ts, packages/indexer/src/db.ts\n      why: The index is built with the TypeScript Compiler API (type-checked calls, imports, definitions) and stored in SQLite (node:sqlite). scip is for CI and other languages, tree-sitter for structure only; CodeGraph is not a dependency.\n  ! 0011 Notes are repo files in .mole/notes anchored to symbols · tested · packages/memory/src/notes.ts\n      why: A note is a markdown file with YAML front matter under `.mole/notes/`, anchored to `path#Symbol` with the symbol's normalized-body hash, so it travels with the repo and turns stale when the code under it changes.\n      ! code in packages/memory/src/notes.ts changed since 53aafc6 (record last committed) (.mole/decisions/0011-notes-anchored-to-symbols.md:8)\n  ✓ 0012 The seen log stays local · tested · packages/memory/src/seen.ts\n      why: What you looked at is written to `.mole/local/seen.jsonl`, which is gitignored and never leaves the machine.\n  ! 0013 The CLI loads heavy modules only in the subcommand that needs them · no test · packages/daemon/src/cli.ts\n      why: The TypeScript compiler, SQLite and git history load with `await import()` inside the subcommand. Loading all of them on every call made a 3-call CLI test exceed 5 s on a loaded machine.\n      ! code in packages/daemon/src/cli.ts#main changed since 1c39a04 (record last committed) (.mole/decisions/0013-cli-loads-heavy-modules-lazily.md:8)\n  ✓ 0014 Agent states are read-only over the harness transcripts · tested · packages/agentstate/src/sources.ts, packages/agentstate/src/langgraph.ts\n      why: Hermes, Claude Code and Codex transcripts are opened read-only (SQLite readOnly, read-only file descriptors). Mole never writes into them; anything it derives goes to `.mole/local/`.\n  ✓ 0015 Fixed role columns instead of ELK · tested · packages/layout/src/layout.ts\n      why: The panel lays nodes out in fixed role columns (callers left, focus middle, callees right); a node that keeps its role keeps its row.\nWho to ask: raymond",
+        "color": "charts.yellow"
+      },
+      {
+        "path": "packages/agentstate",
+        "badge": "1",
+        "tooltip": "packages/agentstate\nTraces to: tenet-4 \"What you read and what your agents did stays on your machine\"\nDecisions in force (1):\n  ✓ 0014 Agent states are read-only over the harness transcripts · tested · packages/agentstate/src/sources.ts, packages/agentstate/src/langgraph.ts\n      why: Hermes, Claude Code and Codex transcripts are opened read-only (SQLite readOnly, read-only file descriptors). Mole never writes into them; anything it derives goes to `.mole/local/`.\nWho to ask: raymond",
+        "color": "charts.green"
+      },
+      {
+        "path": "packages/agentstate/src",
+        "badge": "1",
+        "tooltip": "packages/agentstate/src\nTraces to: tenet-4 \"What you read and what your agents did stays on your machine\"\nDecisions in force (1):\n  ✓ 0014 Agent states are read-only over the harness transcripts · tested · packages/agentstate/src/sources.ts, packages/agentstate/src/langgraph.ts\n      why: Hermes, Claude Code and Codex transcripts are opened read-only (SQLite readOnly, read-only file descriptors). Mole never writes into them; anything it derives goes to `.mole/local/`.\nWho to ask: raymond",
+        "color": "charts.green"
+      },
+      {
+        "path": "packages/daemon",
+        "badge": "4",
+        "tooltip": "packages/daemon  (intent: .mole/intent/packages/daemon.md)\nPurpose: One background process per repo that keeps the TypeScript index warm and answers map/impact requests for the editor, the CLI and the MCP server.\nEnd state: Starts on first use, survives editor reloads, stops on its own when nobody uses it (0007 with the 0008/0009 exceptions).\nRisk accepted: Accepted that a cold start after an idle stop costs one full index; not accepted that the map stops while someone types.\nTraces to: tenet-2 \"A background process nobody asked for must not outlive its editor\" · tenet-3 \"The map stays usable while you work\"\nDecisions in force (4):\n  ! 0007 Stop the daemon after 30 idle minutes · tested · exceptions: 0008, 0009 · packages/daemon/src/cli.ts, packages/daemon/src/server.ts\n      why: `mole daemon` stops itself after 30 minutes without a request (`--idle-minutes`, 0 = never). The lock and socket are removed on the way out. Indexing and editing are exceptions, decided in 0008 and 0009.\n      ! code in packages/daemon/src/cli.ts changed since 53aafc6 (record last committed) (.mole/decisions/0007-idle-shutdown.md:8)\n  ! 0008 Indexing never counts as idle · tested · packages/daemon/src/server.ts\n      why: While a worker job (full index or file update) runs, the idle clock does not tick, however long the job takes; the clock restarts when the job is done. An exception to 0007: a large first index must not be killed half way.\n      ! overrides 0007, which is yellow (scope_changed: code in packages/daemon/src/cli.ts changed since 53aafc6 (record last committed)) (.mole/decisions/0007-idle-shutdown.md:10)\n  ! 0009 Editing counts as use · tested · packages/daemon/src/server.ts\n      why: A file change seen by the watcher resets the idle clock, like a request does. An exception to 0007: a person typing in one file for an hour must not lose the map.\n      ! overrides 0007, which is yellow (scope_changed: code in packages/daemon/src/cli.ts changed since 53aafc6 (record last committed)) (.mole/decisions/0007-idle-shutdown.md:10)\n  ! 0013 The CLI loads heavy modules only in the subcommand that needs them · no test · packages/daemon/src/cli.ts\n      why: The TypeScript compiler, SQLite and git history load with `await import()` inside the subcommand. Loading all of them on every call made a 3-call CLI test exceed 5 s on a loaded machine.\n      ! code in packages/daemon/src/cli.ts#main changed since 1c39a04 (record last committed) (.mole/decisions/0013-cli-loads-heavy-modules-lazily.md:8)\nWho to ask: raymond",
+        "color": "charts.yellow"
+      },
+      {
+        "path": "packages/daemon/src",
+        "badge": "4",
+        "tooltip": "packages/daemon/src\nTraces to: tenet-2 \"A background process nobody asked for must not outlive its editor\" · tenet-3 \"The map stays usable while you work\"\nDecisions in force (4):\n  ! 0007 Stop the daemon after 30 idle minutes · tested · exceptions: 0008, 0009 · packages/daemon/src/cli.ts, packages/daemon/src/server.ts\n      why: `mole daemon` stops itself after 30 minutes without a request (`--idle-minutes`, 0 = never). The lock and socket are removed on the way out. Indexing and editing are exceptions, decided in 0008 and 0009.\n      ! code in packages/daemon/src/cli.ts changed since 53aafc6 (record last committed) (.mole/decisions/0007-idle-shutdown.md:8)\n  ! 0008 Indexing never counts as idle · tested · packages/daemon/src/server.ts\n      why: While a worker job (full index or file update) runs, the idle clock does not tick, however long the job takes; the clock restarts when the job is done. An exception to 0007: a large first index must not be killed half way.\n      ! overrides 0007, which is yellow (scope_changed: code in packages/daemon/src/cli.ts changed since 53aafc6 (record last committed)) (.mole/decisions/0007-idle-shutdown.md:10)\n  ! 0009 Editing counts as use · tested · packages/daemon/src/server.ts\n      why: A file change seen by the watcher resets the idle clock, like a request does. An exception to 0007: a person typing in one file for an hour must not lose the map.\n      ! overrides 0007, which is yellow (scope_changed: code in packages/daemon/src/cli.ts changed since 53aafc6 (record last committed)) (.mole/decisions/0007-idle-shutdown.md:10)\n  ! 0013 The CLI loads heavy modules only in the subcommand that needs them · no test · packages/daemon/src/cli.ts\n      why: The TypeScript compiler, SQLite and git history load with `await import()` inside the subcommand. Loading all of them on every call made a 3-call CLI test exceed 5 s on a loaded machine.\n      ! code in packages/daemon/src/cli.ts#main changed since 1c39a04 (record last committed) (.mole/decisions/0013-cli-loads-heavy-modules-lazily.md:8)\nWho to ask: raymond",
+        "color": "charts.yellow"
+      },
+      {
+        "path": "packages/indexer",
+        "badge": "1",
+        "tooltip": "packages/indexer\nTraces to: tenet-1 \"Facts come from code and git, never from a model guess\"\nDecisions in force (1):\n  ✓ 0010 TypeScript Compiler API + SQLite is the v1 engine · no test · packages/indexer/src/ts-engine.ts, packages/indexer/src/db.ts\n      why: The index is built with the TypeScript Compiler API (type-checked calls, imports, definitions) and stored in SQLite (node:sqlite). scip is for CI and other languages, tree-sitter for structure only; CodeGraph is not a dependency.\nWho to ask: raymond",
+        "color": "charts.green"
+      },
+      {
+        "path": "packages/indexer/src",
+        "badge": "1",
+        "tooltip": "packages/indexer/src\nTraces to: tenet-1 \"Facts come from code and git, never from a model guess\"\nDecisions in force (1):\n  ✓ 0010 TypeScript Compiler API + SQLite is the v1 engine · no test · packages/indexer/src/ts-engine.ts, packages/indexer/src/db.ts\n      why: The index is built with the TypeScript Compiler API (type-checked calls, imports, definitions) and stored in SQLite (node:sqlite). scip is for CI and other languages, tree-sitter for structure only; CodeGraph is not a dependency.\nWho to ask: raymond",
+        "color": "charts.green"
+      },
+      {
+        "path": "packages/layout",
+        "badge": "1",
+        "tooltip": "packages/layout\nTraces to: tenet-3 \"The map stays usable while you work\"\nDecisions in force (1):\n  ✓ 0015 Fixed role columns instead of ELK · tested · packages/layout/src/layout.ts\n      why: The panel lays nodes out in fixed role columns (callers left, focus middle, callees right); a node that keeps its role keeps its row.\nWho to ask: raymond",
+        "color": "charts.green"
+      },
+      {
+        "path": "packages/layout/src",
+        "badge": "1",
+        "tooltip": "packages/layout/src\nTraces to: tenet-3 \"The map stays usable while you work\"\nDecisions in force (1):\n  ✓ 0015 Fixed role columns instead of ELK · tested · packages/layout/src/layout.ts\n      why: The panel lays nodes out in fixed role columns (callers left, focus middle, callees right); a node that keeps its role keeps its row.\nWho to ask: raymond",
+        "color": "charts.green"
+      },
+      {
+        "path": "packages/memory",
+        "badge": "2",
+        "tooltip": "packages/memory\nTraces to: tenet-1 \"Facts come from code and git, never from a model guess\" · tenet-4 \"What you read and what your agents did stays on your machine\"\nDecisions in force (2):\n  ! 0011 Notes are repo files in .mole/notes anchored to symbols · tested · packages/memory/src/notes.ts\n      why: A note is a markdown file with YAML front matter under `.mole/notes/`, anchored to `path#Symbol` with the symbol's normalized-body hash, so it travels with the repo and turns stale when the code under it changes.\n      ! code in packages/memory/src/notes.ts changed since 53aafc6 (record last committed) (.mole/decisions/0011-notes-anchored-to-symbols.md:8)\n  ✓ 0012 The seen log stays local · tested · packages/memory/src/seen.ts\n      why: What you looked at is written to `.mole/local/seen.jsonl`, which is gitignored and never leaves the machine.\nWho to ask: raymond",
+        "color": "charts.yellow"
+      },
+      {
+        "path": "packages/memory/src",
+        "badge": "2",
+        "tooltip": "packages/memory/src\nTraces to: tenet-1 \"Facts come from code and git, never from a model guess\" · tenet-4 \"What you read and what your agents did stays on your machine\"\nDecisions in force (2):\n  ! 0011 Notes are repo files in .mole/notes anchored to symbols · tested · packages/memory/src/notes.ts\n      why: A note is a markdown file with YAML front matter under `.mole/notes/`, anchored to `path#Symbol` with the symbol's normalized-body hash, so it travels with the repo and turns stale when the code under it changes.\n      ! code in packages/memory/src/notes.ts changed since 53aafc6 (record last committed) (.mole/decisions/0011-notes-anchored-to-symbols.md:8)\n  ✓ 0012 The seen log stays local · tested · packages/memory/src/seen.ts\n      why: What you looked at is written to `.mole/local/seen.jsonl`, which is gitignored and never leaves the machine.\nWho to ask: raymond",
+        "color": "charts.yellow"
+      }
+    ],
+    "noRecord": [
+      {
+        "path": "generated data"
+      },
+      {
+        "path": "node_modules"
+      },
+      {
+        "path": ".git"
+      }
+    ]
+  }
+}
