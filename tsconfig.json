@@ -17,6 +17,9 @@
       "path": "packages/questions"
     },
     {
+      "path": "packages/agentstate"
+    },
+    {
       "path": "packages/daemon"
     },
     {

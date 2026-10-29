@@ -22,6 +22,9 @@
     },
     {
       "path": "../questions"
+    },
+    {
+      "path": "../agentstate"
     }
   ]
 }

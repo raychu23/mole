@@ -24,6 +24,13 @@ T18-agent-states      ledger task (rules.md §3 code features)      project task
     non-goals               no capture hooks of its own (read existing transcripts; Entire, SpecStory, git-ai, Agent Trace and claude-mem become adapters later) · no LangGraph runtime needed to read (shape-compatible only) · no UI (T15 shows it) · never commit transcript text · no PR comments/bot (D24) · no structure-map work (D23) · prototype/ rejected · no publishing · don't edit benchmark keys after the red-tests commit (R2)
     proof                   runs.jsonl last line with M6 + M7 + npm run check output + the red-tests commit sha dated before the first implementation commit
     stop                    same check failure 3 rounds in a row (R3) · a source format is undocumented and ambiguous (log it, skip that source) · needs Raymond's accounts or a product decision
+    assumptions             worker 2026-10-29, Raymond not watching · M7 key = every session with a compaction on 10-29: 9 Hermes + 1 Claude Code (the 10-28 "7 + 4" doesn't reproduce, 4 log/key.md)
+                            M6 population = non-merge commits bbb385d^..767f129 (scaffold → T18 base), all agent-made · 542 file edits in 179 commits
+                            outside the boundary, needed: root tsconfig.json + package-lock.json (new package) · daemon + mcp package.json/tsconfig.json (depend on @mole/agentstate)
+                            · packages/mcp/test/mcp.test.ts 1 line toEqual(['mole_map']) → toContain (same line T15 writes)
+                            checkpoint values.tried = what that step tried (LangGraph append channel), not cumulative: long runs stay small
+                            mole agents <file#Symbol> = edit steps whose new text lands in the symbol's current body · commit steps count for file targets only
+                            M6 bench changed once by key ruling 1 (fresh reviewer, 4 log/key-ruling-1.md): `git commit -q` prints no sha
     came from               USER 2026-10-28 22:10 'werent we supposed to include as part of the observe and verify aspects of the project include stuff like langraph all that agent states as a way to mange context verisoning all that.' + 3C1 lines 171, 177, 232, 289-293, 431-433, 465 · correction of D24/D26
     links                   4 log/ledger.md (every transition + its evidence)
     harness                 hermes

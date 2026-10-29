@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { formatNeighborhood } from '@mole/core';
 import { ensureDaemon, MoleClient, type EnsureOptions } from '@mole/daemon';
+import { defaultSources, tried } from '@mole/agentstate';
 
 export interface MoleMcpOptions extends EnsureOptions {
   /** Do not spawn a daemon if none runs (tests). */
@@ -33,6 +34,19 @@ export function createServer(opts: MoleMcpOptions): McpServer {
       }
       return { content: [{ type: 'text' as const, text: formatNeighborhood(n) }], isError: n.state === 'index-unavailable' };
     },
+  );
+  // T18: what agents already tried (commands, tests, fixes + outcome), including before a context compaction
+  server.registerTool(
+    'mole_tried',
+    {
+      title: 'Mole tried',
+      description:
+        'Commands, tests and edits an agent run already tried, each with its outcome (pass/fail/unknown) and the compaction it came before. ' +
+        'Target = a run id (Hermes session, Claude Code or Codex session id, or a unique prefix) or file#Symbol / file (the runs that edited it). ' +
+        'Read from the local transcripts (read-only); no LLM. Use after a compaction, before retrying a fix.',
+      inputSchema: { target: z.string().describe('run id or prefix, file#Symbol, or repo-relative file') },
+    },
+    async ({ target }) => ({ content: [{ type: 'text' as const, text: JSON.stringify(tried(target, { ...defaultSources(), root: opts.root }), null, 2) }] }),
   );
   return server;
 }
