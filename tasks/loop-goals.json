@@ -317,5 +317,25 @@
   "prototype/ is rejected",
   "don't publish, push, or use Raymond's accounts"
  ],
- "asked_10_28_2210": "USER: \"huh what the fuck. werent we supposed to include as part of the observe and verify aspects of the project include stuff like langraph all that agent states as a way to mange context verisoning all that.\""
+ "asked_10_28_2210": "USER: \"huh what the fuck. werent we supposed to include as part of the observe and verify aspects of the project include stuff like langraph all that agent states as a way to mange context verisoning all that.\"",
+ "proposed_next": [
+  {
+   "task": "T24-agent-claim-check",
+   "state": "proposed, waits for D29",
+   "metric": "M16",
+   "why": "verify agents' 'done' claims against their transcripts (3C1 line 672); needs T18"
+  },
+  {
+   "task": "T22-hand-back-test-selection",
+   "state": "proposed, waits for D29",
+   "metric": "M14",
+   "why": "run the guarding tests of touched past fixes at hand-back; needs T12 (built) + T15"
+  },
+  {
+   "task": "T23-decision-traces-intake",
+   "state": "proposed, waits for D29",
+   "metric": "M15",
+   "why": "decision traces from Slack/meetings/PRs → approved .mole/ records; the one place a model is needed"
+  }
+ ]
 }
