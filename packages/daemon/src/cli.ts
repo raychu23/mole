@@ -62,6 +62,9 @@ async function main(): Promise<number> {
     console.log(flags.json ? JSON.stringify(list, null, 2) : formatMemory(list));
     return 0;
   }
+  if (cmd === 'since' || cmd === 'seen') {
+    throw new Error(`${cmd}: not implemented`);
+  }
   const stateDir = str(flags['state-dir']);
   const common = { root, stateDir, ...defaultSources(root, str(flags.tsconfig), str(flags['src-dir'])) };
 

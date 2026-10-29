@@ -1,0 +1,188 @@
+{
+  "written": "2026-10-28T22:09:29-0500",
+  "about": "M3 key (T13), written by hand from the fixture definition below, not by running the implementation. Truth: a symbol is listed iff it was seen (its last seen event) and its normalized body (comments + whitespace ignored) changed after that look. Unseen symbols (Cart.clear, logout, and the class symbol Cart, whose body includes changed methods) must never be listed.",
+  "fixture": {
+    "base": {
+      "author": {
+        "name": "Base",
+        "email": "base@example.com"
+      },
+      "date": "2026-01-01T10:00:00+00:00",
+      "message": "base: cart and user",
+      "files": {
+        "src/cart.ts": "export class Cart {\n  private items: number[] = [];\n  add(price: number): void {\n    this.items.push(price);\n  }\n  total(): number {\n    return this.items.reduce((a, b) => a + b, 0);\n  }\n  clear(): void {\n    this.items = [];\n  }\n}\n\nexport function formatPrice(cents: number): string {\n  return '$' + (cents / 100).toFixed(2);\n}\n",
+        "src/user.ts": "export function login(name: string): string {\n  return 'welcome ' + name;\n}\n\nexport function logout(name: string): string {\n  return 'bye ' + name;\n}\n\nexport const greet = (name: string) => 'hello ' + name;\n"
+      }
+    },
+    "seen": [
+      {
+        "symbol": "src/cart.ts#Cart.add",
+        "how": "visible"
+      },
+      {
+        "symbol": "src/cart.ts#Cart.total",
+        "how": "visible"
+      },
+      {
+        "symbol": "src/cart.ts#formatPrice",
+        "how": "hover"
+      },
+      {
+        "symbol": "src/user.ts#login",
+        "how": "visible"
+      },
+      {
+        "symbol": "src/user.ts#greet",
+        "how": "note"
+      }
+    ],
+    "unseen": [
+      "src/cart.ts#Cart.clear",
+      "src/user.ts#logout",
+      "src/cart.ts#Cart"
+    ],
+    "commits": [
+      {
+        "id": "c1",
+        "author": {
+          "name": "Alice",
+          "email": "alice@example.com"
+        },
+        "date": "2026-01-02T10:00:00+00:00",
+        "message": "cart: reject negative prices, clear in place",
+        "files": {
+          "src/cart.ts": "export class Cart {\n  private items: number[] = [];\n  add(price: number): void {\n    if (price < 0) throw new Error('negative price');\n    this.items.push(price);\n  }\n  total(): number {\n    return this.items.reduce((a, b) => a + b, 0);\n  }\n  clear(): void {\n    this.items.length = 0;\n  }\n}\n\nexport function formatPrice(cents: number): string {\n  return '$' + (cents / 100).toFixed(2);\n}\n"
+        },
+        "changes": {
+          "seen": [
+            "src/cart.ts#Cart.add"
+          ],
+          "unseen": [
+            "src/cart.ts#Cart.clear"
+          ]
+        }
+      },
+      {
+        "id": "c2",
+        "author": {
+          "name": "Bob",
+          "email": "bob@example.com"
+        },
+        "date": "2026-01-03T10:00:00+00:00",
+        "message": "user: friendlier messages\n\nCo-authored-by: Claude <noreply@anthropic.com>",
+        "files": {
+          "src/user.ts": "export function login(name: string): string {\n  return 'welcome back ' + name;\n}\n\nexport function logout(name: string): string {\n  return 'goodbye ' + name;\n}\n\nexport const greet = (name: string) => 'hello ' + name;\n"
+        },
+        "changes": {
+          "seen": [
+            "src/user.ts#login"
+          ],
+          "unseen": [
+            "src/user.ts#logout"
+          ]
+        }
+      },
+      {
+        "id": "c3",
+        "author": {
+          "name": "Alice",
+          "email": "alice@example.com"
+        },
+        "date": "2026-01-04T10:00:00+00:00",
+        "message": "greet says hi; reformat formatPrice",
+        "files": {
+          "src/cart.ts": "export class Cart {\n  private items: number[] = [];\n  add(price: number): void {\n    if (price < 0) throw new Error('negative price');\n    this.items.push(price);\n  }\n  total(): number {\n    return this.items.reduce((a, b) => a + b, 0);\n  }\n  clear(): void {\n    this.items.length = 0;\n  }\n}\n\n// format cents as dollars\nexport function formatPrice(cents: number): string {\n    return '$' +   (cents / 100).toFixed(2); // always two decimals\n}\n",
+          "src/user.ts": "export function login(name: string): string {\n  return 'welcome back ' + name;\n}\n\nexport function logout(name: string): string {\n  return 'goodbye ' + name;\n}\n\nexport const greet = (name: string) => 'hi ' + name;\n"
+        },
+        "changes": {
+          "seen": [
+            "src/user.ts#greet"
+          ],
+          "unseen": [],
+          "whitespaceOrCommentOnly": [
+            "src/cart.ts#formatPrice"
+          ]
+        }
+      }
+    ],
+    "relook": [
+      "src/cart.ts#Cart.add"
+    ]
+  },
+  "expected": {
+    "since": [
+      {
+        "path": "src/user.ts",
+        "symbols": [
+          {
+            "symbol": "src/user.ts#greet",
+            "status": "changed",
+            "changes": [
+              {
+                "commit": "c3",
+                "author": "Alice",
+                "agent": null
+              }
+            ]
+          },
+          {
+            "symbol": "src/user.ts#login",
+            "status": "changed",
+            "changes": [
+              {
+                "commit": "c2",
+                "author": "Bob",
+                "agent": "Claude"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "src/cart.ts",
+        "symbols": [
+          {
+            "symbol": "src/cart.ts#Cart.add",
+            "status": "changed",
+            "changes": [
+              {
+                "commit": "c1",
+                "author": "Alice",
+                "agent": null
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "afterRelook": [
+      {
+        "path": "src/user.ts",
+        "symbols": [
+          {
+            "symbol": "src/user.ts#greet",
+            "status": "changed",
+            "changes": [
+              {
+                "commit": "c3",
+                "author": "Alice",
+                "agent": null
+              }
+            ]
+          },
+          {
+            "symbol": "src/user.ts#login",
+            "status": "changed",
+            "changes": [
+              {
+                "commit": "c2",
+                "author": "Bob",
+                "agent": "Claude"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

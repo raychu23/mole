@@ -48,3 +48,5 @@ export interface MemoryEntry {
 
 export { findSymbol, normalizedHash, relPath, sourceFiles, splitTarget, symbolsInFile, symbolsOfText } from './symbols.js';
 export { addNote, memory, NOTES_DIR, parseNote } from './notes.js';
+export { appendSeen, formatSince, readSeen, SEEN_LOG, since } from './seen.js';
+export type { SeenEvent, SeenHow, SeenInput, SinceChange, SinceEntry, SinceFile, SinceResult } from './seen.js';
