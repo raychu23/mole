@@ -5,4 +5,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 05:08      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T29-decision-graph-core · branch ledger/t29-decision-graph-core · base 491dd7e
     2026-10-29 07:03      running → submitted      report: new @mole/decisions: .mole tenets/decisions/intent/incidents + Nygard/backstage ADR loader, citator flags (red/yellow/green/grey) with file:line reasons and fixed-point propagation, mole decisions [--json] CLI (1
     2026-10-29 07:03      checks ran: npm run check && node packages/decisions/dist/bench/m21.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T29-decision-graph-core → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 07:21      submitted → verified      reviewer t29-reviewer-r2 (fresh subagent deleg_a14ad4d1, r1 deleg_c3935487) · findings: r1: P1 superseded_by unknown id stayed green + P2 unknown status / dangling ids silent -> fixed fb240ab with new tests (fail before,
+    2026-10-29 07:21      checks ran: npm run check && node packages/decisions/dist/bench/m21.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T29-decision-graph-core → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
