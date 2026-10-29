@@ -6,4 +6,5 @@ ledger (newest last, nothing deleted)
     2026-10-29 07:52      running → blocked      cause: M24 missed at the official check: precision 0.63 (>= 0.9), recall 0.52 (>= 0.8), silent 27/30, owners 30/30 exact, p95 2.3 s, failure case + local workflow proof pass, dogfood 9/11. Options round (2 insights §3): 
     2026-10-29 10:04      blocked → ready      Raymond 10-29 10:04 'ok use better ways': an options round on record → lines matching, prior-art.md first (traceability link recovery, co-change mining, scope globs, symbol anchors), frozen key and targets unchanged, max
     2026-10-29 10:09      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T32-team-pr-check · branch ledger/t32-team-pr-check · base d3e834c
+    2026-10-29 10:32      running → blocked      cause: Options round 2 (prior-art.md, 2 insights §3 cont.): title-term bump gate (option 3, IR/VSM-style) kept, precision 0.63->0.75 (fp 9->5), recall 0.52 unchanged, owners 30/30, silent 27/30, p95 0.62s. Still FAILS M2
 ```
