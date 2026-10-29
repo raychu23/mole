@@ -8,6 +8,7 @@ import { clickLine } from '../webview/render.js';
 import { CSS } from '../webview/style.js';
 import { debounce, toRepoPath } from './paths.js';
 import { Surface } from './surface.js';
+import { startDecisionTree } from './tree-provider.js';
 import type { SinceResult } from '@mole/memory';
 import { documentSymbolTails, dwellSpans, SeenRecorder, spanAt, type DocSymbol, type SeenHit, type SymbolSpan } from './seen.js';
 
@@ -61,6 +62,8 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     output.appendLine('no workspace folder: Mole is idle');
     return;
   }
+  startDecisionTree(ctx, root, (m) => output.appendLine(m), moleCli(ctx)); // T30: decision badges + intent cards in the Explorer (only with .mole/)
+  if (process.env.MOLE_TREE_CHECK) return; // T30 proof artifact: decorations only, no daemon/panel needed
   const testing = Boolean(process.env.MOLE_SELFTEST || process.env.MOLE_SELFTEST_RESTORE || process.env.MOLE_HOVER_CHECK);
   // a public extension must be silent where it has nothing to say: no TypeScript here = no panel, no background process
   const dormant = !testing && !(await hasTypeScript());

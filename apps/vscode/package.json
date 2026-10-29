@@ -85,6 +85,7 @@
   "dependencies": {
     "@mole/core": "*",
     "@mole/daemon": "*",
+    "@mole/decisions": "*",
     "@mole/history": "*",
     "@mole/layout": "*",
     "@mole/memory": "*",
