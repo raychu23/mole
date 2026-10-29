@@ -18,6 +18,7 @@
     "@mole/history": "*",
     "@mole/questions": "*",
     "@mole/agentstate": "*",
-    "@mole/telemetry": "*"
+    "@mole/telemetry": "*",
+    "@mole/verify": "*"
   }
 }

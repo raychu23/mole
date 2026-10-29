@@ -28,6 +28,9 @@
     },
     {
       "path": "../telemetry"
+    },
+    {
+      "path": "../verify"
     }
   ]
 }
