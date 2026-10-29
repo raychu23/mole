@@ -32,3 +32,16 @@ model       --reword / opts.reword: no model configured -> no-op + one notice li
             a reply that drops the cited sha / file is discarded. modelCalls = hook calls; the bench never sets one (0)
 seen (T13)  typed hook only: opts.seen?: SeenFact[]; no dependency on T13
 ```
+```notes
+T14 results + decisions after the red commit
+lazy import  @mole/memory (TypeScript compiler) is imported inside questions() only when a notes dir has .md files and
+             the diff has old-side files: loading it on every `mole check` pushed T12's 5 s CLI test to 8.2 s (round 1)
+cli          `mole check ... [--notes-root DIR] [--reword]`: T12's text output unchanged, then a blank line and
+             'questions (n):' (nothing when 0); --json = T12's fields + "questions"; the --reword notice goes to stderr
+results      round 3 (8b8f725): npm run check 98/98; M4 past-fix in top3 8/8, empty-case questions 0, useless 0.0% (0/15),
+             key past-fix items asked 11/11, order ok 13/13, model calls 0. Round 2 failed only on an untouched daemon
+             test timing out under outside load (load avg ~33-60)
+read-only    excalidraw clone `git status --porcelain` empty after the bench (only diff/log/show/blame/rev-parse used)
+not done     no key changes; useless share is graded only against the key's facts (a question can match the key and
+             still be a weak question, e.g. a 'why' taken from a nearby fix comment such as R4's "SAFETY: ..." line)
+```
