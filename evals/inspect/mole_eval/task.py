@@ -65,7 +65,13 @@ def mole_arm_agent(version: str = "auto", break_model_route: bool = False, model
             retry_uncaught_errors=0 if break_model_route else 3,
         )
         before = sum(isinstance(m, ChatMessageAssistant) for m in state.messages)
-        state = await as_solver(agent)(state, generate)
+        try:
+            state = await as_solver(agent)(state, generate)
+        except Exception as e:  # Claude Code exited non-zero: say whether it ever reached the model
+            answers = sum(isinstance(m, ChatMessageAssistant) for m in state.messages) - before
+            if answers <= 0:
+                assert_model_reached(0, f"arm={arm}, sample={state.sample_id}; Claude Code failed: {e!r}")
+            raise
         answers = sum(isinstance(m, ChatMessageAssistant) for m in state.messages) - before
         state.metadata["model_answers"] = answers
         assert_model_reached(answers, f"arm={arm}, sample={state.sample_id}")
