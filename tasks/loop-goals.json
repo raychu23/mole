@@ -62,7 +62,7 @@
   },
   {
    "id": "E6",
-   "goal": "the resume is the plan (Raymond 10-29): every claim in the target entry (context/product-plan/Resume + interview.md) is made true by a task here and measured by a metric; the page counts how many are true today",
+   "goal": "the resume is the plan (Raymond 10-29): every claim in the target entry (context/product-plan/4 Resume + interview.md) is made true by a task here and measured by a metric; the page counts how many are true today",
    "measured_by": [
     "M9",
     "M10",
@@ -307,7 +307,7 @@
   {
    "id": "C7",
    "when": "after T16, T19, T20, T21 (+ T17 harness)",
-   "pass": "Resume + interview.html shows every target claim either true (with its number) or still open with its task; loop-report.md updated"
+   "pass": "4 Resume + interview.html shows every target claim either true (with its number) or still open with its task; loop-report.md updated"
   }
  ],
  "never": [

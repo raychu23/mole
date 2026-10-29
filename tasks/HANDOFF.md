@@ -7,12 +7,12 @@ Raymond, 10-29: "is thre a page managing all the different executing worker agen
 - Before launch, the launching chat adds the agent to `context/agents/registry.json` (chat id, ledger owner name, job, queue) and runs `python3 context/agents/build_agents.py`. The script fails if a running, submitted, verified or blocked task has an owner missing from the registry.
 - The script writes `context/agents/<id>-<name>.md`. Sections 1-7 (main info + handoff, progress timeline, results, further work, needs you, helpers, Raymond's messages) are rebuilt from the Hermes chat store, the ledger and `tasks/loop_status.py`.
 - As the builder, write your own notes under `## Handoff notes` at each checkpoint and before you stop: what you did, what's next and anything odd. The script keeps that part.
-- Raymond sees every agent on `context/product-plan/Agents.html` and in the "Who's building" table of `0 Start here.html`. A task still marked 'running' after its chat stops shows as stale there.
+- Raymond sees every agent on `context/product-plan/5 Agents.html` and in the "Who's building" table of `0 Start here.html`. A task still marked 'running' after its chat stops shows as stale there.
 - Next builder: a4 (`context/agents/a4-mole-builder-3.md`, waiting on D32) takes over T15, merges T21, then prepares T17.
 
 ## Now (2026-10-28 21:10): build loop for L1–L3 (T11–T15)
 
-Raymond, 10-28: "can we pls get started on building. lets say l2 l3 at least or anything before … keeping end goals checkpoints metrics benchamrs in midn as the loop goals, which the twitter articles describes". His note 3C1 line 672: "verificatn: sure thing u tell it to do actually done". The center is your understanding kept current as agents change code (D24, `context/product-plan/Mole start to finish.md`, "Your focus").
+Raymond, 10-28: "can we pls get started on building. lets say l2 l3 at least or anything before … keeping end goals checkpoints metrics benchamrs in midn as the loop goals, which the twitter articles describes". His note 3C1 line 672: "verificatn: sure thing u tell it to do actually done". The center is your understanding kept current as agents change code (D24, `context/product-plan/1 Mole start to finish.md`, "Your focus").
 
 Prompt for a fresh builder chat opened on `/Users/a1/Desktop/CS Code/Project/Mole`:
 
