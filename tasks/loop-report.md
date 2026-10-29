@@ -322,3 +322,5 @@ database mole_t38) — neither is in my queue.
   21.53ms sequential (49.3x) at 100k facts, EXPLAIN ANALYZE plans saved under 4 log/plans/; model calls 0.
   `ledger move tasks/T38-bitemporal-decision-graph integrated --merge ebe4825 --checks-result ...`. Cleaned up:
   deleted the worktree's node_modules, `git worktree remove --force`.
+
+- 2026-10-29 ~23:50 (mole-builder-9/a13) T33-team-server: claimed -> built full loop (prior-art, red tests, implement, 2 review rounds with real fixes each round) -> BLOCKED after round 2/2 review found a real data-loss bug (pg-boss job replay against stale deleted fixture dirs silently wipes the Postgres decision index via an error-swallowed git call in rebuild.ts). M25 hits every numeric target on a single clean run but is not stable across reuse (done-when #1 replay + #5 reconcile-from-git are violated by the wipe). cause + fix needed logged in tasks/T33-team-server/4 log/ledger.md and this blocked move; decision-owner raymond. Worktree left at /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T33-team-server (not cleaned up, branch T33-team-server) for the next agent to pick up the fix.
