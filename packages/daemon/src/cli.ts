@@ -96,13 +96,18 @@ async function main(): Promise<number> {
     const diffFile = str(flags.diff);
     const modes = [sha !== undefined, diffFile !== undefined, flags.worktree === true].filter(Boolean).length;
     if (modes !== 1) {
-      console.error('usage: mole check <sha | --diff FILE [--base SHA] | --worktree> [--json] [--fix-rule RE] [--root DIR]');
+      console.error('usage: mole check <sha | --diff FILE [--base SHA] | --worktree> [--json] [--fix-rule RE] [--root DIR] [--notes-root DIR] [--reword]');
       return 2;
     }
     const change: Change = diffFile !== undefined ? { diffFile: resolve(diffFile), base: str(flags.base) } : sha !== undefined ? { sha } : { worktree: true };
-    const { check, formatCheck } = await import('@mole/history');
-    const r = await check(root, change, { fixRule: str(flags['fix-rule']) });
-    console.log(flags.json ? JSON.stringify(r, null, 2) : formatCheck(r));
+    // L3 (T14): at most 3 questions from templates over those facts (+ notes); T12's output fields stay as they were
+    const [{ formatCheck }, { questions, formatQuestions }] = await Promise.all([import('@mole/history'), import('@mole/questions')]);
+    const notesRoot = str(flags['notes-root']);
+    const q = await questions(root, change, { fixRule: str(flags['fix-rule']), notesRoot: notesRoot ? resolve(notesRoot) : undefined, reword: flags.reword === true });
+    for (const n of q.notices) console.error(`mole: ${n}`);
+    const { notes: _notes, guards: _guards, ...r } = q.facts;
+    if (flags.json) console.log(JSON.stringify({ ...r, questions: q.questions }, null, 2));
+    else console.log(formatCheck(r) + (q.questions.length ? `\n\n${formatQuestions(q.questions)}` : ''));
     return 0;
   }
   const client = new MoleClient({ root, stateDir });
