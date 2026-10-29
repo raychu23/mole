@@ -33,8 +33,10 @@ import type {
 } from './types.js';
 
 export * from './types.js';
+export * from './claims/index.js';
 export { defaultSources } from './sources.js';
 export { agentCli } from './cli.js';
+export * from './collisions.js';
 export { exportLangGraph, runGraph, runValues, RunState, type LangGraphExport, type RunValues } from './langgraph.js';
 
 const srcOf = (o: Sources): Required<Sources> => ({ ...defaultSources(), ...Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) });
@@ -602,4 +604,45 @@ export function attribute(root: string, range: string, opts: Sources = {}): Attr
     path: l.path,
     link: l.hit ? { kind: l.kind, run: l.hit.run, step: l.hit.step, ref: l.hit.ref } : null,
   }));
+}
+
+// ---------------------------------------------------------------- T21 collisions: the runs with their steps and raw calls
+export interface LoadedRun {
+  raw: RawRun;
+  steps: Step[];
+  call: (stepId: string) => RawRun['calls'][number] | undefined;
+}
+/** In-scope runs (only `ids` when given; only those whose transcript moved since `since` ms), with steps; + every known
+ * run's parent (Hermes sessions table, Claude Code subagent folders) so a parent/subagent pair can be told apart. */
+export function loadRuns(o: RunsOptions & { root: string }, skipped: Skipped[], keep: { ids?: Set<string>; since?: number }): { runs: LoadedRun[]; parents: Map<string, string>; dirs: string[] } {
+  const s = srcOf(o);
+  const dirs = scopeDirs(resolve(o.root));
+  const since = keep.since ?? 0;
+  const parents = new Map<string, string>();
+  const raws: RawRun[] = [];
+  const hermes = hermesSummaries(s.hermesDb, skipped);
+  for (const h of hermes) if (h.parent) parents.set(h.id, h.parent);
+  const want = hermes.filter((h) => mayTouch(h.cwd, dirs) && (!keep.ids || keep.ids.has(h.id)) && Date.parse(h.end ?? h.start) >= since);
+  raws.push(...hermesRuns(s.hermesDb, want, skipped));
+  const jsonl = (harness: Skipped['harness'], dir: string, cwdOf: (f: string) => string | null, read: (f: string) => RawRun | undefined): void => {
+    for (const f of jsonlOrSkip(harness, dir, skipped)) {
+      try {
+        if (since > 0 && statSync(f).mtimeMs < since) continue;
+        if (!mayTouch(cwdOf(f), dirs)) continue;
+        const r = read(f);
+        if (!r) continue;
+        if (r.summary.parent) parents.set(r.summary.id, r.summary.parent);
+        if (!keep.ids || keep.ids.has(r.summary.id)) raws.push(r);
+      } catch (e) {
+        skipped.push({ harness, path: f, reason: `unreadable: ${e instanceof Error ? e.message : String(e)}` });
+      }
+    }
+  };
+  jsonl('claude-code', s.claudeDir, (f) => claudeCwd(f).cwd, claudeRun);
+  jsonl('codex', s.codexDir, (f) => codexMeta(f)?.cwd ?? null, codexRun);
+  const runs = raws.map((raw) => {
+    const byId = new Map(raw.calls.map((c) => [`${raw.summary.id}:${c.callId}`, c]));
+    return { raw, steps: buildSteps(raw), call: (id: string) => byId.get(id) };
+  });
+  return { runs, parents, dirs };
 }

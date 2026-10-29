@@ -1,0 +1,11 @@
+diff --git a/packages/layout/src/layout.ts b/packages/layout/src/layout.ts
+index 3c848cd..5751db8 100644
+--- a/packages/layout/src/layout.ts
++++ b/packages/layout/src/layout.ts
+@@ -139,5 +139,5 @@ export function layoutNeighborhood(map: Neighborhood, home: Home = newHome()): L
+ export function nextTop(prev: number | undefined, want: number, hadShared: boolean): number {
+   if (prev === undefined || !hadShared) return want - 3 * ROW_H;
+   if (want < prev) return want - 3 * ROW_H;
+-  return want - prev > 12 * ROW_H ? want - 3 * ROW_H : prev;
++  return want - prev > 6 * ROW_H ? want - 3 * ROW_H : prev;
+ }

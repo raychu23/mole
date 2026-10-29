@@ -3,7 +3,8 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { CodeSymbol, MemoryEntry, Note, NoteOptions } from './index.js';
-import { findSymbol, sourceFiles, splitTarget, symbolsInFile } from './symbols.js';
+import { dirTree, gitTree, reanchor, type SourceTree } from './reanchor.js';
+import { findSymbol, sourceFiles, splitTarget, symbolsInFile, symbolsOfText } from './symbols.js';
 
 export const NOTES_DIR = '.mole/notes';
 const REQUIRED = ['symbol', 'hash'] as const;
@@ -16,6 +17,14 @@ function author(root: string): string {
     // not a git repo or no user.name
   }
   return process.env.USER ?? process.env.USERNAME ?? 'unknown';
+}
+
+function gitOut(root: string, args: string[]): string | undefined {
+  try {
+    return execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 256 * 1024 * 1024 });
+  } catch {
+    return undefined;
+  }
 }
 
 const slugOf = (qualifiedName: string) =>
@@ -51,8 +60,13 @@ export function addNote(root: string, target: string, text: string, opts: NoteOp
     written,
     text: body,
   };
+  // the commit the note was written at (T19): its tree holds the symbol's body, so a later rename can be re-anchored
+  const head = gitOut(root, ['rev-parse', '--verify', '-q', 'HEAD'])?.trim();
+  if (head) note.commit = head;
   const q = (v: string) => JSON.stringify(v);
-  const front = ['---', `symbol: ${q(note.symbol)}`, `path: ${q(note.path)}`, `kind: ${note.kind}`, `hash: ${note.hash}`, `author: ${q(note.author)}`, `written: ${q(note.written)}`, '---'];
+  const front = ['---', `symbol: ${q(note.symbol)}`, `path: ${q(note.path)}`, `kind: ${note.kind}`, `hash: ${note.hash}`, `author: ${q(note.author)}`, `written: ${q(note.written)}`];
+  if (note.commit) front.push(`commit: ${note.commit}`);
+  front.push('---');
   writeFileSync(join(root, note.file), `${front.join('\n')}\n\n${body}\n`);
   return note;
 }
@@ -104,13 +118,14 @@ export function parseNote(content: string, file: string): Parsed {
       hash: get('hash'),
       author: get('author'),
       written: get('written'),
+      ...(get('commit') ? { commit: get('commit') } : {}),
       text: lines.slice(close + 1).join('\n').trim(),
     },
   };
 }
 
 /** Where a note's symbol is now. */
-function locate(root: string, note: Note, repo: () => CodeSymbol[]): Pick<MemoryEntry, 'status' | 'newPath' | 'line' | 'changed'> {
+function locate(root: string, note: Note, repo: () => CodeSymbol[], now: () => SourceTree): Pick<MemoryEntry, 'status' | 'newPath' | 'line' | 'changed' | 'renamedTo' | 'candidates' | 'similarity'> {
   const tail = note.symbol.slice(note.symbol.indexOf('#') + 1);
   const here = symbolsInFile(root, note.path).find((s) => s.tail === tail);
   if (here) return { status: here.hash === note.hash ? 'fresh' : 'stale', line: here.startLine, changed: here.hash !== note.hash };
@@ -123,6 +138,37 @@ function locate(root: string, note: Note, repo: () => CodeSymbol[]): Pick<Memory
   const last = tail.slice(tail.lastIndexOf('.') + 1);
   const renamed = [...symbolsInFile(root, note.path), ...elsewhere].filter((s) => s.tail.slice(s.tail.lastIndexOf('.') + 1) === last && s.hash === note.hash && s.kind === note.kind);
   if (renamed.length === 1) return { status: 'moved', newPath: renamed[0]!.path, line: renamed[0]!.startLine, changed: false };
+  return renamedOrOrphaned(root, note, tail, now());
+}
+
+/** A tree where the note's symbol still has the note's hash: the note's commit, else the newest such commit of its file. */
+function revWithBody(root: string, note: Note, tail: string): string | undefined {
+  const has = (rev: string) => {
+    const text = gitOut(root, ['show', `${rev}:${note.path}`]);
+    return text !== undefined && symbolsOfText(note.path, text).some((s) => s.tail === tail && s.hash === note.hash);
+  };
+  if (note.commit && has(note.commit)) return note.commit;
+  const revs = (gitOut(root, ['log', '--format=%H', '-n', '200', '--', note.path]) ?? '').split('\n').filter(Boolean);
+  return revs.find(has);
+}
+
+/** T19: the symbol's name is gone; look for its rename (same kind, normalized body equal modulo its own name, or similar). */
+function renamedOrOrphaned(root: string, note: Note, tail: string, now: SourceTree): ReturnType<typeof locate> {
+  const rev = revWithBody(root, note, tail);
+  if (!rev) return { status: 'orphaned', changed: true };
+  const r = reanchor({ path: note.path, tail, kind: note.kind, hash: note.hash }, gitTree(root, rev), now);
+  if ((r.outcome === 'renamed' || r.outcome === 'renamed+changed') && r.to) {
+    const same = r.outcome === 'renamed' && r.from?.hash === note.hash;
+    return {
+      status: same ? 'fresh' : 'stale',
+      renamedTo: r.to.qualifiedName,
+      ...(r.to.path !== note.path ? { newPath: r.to.path } : {}),
+      line: r.to.startLine,
+      changed: !same,
+      similarity: Math.round((r.similarity ?? 0) * 1000) / 1000,
+    };
+  }
+  if (r.outcome === 'ambiguous') return { status: 'orphaned', changed: true, candidates: (r.candidates ?? []).map((c) => c.qualifiedName) };
   return { status: 'orphaned', changed: true };
 }
 
@@ -137,6 +183,8 @@ export function memory(root: string): MemoryEntry[] {
   }
   let repoSyms: CodeSymbol[] | undefined;
   const repo = () => (repoSyms ??= sourceFiles(root).flatMap((f) => symbolsInFile(root, f)));
+  let tree: SourceTree | undefined;
+  const now = () => (tree ??= dirTree(root));
   return names.map((n): MemoryEntry => {
     const file = `${NOTES_DIR}/${n}`;
     let content: string;
@@ -152,7 +200,7 @@ export function memory(root: string): MemoryEntry[] {
     }
     let where: ReturnType<typeof locate>;
     try {
-      where = locate(root, note, repo);
+      where = locate(root, note, repo, now);
     } catch (e) {
       where = { status: 'orphaned', changed: true };
       return { file, symbol: note.symbol, path: note.path, ...where, text: note.text, author: note.author, written: note.written, problem: `${file}:1: ${e instanceof Error ? e.message : String(e)}` };

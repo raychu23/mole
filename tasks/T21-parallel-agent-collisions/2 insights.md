@@ -34,3 +34,18 @@ T21 insights      builder-2 worker, 2026-10-29      contract: tasks/T21-parallel
                             "mole: you changed <symbol>; <b.harness> <b.run> relies on it (<path>)" + notes[]: "edited <symbol> under note <file>"
         silence             nothing printed when pairs and notes are empty (done-when 4: unrelated files = no output)
 ```
+
+```notes
+T21 builder 3 follow-up      mole-builder-3      2026-10-29
+    merge                   main (T15 hooks, T16, T20 LangGraph) merged into the branch 400d21f: conflicts were both-sides adds (agentstate deps,
+                            index exports, cli usage, mcp server tool registrations) → kept both
+    M11 drift               rerun after the merge: false alarms 20% (4/20), cause = resumed chat fc6c6dc0's window spanned its idle gap → fixed by
+                            activity segments (key-changes.md note 2) → 0/16 again at be95f3c
+    hook output             done-when 2 second half (T15 landed): session-start.mjs + stop.mjs call mole collisions --json --run <session> --since 4
+                            only when the session's transcript already has a tool_use (new sessions can't collide, and the CLI reads every
+                            harness's runs: ~1-20 s, kept out of T15's hook tests that use unknown sessions)
+                            root passed in the session's own path form (sameFormRoot): transcripts keep /var/... while git says /private/var/...
+    write gate              red tests created with terminal heredocs (6c201a1), as the brief allows
+    gaps INFERENCE          a fresh session (SessionStart source=startup) has no steps → never warned; it would need 'live runs touching files in
+                            play', not built · a pair counts touches from any segment once segments overlap (an edit 5 h earlier still counts)
+```

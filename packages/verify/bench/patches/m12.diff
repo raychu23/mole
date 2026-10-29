@@ -1,0 +1,13 @@
+diff --git a/packages/memory/src/symbols.ts b/packages/memory/src/symbols.ts
+index 038bea0..b66a023 100644
+--- a/packages/memory/src/symbols.ts
++++ b/packages/memory/src/symbols.ts
+@@ -44,7 +44,7 @@ export function symbolsOfText(path: string, text: string): CodeSymbol[] {
+       tail,
+       kind,
+       startLine: line(node.getStart(sf)),
+-      endLine: line(node.getEnd()),
++      endLine: line(node.getEnd()) - 1,
+       hash: digest(tokens(node, sf, [])),
+       hasBody,
+       node,

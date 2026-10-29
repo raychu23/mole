@@ -1,0 +1,29 @@
+{
+ "label": "failure probe closed bridge port",
+ "model": "mockllm/model",
+ "incomplete": "1 of 1 samples errored or have no score (no partial score): B3-review-none",
+ "records": [
+  {
+   "id": "B3-review-none",
+   "arm": "none",
+   "case": "B3-review",
+   "epoch": 1,
+   "label": null,
+   "error": "ModelUnreachable(\"Claude Code in the sandbox could not reach the model through the Inspect bridge (0 model answers); no score is given: arm=none, sample=B3-review-none; Claude Code failed: RuntimeError('Error executing claude code agent 1: ')\")",
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "total_tokens": 0,
+   "seconds": 238.749,
+   "working_seconds": 238.695,
+   "model_answers": null
+  }
+ ],
+ "inspect_log": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T17-agent-eval-inspect/evals/inspect/logs/2026-10-29T11-27-07-00-00_mole-regression_ReMf74a5AGtG6fEMHLCAZd.eval",
+ "status": "success",
+ "epochs": 1,
+ "cases": "B3-review",
+ "arms": "none",
+ "break_model_route": true,
+ "model_config": "claude-sonnet-4-5",
+ "paid_run_approved": null
+}

@@ -1,0 +1,13 @@
+diff --git a/packages/daemon/src/query.ts b/packages/daemon/src/query.ts
+index a75ba42..d954625 100644
+--- a/packages/daemon/src/query.ts
++++ b/packages/daemon/src/query.ts
+@@ -105,7 +105,7 @@ function nodeById(db: DatabaseSync, id: string): Row | undefined {
+ export function impactSet(db: DatabaseSync, ids: string[], depth = 3, cap = 400): Map<string, number> {
+   const seen = new Map<string, number>();
+   let frontier = ids;
+-  for (let d = 1; d <= depth && frontier.length && seen.size < cap; d++) {
++  for (let d = 1; d < depth && frontier.length && seen.size < cap; d++) {
+     const next: string[] = [];
+     for (const a of aggIn(db, frontier, 'calls')) {
+       if (!seen.has(a.other) && !ids.includes(a.other)) {

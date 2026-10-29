@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { CodeSymbol } from './index.js';
+import { dirTree, gitTree, reanchor, type SourceTree } from './reanchor.js';
 import { relPath, sourceFiles, symbolsInFile, symbolsOfText } from './symbols.js';
 
 export const SEEN_LOG = '.mole/local/seen.jsonl';
@@ -42,8 +43,10 @@ export interface SinceChange {
 export interface SinceEntry {
   symbol: string;
   path: string;
-  status: 'changed' | 'deleted';
-  newPath?: string; // the symbol moved to another file (and changed)
+  status: 'changed' | 'deleted' | 'renamed' | 'renamed+changed';
+  newPath?: string; // the symbol moved to another file (and changed), or was renamed into another file
+  renamedTo?: string; // T19: 'renamed' (only the name changed) / 'renamed+changed': the symbol's qualifiedName now
+  candidates?: string[]; // 'deleted' only: an ambiguous rename's equal candidates (never guessed)
   line?: number; // current 1-based start line
   seen: SeenEvent;
   changes: SinceChange[]; // newest first
@@ -183,8 +186,15 @@ function userName(root: string): string {
   return git(root, ['config', 'user.name'])?.trim() || process.env.USER || process.env.USERNAME || 'you';
 }
 
-/** Where the seen symbol is now: undefined = gone; same = moved or untouched with the seen body. */
-function locate(root: string, e: SeenEvent, repo: () => CodeSymbol[]): { sym?: CodeSymbol; same: boolean } {
+interface Where {
+  sym?: CodeSymbol;
+  same: boolean;
+  renamed?: 'renamed' | 'renamed+changed';
+  candidates?: string[];
+}
+
+/** Where the seen symbol is now: undefined = gone; same = moved or untouched with the seen body; renamed = re-anchored (T19). */
+function locate(root: string, e: SeenEvent, repo: () => CodeSymbol[], now: () => SourceTree): Where {
   const tail = tailOf(e.symbol);
   const here = symbolsInFile(root, e.path).find((s) => s.tail === tail);
   if (here) return { sym: here, same: here.hash === e.hash };
@@ -195,6 +205,14 @@ function locate(root: string, e: SeenEvent, repo: () => CodeSymbol[]): { sym?: C
   const last = tail.slice(tail.lastIndexOf('.') + 1);
   const renamed = [...symbolsInFile(root, e.path), ...elsewhere].filter((s) => s.tail.slice(s.tail.lastIndexOf('.') + 1) === last && s.hash === e.hash);
   if (renamed.length === 1) return { sym: renamed[0], same: true };
+  // T19: the name is gone: re-anchor from the tree at the look (same kind, body equal modulo its own name, or similar)
+  if (!e.commit) return { same: false };
+  const r = reanchor({ path: e.path, tail, kind: '', hash: e.hash }, gitTree(root, e.commit), now());
+  if ((r.outcome === 'renamed' || r.outcome === 'renamed+changed') && r.to) {
+    // 'renamed' only when the body is the one you looked at (a dirty-buffer look may differ from the commit's)
+    return { sym: r.to, same: false, renamed: r.outcome === 'renamed' && r.from?.hash === e.hash ? 'renamed' : 'renamed+changed' };
+  }
+  if (r.outcome === 'ambiguous') return { same: false, candidates: (r.candidates ?? []).map((c) => c.qualifiedName) };
   return { same: false };
 }
 
@@ -208,9 +226,21 @@ export function since(root: string): SinceResult {
   const repo = () => (repoSyms ??= sourceFiles(root).flatMap((f) => symbolsInFile(root, f)));
   const hist = new History(root);
   const head = headOf(root);
-  const entries: Array<SinceEntry & { key: number }> = [];
+  let tree: SourceTree | undefined;
+  const now = () => (tree ??= dirTree(root));
+  // seen history follows renames (T19): a look at the old name and a later look at the new name are one symbol; the latest wins
+  const resolved = new Map<string, { e: SeenEvent; where: Where; order: number }>();
+  let order = 0;
   for (const e of last.values()) {
-    const where = locate(root, e, repo);
+    const where = locate(root, e, repo, now);
+    const k = where.sym ? where.sym.qualifiedName : e.symbol;
+    const prev = resolved.get(k);
+    const t = Date.parse(e.time) || 0;
+    if (!prev || t > (Date.parse(prev.e.time) || 0) || (t === (Date.parse(prev.e.time) || 0) && order > prev.order)) resolved.set(k, { e, where, order });
+    order++;
+  }
+  const entries: Array<SinceEntry & { key: number }> = [];
+  for (const { e, where } of resolved.values()) {
     if (where.same) continue;
     const tail = tailOf(e.symbol);
     // commits after the look that changed this symbol's normalized body; a commit that brings back the seen body is a look-equal state
@@ -225,9 +255,20 @@ export function since(root: string): SinceResult {
       }
       changes.push({ commit: c.sha, author: c.author, email: c.email, date: c.date, agent: agentOf(c.body), subject: c.body.split('\n')[0] ?? '' });
     }
+    if (where.renamed && where.sym) {
+      // commits that changed the renamed symbol after the rename (its new path + name), if any
+      for (const c of hist.commits(where.sym.path, e)) {
+        if (changes.some((x) => x.commit === c.sha)) continue;
+        const before = c.parent ? hist.hashAt(c.parent, where.sym.path, where.sym.tail) : undefined;
+        const after = hist.hashAt(c.sha, where.sym.path, where.sym.tail);
+        if (before === undefined || before === after) continue;
+        changes.push({ commit: c.sha, author: c.author, email: c.email, date: c.date, agent: agentOf(c.body), subject: c.body.split('\n')[0] ?? '' });
+      }
+      changes.sort((a, b) => (Date.parse(a.date) || 0) - (Date.parse(b.date) || 0));
+    }
     const atHead = head ? hist.hashAt(head, e.path, tail) : undefined;
-    const now = where.sym && where.sym.path === e.path ? where.sym.hash : undefined;
-    if (now !== atHead) {
+    const nowHash = where.sym && where.sym.path === e.path && where.sym.tail === tail ? where.sym.hash : undefined;
+    if (nowHash !== atHead) {
       let date = new Date().toISOString();
       try {
         date = statSync(join(root, e.path)).mtime.toISOString();
@@ -235,15 +276,18 @@ export function since(root: string): SinceResult {
         // file deleted in the working tree
       }
       if (atHead === e.hash) changes = [];
-      changes.push({ commit: 'uncommitted', author: userName(root), date, subject: now === undefined ? 'removed in the working tree' : 'uncommitted change in the working tree' });
+      const subject = nowHash !== undefined ? 'uncommitted change in the working tree' : where.renamed ? 'renamed in the working tree' : 'removed in the working tree';
+      changes.push({ commit: 'uncommitted', author: userName(root), date, subject });
     }
     changes.reverse(); // newest first
     const key = changes.length ? Math.max(...changes.map((c) => Date.parse(c.date) || 0)) : Date.parse(e.time) || 0;
     entries.push({
       symbol: e.symbol,
       path: e.path,
-      status: where.sym ? 'changed' : 'deleted',
+      status: where.renamed ?? (where.sym ? 'changed' : 'deleted'),
       ...(where.sym && where.sym.path !== e.path ? { newPath: where.sym.path } : {}),
+      ...(where.renamed && where.sym ? { renamedTo: where.sym.qualifiedName } : {}),
+      ...(where.candidates?.length ? { candidates: where.candidates } : {}),
       ...(where.sym ? { line: where.sym.startLine } : {}),
       seen: e,
       changes,
@@ -277,7 +321,16 @@ export function formatSince(r: SinceResult): string {
   for (const f of r.files) {
     out.push('', f.path);
     for (const s of f.symbols) {
-      const what = s.status === 'deleted' ? 'deleted since you looked' : s.newPath ? `moved to ${s.newPath} and changed` : 'changed';
+      const newTail = s.renamedTo ? s.renamedTo.slice(s.renamedTo.indexOf('#') + 1) : '';
+      const oldTail = s.symbol.slice(s.symbol.indexOf('#') + 1);
+      const what =
+        s.status === 'renamed' || s.status === 'renamed+changed'
+          ? `${s.status === 'renamed' ? 'renamed' : 'renamed + changed'}: ${oldTail} → ${newTail}${s.newPath ? ` (now in ${s.newPath})` : ''}`
+          : s.status === 'deleted'
+            ? `deleted since you looked${s.candidates?.length ? ` (ambiguous rename, not followed: ${s.candidates.join(', ')})` : ''}`
+            : s.newPath
+              ? `moved to ${s.newPath} and changed`
+              : 'changed';
       out.push(`  ${s.symbol.slice(s.symbol.indexOf('#') + 1)}${s.line ? `:${s.line}` : ''}  ${what}  (you looked ${minute(s.seen.time)}, ${s.seen.how})`);
       for (const c of s.changes) {
         const sha = c.commit === 'uncommitted' ? 'uncommitted' : c.commit.slice(0, 7);

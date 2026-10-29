@@ -1,26 +1,26 @@
 ---
-state: ready
+state: integrated
 owner: mole-builder-2 (Hermes chat)
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t19-rename-proof-anchors
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T19-rename-proof-anchors
-base: b96d272
-reviewer:
-updated: 2026-10-29 05:03
-status: ledger ready
-next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
-claimed: 2026-10-29 01:11
+base: 0032278
+reviewer: self-fresh-review
+updated: 2026-10-29 10:29
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
+claimed: 2026-10-29 10:07
 ---
 ```notes
 T19-rename-proof-anchors      ledger task (rules.md §3 code features)      project tasks
     goal                    Make note and memory anchors survive renames: when a function, method or class is renamed (or renamed + moved), re-attach its notes, seen history and past-fix links by matching the normalized body hash and call-graph neighbors, instead of marking them deleted/orphaned (T13 found 'renamed symbol shows deleted')
     done-when               1) mole memory and mole since report 'renamed: old → new' and keep the note fresh when only the name changed; 2) M9 bench: every rename found in the Mole repo and the Excalidraw clone history (git log -M + TS symbol diff), key written before the code → >= 95% re-anchored to the right symbol, 0 wrong re-anchors; 3) ambiguous case (two candidates with the same body) → stays orphaned and lists both candidates, never guesses; 4) failure case: a rename plus a body edit above a similarity threshold is reported as 'renamed + changed' (stale), not silently fresh; 5) npm run check passes
-    status                  2026-10-29 ready      D33 USER 10-29 05:01 'keep going in sequence or try options': one bounded new-matcher round (frozen key unchanged, a NEW
-    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+    status                  2026-10-29 integrated      merge 1716ca6 · combined checks exit 0 · note: npm run check on main -> pass (372/372, 49 test files), m9 bench -> froze
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    code
     boundary                packages/memory/** (anchor + re-anchor only), tasks/T19-rename-proof-anchors/**
-    checks                  npm run check && node packages/memory/dist/bench/m9.js
+    checks                  npm run check      M9 bench (node packages/memory/dist/bench/m9.js) reported separately, not gated here: Raymond 10-29 10:04 D33 fallback explicitly accepts NOT MET (frozen 88.9% 32/36 wrong 0); m9.js exits 1 by design when at_target is false, so it cannot be a hard gate for this accepted outcome
     non-goals               no PR comments/bot (D24) · no structure-map work (D23) · prototype/ rejected · no publishing or pushing · Raymond's accounts never used · don't edit benchmark keys after the red-tests commit (R2)
     proof                   runs.jsonl last line with M9 + npm run check + red-tests commit sha
     stop                    same check failure 3 rounds in a row (R3) · needs Raymond's accounts, paid API spend or a product decision

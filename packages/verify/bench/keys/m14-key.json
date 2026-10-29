@@ -1,0 +1,775 @@
+{
+  "regressions": [
+    {
+      "id": "m01",
+      "repo": "mole",
+      "base": "70a2989fb2fb3b0838c36ed02390f9741738b7d5",
+      "patch": "patches/m01.diff",
+      "patchSha256": "24c7d2da80615ca9409056207f02d1a993e267b3814dd50bead1f0c9ebffb9d3",
+      "editedFiles": [
+        "packages/history/src/diff.ts"
+      ],
+      "failing": [],
+      "failingFiles": [],
+      "flakyDropped": 0,
+      "fullSuiteTests": 181,
+      "reach": {
+        "tests": 29,
+        "files": 4,
+        "relatedArgs": [
+          "packages/history/src/diff.ts",
+          "packages/history/dist/src/diff.js"
+        ],
+        "failingInReach": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "m02",
+      "repo": "mole",
+      "base": "70a2989fb2fb3b0838c36ed02390f9741738b7d5",
+      "patch": "patches/m02.diff",
+      "patchSha256": "ffaaea878ce040637573b0ac92eab8a95d5bc7851cb08d201f661b8a1be0cf08",
+      "editedFiles": [
+        "packages/layout/src/layout.ts"
+      ],
+      "failing": [],
+      "failingFiles": [],
+      "flakyDropped": 0,
+      "fullSuiteTests": 181,
+      "reach": {
+        "tests": 5,
+        "files": 1,
+        "relatedArgs": [
+          "packages/layout/src/layout.ts",
+          "packages/layout/dist/src/layout.js"
+        ],
+        "failingInReach": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "m03",
+      "repo": "mole",
+      "base": "70a2989fb2fb3b0838c36ed02390f9741738b7d5",
+      "patch": "patches/m03.diff",
+      "patchSha256": "55520bc277af9749fb93f00e7359ffde998cd762c20fcfead60c45743b8e0ee3",
+      "editedFiles": [
+        "packages/agentstate/src/steps.ts"
+      ],
+      "failing": [],
+      "failingFiles": [],
+      "flakyDropped": 0,
+      "fullSuiteTests": 181,
+      "reach": {
+        "tests": 22,
+        "files": 3,
+        "relatedArgs": [
+          "packages/agentstate/src/steps.ts",
+          "packages/agentstate/dist/src/steps.js"
+        ],
+        "failingInReach": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "m04",
+      "repo": "mole",
+      "base": "70a2989fb2fb3b0838c36ed02390f9741738b7d5",
+      "patch": "patches/m04.diff",
+      "patchSha256": "cdbacab6ae3debef6198a919c1c84a5d62d2a87f42a248d671c036878e3c54e2",
+      "editedFiles": [
+        "packages/daemon/src/query.ts"
+      ],
+      "failing": [],
+      "failingFiles": [],
+      "flakyDropped": 0,
+      "fullSuiteTests": 181,
+      "reach": {
+        "tests": 23,
+        "files": 1,
+        "relatedArgs": [
+          "packages/daemon/src/query.ts",
+          "packages/daemon/dist/src/query.js"
+        ],
+        "failingInReach": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "m05",
+      "repo": "mole",
+      "base": "70a2989fb2fb3b0838c36ed02390f9741738b7d5",
+      "patch": "patches/m05.diff",
+      "patchSha256": "b2b79b76545564da34373eebe68b154caa4235c952dbbe59f53bdc077a400202",
+      "editedFiles": [
+        "packages/core/src/neighborhood.ts"
+      ],
+      "failing": [],
+      "failingFiles": [],
+      "flakyDropped": 0,
+      "fullSuiteTests": 181,
+      "reach": {
+        "tests": 3,
+        "files": 1,
+        "relatedArgs": [
+          "packages/core/src/neighborhood.ts",
+          "packages/core/dist/src/neighborhood.js"
+        ],
+        "failingInReach": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "m06",
+      "repo": "mole",
+      "base": "70a2989fb2fb3b0838c36ed02390f9741738b7d5",
+      "patch": "patches/m06.diff",
+      "patchSha256": "006cff3e62510d0a5afb1dcc346a0cdee8427364e754cb8fb434e4e60decef57",
+      "editedFiles": [
+        "packages/telemetry/src/index.ts"
+      ],
+      "failing": [
+        {
+          "file": "packages/history/test/history.test.ts",
+          "name": "mole check: past fixes per hunk (T12 done-when 1) CLI: mole check <sha> prints the fix; --json returns the same structure; exit 0",
+          "line": null
+        },
+        {
+          "file": "packages/indexer/test/indexer.test.ts",
+          "name": "indexer fixtures resolves a call through a barrel re-export to the defining file",
+          "line": null
+        },
+        {
+          "file": "packages/telemetry/test/telemetry-off.test.ts",
+          "name": "telemetry off (MOLE_OTEL unset) spans are pass-through, the SDK is never imported and no request is sent",
+          "line": null
+        }
+      ],
+      "failingFiles": [
+        "packages/history/test/history.test.ts",
+        "packages/indexer/test/indexer.test.ts",
+        "packages/telemetry/test/telemetry-off.test.ts"
+      ],
+      "flakyDropped": 11,
+      "fullSuiteTests": 181,
+      "reach": {
+        "tests": 57,
+        "files": 8,
+        "relatedArgs": [
+          "packages/telemetry/src/index.ts",
+          "packages/telemetry/dist/src/index.js"
+        ],
+        "failingInReach": 2
+      },
+      "valid": true
+    },
+    {
+      "id": "m07",
+      "repo": "mole",
+      "base": "70a2989fb2fb3b0838c36ed02390f9741738b7d5",
+      "patch": "patches/m07.diff",
+      "patchSha256": "91468a3eefa0b5e595047378c3e924361ff249c782347b29d4de53b800f2176f",
+      "editedFiles": [
+        "packages/memory/src/symbols.ts"
+      ],
+      "failing": [
+        {
+          "file": "packages/memory/test/memory.test.ts",
+          "name": "symbols and normalized hash normalizedHash ignores whitespace and comments but not string contents or tokens",
+          "line": null
+        },
+        {
+          "file": "packages/memory/test/memory.test.ts",
+          "name": "stale flag (done-when 2) a body change makes the note stale; whitespace-only and comment-only edits stay fresh",
+          "line": null
+        }
+      ],
+      "failingFiles": [
+        "packages/memory/test/memory.test.ts"
+      ],
+      "flakyDropped": 14,
+      "fullSuiteTests": 181,
+      "reach": {
+        "tests": 67,
+        "files": 9,
+        "relatedArgs": [
+          "packages/memory/src/symbols.ts",
+          "packages/memory/dist/src/symbols.js"
+        ],
+        "failingInReach": 2
+      },
+      "valid": true
+    },
+    {
+      "id": "m08",
+      "repo": "mole",
+      "base": "70a2989fb2fb3b0838c36ed02390f9741738b7d5",
+      "patch": "patches/m08.diff",
+      "patchSha256": "2fdf826bc65e47e73ba2499deda2c0270e169b02a6962d1624b5bf8060899278",
+      "editedFiles": [
+        "packages/core/src/index.ts"
+      ],
+      "failing": [
+        {
+          "file": "packages/core/test/core.test.ts",
+          "name": "core schema helpers isStale only when commit differs and the file changed",
+          "line": null
+        }
+      ],
+      "failingFiles": [
+        "packages/core/test/core.test.ts"
+      ],
+      "flakyDropped": 0,
+      "fullSuiteTests": 181,
+      "reach": {
+        "tests": 3,
+        "files": 1,
+        "relatedArgs": [
+          "packages/core/src/index.ts",
+          "packages/core/dist/src/index.js"
+        ],
+        "failingInReach": 1
+      },
+      "valid": true
+    },
+    {
+      "id": "m09",
+      "repo": "mole",
+      "base": "70a2989fb2fb3b0838c36ed02390f9741738b7d5",
+      "patch": "patches/m09.diff",
+      "patchSha256": "10b30dbb9cbaa84e41706060df5cd27cff71ecd1db3576e08e96b49882366577",
+      "editedFiles": [
+        "packages/questions/src/index.ts"
+      ],
+      "failing": [],
+      "failingFiles": [],
+      "flakyDropped": 0,
+      "fullSuiteTests": 181,
+      "reach": {
+        "tests": 18,
+        "files": 2,
+        "relatedArgs": [
+          "packages/questions/src/index.ts",
+          "packages/questions/dist/src/index.js"
+        ],
+        "failingInReach": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "m10",
+      "repo": "mole",
+      "base": "70a2989fb2fb3b0838c36ed02390f9741738b7d5",
+      "patch": "patches/m10.diff",
+      "patchSha256": "59e531d0b1091513d194d9fccd505eca16f26f5450ce999e002a93d7120c173f",
+      "editedFiles": [
+        "packages/layout/src/layout.ts"
+      ],
+      "failing": [],
+      "failingFiles": [],
+      "flakyDropped": 0,
+      "fullSuiteTests": 181,
+      "reach": {
+        "tests": 5,
+        "files": 1,
+        "relatedArgs": [
+          "packages/layout/src/layout.ts",
+          "packages/layout/dist/src/layout.js"
+        ],
+        "failingInReach": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "m11",
+      "repo": "mole",
+      "base": "70a2989fb2fb3b0838c36ed02390f9741738b7d5",
+      "patch": "patches/m11.diff",
+      "patchSha256": "2504ddfcbadb6fd257329dfffdf08e7404ddd005b988d09579d754b5de45dafb",
+      "editedFiles": [
+        "packages/core/src/index.ts"
+      ],
+      "failing": [
+        {
+          "file": "plugins/claude-code/test/hooks.test.ts",
+          "name": "hook scripts on a fixture session silent (no output, exit 0) when the session changed nothing, outside git, or when no mole CLI is found",
+          "line": null
+        },
+        {
+          "file": "packages/core/test/core.test.ts",
+          "name": "core schema helpers flags current-layer items without evidence",
+          "line": null
+        },
+        {
+          "file": "packages/daemon/test/daemon.test.ts",
+          "name": "call-site lines (T7) a caller carries the first call-site line and the site count, next to its declaration line",
+          "line": null
+        },
+        {
+          "file": "packages/mcp/test/mcp.test.ts",
+          "name": "mole_map over stdio returns the same neighbourhood text as the CLI; a down daemon is an error result, not a crash",
+          "line": null
+        },
+        {
+          "file": "packages/telemetry/test/key-guard.test.ts",
+          "name": "key guard (R2) allows a change only with an APPROVE ruling naming the key and the exact sha256 of the new content",
+          "line": null
+        }
+      ],
+      "failingFiles": [
+        "plugins/claude-code/test/hooks.test.ts",
+        "packages/core/test/core.test.ts",
+        "packages/daemon/test/daemon.test.ts",
+        "packages/mcp/test/mcp.test.ts",
+        "packages/telemetry/test/key-guard.test.ts"
+      ],
+      "flakyDropped": 23,
+      "fullSuiteTests": 181,
+      "reach": {
+        "tests": 3,
+        "files": 1,
+        "relatedArgs": [
+          "packages/core/src/index.ts",
+          "packages/core/dist/src/index.js"
+        ],
+        "failingInReach": 1
+      },
+      "valid": true
+    },
+    {
+      "id": "m12",
+      "repo": "mole",
+      "base": "70a2989fb2fb3b0838c36ed02390f9741738b7d5",
+      "patch": "patches/m12.diff",
+      "patchSha256": "610697645f9c5da2f6ad60549c21f7272401847488db0e8607b8047ad4cfc2fc",
+      "editedFiles": [
+        "packages/memory/src/symbols.ts"
+      ],
+      "failing": [
+        {
+          "file": "packages/memory/test/memory.test.ts",
+          "name": "symbols and normalized hash lists functions, const arrow functions, classes and methods with 1-based ranges",
+          "line": null
+        }
+      ],
+      "failingFiles": [
+        "packages/memory/test/memory.test.ts"
+      ],
+      "flakyDropped": 5,
+      "fullSuiteTests": 181,
+      "reach": {
+        "tests": 67,
+        "files": 9,
+        "relatedArgs": [
+          "packages/memory/src/symbols.ts",
+          "packages/memory/dist/src/symbols.js"
+        ],
+        "failingInReach": 1
+      },
+      "valid": true
+    },
+    {
+      "id": "m13",
+      "repo": "mole",
+      "base": "70a2989fb2fb3b0838c36ed02390f9741738b7d5",
+      "patch": "patches/m13.diff",
+      "patchSha256": "64519cc1bd0b3062fad35dbed1371b50fc691f334108689aa30313b0859c6a82",
+      "editedFiles": [
+        "packages/daemon/src/detect.ts"
+      ],
+      "failing": [
+        {
+          "file": "packages/daemon/test/daemon.test.ts",
+          "name": "default sources (T9) uses src when it exists, the whole folder when it does not, and never overrides an explicit choice",
+          "line": null
+        },
+        {
+          "file": "packages/telemetry/test/key-guard.test.ts",
+          "name": "key guard (R2) allows a change only with an APPROVE ruling naming the key and the exact sha256 of the new content",
+          "line": null
+        },
+        {
+          "file": "packages/indexer/test/indexer.test.ts",
+          "name": "indexer fixtures resolves a call through a barrel re-export to the defining file",
+          "line": null
+        }
+      ],
+      "failingFiles": [
+        "packages/daemon/test/daemon.test.ts",
+        "packages/telemetry/test/key-guard.test.ts",
+        "packages/indexer/test/indexer.test.ts"
+      ],
+      "flakyDropped": 26,
+      "fullSuiteTests": 181,
+      "reach": {
+        "tests": 23,
+        "files": 1,
+        "relatedArgs": [
+          "packages/daemon/src/detect.ts",
+          "packages/daemon/dist/src/detect.js"
+        ],
+        "failingInReach": 1
+      },
+      "valid": true
+    },
+    {
+      "id": "x01",
+      "repo": "excalidraw",
+      "base": "e7b534668a60add7f725531f3c9abf32508c7b4e",
+      "patch": "patches/x01.diff",
+      "patchSha256": "25e2b664344b3dde29d8fb88ee0ca95a5d7158b83a839323392bfe69536ec08d",
+      "editedFiles": [
+        "packages/math/src/range.ts"
+      ],
+      "failing": [],
+      "failingFiles": [],
+      "flakyDropped": 4,
+      "fullSuiteTests": 2632,
+      "reach": {
+        "tests": 2459,
+        "files": 134,
+        "relatedArgs": [
+          "packages/math/src/range.ts"
+        ],
+        "failingInReach": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "x02",
+      "repo": "excalidraw",
+      "base": "e7b534668a60add7f725531f3c9abf32508c7b4e",
+      "patch": "patches/x02.diff",
+      "patchSha256": "f32eb36bc7efcd4c00b94d80d0432c90bcff033e49dc2a9e5146013b2ddda5cd",
+      "editedFiles": [
+        "packages/math/src/polygon.ts"
+      ],
+      "failing": [
+        {
+          "file": "packages/element/tests/collision.test.tsx",
+          "name": "freedraw loop fill containment hits the center and axes of a loop with curve junctions at angle 0",
+          "line": null
+        },
+        {
+          "file": "packages/element/tests/collision.test.tsx",
+          "name": "freedraw loop fill containment hits the center and axes of a loop with curve junctions at angle 0.7853981633974483",
+          "line": null
+        }
+      ],
+      "failingFiles": [
+        "packages/element/tests/collision.test.tsx"
+      ],
+      "flakyDropped": 10,
+      "fullSuiteTests": 2632,
+      "reach": {
+        "tests": 2470,
+        "files": 135,
+        "relatedArgs": [
+          "packages/math/src/polygon.ts"
+        ],
+        "failingInReach": 2
+      },
+      "valid": true
+    },
+    {
+      "id": "x03",
+      "repo": "excalidraw",
+      "base": "e7b534668a60add7f725531f3c9abf32508c7b4e",
+      "patch": "patches/x03.diff",
+      "patchSha256": "252c1d9d010c8c7390cf59cbc9919d9d1252f62bf1654476d3cc30c033d4751a",
+      "editedFiles": [
+        "packages/common/src/colors.ts"
+      ],
+      "failing": [
+        {
+          "file": "packages/common/src/colors.test.ts",
+          "name": "removeDarkModeFilter restores black and white",
+          "line": null
+        },
+        {
+          "file": "packages/common/src/colors.test.ts",
+          "name": "removeDarkModeFilter preserves the rendered dark-mode color for #ffffff",
+          "line": null
+        },
+        {
+          "file": "packages/common/src/colors.test.ts",
+          "name": "removeDarkModeFilter preserves the rendered dark-mode color for #e03131",
+          "line": null
+        },
+        {
+          "file": "packages/common/src/colors.test.ts",
+          "name": "removeDarkModeFilter preserves the rendered dark-mode color for #2f9e44",
+          "line": null
+        },
+        {
+          "file": "packages/common/src/colors.test.ts",
+          "name": "removeDarkModeFilter preserves the rendered dark-mode color for #1971c2",
+          "line": null
+        },
+        {
+          "file": "packages/excalidraw/tests/eyeDropper.test.tsx",
+          "name": "eye dropper applies the unfiltered color in dark mode",
+          "line": null
+        },
+        {
+          "file": "packages/excalidraw/tests/scene/export.test.ts",
+          "name": "exporting frames exportToSvg colors frame names like the editor in the configured theme",
+          "line": null
+        }
+      ],
+      "failingFiles": [
+        "packages/common/src/colors.test.ts",
+        "packages/excalidraw/tests/eyeDropper.test.tsx",
+        "packages/excalidraw/tests/scene/export.test.ts"
+      ],
+      "flakyDropped": 4,
+      "fullSuiteTests": 2632,
+      "reach": {
+        "tests": 2459,
+        "files": 134,
+        "relatedArgs": [
+          "packages/common/src/colors.ts"
+        ],
+        "failingInReach": 7
+      },
+      "valid": true
+    },
+    {
+      "id": "x04",
+      "repo": "excalidraw",
+      "base": "e7b534668a60add7f725531f3c9abf32508c7b4e",
+      "patch": "patches/x04.diff",
+      "patchSha256": "93d972be9555dd7173670e5a223b0e246554bef9b08f459d9b2672bec7dd71ac",
+      "editedFiles": [
+        "packages/element/src/textWrapping.ts"
+      ],
+      "failing": [
+        {
+          "file": "packages/element/tests/textWrapping.test.ts",
+          "name": "Test wrapText Test parseTokens should tokenize decomposed chars into their composed variants",
+          "line": null
+        }
+      ],
+      "failingFiles": [
+        "packages/element/tests/textWrapping.test.ts"
+      ],
+      "flakyDropped": 0,
+      "fullSuiteTests": 2632,
+      "reach": {
+        "tests": 2307,
+        "files": 119,
+        "relatedArgs": [
+          "packages/element/src/textWrapping.ts"
+        ],
+        "failingInReach": 1
+      },
+      "valid": true
+    },
+    {
+      "id": "x05",
+      "repo": "excalidraw",
+      "base": "e7b534668a60add7f725531f3c9abf32508c7b4e",
+      "patch": "patches/x05.diff",
+      "patchSha256": "53020ffe77da843aaa27db3bbc174952791df65b0c45f3241ff1c26175210926",
+      "editedFiles": [
+        "packages/common/src/utils.ts"
+      ],
+      "failing": [],
+      "failingFiles": [],
+      "flakyDropped": 0,
+      "fullSuiteTests": 2632,
+      "reach": {
+        "tests": 2459,
+        "files": 134,
+        "relatedArgs": [
+          "packages/common/src/utils.ts"
+        ],
+        "failingInReach": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "x06",
+      "repo": "excalidraw",
+      "base": "e7b534668a60add7f725531f3c9abf32508c7b4e",
+      "patch": "patches/x06.diff",
+      "patchSha256": "0a0bd6985b8f324b9fd89589e3af3b3a4320466b87441b59e35afe7a6df85e8d",
+      "editedFiles": [
+        "packages/element/src/fractionalIndex.ts"
+      ],
+      "failing": [
+        {
+          "file": "packages/excalidraw/tests/data/reconcile.test.ts",
+          "name": "elements reconciliation reconcileElements()",
+          "line": null
+        },
+        {
+          "file": "packages/excalidraw/tests/data/reconcile.test.ts",
+          "name": "elements reconciliation test identical elements reconciliation",
+          "line": null
+        }
+      ],
+      "failingFiles": [
+        "packages/excalidraw/tests/data/reconcile.test.ts"
+      ],
+      "flakyDropped": 0,
+      "fullSuiteTests": 2632,
+      "reach": {
+        "tests": 2256,
+        "files": 118,
+        "relatedArgs": [
+          "packages/element/src/fractionalIndex.ts"
+        ],
+        "failingInReach": 2
+      },
+      "valid": true
+    },
+    {
+      "id": "x07",
+      "repo": "excalidraw",
+      "base": "e7b534668a60add7f725531f3c9abf32508c7b4e",
+      "patch": "patches/x07.diff",
+      "patchSha256": "a6699f5a1fa2453ac14f29bd65bc4d9872204b6482d24808a96caa903ea76ebc",
+      "editedFiles": [
+        "packages/common/src/binary-heap.ts"
+      ],
+      "failing": [
+        {
+          "file": "packages/common/tests/binary-heap.test.ts",
+          "name": "BinaryHeap push / pop always pops the smallest score first",
+          "line": null
+        },
+        {
+          "file": "packages/common/tests/binary-heap.test.ts",
+          "name": "BinaryHeap push / pop handles duplicate scores",
+          "line": null
+        },
+        {
+          "file": "packages/common/tests/binary-heap.test.ts",
+          "name": "BinaryHeap push / pop maintains the heap invariant for a large adversarial (reverse-sorted) input",
+          "line": null
+        },
+        {
+          "file": "packages/common/tests/binary-heap.test.ts",
+          "name": "BinaryHeap remove removes an interior element and keeps the rest ordered",
+          "line": null
+        },
+        {
+          "file": "packages/common/tests/binary-heap.test.ts",
+          "name": "BinaryHeap remove can remove the current minimum",
+          "line": null
+        }
+      ],
+      "failingFiles": [
+        "packages/common/tests/binary-heap.test.ts"
+      ],
+      "flakyDropped": 0,
+      "fullSuiteTests": 2632,
+      "reach": {
+        "tests": 2470,
+        "files": 135,
+        "relatedArgs": [
+          "packages/common/src/binary-heap.ts"
+        ],
+        "failingInReach": 5
+      },
+      "valid": true
+    },
+    {
+      "id": "x08",
+      "repo": "excalidraw",
+      "base": "e7b534668a60add7f725531f3c9abf32508c7b4e",
+      "patch": "patches/x08.diff",
+      "patchSha256": "1c5064d95ac98464c839336992ec65120e194fc099a98e477f747664522f85da",
+      "editedFiles": [
+        "packages/element/src/sizeHelpers.ts"
+      ],
+      "failing": [
+        {
+          "file": "packages/element/tests/sizeHelpers.test.ts",
+          "name": "getPerfectElementSize should return height:0 if `elementType` is line and locked angle is 0",
+          "line": null
+        },
+        {
+          "file": "packages/element/tests/sizeHelpers.test.ts",
+          "name": "getPerfectElementSize should return height:0 if `elementType` is arrow and locked angle is 0",
+          "line": null
+        }
+      ],
+      "failingFiles": [
+        "packages/element/tests/sizeHelpers.test.ts"
+      ],
+      "flakyDropped": 0,
+      "fullSuiteTests": 2632,
+      "reach": {
+        "tests": 2256,
+        "files": 118,
+        "relatedArgs": [
+          "packages/element/src/sizeHelpers.ts"
+        ],
+        "failingInReach": 2
+      },
+      "valid": true
+    }
+  ],
+  "frozen": [
+    "m06",
+    "m07",
+    "m08",
+    "m11",
+    "m12",
+    "x02",
+    "x03",
+    "x04",
+    "x06",
+    "x07"
+  ],
+  "replaced": [
+    {
+      "id": "m01",
+      "why": "no test fails in the full suite with this patch applied: not a regression the suite can catch"
+    },
+    {
+      "id": "m02",
+      "why": "no test fails in the full suite with this patch applied: not a regression the suite can catch"
+    },
+    {
+      "id": "m03",
+      "why": "no test fails in the full suite with this patch applied: not a regression the suite can catch"
+    },
+    {
+      "id": "m04",
+      "why": "no test fails in the full suite with this patch applied: not a regression the suite can catch"
+    },
+    {
+      "id": "m05",
+      "why": "no test fails in the full suite with this patch applied: not a regression the suite can catch"
+    },
+    {
+      "id": "m09",
+      "why": "no test fails in the full suite with this patch applied: not a regression the suite can catch"
+    },
+    {
+      "id": "m10",
+      "why": "no test fails in the full suite with this patch applied: not a regression the suite can catch"
+    },
+    {
+      "id": "x01",
+      "why": "no test fails in the full suite with this patch applied: not a regression the suite can catch"
+    },
+    {
+      "id": "x05",
+      "why": "no test fails in the full suite with this patch applied: not a regression the suite can catch"
+    }
+  ],
+  "written": "2026-10-29T11:57:35.727Z",
+  "definitions": {
+    "caught": "a test the selection ran FAILS with the patch applied and is listed in `failing` (same file + full name)",
+    "failing": "test cases failing in the full suite with the patch (and again on a rerun of their files), not failing in the unpatched full run",
+    "reach": "test cases run by `vitest related <edited files>` with the patch applied (Mole: plus the compiled dist/*.js of each edited src file); the denominator of the share",
+    "share": "tests the selection ran / reach.tests, averaged over the 10 frozen regressions (target <= 1/3)",
+    "runAll": "fullSuiteTests of each row (the full-suite run catches every valid regression by construction)",
+    "runNone": "0 tests, 0 caught"
+  }
+}

@@ -1,0 +1,96 @@
+{
+ "label": "dry run 2 samples mockllm",
+ "model": "mockllm/model",
+ "written": "2026-10-29T06:15:33-05:00",
+ "summary": {
+  "n_samples": 2,
+  "arms": {
+   "none": {
+    "n": 1,
+    "regressions": 1,
+    "rate": 1.0,
+    "ci95": [
+     0.20654931437723745,
+     1.0
+    ],
+    "counts": {
+     "kept": 0,
+     "regressed": 1,
+     "build_broken": 0,
+     "guard_unrunnable": 0
+    },
+    "tokens_mean": 24996.0,
+    "tokens_total": 24996,
+    "input_tokens_total": 24963,
+    "output_tokens_total": 33,
+    "seconds_mean": 91.76
+   },
+   "mole": {
+    "n": 1,
+    "regressions": 1,
+    "rate": 1.0,
+    "ci95": [
+     0.20654931437723745,
+     1.0
+    ],
+    "counts": {
+     "kept": 0,
+     "regressed": 1,
+     "build_broken": 0,
+     "guard_unrunnable": 0
+    },
+    "tokens_mean": 52364.0,
+    "tokens_total": 52364,
+    "input_tokens_total": 52298,
+    "output_tokens_total": 66,
+    "seconds_mean": 136.655
+   }
+  },
+  "diff_none_minus_mole": {
+   "d": 0.0,
+   "ci95": [
+    -0.7934506856227626,
+    0.7934506856227626
+   ],
+   "mole_better_shown": false
+  }
+ },
+ "records": [
+  {
+   "id": "B3-review-mole",
+   "arm": "mole",
+   "case": "B3-review",
+   "epoch": 1,
+   "label": "regressed",
+   "error": null,
+   "input_tokens": 52298,
+   "output_tokens": 66,
+   "total_tokens": 52364,
+   "seconds": 136.655,
+   "working_seconds": 117.219,
+   "model_answers": 2
+  },
+  {
+   "id": "B3-review-none",
+   "arm": "none",
+   "case": "B3-review",
+   "epoch": 1,
+   "label": "regressed",
+   "error": null,
+   "input_tokens": 24963,
+   "output_tokens": 33,
+   "total_tokens": 24996,
+   "seconds": 91.76,
+   "working_seconds": 91.289,
+   "model_answers": 1
+  }
+ ],
+ "inspect_log": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T17-agent-eval-inspect/evals/inspect/logs/2026-10-29T11-13-06-00-00_mole-regression_L2rMK2MNz8yUSuYM7hsm9H.eval",
+ "status": "success",
+ "epochs": 1,
+ "cases": "B3-review",
+ "arms": "none,mole",
+ "break_model_route": false,
+ "model_config": "claude-sonnet-4-5",
+ "paid_run_approved": null
+}

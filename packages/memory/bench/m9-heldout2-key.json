@@ -1,0 +1,1684 @@
+{
+ "written": "2026-10-29T06:03:56-0500",
+ "about": "M9 HELD-OUT key #2 (T19, D33 'try options' round, mole-builder-3), written and committed BEFORE any re-anchor run, similarity score (key measure) or new matcher option touched these pairs. Source: honojs/hono src/ TS/TSX history (not Mole, not Excalidraw, not hermes ui-tui). cases: every candidate pair produced mechanically by bench/m9-heldout2-builder.ts (a copy of bench/m9-heldout-builder.ts with only repo/prefix changed: same file, git -M renamed file, cross-file when token Jaccard >= 0.5), newest commits first. Each pair LABELLED BY HAND from the declarations, the commit diff lines naming the old/new symbol, and a whitespace/comment-insensitive text diff of the two declarations with the old name swapped for the new (a labelling aid, not the key similarity), with the same 3 labelRules as m9-key.json; every positive reason cites body or role continuity, not only switched callers. 'rename' needs identical declaration tokens except the own name, so a dropped 'private' modifier (private x -> #x) is rename+change.",
+ "labelRules": [
+  "rename: same role, callers (if any) now use the new name, normalized body identical except the symbol's own name",
+  "rename+change: same role continued under a new name (callers switched, or the old code is the clear bulk of the new symbol) and the body was edited",
+  "not-rename: the old symbol was dropped, split across several new symbols, or merged with another into one generalized symbol (no single successor), or the bodies are too small to tell"
+ ],
+ "stopRule": "fixed before labelling, on label counts only: walk the src/ TS/TSX commits newest first from the pinned head and stop after the first commit at which the running count of expected re-anchors (rename + rename+change) reaches >= 20; every candidate pair of the commits walked so far is in the key",
+ "stop": {
+  "commit": "c4f4ab06",
+  "walk": 1023,
+  "expectedReanchors": 21,
+  "note": "walk = position in `git rev-list --no-merges <head> -- src/*.ts src/*.tsx`; all 1811 commits were generated (436 pairs); the pairs past walk 1023 were not labelled and are not in the key. 10 of the 21 positives come from one commit (walk 507: private x -> #x)."
+ },
+ "thresholds": {
+  "similarity": "Dice coefficient over token bigrams: TypeScript tokens of the declaration with trivia removed, the symbol's own name replaced by $SELF and (methods) its class name by $CLS",
+  "renamedChangedMin": 0.55,
+  "tieEpsilon": 0.01,
+  "minTokens": 16
+ },
+ "scoring": "per old symbol: expected = its rename / rename+change pair if any, else none. right = re-anchored to the labelled symbol with the labelled outcome (rename -> renamed/fresh, rename+change -> renamed+changed/stale). wrong = re-anchored to any other symbol, or re-anchored when expected none. silentFresh = rename+change reported as renamed (fresh). Target: right >= 95% of expected re-anchors (held-out 2 cases), wrong = 0, silentFresh = 0. Band check (ruling 1 \u00a75): count the old symbols whose best key candidate (labelled target for positives, best candidate for negatives) has key similarity in [0.40, 0.55); fewer than 5 = inconclusive.",
+ "repos": {
+  "hono": {
+   "path": "~/.hermes/cache/scratch/mole-builder-3/hono.git",
+   "source": "https://github.com/honojs/hono.git (full bare clone, 11 MB)",
+   "head": "ed1d5f72135ccf7e09c17d64dc4af7588dd3e491",
+   "prefix": "src/",
+   "note": "recreate: git clone --bare https://github.com/honojs/hono.git <path>; the head commit must exist. The bench exits 2 when it is missing."
+  }
+ },
+ "cases": [
+  {
+   "id": "hono-50869562-0",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "parseAcceptValue",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "isWhitespace",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.16,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "parseAcceptValue continues as getNextAcceptValue; isWhitespace is a different new symbol"
+  },
+  {
+   "id": "hono-50869562-1",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "parseAcceptValue",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "consumeWhitespace",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.33,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "parseAcceptValue continues as getNextAcceptValue; consumeWhitespace is a different new symbol"
+  },
+  {
+   "id": "hono-50869562-2",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "parseAcceptValue",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "ignoreTrailingWhitespace",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.39,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "parseAcceptValue continues as getNextAcceptValue; ignoreTrailingWhitespace is a different new symbol"
+  },
+  {
+   "id": "hono-50869562-3",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "parseAcceptValue",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "skipInvalidParam",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.35,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "parseAcceptValue continues as getNextAcceptValue; skipInvalidParam is a different new symbol"
+  },
+  {
+   "id": "hono-50869562-4",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "parseAcceptValue",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "skipInvalidAcceptValue",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.27,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "parseAcceptValue continues as getNextAcceptValue; skipInvalidAcceptValue is a different new symbol"
+  },
+  {
+   "id": "hono-50869562-5",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "parseAcceptValue",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "getNextParam",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.23,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "parseAcceptValue continues as getNextAcceptValue; getNextParam is a different new symbol"
+  },
+  {
+   "id": "hono-50869562-6",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "parseAcceptValue",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "getNextAcceptValue",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.34,
+   "walk": 228,
+   "label": "rename+change",
+   "reason": "parsing one accept-header entry into type + params continues (the ReDoS fix replaced the regex split with a char scanner, params still go through a helper); the sole caller parseAccept switched from .map(parseAcceptValue) to a getNextAcceptValue loop"
+  },
+  {
+   "id": "hono-50869562-7",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "parseParams",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "isWhitespace",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.15,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "the params reduce over split parts was split: the loop moved into getNextAcceptValue and one-param scanning into getNextParam (no single successor); isWhitespace is not its successor"
+  },
+  {
+   "id": "hono-50869562-8",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "parseParams",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "consumeWhitespace",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.34,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "the params reduce over split parts was split: the loop moved into getNextAcceptValue and one-param scanning into getNextParam (no single successor); consumeWhitespace is not its successor"
+  },
+  {
+   "id": "hono-50869562-9",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "parseParams",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "ignoreTrailingWhitespace",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.31,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "the params reduce over split parts was split: the loop moved into getNextAcceptValue and one-param scanning into getNextParam (no single successor); ignoreTrailingWhitespace is not its successor"
+  },
+  {
+   "id": "hono-50869562-10",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "parseParams",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "skipInvalidParam",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.36,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "the params reduce over split parts was split: the loop moved into getNextAcceptValue and one-param scanning into getNextParam (no single successor); skipInvalidParam is not its successor"
+  },
+  {
+   "id": "hono-50869562-11",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "parseParams",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "skipInvalidAcceptValue",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.28,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "the params reduce over split parts was split: the loop moved into getNextAcceptValue and one-param scanning into getNextParam (no single successor); skipInvalidAcceptValue is not its successor"
+  },
+  {
+   "id": "hono-50869562-12",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "parseParams",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "getNextParam",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.2,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "the params reduce over split parts was split: the loop moved into getNextAcceptValue and one-param scanning into getNextParam (no single successor); getNextParam is not its successor"
+  },
+  {
+   "id": "hono-50869562-13",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "parseParams",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "getNextAcceptValue",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.28,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "the params reduce over split parts was split: the loop moved into getNextAcceptValue and one-param scanning into getNextParam (no single successor); getNextAcceptValue is not its successor"
+  },
+  {
+   "id": "hono-50869562-14",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "sortByQualityAndIndex",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "isWhitespace",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.22,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "the named comparator was dropped by the scanner rewrite; isWhitespace is a scanner helper"
+  },
+  {
+   "id": "hono-50869562-15",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "sortByQualityAndIndex",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "consumeWhitespace",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.4,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "the named comparator was dropped by the scanner rewrite; consumeWhitespace is a scanner helper"
+  },
+  {
+   "id": "hono-50869562-16",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "sortByQualityAndIndex",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "ignoreTrailingWhitespace",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.48,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "the named comparator was dropped by the scanner rewrite; ignoreTrailingWhitespace is a scanner helper"
+  },
+  {
+   "id": "hono-50869562-17",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "sortByQualityAndIndex",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "skipInvalidParam",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.27,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "the named comparator was dropped by the scanner rewrite; skipInvalidParam is a scanner helper"
+  },
+  {
+   "id": "hono-50869562-18",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "sortByQualityAndIndex",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "skipInvalidAcceptValue",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.28,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "the named comparator was dropped by the scanner rewrite; skipInvalidAcceptValue is a scanner helper"
+  },
+  {
+   "id": "hono-50869562-19",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "sortByQualityAndIndex",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "getNextParam",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.18,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "the named comparator was dropped by the scanner rewrite; getNextParam is a scanner helper"
+  },
+  {
+   "id": "hono-50869562-20",
+   "repo": "hono",
+   "commit": "50869562980628b2984f73e064bb80691e5286bc",
+   "parent": "18cc595fc2a6a24c919bda8d733e7f95460eef4f",
+   "subject": "fix(accept): replace regex split to mitigate ReDoS (#4758)",
+   "old": {
+    "path": "src/utils/accept.ts",
+    "tail": "sortByQualityAndIndex",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/accept.ts",
+    "tail": "getNextAcceptValue",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.26,
+   "walk": 228,
+   "label": "not-rename",
+   "reason": "the named comparator was dropped by the scanner rewrite; getNextAcceptValue is a scanner helper"
+  },
+  {
+   "id": "hono-bd26c312-21",
+   "repo": "hono",
+   "commit": "bd26c3129f8e159864d3f96522f44e900516e847",
+   "parent": "b85c1e032864322c581f4d04652d37ef59130eee",
+   "subject": "perf(trie-router): improve performance (1.5x ~ 2.0x) (#4724)",
+   "old": {
+    "path": "src/router/trie-router/node.ts",
+    "tail": "Node.#getHandlerSets",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/router/trie-router/node.ts",
+    "tail": "Node.#pushHandlerSets",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.93,
+   "walk": 249,
+   "label": "rename+change",
+   "reason": "same handler-set collection over node.#methods (same params loop, same processedSet logic); it now pushes into a caller-supplied array instead of returning one; the recursive call sites switched"
+  },
+  {
+   "id": "hono-08390665-22",
+   "repo": "hono",
+   "commit": "083906656a3824263c83c6049d6bab63898a4f1e",
+   "parent": "1196f14b94e589e2ac44fa7f1c8785d70c1cf83e",
+   "subject": "feat(jwt): Exposing utility function `verifyWithJwks` for external use (#4302)",
+   "old": {
+    "path": "src/utils/jwt/jwt.ts",
+    "tail": "verifyFromJwks",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/jwt/jwt.ts",
+    "tail": "verifyWithJwks",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.98,
+   "walk": 362,
+   "label": "rename",
+   "reason": "identical body; the export was renamed for external use and the jwt middleware import + tests switched to verifyWithJwks"
+  },
+  {
+   "id": "hono-5205e7c7-23",
+   "repo": "hono",
+   "commit": "5205e7c7cfdf9dfc2124244c1123ef4050983fd8",
+   "parent": "f0fd89a7ff3b2c0ed6157b912f164f0ad0c1d54e",
+   "subject": "feat(aws-lambda): specify content-type as binary (#4250)",
+   "old": {
+    "path": "src/adapter/aws-lambda/handler.ts",
+    "tail": "isContentTypeBinary",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/adapter/aws-lambda/handler.ts",
+    "tail": "defaultIsContentTypeBinary",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.92,
+   "walk": 367,
+   "label": "rename+change",
+   "reason": "same content-type regex predicate, now the default for a new isContentTypeBinary option; only a ': boolean' return annotation was added; test imports switched"
+  },
+  {
+   "id": "hono-9cdfdf3c-24",
+   "repo": "hono",
+   "commit": "9cdfdf3c65affaec4d3682d66fbd1cffeede975d",
+   "parent": "9e42fd1c9d895a655c4fb1ed82af9d2f2cb4abe7",
+   "subject": "fix: reduce Context code (#4100)",
+   "old": {
+    "path": "src/context.ts",
+    "tail": "setHeaders",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/context.ts",
+    "tail": "setDefaultContentType",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.38,
+   "walk": 398,
+   "label": "not-rename",
+   "reason": "setHeaders copied a map onto a Headers object; setDefaultContentType builds a header record with a Content-Type: a different job (Context code reduction)"
+  },
+  {
+   "id": "hono-7e17b76c-25",
+   "repo": "hono",
+   "commit": "7e17b76ce9438d68072a271bd593f7d5deb8542b",
+   "parent": "61bee9f65115771c307519a1dee1281365850b45",
+   "subject": "perf(trie-router): optimize and remove unnecessary processes (#3647)",
+   "old": {
+    "path": "src/router/trie-router/node.ts",
+    "tail": "Node.#gHSets",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/router/trie-router/node.ts",
+    "tail": "Node.#getHandlerSets",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.95,
+   "walk": 499,
+   "label": "rename+change",
+   "reason": "same handler-set collection (the #gHSets abbreviation expanded to #getHandlerSets); only processedSet's type and initializer edited; recursive call sites switched"
+  },
+  {
+   "id": "hono-ae6165b9-26",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.clone",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.#clone",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.92,
+   "walk": 507,
+   "label": "rename+change",
+   "reason": "same body; 'private clone' became the ES private '#clone' (the private modifier token is gone), the route() call site switched to this.#clone"
+  },
+  {
+   "id": "hono-ae6165b9-27",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.clone",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.#addRoute",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.31,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "clone continues as #clone; #addRoute is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-28",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.clone",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.#handleError",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.35,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "clone continues as #clone; #handleError is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-29",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.clone",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.#dispatch",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.18,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "clone continues as #clone; #dispatch is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-30",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.addRoute",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.#clone",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.31,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "addRoute continues as #addRoute; #clone is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-31",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.addRoute",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.#addRoute",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.93,
+   "walk": 507,
+   "label": "rename+change",
+   "reason": "same body; 'private addRoute' became the ES private '#addRoute' (the private modifier token is gone), every call site switched to this.#addRoute"
+  },
+  {
+   "id": "hono-ae6165b9-32",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.addRoute",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.#handleError",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.19,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "addRoute continues as #addRoute; #handleError is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-33",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.addRoute",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.#dispatch",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.18,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "addRoute continues as #addRoute; #dispatch is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-34",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.handleError",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.#clone",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.35,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "handleError continues as #handleError; #clone is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-35",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.handleError",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.#addRoute",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.19,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "handleError continues as #handleError; #addRoute is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-36",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.handleError",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.#handleError",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.92,
+   "walk": 507,
+   "label": "rename+change",
+   "reason": "same body; 'private handleError' became '#handleError' (modifier gone) and it now calls this.#errorHandler; call sites switched"
+  },
+  {
+   "id": "hono-ae6165b9-37",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.handleError",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.#dispatch",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.23,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "handleError continues as #handleError; #dispatch is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-38",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.dispatch",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.#clone",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.18,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "dispatch continues as #dispatch; #clone is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-39",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.dispatch",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.#addRoute",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.18,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "dispatch continues as #dispatch; #addRoute is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-40",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.dispatch",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.#handleError",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.23,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "dispatch continues as #dispatch; #handleError is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-41",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.dispatch",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/hono-base.ts",
+    "tail": "Hono.#dispatch",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.98,
+   "walk": 507,
+   "label": "rename+change",
+   "reason": "same dispatch body; 'private dispatch' became '#dispatch' (modifier gone), its references to the handlers now use the # names; fetch/request call sites switched"
+  },
+  {
+   "id": "hono-ae6165b9-42",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.getDecodedParam",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.#getDecodedParam",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.97,
+   "walk": 507,
+   "label": "rename+change",
+   "reason": "same body; 'private getDecodedParam' became '#getDecodedParam' (modifier gone) and calls this.#getParamValue; param() switched"
+  },
+  {
+   "id": "hono-ae6165b9-43",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.getDecodedParam",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.#getAllDecodedParams",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.55,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "getDecodedParam continues as #getDecodedParam; #getAllDecodedParams is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-44",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.getDecodedParam",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.#getParamValue",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.56,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "getDecodedParam continues as #getDecodedParam; #getParamValue is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-45",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.getAllDecodedParams",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.#getDecodedParam",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.55,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "getAllDecodedParams continues as #getAllDecodedParams; #getDecodedParam is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-46",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.getAllDecodedParams",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.#getAllDecodedParams",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.98,
+   "walk": 507,
+   "label": "rename+change",
+   "reason": "same body; 'private getAllDecodedParams' became '#getAllDecodedParams' (modifier gone) and calls this.#getParamValue; param() switched"
+  },
+  {
+   "id": "hono-ae6165b9-47",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.getAllDecodedParams",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.#getParamValue",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.34,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "getAllDecodedParams continues as #getAllDecodedParams; #getParamValue is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-48",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.getParamValue",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.#getDecodedParam",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.56,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "getParamValue continues as #getParamValue; #getDecodedParam is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-49",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.getParamValue",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.#getAllDecodedParams",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.34,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "getParamValue continues as #getParamValue; #getAllDecodedParams is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-50",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.getParamValue",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/request.ts",
+    "tail": "HonoRequest.#getParamValue",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.95,
+   "walk": 507,
+   "label": "rename+change",
+   "reason": "same one-line body; 'private getParamValue' became '#getParamValue' (only the private modifier token is gone); both callers switched"
+  },
+  {
+   "id": "hono-ae6165b9-51",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/router/reg-exp-router/router.ts",
+    "tail": "RegExpRouter.buildAllMatchers",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/router/reg-exp-router/router.ts",
+    "tail": "RegExpRouter.#buildAllMatchers",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.95,
+   "walk": 507,
+   "label": "rename+change",
+   "reason": "same body; 'private buildAllMatchers' became '#buildAllMatchers' (modifier gone) and calls this.#buildMatcher; match() switched"
+  },
+  {
+   "id": "hono-ae6165b9-52",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/router/reg-exp-router/router.ts",
+    "tail": "RegExpRouter.buildAllMatchers",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/router/reg-exp-router/router.ts",
+    "tail": "RegExpRouter.#buildMatcher",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.49,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "buildAllMatchers continues as #buildAllMatchers; #buildMatcher is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-53",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/router/reg-exp-router/router.ts",
+    "tail": "RegExpRouter.buildMatcher",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/router/reg-exp-router/router.ts",
+    "tail": "RegExpRouter.#buildAllMatchers",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.49,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "buildMatcher continues as #buildMatcher; #buildAllMatchers is a different new symbol"
+  },
+  {
+   "id": "hono-ae6165b9-54",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/router/reg-exp-router/router.ts",
+    "tail": "RegExpRouter.buildMatcher",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/router/reg-exp-router/router.ts",
+    "tail": "RegExpRouter.#buildMatcher",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.96,
+   "walk": 507,
+   "label": "rename+change",
+   "reason": "same body; 'private buildMatcher' became '#buildMatcher' (only the private modifier token is gone); #buildAllMatchers calls it"
+  },
+  {
+   "id": "hono-ae6165b9-55",
+   "repo": "hono",
+   "commit": "ae6165b99440dce8f8839b6e85e9d4c3ed7b2c42",
+   "parent": "e43f203a2ac1c86556cb0ca74b667efdbc6b883b",
+   "subject": "refactor: use `#` for private methods to reduce the minified file size (#3596)",
+   "old": {
+    "path": "src/router/trie-router/node.ts",
+    "tail": "Node.gHSets",
+    "kind": "method"
+   },
+   "new": {
+    "path": "src/router/trie-router/node.ts",
+    "tail": "Node.#gHSets",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.96,
+   "walk": 507,
+   "label": "rename+change",
+   "reason": "same body; 'private gHSets' became '#gHSets' (only the private modifier token is gone); the search and recursive call sites switched"
+  },
+  {
+   "id": "hono-ad04fbff-56",
+   "repo": "hono",
+   "commit": "ad04fbff1c46c3f4c78191c8956657cdcab6f7f5",
+   "parent": "32ba5ba8360e0b8e1cb2b681af22469a9a3f7175",
+   "subject": "refactor(jsx): reduce code size and improve maintainability (#2956)",
+   "old": {
+    "path": "src/jsx/utils.ts",
+    "tail": "normalizeIntrinsicElementProps",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/jsx/utils.ts",
+    "tail": "normalizeIntrinsicElementKey",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.24,
+   "walk": 695,
+   "label": "rename+change",
+   "reason": "same job (className -> class, htmlFor -> for on intrinsic elements); the props-mutating body became a per-key lookup in normalizeElementKeyMap and the sole call site moved into the attribute-key loop"
+  },
+  {
+   "id": "hono-7875a615-57",
+   "repo": "hono",
+   "commit": "7875a615221414453047ce1243962a9fa108ce43",
+   "parent": "366f760a30f77a35c78d487790bd32df5aa43cf3",
+   "subject": "fix(helper/ssg): fix bug of joinPaths (#2809)",
+   "old": {
+    "path": "src/helper/ssg/utils.ts",
+    "tail": "handleDotDot",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/helper/ssg/utils.ts",
+    "tail": "handleParent",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.78,
+   "walk": 738,
+   "label": "rename+change",
+   "reason": "same '..' push / pop logic with a new beforeParentFlag parameter added to the condition; the sole caller joinPaths switched"
+  },
+  {
+   "id": "hono-c83d80f1-58",
+   "repo": "hono",
+   "commit": "c83d80f17b58425ba669f8b73050cd18c8fb8d55",
+   "parent": "fa9ed80619d9e3938c15eb1e4adbb953fcabca74",
+   "subject": "refactor(aws-lambda): replace conditional logics with polymorphism (#2521)",
+   "old": {
+    "path": "src/adapter/aws-lambda/handler.ts",
+    "tail": "createResult",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/adapter/aws-lambda/handler.ts",
+    "tail": "getProcessor",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.22,
+   "walk": 832,
+   "label": "not-rename",
+   "reason": "aws-lambda event-type conditionals moved into EventProcessor class methods; getProcessor only picks a processor"
+  },
+  {
+   "id": "hono-c83d80f1-59",
+   "repo": "hono",
+   "commit": "c83d80f17b58425ba669f8b73050cd18c8fb8d55",
+   "parent": "fa9ed80619d9e3938c15eb1e4adbb953fcabca74",
+   "subject": "refactor(aws-lambda): replace conditional logics with polymorphism (#2521)",
+   "old": {
+    "path": "src/adapter/aws-lambda/handler.ts",
+    "tail": "createRequest",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/adapter/aws-lambda/handler.ts",
+    "tail": "getProcessor",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.19,
+   "walk": 832,
+   "label": "not-rename",
+   "reason": "aws-lambda event-type conditionals moved into EventProcessor class methods; getProcessor only picks a processor"
+  },
+  {
+   "id": "hono-c83d80f1-60",
+   "repo": "hono",
+   "commit": "c83d80f17b58425ba669f8b73050cd18c8fb8d55",
+   "parent": "fa9ed80619d9e3938c15eb1e4adbb953fcabca74",
+   "subject": "refactor(aws-lambda): replace conditional logics with polymorphism (#2521)",
+   "old": {
+    "path": "src/adapter/aws-lambda/handler.ts",
+    "tail": "extractQueryString",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/adapter/aws-lambda/handler.ts",
+    "tail": "getProcessor",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.31,
+   "walk": 832,
+   "label": "not-rename",
+   "reason": "aws-lambda event-type conditionals moved into EventProcessor class methods; getProcessor only picks a processor"
+  },
+  {
+   "id": "hono-c83d80f1-61",
+   "repo": "hono",
+   "commit": "c83d80f17b58425ba669f8b73050cd18c8fb8d55",
+   "parent": "fa9ed80619d9e3938c15eb1e4adbb953fcabca74",
+   "subject": "refactor(aws-lambda): replace conditional logics with polymorphism (#2521)",
+   "old": {
+    "path": "src/adapter/aws-lambda/handler.ts",
+    "tail": "getCookies",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/adapter/aws-lambda/handler.ts",
+    "tail": "getProcessor",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.36,
+   "walk": 832,
+   "label": "not-rename",
+   "reason": "aws-lambda event-type conditionals moved into EventProcessor class methods (getCookies is now a method); getProcessor only picks a processor"
+  },
+  {
+   "id": "hono-c83d80f1-62",
+   "repo": "hono",
+   "commit": "c83d80f17b58425ba669f8b73050cd18c8fb8d55",
+   "parent": "fa9ed80619d9e3938c15eb1e4adbb953fcabca74",
+   "subject": "refactor(aws-lambda): replace conditional logics with polymorphism (#2521)",
+   "old": {
+    "path": "src/adapter/aws-lambda/handler.ts",
+    "tail": "setCookies",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/adapter/aws-lambda/handler.ts",
+    "tail": "getProcessor",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.33,
+   "walk": 832,
+   "label": "not-rename",
+   "reason": "aws-lambda event-type conditionals moved into EventProcessor class methods (setCookies is now a method); getProcessor only picks a processor"
+  },
+  {
+   "id": "hono-e9a2d859-63",
+   "repo": "hono",
+   "commit": "e9a2d8597c0c11c7dbeb5915cd50c1359342a997",
+   "parent": "1a4a545b5082a9c954130f040e6dcf8c48f4a584",
+   "subject": "feat(jwt): acceptable CryptoKey in JWT sign and verify (#2373)",
+   "old": {
+    "path": "src/utils/jwt/jwt.ts",
+    "tail": "param",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/utils/jwt/jws.ts",
+    "tail": "getKeyAlgorithm",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "jaccard": 0.89,
+   "walk": 873,
+   "label": "rename+change",
+   "reason": "same algorithm-name -> importKey params switch, moved jwt.ts -> jws.ts with 'satisfies' clauses and new type names; the sign/verify code now calls getKeyAlgorithm"
+  },
+  {
+   "id": "hono-b827efb3-64",
+   "repo": "hono",
+   "commit": "b827efb3fb3fa988e74a5b96d1cfcd75d415f2af",
+   "parent": "bc6330c91df6c71c99fe85c4d65aaab4dfceb2ec",
+   "subject": "fix(streaming): Fix stream SSE, not necessary close stream. (#2320)",
+   "old": {
+    "path": "src/helper/streaming/sse.ts",
+    "tail": "setSSEHeaders",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/helper/streaming/sse.ts",
+    "tail": "run",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.24,
+   "walk": 884,
+   "label": "not-rename",
+   "reason": "the SSE header setup was dropped from this helper; run is a new error-handling stream runner"
+  },
+  {
+   "id": "hono-30b33b0e-65",
+   "repo": "hono",
+   "commit": "30b33b0e8c0d5653712899a1a388f6de7ad563b8",
+   "parent": "2be989352c81dba43faa6e3159cfcbc1378963c4",
+   "subject": "feat(ssg): generate files concurrently (#2187)",
+   "old": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "saveContentToFiles",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "saveContentToFile",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.7,
+   "walk": 908,
+   "label": "rename+change",
+   "reason": "the per-entry body (generateFilePath, mkdir, writeFile string/ArrayBuffer) continues for one entry; the loop over the map moved to toSSG for concurrent saves; the sole caller switched"
+  },
+  {
+   "id": "hono-62f11a28-66",
+   "repo": "hono",
+   "commit": "62f11a281766d7a01dc3d8417a3701c0b8b30e7e",
+   "parent": "c4f4ab06b6412e821a363d2a9c266fd8f17a670b",
+   "subject": "feat(jsx/dom): rewrite renderer to use virtual tree (#1981)",
+   "old": {
+    "path": "src/jsx/dom/index.ts",
+    "tail": "patch",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/jsx/dom/render.ts",
+    "tail": "applyProps",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "jaccard": 0.54,
+   "walk": 1022,
+   "label": "not-rename",
+   "reason": "the vnode patcher was replaced by a virtual-tree renderer; applyProps only applies attributes, a different job"
+  },
+  {
+   "id": "hono-c4f4ab06-67",
+   "repo": "hono",
+   "commit": "c4f4ab06b6412e821a363d2a9c266fd8f17a670b",
+   "parent": "6a8b4e61ba784c4c76c29d1ef1ea525cd10e8a28",
+   "subject": "feat(ssg): Implement Dynamic File Extension on MIME Type and Enhanced Response Handling (#1968)",
+   "old": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "generateHtmlMap",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "parseResponseContent",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.26,
+   "walk": 1023,
+   "label": "not-rename",
+   "reason": "generateHtmlMap continues as fetchRoutesContent; parseResponseContent is a different new symbol"
+  },
+  {
+   "id": "hono-c4f4ab06-68",
+   "repo": "hono",
+   "commit": "c4f4ab06b6412e821a363d2a9c266fd8f17a670b",
+   "parent": "6a8b4e61ba784c4c76c29d1ef1ea525cd10e8a28",
+   "subject": "feat(ssg): Implement Dynamic File Extension on MIME Type and Enhanced Response Handling (#1968)",
+   "old": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "generateHtmlMap",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "determineExtension",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.25,
+   "walk": 1023,
+   "label": "not-rename",
+   "reason": "generateHtmlMap continues as fetchRoutesContent; determineExtension is a different new symbol"
+  },
+  {
+   "id": "hono-c4f4ab06-69",
+   "repo": "hono",
+   "commit": "c4f4ab06b6412e821a363d2a9c266fd8f17a670b",
+   "parent": "6a8b4e61ba784c4c76c29d1ef1ea525cd10e8a28",
+   "subject": "feat(ssg): Implement Dynamic File Extension on MIME Type and Enhanced Response Handling (#1968)",
+   "old": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "generateHtmlMap",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "fetchRoutesContent",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.71,
+   "walk": 1023,
+   "label": "rename+change",
+   "reason": "same fetch-every-route loop (inspectRoutes, app.fetch, skip non-200) now storing {content, mimeType}; toSSG and the tests switched"
+  },
+  {
+   "id": "hono-c4f4ab06-70",
+   "repo": "hono",
+   "commit": "c4f4ab06b6412e821a363d2a9c266fd8f17a670b",
+   "parent": "6a8b4e61ba784c4c76c29d1ef1ea525cd10e8a28",
+   "subject": "feat(ssg): Implement Dynamic File Extension on MIME Type and Enhanced Response Handling (#1968)",
+   "old": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "generateHtmlMap",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "saveContentToFiles",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.29,
+   "walk": 1023,
+   "label": "not-rename",
+   "reason": "generateHtmlMap continues as fetchRoutesContent; saveContentToFiles is a different new symbol"
+  },
+  {
+   "id": "hono-c4f4ab06-71",
+   "repo": "hono",
+   "commit": "c4f4ab06b6412e821a363d2a9c266fd8f17a670b",
+   "parent": "6a8b4e61ba784c4c76c29d1ef1ea525cd10e8a28",
+   "subject": "feat(ssg): Implement Dynamic File Extension on MIME Type and Enhanced Response Handling (#1968)",
+   "old": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "saveHtmlToLocal",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "parseResponseContent",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.21,
+   "walk": 1023,
+   "label": "not-rename",
+   "reason": "saveHtmlToLocal continues as saveContentToFiles; parseResponseContent is a different new symbol"
+  },
+  {
+   "id": "hono-c4f4ab06-72",
+   "repo": "hono",
+   "commit": "c4f4ab06b6412e821a363d2a9c266fd8f17a670b",
+   "parent": "6a8b4e61ba784c4c76c29d1ef1ea525cd10e8a28",
+   "subject": "feat(ssg): Implement Dynamic File Extension on MIME Type and Enhanced Response Handling (#1968)",
+   "old": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "saveHtmlToLocal",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "determineExtension",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.23,
+   "walk": 1023,
+   "label": "not-rename",
+   "reason": "saveHtmlToLocal continues as saveContentToFiles; determineExtension is a different new symbol"
+  },
+  {
+   "id": "hono-c4f4ab06-73",
+   "repo": "hono",
+   "commit": "c4f4ab06b6412e821a363d2a9c266fd8f17a670b",
+   "parent": "6a8b4e61ba784c4c76c29d1ef1ea525cd10e8a28",
+   "subject": "feat(ssg): Implement Dynamic File Extension on MIME Type and Enhanced Response Handling (#1968)",
+   "old": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "saveHtmlToLocal",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "fetchRoutesContent",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.28,
+   "walk": 1023,
+   "label": "not-rename",
+   "reason": "saveHtmlToLocal continues as saveContentToFiles; fetchRoutesContent is a different new symbol"
+  },
+  {
+   "id": "hono-c4f4ab06-74",
+   "repo": "hono",
+   "commit": "c4f4ab06b6412e821a363d2a9c266fd8f17a670b",
+   "parent": "6a8b4e61ba784c4c76c29d1ef1ea525cd10e8a28",
+   "subject": "feat(ssg): Implement Dynamic File Extension on MIME Type and Enhanced Response Handling (#1968)",
+   "old": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "saveHtmlToLocal",
+    "kind": "function"
+   },
+   "new": {
+    "path": "src/helper/ssg/index.ts",
+    "tail": "saveContentToFiles",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.71,
+   "walk": 1023,
+   "label": "rename+change",
+   "reason": "same mkdir + writeFile loop over the route map, now writing ArrayBuffer content and passing mimeType to generateFilePath; toSSG and the tests switched"
+  }
+ ]
+}

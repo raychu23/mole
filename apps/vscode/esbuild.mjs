@@ -13,7 +13,9 @@ await build({ ...common, entryPoints: ['webview/main.ts'], outfile: 'dist/webvie
 
 // the daemon and its worker thread run as plain Node (the editor's own Node with ELECTRON_RUN_AS_NODE). server.ts / client.ts use
 // import.meta.url to find sibling files, which does not exist in CommonJS: point it at the bundle file.
-const daemon = { ...common, ...importMeta, platform: 'node', format: 'cjs', sourcemap: false };
+// dependency-cruiser (T27 `mole rules`, ESM with top-level await) can't go in a CJS bundle; the CLI loads it lazily, so the
+// packaged daemon works without it and only `mole rules` needs a repo checkout (npm install).
+const daemon = { ...common, ...importMeta, platform: 'node', format: 'cjs', sourcemap: false, external: ['dependency-cruiser'] };
 await build({ ...daemon, entryPoints: ['../../packages/daemon/src/cli.ts'], outfile: 'dist/daemon.cjs' });
 await build({ ...daemon, entryPoints: ['../../packages/daemon/src/worker.ts'], outfile: 'dist/worker.cjs' });
 

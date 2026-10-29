@@ -39,7 +39,12 @@ function formatMemory(list: MemoryEntry[]): string {
       const status = e.status === 'moved' && e.changed ? 'moved*' : e.status;
       const where = e.newPath ? ` -> ${e.newPath}${e.line ? `:${e.line}` : ''}` : e.line ? `:${e.line}` : '';
       const text = e.text.split('\n')[0] ?? '';
-      return `${status.padEnd(9)} ${e.symbol}${where}  ${text.length > 80 ? `${text.slice(0, 77)}...` : text}  (${e.file})`;
+      // T19: a renamed symbol keeps its note ('renamed' = only the name changed, fresh; 'renamed + changed' = stale)
+      const sym = e.renamedTo
+        ? `${e.changed ? 'renamed + changed' : 'renamed'}: ${e.symbol} → ${e.renamedTo}${e.line ? `:${e.line}` : ''}`
+        : `${e.symbol}${where}`;
+      const ambiguous = e.candidates?.length ? `  (ambiguous rename, not re-anchored: ${e.candidates.join(', ')})` : '';
+      return `${status.padEnd(9)} ${sym}  ${text.length > 80 ? `${text.slice(0, 77)}...` : text}  (${e.file})${ambiguous}`;
     })
     .join('\n') + (list.some((e) => e.status === 'moved' && e.changed) ? '\n(moved* = moved and its body changed since the note)' : '');
 }
@@ -103,8 +108,11 @@ async function main(): Promise<number> {
     if (!flags.stdin || flags.verbose) console.log(`recorded ${ev.length} look${ev.length === 1 ? '' : 's'} in .mole/local/seen.jsonl${ev.length < inputs.length ? ` (${inputs.length - ev.length} unknown symbol${inputs.length - ev.length === 1 ? '' : 's'} skipped)` : ''}`);
     return ev.length === 0 && inputs.length > 0 && !flags.stdin ? 1 : 0;
   }
-  if (['runs', 'run', 'tried', 'agents'].includes(cmd)) return (await import('@mole/agentstate')).agentCli(cmd, pos, flags, root); // agent states (T18), no daemon needed
+  if (cmd === 'claims') return (await import('@mole/agentstate/dist/src/claims/cli.js')).claimsCli(pos, flags); // claim check (T24): light entry, no daemon
+  if (['runs', 'run', 'tried', 'agents', 'collisions'].includes(cmd)) return (await import('@mole/agentstate')).agentCli(cmd, pos, flags, root); // agent states (T18) + collisions (T21), no daemon needed
   if (cmd === 'decisions') return (await import('@mole/decisions')).decisionsCli(pos, flags, root); // decision graph + flags (T29), no daemon needed
+  if (cmd === 'flows') return (await import('@mole/flows')).flowsCli(pos, flags, root); // runtime call flows recorded from tests (T28), no daemon needed
+  if (cmd === 'rules') return (await import('@mole/decisions')).rulesCli(pos, flags, root);
   const stateDir = str(flags['state-dir']);
   const common = { root, stateDir, ...defaultSources(root, str(flags.tsconfig), str(flags['src-dir'])) };
 
@@ -145,6 +153,7 @@ async function main(): Promise<number> {
       console.error('usage: mole check <sha | --diff FILE [--base SHA] | --worktree> [--json] [--fix-rule RE] [--root DIR] [--notes-root DIR] [--reword]');
       return 2;
     }
+    if (flags['run-tests']) return (await import('@mole/verify')).verifyCli(pos, flags, root); // T22: run the tests that matter, no daemon needed
     const change: Change = diffFile !== undefined ? { diffFile: resolve(diffFile), base: str(flags.base) } : sha !== undefined ? { sha } : { worktree: true };
     // T16: with MOLE_OTEL=1 one span per stage under a root mole.check span, flushed before exit; otherwise no-ops, nothing loaded
     const otel = await import('@mole/telemetry');
