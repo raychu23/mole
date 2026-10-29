@@ -1,0 +1,14 @@
+{
+  "//": "M20 static graph of Mole: the indexer with @mole/* mapped to each package's src, so cross-package calls resolve (the daemon's own index of Mole leaves them unresolved, which would count ordinary calls as dynamic).",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node"],
+    "baseUrl": "../../..",
+    "paths": { "@mole/*": ["packages/*/src/index.ts"] }
+  }
+}
