@@ -3,4 +3,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 01:07      new → proposed      Export the agent runs T18 reconstructs as real LangGraph checkpoints, written with LangGraph.js's SQLite checkpointer (@langchain/langgraph-checkpoint-sqlite), 
     2026-10-29 01:07      proposed → ready      owner mole-builder-2 (Hermes chat)
     2026-10-29 01:37      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T20-langgraph-checkpoint-export · branch ledger/t20-langgraph-checkpoint-export · base 24cf82c
+    2026-10-29 01:49      running → submitted      report: branch ledger/t20-langgraph-checkpoint-export @18faa26 (red 626a462): packages/agentstate/src/langgraph.ts exports runs via @langchain/langgraph-checkpoint-sqlite SqliteSaver.put (1 thread/run, 1 checkpoint/step,
+    2026-10-29 01:49      checks ran: npm run check && node packages/agentstate/dist/bench/m10.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T20-langgraph-checkpoint-export → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
