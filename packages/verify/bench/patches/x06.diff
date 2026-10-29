@@ -1,0 +1,13 @@
+diff --git a/packages/element/src/fractionalIndex.ts b/packages/element/src/fractionalIndex.ts
+index 0ff4977..23c255d 100644
+--- a/packages/element/src/fractionalIndex.ts
++++ b/packages/element/src/fractionalIndex.ts
+@@ -160,7 +160,7 @@ export const orderByFractionalIndex = (
+       }
+ 
+       // break ties based on the element id
+-      return a.id < b.id ? -1 : 1;
++      return a.id < b.id ? 1 : -1;
+     }
+ 
+     // defensively keep the array order

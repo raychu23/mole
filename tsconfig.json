@@ -23,6 +23,9 @@
       "path": "packages/agentstate"
     },
     {
+      "path": "packages/verify"
+    },
+    {
       "path": "packages/daemon"
     },
     {

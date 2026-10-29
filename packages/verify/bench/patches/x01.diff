@@ -1,0 +1,11 @@
+diff --git a/packages/math/src/range.ts b/packages/math/src/range.ts
+index 1b29234..eed5326 100644
+--- a/packages/math/src/range.ts
++++ b/packages/math/src/range.ts
+@@ -79,5 +79,5 @@ export const rangeIncludesValue = (
+   value: number,
+   [min, max]: InclusiveRange,
+ ): boolean => {
+-  return value >= min && value <= max;
++  return value >= min && value < max;
+ };

@@ -1,0 +1,12 @@
+diff --git a/packages/agentstate/src/steps.ts b/packages/agentstate/src/steps.ts
+index 82a1ee6..cb104f8 100644
+--- a/packages/agentstate/src/steps.ts
++++ b/packages/agentstate/src/steps.ts
+@@ -50,7 +50,6 @@ export function isTest(command: string, tool: string): boolean {
+ function testText(s: string): boolean {
+   // a mention in a commit message / ledger --checks value is not a run
+   const stripped = s.replace(/(--checks(?:-result)?|--goal|--report|-m)\s+("([^"\\]|\\.)*"|'[^']*')/g, '');
+-  if (/--dry-run/.test(stripped)) return false;
+   return TEST_RE.test(stripped);
+ }
+ 

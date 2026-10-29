@@ -1,0 +1,13 @@
+diff --git a/packages/common/src/binary-heap.ts b/packages/common/src/binary-heap.ts
+index 5abf484..6295b91 100644
+--- a/packages/common/src/binary-heap.ts
++++ b/packages/common/src/binary-heap.ts
+@@ -42,7 +42,7 @@ export class BinaryHeap<T> {
+       // Check right child
+       if (child2N < length) {
+         const child2Score = this.scoreFunction(this.content[child2N]);
+-        if (child2Score < smallestScore) {
++        if (child2Score > smallestScore) {
+           smallestIdx = child2N;
+         }
+       }

@@ -1,0 +1,11 @@
+diff --git a/packages/core/src/index.ts b/packages/core/src/index.ts
+index 292066b..8fca2ae 100644
+--- a/packages/core/src/index.ts
++++ b/packages/core/src/index.ts
+@@ -14,5 +14,5 @@ export function isStale(ev: Evidence, head: string, changedSince: ReadonlySet<st
+ 
+ /** Validate the invariant every surface relies on: current-layer nodes and edges carry evidence. */
+ export function missingEvidence(items: ReadonlyArray<GraphNode | GraphEdge>): Array<GraphNode | GraphEdge> {
+-  return items.filter((x) => x.layer === 'current' && !x.evidence);
++  return items.filter((x) => !x.evidence);
+ }

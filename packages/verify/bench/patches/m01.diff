@@ -1,0 +1,13 @@
+diff --git a/packages/history/src/diff.ts b/packages/history/src/diff.ts
+index 650ef85..a84d7ff 100644
+--- a/packages/history/src/diff.ts
++++ b/packages/history/src/diff.ts
+@@ -128,7 +128,7 @@ export function parseDiff(text: string): FileDiff[] {
+       const b = h[2] === undefined ? 1 : Number(h[2]);
+       const c = Number(h[3]);
+       const d = h[4] === undefined ? 1 : Number(h[4]);
+-      oldLn = b === 0 ? a + 1 : a;
++      oldLn = a;
+       newLn = d === 0 ? c + 1 : c;
+       oldRem = b;
+       newRem = d;
