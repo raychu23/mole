@@ -1,0 +1,175 @@
+{
+ "written": "2026-10-28T20:00:54-0500",
+ "what": "M8 memory recall: does the tool, shown change C, bring up the past fix F that last wrote the lines C edits (or the decision behind it) with a source you can click",
+ "scoring": "1 = names the fix (sha, PR or its subject) or its specific reason + a clickable source (commit, PR, file:line); 0.5 = the reason without a source, or a source without the reason; 0 = nothing. Bar: 3 of 5 on R1-R5; R6 = the Mole case, reported separately",
+ "cases": [
+  {
+   "id": "R1",
+   "repo": "excalidraw",
+   "change": "02fc9f3505",
+   "changeSubject": "fix(packages/excalidraw): setViewport stops following a collaborator (#12184)",
+   "fixes": [
+    {
+     "fix": "374716304a",
+     "subject": "fix(editor): improve UX around locked animations (#11671)",
+     "date": "2026-07-16",
+     "lines": [
+      "packages/excalidraw/components/App.viewport.ts:668"
+     ],
+     "reason": ""
+    }
+   ]
+  },
+  {
+   "id": "R2",
+   "repo": "excalidraw",
+   "change": "704db6803c",
+   "changeSubject": "feat(editor): `w` to wrap/unwrap selection (#12264)",
+   "fixes": [
+    {
+     "fix": "9357f98a9b",
+     "subject": "fix(editor): optimize UI rendering during animation (#11604)",
+     "date": "2026-07-05",
+     "lines": [
+      "packages/excalidraw/actions/actionFrame.ts:23"
+     ],
+     "reason": ""
+    }
+   ]
+  },
+  {
+   "id": "R3",
+   "repo": "excalidraw",
+   "change": "bee01e3a12",
+   "changeSubject": "fix(packages/excalidraw): load export fonts into a worker's font set, warn without one (#12374)",
+   "fixes": [
+    {
+     "fix": "d3a9c2a195",
+     "subject": "fix(packages/excalidraw): complete cross-document runtime ownership (#11997)",
+     "date": "2026-10-20",
+     "lines": [
+      "packages/excalidraw/fonts/Fonts.ts:183",
+      "packages/excalidraw/fonts/Fonts.ts:184",
+      "packages/excalidraw/fonts/Fonts.ts:186",
+      "packages/excalidraw/fonts/Fonts.ts:187",
+      "packages/excalidraw/fonts/Fonts.ts:194"
+     ],
+     "reason": "* fix: complete cross-document runtime ownership * fix: schedule cross-document animations in owner window * fix: Prewarm the right font even if it's not Excalifont Signed-off-by: Mark Tolmacs <mark@lazycat.hu> * fix: Hyperlink and tooltip host staleness issues Signed-off-by: Mark Tolmacs <mark@lazycat.hu> * fix: Various hyperlink fixes * feat: Host abstraction * fix: exportToSvg support for document override Signed-off-by: Mark Tolmacs <mark@lazycat.hu> * fix: Remove caches Signed-off-by: Mark Tolmacs <mark@lazycat.hu> * fix: Refactor tests (cut non-critical) Signed-off-by: Mark Tolmacs <mark"
+    }
+   ]
+  },
+  {
+   "id": "R4",
+   "repo": "excalidraw",
+   "change": "53973c3a42",
+   "changeSubject": "feat(editor): alt-click to cycle the selection through overlapping elements (#12237)",
+   "fixes": [
+    {
+     "fix": "a3b90897b5",
+     "subject": "fix(editor): Lost focus point on transition to inside-inside (#10964)",
+     "date": "2026-07-22",
+     "lines": [
+      "packages/excalidraw/components/App.tsx:8482",
+      "packages/excalidraw/components/App.tsx:8483",
+      "packages/excalidraw/components/App.tsx:8484",
+      "packages/excalidraw/components/App.tsx:8485",
+      "packages/excalidraw/components/App.tsx:8486",
+      "packages/excalidraw/components/App.tsx:8487",
+      "packages/excalidraw/components/App.tsx:8488",
+      "packages/excalidraw/components/App.tsx:8489",
+      "packages/excalidraw/components/App.tsx:8490",
+      "packages/excalidraw/components/App.tsx:8491",
+      "packages/excalidraw/components/App.tsx:8501",
+      "packages/excalidraw/components/App.tsx:8502",
+      "packages/excalidraw/components/App.tsx:8503",
+      "packages/excalidraw/components/App.tsx:8504"
+     ],
+     "reason": "--------- Signed-off-by: Mark Tolmacs <mark@lazycat.hu>"
+    },
+    {
+     "fix": "dd8296af18",
+     "subject": "fix(editor): narrow `NonDeleted` type to `isDeleted: false` (#11470)",
+     "date": "2026-07-07",
+     "lines": [
+      "packages/excalidraw/components/App.tsx:12550",
+      "packages/excalidraw/components/App.tsx:12668",
+      "packages/excalidraw/components/App.tsx:12675",
+      "packages/excalidraw/components/App.tsx:12676",
+      "packages/excalidraw/components/App.tsx:12677",
+      "packages/excalidraw/components/App.tsx:12678",
+      "packages/excalidraw/components/App.tsx:12679",
+      "packages/excalidraw/components/App.tsx:12680",
+      "packages/excalidraw/components/App.tsx:12681",
+      "packages/excalidraw/components/App.tsx:12682",
+      "packages/excalidraw/components/App.tsx:12683",
+      "packages/excalidraw/components/App.tsx:12684"
+     ],
+     "reason": "--------- Signed-off-by: Mark Tolmacs <mark@lazycat.hu> Co-authored-by: Mark Tolmacs <mark@lazycat.hu>"
+    }
+   ]
+  },
+  {
+   "id": "R5",
+   "repo": "excalidraw",
+   "change": "1919728724",
+   "changeSubject": "fix(editor): reach text containers below transparent ones (#12210)",
+   "fixes": [
+    {
+     "fix": "dc2c16d9e2",
+     "subject": "fix(editor): Binding follow-ups to #10753 (#12156)",
+     "date": "2026-09-24",
+     "lines": [
+      "packages/element/src/collision.ts:349",
+      "packages/element/src/collision.ts:350",
+      "packages/element/src/collision.ts:352"
+     ],
+     "reason": "* fix: Midpoint highlight color in dark mode The highlighted binding midpoint hardcoded rgba(3, 93, 161) for dark mode, the pre-filter color from when the interactive canvas was inverted by a CSS filter. The canvas now draws post-filter colors directly, so it rendered dark blue. Use BINDING_HIGHLIGHT_RGB like the rest of the binding highlight. Claude Opus 5.5 (1M context), high reasoning effort * fix: Show binding midpoints like before the hit test rework The binding highlight drew all four midpoints for any suggested binding, including simple arrows with the cursor deep inside the element. Re"
+    },
+    {
+     "fix": "dd8296af18",
+     "subject": "fix(editor): narrow `NonDeleted` type to `isDeleted: false` (#11470)",
+     "date": "2026-07-07",
+     "lines": [
+      "packages/excalidraw/components/App.tsx:6044",
+      "packages/excalidraw/components/App.tsx:6045",
+      "packages/excalidraw/components/App.tsx:6046",
+      "packages/excalidraw/components/App.tsx:6053",
+      "packages/excalidraw/components/App.tsx:6054",
+      "packages/excalidraw/components/App.tsx:6055",
+      "packages/excalidraw/components/App.tsx:6056",
+      "packages/excalidraw/components/App.tsx:6057"
+     ],
+     "reason": "--------- Signed-off-by: Mark Tolmacs <mark@lazycat.hu> Co-authored-by: Mark Tolmacs <mark@lazycat.hu>"
+    },
+    {
+     "fix": "acb48c3f45",
+     "subject": "fix(editor): make embeddable ignore higher-z-index non-framelike elements (#11662)",
+     "date": "2026-07-14",
+     "lines": [
+      "packages/excalidraw/components/App.tsx:6049",
+      "packages/excalidraw/components/App.tsx:6050",
+      "packages/excalidraw/components/App.tsx:6051",
+      "packages/excalidraw/components/App.tsx:6052"
+     ],
+     "reason": ""
+    }
+   ]
+  },
+  {
+   "id": "R6",
+   "repo": "mole",
+   "change": "planted (fixtures/plant_m8.py): file watcher no longer resets the idle clock",
+   "fixes": [
+    {
+     "fix": "9e19c51",
+     "subject": "T9 review fixes: ... idle clock counts editing + running index ...",
+     "date": "2026-10-27",
+     "lines": [
+      "packages/daemon/src/server.ts:211-217 (watcher callback: this.lastRequest = Date.now())"
+     ],
+     "reason": "editing counts as use: a person typing in one file for an hour must not lose the map (the daemon stopped while you typed, or mid-index); guarded by the test 'idle shutdown (T9)' in packages/daemon/test/daemon.test.ts"
+    }
+   ]
+  }
+ ]
+}

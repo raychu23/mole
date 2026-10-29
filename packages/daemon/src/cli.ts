@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// mole daemon | map | impact | status | stop | reindex  — thin CLI over the daemon (offerings F1.9).
+// mole daemon | map | impact | check | status | stop | reindex  — thin CLI over the daemon (offerings F1.9).
 // mole note add <file#Symbol> "text" | mole memory [--json]  — L2 notes on code (T11), no daemon needed.
 import { defaultSources } from './detect.js';
 import { resolve } from 'node:path';
@@ -7,6 +7,7 @@ import { formatNeighborhood } from '@mole/core';
 import { addNote, memory, type MemoryEntry } from '@mole/memory';
 import { ensureDaemon, MoleClient } from './client.js';
 import { Daemon } from './server.js';
+import { check, formatCheck, type Change } from '@mole/history';
 
 function parse(argv: string[]): { cmd: string; pos: string[]; flags: Record<string, string | true> } {
   const [cmd = 'help', ...rest] = argv;
@@ -85,6 +86,20 @@ async function main(): Promise<number> {
     console.log(flags.json ? JSON.stringify(n, null, 2) : formatNeighborhood(n));
     return n.state === 'ok' ? 0 : 1;
   }
+  if (cmd === 'check') {
+    // L2 (T12): past fixes that last wrote the lines a change edits, with their reason, guarding tests and source
+    const sha = pos[0];
+    const diffFile = str(flags.diff);
+    const modes = [sha !== undefined, diffFile !== undefined, flags.worktree === true].filter(Boolean).length;
+    if (modes !== 1) {
+      console.error('usage: mole check <sha | --diff FILE [--base SHA] | --worktree> [--json] [--fix-rule RE] [--root DIR]');
+      return 2;
+    }
+    const change: Change = diffFile !== undefined ? { diffFile: resolve(diffFile), base: str(flags.base) } : sha !== undefined ? { sha } : { worktree: true };
+    const r = await check(root, change, { fixRule: str(flags['fix-rule']) });
+    console.log(flags.json ? JSON.stringify(r, null, 2) : formatCheck(r));
+    return 0;
+  }
   const client = new MoleClient({ root, stateDir });
   if (cmd === 'status') {
     try {
@@ -104,7 +119,7 @@ async function main(): Promise<number> {
       return 1;
     }
   }
-  console.error('usage: mole <daemon|map|impact|status|reindex|stop|note add|memory> [target] [--root DIR] [--state-dir DIR] [--tsconfig F] [--src-dir D] [--idle-minutes N] [--json]');
+  console.error('usage: mole <daemon|map|impact|check|status|reindex|stop|note add|memory> [target] [--root DIR] [--state-dir DIR] [--tsconfig F] [--src-dir D] [--idle-minutes N] [--json]');
   return cmd === 'help' ? 0 : 2;
 }
 

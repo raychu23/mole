@@ -14,6 +14,7 @@
   "dependencies": {
     "@mole/core": "*",
     "@mole/indexer": "*",
-    "@mole/memory": "*"
+    "@mole/memory": "*",
+    "@mole/history": "*"
   }
 }
