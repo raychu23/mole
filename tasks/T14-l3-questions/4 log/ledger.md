@@ -10,4 +10,6 @@ ledger (newest last, nothing deleted)
     2026-10-28 22:46      checks ran: npm run check && node packages/questions/dist/bench/m4.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T14-l3-questions → exit 0 (bench: all targets met)
     2026-10-28 22:49      submitted → verified      reviewer reviewer-T14-r2 · findings: P2 only: (1) guard of an unasked fix still evicts lowest note/3rd past fix (forced by frozen red test, documented), (2) blame guards on formatting-only fix lines + same-sha guard aske
     2026-10-28 22:49      checks ran: npm run check && node packages/questions/dist/bench/m4.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T14-l3-questions → exit 0 (bench: all targets met)
+    2026-10-28 22:52      verified → integrated      merge 4e0e9de · combined checks exit 0 · note: npm run check on main 4e0e9de → 128/128 passed (rerun, first run 1 failed: untouched apps/vscode debounce timing test under load avg ~35) · m4.js on main → past-fix in top3 
+    2026-10-28 22:52      combined checks ran: npm run check && node packages/questions/dist/bench/m4.js in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (bench: all targets met)
 ```
