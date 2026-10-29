@@ -13,4 +13,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 18:06      checks ran: npm run check && node packages/decisions/dist/bench/m22.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T30-annotated-file-tree → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 18:11      submitted → verified      reviewer mole-builder-7-reviewer · findings: No P0/P1. Verified: decorations p95 0.001-0.004ms per folder (<=50ms target) MET, empty/no-record folder shows no decoration/card (done-when 4) MET, confirmed via screenshot o
     2026-10-29 18:11      checks ran: npm run check && node packages/decisions/dist/bench/m22.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T30-annotated-file-tree → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 18:16      verified → integrated      merge 5457a5e47a7fa1c7f2834c50c8326ab017fcb1ee · combined checks exit 0 · note: npm run check on main after merge -> see below
+    2026-10-29 18:16      combined checks ran: npm run check && node packages/decisions/dist/bench/m22.js in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
