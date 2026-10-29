@@ -146,3 +146,24 @@ T15             ledger running since 22:53 · red commit a11b256 (23:07) · unco
 why stalled     builder turn ended mid-T15 (interrupted), worker stopped ~23:07; nothing resumed it for 4 h
 next            resume T15 from the worktree as is: commit the edits, run checks, log runs.jsonl, fresh review, integrate, then C5
 ```
+
+## C5 (2026-10-29 03:50): T15 integrated, loop done
+
+```notes
+result          T11-T15 all integrated · main 79520b5 · npm run check 181/181 · M1 M2 M3 M4 M5 benches all at target on main
+stall           03:26 status above resolved: T15 resumed from its worktree 03:27, done 03:35
+T15 proof       hover on a touched line (server.ts:210) shows fix 9e19c51 + "editing counts as use" + test "idle shutdown (T9)" + source, opens commit + file
+                clean VS Code profile 8/8 on dev build and installed .vsix (tasks/T15-surface-hover-and-agent-hooks/4 log/hover-check-*.json) · T9 selftest on .vsix 857/857
+                daemon down → 0 hovers, 0 marks, 0 popups · MCP mole_check JSON == CLI (3 modes) · Claude Code SessionStart + Stop hooks on a fixture session (4 log/hooks-run.txt)
+                reviewer-T15-r1 verified, 0 P0/P1, also reran the hover check itself 8/8
+merge           conflict with T16/T18 (also on main) in packages/mcp: deps unioned · T15's exact tool-list test → arrayContaining per fresh key ruling (4 log/key-ruling-1.md)
+missed / risks
+    hooks       prefer any `mole` on PATH (a Mac cleaner app ships one → hooks go silent) · Stop repeats the whole-session check every turn
+    hover       mole.showCommit passes its arg to git show unchecked (only real shas reach it today) · check+since run on every save/focus, not timed on a big repo
+    not real    hover link clicks replayed via the hover's command args, not a mouse · plugin never installed into a real ~/.claude
+open follow-ups (all P2, none blocks)
+    T15         resolve the repo's own mole first · hex-check showCommit · Stop: only new hunks since last stop
+    T14         guard question outranks a note when its fix isn't asked · why-clips from JSDoc
+    T13         newline before append on a torn seen.jsonl
+    C4          default fix rule's bare "regression" catches non-fix subjects (b903a6f) · task-goal "why" for fd7ed34
+```
