@@ -8,7 +8,8 @@ import { computeFlags } from '../flags.js';
 import { loadGraph } from '../graph.js';
 import type { Flag, GraphNode } from '../types.js';
 import { codeownersAt, parseCodeowners } from './codeowners.js';
-import { parseGitDiff, type ChangedFile } from './diff.js';
+import { parseGitDiff, type ChangedFile, type Hunk } from './diff.js';
+import { contentAnchorsOf, isVersionOnlyHunk, type ContentAnchor } from './options.js';
 import type { CheckAnnotation, CheckRunPayload, GovernedRecord, PrCheckOptions, PrCheckResult, PrQuestion, UnanchoredRecord } from './types.js';
 
 export const CHECK_NAME = 'mole';
@@ -41,11 +42,12 @@ const merge = (rs: Range[]): Range[] => {
 const clip = (rs: Range[], lo: number, hi: number): Range[] => rs.map(([a, b]): Range => [Math.max(a, lo), Math.min(b, hi)]).filter(([a, b]) => a <= b);
 
 /** changed line ranges of a file: new side (added/modified lines) and old side (removed lines) */
-function changedRanges(f: ChangedFile): { added: Range[]; removed: Range[]; deletionPoints: number[] } {
+function changedRanges(f: ChangedFile, skip?: (h: Hunk) => boolean): { added: Range[]; removed: Range[]; deletionPoints: number[] } {
   const added: Range[] = [];
   const removed: Range[] = [];
   const deletionPoints: number[] = [];
   for (const h of f.hunks) {
+    if (skip?.(h)) continue;
     if (h.newLines > 0) added.push([h.newStart, h.newStart + h.newLines - 1]);
     if (h.oldLines > 0) removed.push([h.oldStart, h.oldStart + h.oldLines - 1]);
     if (h.newLines === 0) deletionPoints.push(Math.max(1, h.newStart));
@@ -118,14 +120,38 @@ export async function prCheck(opts: PrCheckOptions): Promise<PrCheckResult> {
 
   const governed: GovernedRecord[] = [];
   const unanchored: UnanchoredRecord[] = [];
-  const candidates = graph.nodes.filter((n) => n.kind === 'decision' && n.scope.length > 0 && !NOT_GOVERNING.has(n.status));
+  const useContent = opts.contentAnchors !== false;
+  const versionRule = opts.versionBumpRule === true; // off by default: it cost recall on both keys (options round, 2 insights)
+  const versionOnly = (h: Hunk) => isVersionOnlyHunk(h.del ?? [], h.add ?? []);
+  const content = new Map<string, ContentAnchor[]>();
+  if (useContent) for (const n of graph.nodes) if (n.kind === 'decision') content.set(n.id, contentAnchorsOf(recordsRoot, n));
+  const candidates = graph.nodes.filter((n) => n.kind === 'decision' && (n.scope.length > 0 || (content.get(n.id)?.length ?? 0) > 0) && !NOT_GOVERNING.has(n.status));
   for (const n of candidates) {
     const hits: GovernedRecord['hits'] = [];
     const lost: UnanchoredRecord[] = [];
+    // content anchors (option 1): added lines whose text matches, in files the glob covers
+    for (const c of content.get(n.id) ?? [])
+      for (const f of changed) {
+        if (f.newPath === null || (c.inRe && !c.inRe.test(f.newPath))) continue;
+        const rs: Range[] = [];
+        for (const h of f.hunks) {
+          const add = h.add ?? [];
+          // a version-only hunk names its dependency in the enclosing block, not on the changed line (option 2)
+          if (versionRule && h.newLines > 0 && c.re.test(h.context ?? '') && versionOnly(h)) {
+            rs.push([h.newStart, h.newStart + h.newLines - 1]);
+            continue;
+          }
+          add.forEach((line, i) => {
+            if (c.re.test(line)) rs.push([h.newStart + i, h.newStart + i]);
+          });
+        }
+        if (rs.length) hits.push({ anchor: `match:${c.pattern}`, path: f.newPath, side: 'new', ranges: merge(rs) });
+      }
     for (const a of n.scope) {
       const an = parseAnchor(a.target);
       for (const f of changed) {
-        const { added, removed, deletionPoints } = changedRanges(f);
+        const { added, removed, deletionPoints } = changedRanges(f, versionRule ? versionOnly : undefined);
+        if (versionRule && f.hunks.length > 0 && f.hunks.every(versionOnly)) continue; // only dependency bumps in this file
         const push = (side: 'new' | 'old', path: string, ranges: Range[]) => {
           if (ranges.length) hits.push({ anchor: a.target, path, side, ranges });
         };

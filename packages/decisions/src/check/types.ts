@@ -15,6 +15,11 @@ export interface PrCheckOptions {
   history?: boolean;
   notesRoot?: string;
   fixRule?: string;
+  /** option 1: records' `match:` content anchors govern added lines whose text matches (default true) */
+  contentAnchors?: boolean;
+  /** option 2: version-only hunks are not governed by scope anchors (default false: the M24 keys label bumps of a decided
+   *  component as governed, so the rule cost recall 0.52 -> 0.31 on the frozen key; kept for the options bench) */
+  versionBumpRule?: boolean;
 }
 
 export interface CheckAnnotation {

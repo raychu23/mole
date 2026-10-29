@@ -47,7 +47,7 @@ beforeAll(() => {
   );
   write(
     '.mole/decisions/named-exports.md',
-    `---\nid: named-exports\ntitle: Prefer named exports\nstatus: accepted\nscope: []\nmatch:\n  - pattern: '^\\s*export\\s'\n    in: '{pkg,plugins}/*/src/**'\n    why: 'We will stop using default exports'\n---\n`,
+    `---\nid: named-exports\ntitle: Prefer named exports\nstatus: accepted\nscope: []\nmatch:\n  - pattern: '^\\s*export\\s'\n    in: '{pkg,plugins}/src/**'\n    why: 'We will stop using default exports'\n---\n`,
   );
   write(
     '.mole/decisions/old-convention.md',

@@ -5,6 +5,11 @@ export interface Hunk {
   oldLines: number;
   newStart: number;
   newLines: number;
+  /** text of the removed (old side) and added (new side) lines, without the -/+ marker */
+  del: string[];
+  add: string[];
+  /** git's enclosing-block context from the @@ header (funcname), '' when none */
+  context: string;
 }
 
 export interface ChangedFile {
@@ -31,9 +36,22 @@ const side = (s: string, prefix: 'a/' | 'b/'): string | null => {
 export function parseGitDiff(text: string): ChangedFile[] {
   const out: ChangedFile[] = [];
   let cur: ChangedFile | null = null;
+  let hunk: Hunk | null = null;
   for (const line of text.split('\n')) {
+    if (hunk && cur && !line.startsWith('diff --git ') && !line.startsWith('@@')) {
+      if (line.startsWith('-')) {
+        hunk.del.push(line.slice(1));
+        continue;
+      }
+      if (line.startsWith('+')) {
+        hunk.add.push(line.slice(1));
+        continue;
+      }
+      if (line.startsWith('\\')) continue; // \ No newline at end of file
+    }
     if (line.startsWith('diff --git ')) {
       const m = /^diff --git ("?a\/.*?"?) ("?b\/.*"?)$/.exec(line);
+      hunk = null;
       cur = { status: 'M', oldPath: m ? side(m[1]!, 'a/') : null, newPath: m ? side(m[2]!, 'b/') : null, hunks: [] };
       out.push(cur);
       continue;
@@ -52,8 +70,9 @@ export function parseGitDiff(text: string): ChangedFile[] {
     } else if (line.startsWith('+++ ')) {
       if (cur.status !== 'R') cur.newPath = side(line.slice(4), 'b/');
     } else if (line.startsWith('@@')) {
-      const m = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/.exec(line);
-      if (m) cur.hunks.push({ oldStart: +m[1]!, oldLines: m[2] === undefined ? 1 : +m[2], newStart: +m[3]!, newLines: m[4] === undefined ? 1 : +m[4] });
+      const m = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@ ?(.*)$/.exec(line);
+      hunk = m ? { oldStart: +m[1]!, oldLines: m[2] === undefined ? 1 : +m[2], newStart: +m[3]!, newLines: m[4] === undefined ? 1 : +m[4], del: [], add: [], context: (m[5] ?? '').trim() } : null;
+      if (hunk) cur.hunks.push(hunk);
     }
   }
   for (const f of out) {
