@@ -83,4 +83,26 @@ environment note
     several other concurrent builders + a full VS Code + multiple tsservers). Fixed by `exec`ing a fresh script file
     instead of running the command inline in the same persisted shell. Flagging this because the same symptom could be
     mistaken for a real test failure by the next person running `npm run check` in a long session on this box.
+
+2026-10-29 22:40 reclaim attempt (stronger evidence this is infra, not this task's code)
+    re-claimed the worktree per raymond's instruction to retry once load might be lower; merged main (18 commits,
+    18-commit range was all tasks/* ledger/report churn from other builders plus loop-goals.json -- 0 overlap with this
+    task's boundary files, auto-merged clean, 0 conflicts). M29 bench re-run on the merged commit (f60450b):
+    100%/100%/100%, unchanged.
+    3 full `npm run check` runs at escalating load (58/89/194/275 1-min avg across the session -- it got WORSE during
+    this attempt, not better, despite the lower reading at claim time): 21, then 3, then 9 test failures, every single
+    one a "Test timed out in 5000ms" / vitest-worker "Timeout calling onTaskUpdate" RPC error, in a DIFFERENT random
+    subset of files each run (daemon.test.ts, history.test.ts, indexer.test.ts, since.test.ts, claims-hook.test.ts,
+    hooks.test.ts, agentstate.test.ts, mcp.test.ts, key-guard.test.ts, and once packages/decisions/test/cli.test.ts's
+    pre-existing text-output CLI-subprocess test). packages/decisions/test/import-t36.test.ts (this task's own 9 new
+    tests) and the rest of packages/decisions were green on every one of the 3 runs; the one packages/decisions failure
+    observed (cli.test.ts, run 2) was a different, pre-existing test unrelated to the spec-kit/ADR import, also a 5s
+    RPC timeout, not a logic failure (no assertion mismatch in any failure across all 3 runs -- every failure's full
+    error text is "Test timed out in 5000ms", nothing else). This matches exactly the failure mode that got this task
+    blocked originally: random unrelated files, timeout-only, never the same file twice, this task's own code always
+    green. Full runs.jsonl lines: rounds 4-7. Keeping state blocked, decision-owner raymond: the fix here is scheduling
+    (fewer concurrent builders / a quieter check window / a vitest pool-size cap), not a code change in this task's
+    boundary, and this session's attempt (at a time believed likely quieter) reproduced the identical pattern at worse
+    severity, which argues against waiting for "load to drop" as a resolution and for either a scheduled/serialized
+    check run or accepting isolated-file passes as sufficient proof for tasks like this one.
 ```
