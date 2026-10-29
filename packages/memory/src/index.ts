@@ -46,36 +46,5 @@ export interface MemoryEntry {
   problem?: string; // 'invalid' only: '<file>:<line>: <message>'
 }
 
-const notImplemented = (): never => {
-  throw new Error('not implemented');
-};
-
-/** sha256 hex of the text's tokens with comments and whitespace removed (string contents kept). */
-export function normalizedHash(_text: string): string {
-  return notImplemented();
-}
-
-/** Top-level functions (incl. const arrow functions), classes and class methods/constructors of a file. */
-export function symbolsInFile(_root: string, _relPath: string): CodeSymbol[] {
-  return notImplemented();
-}
-
-/** Resolve 'path#Tail' to a symbol, or undefined. */
-export function findSymbol(_root: string, _target: string): CodeSymbol | undefined {
-  return notImplemented();
-}
-
-/** Write .mole/notes/<slug>.md for the target symbol; throws if the symbol does not exist. */
-export function addNote(_root: string, _target: string, _text: string, _opts?: NoteOptions): Note {
-  return notImplemented();
-}
-
-/** Every note under .mole/notes with its status against the current tree. Never throws on a bad note. */
-export function memory(_root: string): MemoryEntry[] {
-  return notImplemented();
-}
-
-/** Parse one note file's text; a malformed note yields { problem: { line, message } }. */
-export function parseNote(_content: string, _file: string): { note?: Note; problem?: { line: number; message: string } } {
-  return notImplemented();
-}
+export { findSymbol, normalizedHash, relPath, sourceFiles, splitTarget, symbolsInFile, symbolsOfText } from './symbols.js';
+export { addNote, memory, NOTES_DIR, parseNote } from './notes.js';
