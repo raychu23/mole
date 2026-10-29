@@ -82,7 +82,7 @@ function main() {
   if (!mole) return;
   const check = checkResult(root, mole, input);
   // T21: what this session edited that another parallel run relies on
-  const coll = collisionsStopText(sessionCollisions(mole, root, input), input.session_id);
+  const coll = collisionsStopText(sessionCollisions(mole, root, input, 35_000), input.session_id);
   const parts = [check ? format(check.r, check.label) : '', coll].filter(Boolean);
   if (!parts.length) return;
   const msg = { systemMessage: clip(parts.join('\n\n')) };

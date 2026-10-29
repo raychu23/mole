@@ -129,9 +129,10 @@ export function sameFormRoot(root, cwd) {
 /**
  * `mole collisions --json --run <session>` for the last few hours; undefined when the CLI fails or the session is unknown.
  * Only when the session's transcript already has a tool call: a session with no steps of its own can't collide, and the
- * CLI call (reads every harness's recent runs) is skipped.
+ * CLI call (reads every harness's recent runs) is skipped. timeoutMs = this call's own budget inside the hook's Claude Code
+ * timeout (MOLE_COLLISIONS_TIMEOUT_MS overrides); on timeout nothing is printed for collisions.
  */
-export function sessionCollisions(mole, root, input, hours = 4) {
+export function sessionCollisions(mole, root, input, timeoutMs, hours = 4) {
   const sessionId = input.session_id;
   if (!sessionId || !input.transcript_path) return undefined;
   try {
@@ -139,7 +140,8 @@ export function sessionCollisions(mole, root, input, hours = 4) {
   } catch {
     return undefined;
   }
-  const r = moleJson(mole, sameFormRoot(root, input.cwd), ['collisions', '--json', '--run', String(sessionId), '--since', String(hours)]);
+  const budget = Number(process.env.MOLE_COLLISIONS_TIMEOUT_MS) > 0 ? Number(process.env.MOLE_COLLISIONS_TIMEOUT_MS) : timeoutMs;
+  const r = moleJson(mole, sameFormRoot(root, input.cwd), ['collisions', '--json', '--run', String(sessionId), '--since', String(hours)], budget);
   return r && Array.isArray(r.pairs) ? r : undefined;
 }
 
@@ -147,7 +149,7 @@ export function sessionCollisions(mole, root, input, hours = 4) {
 export function collisionsStartText(r, sessionId) {
   const pairs = (r?.pairs ?? []).filter((p) => p.a.run === sessionId || p.b.run === sessionId);
   if (!pairs.length) return '';
-  const out = [`mole: ${pairs.length} parallel run${pairs.length === 1 ? '' : 's'} touch code near yours (mole collisions):`];
+  const out = [`mole: ${pairs.length} parallel run${pairs.length === 1 ? ' touches' : 's touch'} code near yours (mole collisions):`];
   for (const p of pairs.slice(0, 3)) {
     const other = p.a.run === sessionId ? p.b : p.a;
     const did = p.changes.filter((c) => c.run === other.run).map((c) => `${c.how === 'edit' ? 'edited' : 'read'} ${c.symbol} ${hhmm(c.time)}`);
@@ -163,7 +165,15 @@ export function collisionsStopText(r, sessionId) {
   for (const p of r?.pairs ?? []) {
     if (p.a.run !== sessionId && p.b.run !== sessionId) continue;
     const other = p.a.run === sessionId ? p.b : p.a;
-    for (const c of p.changes.filter((c) => c.run === sessionId && c.how === 'edit')) out.push(`mole: you changed ${c.symbol}; ${other.harness} ${other.run} relies on it (${via(p)})`);
+    // the other run relies on an edit of mine when it touched the same function, or its code calls (via the chain) the
+    // function I edited: the chain's LAST node. A chain starting at my edit = I call into its code, not the other way round.
+    const end = p.path?.length ? p.path.at(-1).split(' -> ').at(-1) : undefined;
+    const theirs = new Set(p.changes.filter((c) => c.run === other.run).map((c) => c.symbol));
+    const start = p.path?.length ? p.path[0].split(' -> ')[0] : undefined;
+    for (const c of p.changes.filter((c) => c.run === sessionId && c.how === 'edit')) {
+      const relies = p.shared.includes(c.symbol) || (end === c.symbol && start !== undefined && theirs.has(start));
+      if (relies) out.push(`mole: you changed ${c.symbol}; ${other.harness} ${other.run} relies on it (${via(p)})`);
+    }
   }
   for (const n of r?.notes ?? []) if (n.run === sessionId) out.push(`mole: you edited ${n.symbol} under note ${n.note}`);
   return [...new Set(out)].join('\n');

@@ -49,7 +49,7 @@ function main() {
   const mole = findMole(root);
   if (!mole) return;
   // T21: other parallel runs whose work meets this session's (a resumed or compacted session has steps already)
-  const parts = [notesText(root, mole), collisionsStartText(sessionCollisions(mole, root, input), input.session_id)].filter(Boolean);
+  const parts = [notesText(root, mole), collisionsStartText(sessionCollisions(mole, root, input, 20_000), input.session_id)].filter(Boolean);
   if (!parts.length) return;
   emit({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: clip(parts.join('\n\n')) } });
 }
