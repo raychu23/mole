@@ -1,0 +1,106 @@
+{
+  "generatedAt": "2026-10-29T08:30:44.434Z",
+  "what": "T15 hover + gutter mark + since list in a clean VS Code profile, then the same with the daemon stopped",
+  "vscode": [
+    "1.141.1",
+    "7baac39ec3ca969dab74ac12c097f6a486e46593"
+  ],
+  "extension": {
+    "vsix": "mole-code-map-0.1.0.vsix",
+    "installOutput": "Installing extensions...\nExtension 'mole-code-map-0.1.0.vsix' was successfully installed."
+  },
+  "scratch": {
+    "ws": "~/.hermes/cache/scratch/mole-t15-hover-vsix/ws",
+    "base": "bdeff14",
+    "diff": "packages/history/bench/fixtures/planted-m8.diff",
+    "status": "M packages/daemon/src/server.ts",
+    "seenBeforeEdit": "recorded 1 look in .mole/local/seen.jsonl",
+    "note": "git clone --shared of this repo under $TMPDIR; the real checkout is never written"
+  },
+  "hoverAt": "packages/daemon/src/server.ts:210",
+  "expect": {
+    "sha": "9e19c51",
+    "why": "editing counts as use",
+    "test": "idle shutdown (T9)"
+  },
+  "result": {
+    "up": {
+      "daemonRunning": true,
+      "checkLoaded": true,
+      "hoverMs": 22,
+      "hoverText": "**Mole** · this change edits lines with history\n\n**past fix** [9e19c51](command:mole.showCommit?%5B%229e19c51865114310db5e40c6114123e1b32a6995%22%5D) T9 review fixes: Node-too-old message shown in panel, whole-folder default when no src/, marketplace image base, idle clock counts editing …\n- why: editing counts as use: a person typing in one file for an hour must not lose the map\n- test: packages/daemon/test/daemon.test.ts » idle shutdown (T9) (+3)\n- source: [packages/daemon/src/server.ts:211 @ 9e19c51](command:mole.openAt?%5B%22packages%2Fdaemon%2Fsrc%2Fserver.ts%22%2C211%2C%229e19c51865114310db5e40c6114123e1b32a6995%22%5D)\n\n**questions**\n1. You edit packages/daemon/src/server.ts:211-212, lines 9e19c51 \"T9 review fixes: Node-too-old message shown in panel, whole-folder default when no src/…\" wrote as a fix (why: editing counts as use: a person typing in one file for an hour must not lose the map…). Does your change keep that fix working? Its guarding test: packages/daemon/test/daemon.test.ts » \"idle shutdown (T9)\". (source: 9e19c51 p…",
+      "otherHovers": 0,
+      "decorations": 2,
+      "ranges": [
+        [
+          210,
+          211
+        ],
+        [
+          215,
+          216
+        ]
+      ],
+      "links": [
+        [
+          "mole.showCommit",
+          [
+            "9e19c51865114310db5e40c6114123e1b32a6995"
+          ]
+        ],
+        [
+          "mole.openAt",
+          [
+            "packages/daemon/src/server.ts",
+            211,
+            "9e19c51865114310db5e40c6114123e1b32a6995"
+          ]
+        ]
+      ],
+      "clickCommit": {
+        "args": [
+          "9e19c51865114310db5e40c6114123e1b32a6995"
+        ],
+        "uri": "mole-git:/9e19c5186511.diff?show%3D9e19c51865114310db5e40c6114123e1b32a6995",
+        "firstLine": "commit 9e19c51865114310db5e40c6114123e1b32a6995",
+        "ok": true
+      },
+      "clickSource": {
+        "args": [
+          "packages/daemon/src/server.ts",
+          211,
+          "9e19c51865114310db5e40c6114123e1b32a6995"
+        ],
+        "uri": "mole-git:/packages/daemon/src/server.ts?sha%3D9e19c51865114310db5e40c6114123e1b32a6995",
+        "landedLine": 211,
+        "lineText": "// editing counts as use: a person typing in one file for an hour must not lose the map",
+        "ok": true
+      }
+    },
+    "since": {
+      "rendered": 1
+    },
+    "down": {
+      "daemonRunning": false,
+      "moleHovers": 0,
+      "otherHovers": 0,
+      "decorations": 0
+    },
+    "popups": {
+      "patched": true,
+      "count": 0,
+      "messages": []
+    }
+  },
+  "checks": {
+    "hoverShowsPastFix": true,
+    "gutterMarks": true,
+    "clickOpensCommit": true,
+    "clickOpensSource": true,
+    "panelListsSince": true,
+    "daemonDownNoHover": true,
+    "daemonDownNoMarks": true,
+    "noErrorPopups": true
+  },
+  "passed": true
+}

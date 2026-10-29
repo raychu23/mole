@@ -1,0 +1,49 @@
+{
+ "generatedAt": "2026-10-29T08:33:50.638Z",
+ "switches": 40,
+ "totalMs": {
+  "n": 37,
+  "p50": 4.1,
+  "p95": 8.8,
+  "max": 18.9
+ },
+ "withDebounceMs": {
+  "n": 37,
+  "p50": 4.1,
+  "p95": 8.8,
+  "max": 18.9
+ },
+ "states": {
+  "ok": 40
+ },
+ "passed": true,
+ "failureCases": [
+  {
+   "file": "package.json",
+   "state": "not-indexed"
+  },
+  {
+   "file": "src/gatewayClient.ts",
+   "state": "index-unavailable"
+  }
+ ],
+ "restoreAfterRelaunch": {
+  "panelAdopted": true,
+  "moleTabs": [
+   {
+    "col": 2,
+    "label": "Mole",
+    "webview": "mainThreadWebview-mole.map"
+   }
+  ],
+  "groups": 2,
+  "followedActiveEditor": true,
+  "mapStateAfterRelaunch": "ok",
+  "activeFile": "/src/gatewayClient.ts"
+ },
+ "extension": null,
+ "vscode": [
+  "1.141.1",
+  "7baac39ec3ca969dab74ac12c097f6a486e46593"
+ ]
+}

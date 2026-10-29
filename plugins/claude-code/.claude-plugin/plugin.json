@@ -1,0 +1,8 @@
+{
+  "name": "mole",
+  "version": "0.1.0",
+  "description": "Mole for Claude Code: at session start, your notes (mole memory) on the files in play; when Claude stops, mole check on the session's diff (past fixes on the edited lines + at most 3 questions). Local only, no model calls.",
+  "author": { "name": "Raymond Chu" },
+  "license": "MIT",
+  "keywords": ["code memory", "past fixes", "git history", "notes"]
+}

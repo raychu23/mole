@@ -7,6 +7,8 @@ import { ensureDaemon, MoleClient } from '@mole/daemon';
 import { clickLine } from '../webview/render.js';
 import { CSS } from '../webview/style.js';
 import { debounce, toRepoPath } from './paths.js';
+import { Surface } from './surface.js';
+import type { SinceResult } from '@mole/memory';
 import { documentSymbolTails, dwellSpans, SeenRecorder, spanAt, type DocSymbol, type SeenHit, type SymbolSpan } from './seen.js';
 
 const VIEW_TYPE = 'mole.map';
@@ -59,7 +61,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     output.appendLine('no workspace folder: Mole is idle');
     return;
   }
-  const testing = Boolean(process.env.MOLE_SELFTEST || process.env.MOLE_SELFTEST_RESTORE);
+  const testing = Boolean(process.env.MOLE_SELFTEST || process.env.MOLE_SELFTEST_RESTORE || process.env.MOLE_HOVER_CHECK);
   // a public extension must be silent where it has nothing to say: no TypeScript here = no panel, no background process
   const dormant = !testing && !(await hasTypeScript());
   if (process.env.MOLE_IDLE_PROBE) {
@@ -70,7 +72,27 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     return;
   }
   startSeen(ctx, root);
-  void mole.boot();
+  // T15: hover + gutter mark on lines the working-tree change touched, and the panel's since list
+  const surface = new Surface(ctx, {
+    root,
+    cli: moleCli(ctx),
+    stateDir: vscode.workspace.getConfiguration('mole').get<string>('stateDir') || process.env.MOLE_STATE_DIR || undefined,
+    log: (m) => output.appendLine(m),
+    onSince: (r) => mole.setSince(r),
+  });
+  surface.register();
+  ctx.subscriptions.push(
+    // the daemon may have stopped since the last refresh: a switch re-checks it (one ping), so marks never outlive it
+    vscode.window.onDidChangeActiveTextEditor(
+      debounce(() => void surface.recheck(), 500),
+    ),
+  );
+  const booted = mole.boot();
+  void booted.then(() => Promise.all([surface.refresh(), surface.refreshSince()]));
+  if (process.env.MOLE_HOVER_CHECK) {
+    void hoverCheck(mole, surface, root, process.env.MOLE_HOVER_CHECK);
+    return;
+  }
   if (process.env.MOLE_REVIVE_PROBE) void reviveProbe(mole, root, process.env.MOLE_REVIVE_PROBE, process.env.MOLE_REVIVE_FILE ?? '');
   if (process.env.MOLE_SELFTEST) void selfTest(mole, process.env.MOLE_SELFTEST);
   else if (process.env.MOLE_SELFTEST_RESTORE) void restoreProbe(mole, process.env.MOLE_SELFTEST_RESTORE);
@@ -253,6 +275,15 @@ class MolePanel {
   private unsupported?: string;
   private lastRevive = 0;
   samples: Sample[] = [];
+  private since?: SinceResult;
+  sinceRendered = -1;
+  sinceWaiters: Array<(n: number) => void> = [];
+
+  /** T15: the panel's "Since you last looked" list (`mole since --json`); kept for a panel that is opened or restored later. */
+  setSince(r: SinceResult | undefined): void {
+    this.since = r;
+    if (r) void this.panel?.webview.postMessage({ type: 'since', since: r });
+  }
 
   constructor(private readonly ctx: vscode.ExtensionContext, private readonly root: string | undefined) {}
 
@@ -329,7 +360,7 @@ class MolePanel {
   private html(webview: vscode.Webview): string {
     const nonce = Math.random().toString(36).slice(2);
     const script = webview.asWebviewUri(vscode.Uri.joinPath(this.ctx.extensionUri, 'dist', 'webview.js'));
-    return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}'; img-src data:;"><style nonce="${nonce}">${CSS}</style></head><body><div id="app"></div><script nonce="${nonce}" src="${script}"></script></body></html>`;
+    return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}'; img-src data:;"><style nonce="${nonce}">${CSS}</style></head><body><div id="app"></div><div id="since"></div><script nonce="${nonce}" src="${script}"></script></body></html>`;
   }
 
   private async onMessage(m: { type: string; [k: string]: unknown }): Promise<void> {
@@ -337,6 +368,10 @@ class MolePanel {
     if (m.type === 'ready') {
       this.ready?.();
       if (this.lastTarget) void this.send(this.lastTarget);
+      if (this.since) void this.panel?.webview.postMessage({ type: 'since', since: this.since });
+    } else if (m.type === 'sinceRendered') {
+      this.sinceRendered = Number(m.items);
+      for (const w of this.sinceWaiters.splice(0)) w(this.sinceRendered);
     } else if (m.type === 'rendered') {
       const r = m as unknown as Rendered;
       this.waiters.get(r.seq)?.(r);
@@ -414,7 +449,8 @@ class MolePanel {
     let map: Neighborhood = this.unsupported
       ? { state: 'index-unavailable', message: this.unsupported, nodes: [], edges: [], more: [] }
       : await this.client!.map(target, this.impact);
-    if (map.state === 'index-unavailable' && !this.unsupported && !process.env.MOLE_SELFTEST && Date.now() - this.lastRevive > 10_000) {
+    // (not in the self-tests: they stop the daemon on purpose and check what the editor shows without it)
+    if (map.state === 'index-unavailable' && !this.unsupported && !process.env.MOLE_SELFTEST && !process.env.MOLE_HOVER_CHECK && Date.now() - this.lastRevive > 10_000) {
       // the daemon stopped (idle shutdown, crash, or killed): start a new one and ask again, at most once per 10 s
       this.lastRevive = Date.now();
       output.appendLine('daemon not answering: starting a new one');
@@ -585,5 +621,100 @@ async function restoreProbe(mole: MolePanel, out: string): Promise<void> {
   writeFileSync(out, JSON.stringify({ panelAdopted: mole.hasPanel(), moleTabs: tabs.filter((t) => t.webview), groups: vscode.window.tabGroups.all.length, followedActiveEditor: mole.samples.length > before, mapStateAfterRelaunch: state, activeFile: file ? file.replace(root, '') : null }, null, 2));
   writeFileSync(`${out}.ready`, 'ok');
   await new Promise((r) => setTimeout(r, 4000));
+  await vscode.commands.executeCommand('workbench.action.quit');
+}
+
+/**
+ * MOLE_HOVER_CHECK=<json path>: {out, file, line, expect} (T15 done-when 1, 2, 5, 6; driven by scripts/hover-check.mjs). In the real
+ * editor: hover at file:line through vscode.executeHoverProvider, count the gutter marks drawn, run the two links the hover
+ * carries (the exact command + arguments parsed from its markdown, which is what a click on them executes), wait for the
+ * panel's since list, then stop the daemon and do it again: no Mole hover, no marks, and no popup at any point. Then quit.
+ */
+async function hoverCheck(mole: MolePanel, surface: Surface, root: string, cfgPath: string): Promise<void> {
+  const cfg = JSON.parse((await vscode.workspace.fs.readFile(vscode.Uri.file(cfgPath))).toString()) as { out: string; file: string; line: number; expect: { sha: string } };
+  const res: Record<string, unknown> = {};
+  const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+  // count every popup any code in this extension host raises
+  const popups = { patched: false, count: 0, messages: [] as string[] };
+  try {
+    const w = vscode.window as unknown as Record<string, unknown>;
+    for (const k of ['Error', 'Warning', 'Information'].map((x) => `show${x}Message`)) {
+      const orig = w[k] as (...a: unknown[]) => unknown;
+      const wrapped = (...a: unknown[]): unknown => {
+        popups.count++;
+        popups.messages.push(`${k}: ${String(a[0]).slice(0, 200)}`);
+        return orig.apply(vscode.window, a);
+      };
+      w[k] = wrapped;
+      popups.patched = w[k] === wrapped;
+    }
+  } catch (e) {
+    output.appendLine(`hover check: cannot count popups: ${(e as Error).message}`);
+  }
+  const uri = vscode.Uri.file(join(root, cfg.file));
+  const pos = new vscode.Position(cfg.line - 1, 0);
+  const hoverTexts = async (): Promise<string[]> => {
+    const hs = (await vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', uri, pos)) ?? [];
+    return hs.flatMap((h) => h.contents.map((c) => (typeof c === 'string' ? c : c.value)));
+  };
+  const isMole = (t: string): boolean => t.startsWith('**Mole**');
+  const links = (md: string): Array<[string, unknown[]]> =>
+    [...md.matchAll(/\]\(command:(mole\.[A-Za-z]+)\?([^)\s]+)\)/g)].map((m) => [m[1] as string, JSON.parse(decodeURIComponent(m[2] as string)) as unknown[]]);
+  try {
+    await vscode.commands.executeCommand('workbench.action.closeAuxiliaryBar');
+    await mole.boot();
+    await mole.open();
+    await vscode.window.showTextDocument(uri, { viewColumn: vscode.ViewColumn.One, preview: false });
+    let loaded = false;
+    for (let i = 0; i < 20 && !loaded; i++) {
+      loaded = await surface.refresh();
+      if (!loaded) await sleep(1000);
+    }
+    await surface.refreshSince();
+    const t0 = Date.now();
+    const texts = await hoverTexts();
+    const hoverMs = Date.now() - t0;
+    const hoverText = texts.find(isMole) ?? '';
+    const up: Record<string, unknown> = { daemonRunning: await surface.running(), checkLoaded: loaded, hoverMs, hoverText, otherHovers: texts.filter((t) => !isMole(t)).length, decorations: surface.drawn.get(cfg.file) ?? 0, ranges: surface.touched.ranges(cfg.file).map((r) => [r.startLine, r.endLine]) };
+    const ls = links(hoverText);
+    up.links = ls;
+    const commit = ls.find(([c]) => c === 'mole.showCommit');
+    if (commit) {
+      await vscode.commands.executeCommand(commit[0], ...commit[1]);
+      await sleep(500);
+      const ed = vscode.window.activeTextEditor;
+      const text = ed?.document.getText() ?? '';
+      up.clickCommit = { args: commit[1], uri: ed?.document.uri.toString(), firstLine: text.split('\n')[0], ok: ed?.document.uri.scheme === 'mole-git' && text.startsWith(`commit ${String(commit[1][0])}`) };
+    }
+    const source = ls.find(([c]) => c === 'mole.openAt');
+    if (source) {
+      await vscode.commands.executeCommand(source[0], ...source[1]);
+      await sleep(500);
+      const ed = vscode.window.activeTextEditor;
+      const [file, line] = source[1] as [string, number];
+      const landed = ed ? ed.selection.active.line + 1 : -1;
+      const lineText = ed && landed > 0 ? ed.document.lineAt(landed - 1).text.trim() : '';
+      up.clickSource = { args: source[1], uri: ed?.document.uri.toString(), landedLine: landed, lineText, ok: ed?.document.uri.scheme === 'mole-git' && ed.document.uri.path === `/${file}` && landed === line && lineText.length > 0 };
+    }
+    res.up = up;
+    // panel: the since list rendered in the webview (the webview reports the number of rows it drew)
+    let rendered = mole.sinceRendered;
+    if (rendered <= 0) rendered = await Promise.race([new Promise<number>((ok) => mole.sinceWaiters.push(ok)), sleep(20_000).then(() => mole.sinceRendered)]);
+    res.since = { rendered };
+    // daemon down: back on the file, stop the daemon, then refresh + hover as the editor would
+    await vscode.window.showTextDocument(uri, { viewColumn: vscode.ViewColumn.One, preview: false });
+    await sleep(700);
+    await surface.stopDaemon();
+    for (let i = 0; i < 40 && (await surface.running()); i++) await sleep(250);
+    await surface.refresh();
+    const downTexts = await hoverTexts();
+    res.down = { daemonRunning: await surface.running(), moleHovers: downTexts.filter(isMole).length, otherHovers: downTexts.length - downTexts.filter(isMole).length, decorations: surface.drawn.get(cfg.file) ?? 0 };
+    await sleep(1500); // let any late popup land before counting
+  } catch (e) {
+    res.error = (e as Error).stack ?? (e as Error).message;
+  }
+  res.popups = popups;
+  writeFileSync(cfg.out, JSON.stringify(res, null, 2));
+  await sleep(500);
   await vscode.commands.executeCommand('workbench.action.quit');
 }
