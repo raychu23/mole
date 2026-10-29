@@ -119,10 +119,18 @@ export function outcomeOf(c: RawCall, kind: StepKind, command: string | null, ru
 }
 
 function background(proc: string, c: RawCall, run: RawRun, kind: StepKind): Outcome {
-  for (const [order, text] of run.notices) {
-    if (order <= c.order || !text.includes(proc)) continue;
-    const m = /exit(?:ed)?(?: with)?(?: code)?[\s:=]+(-?\d+)/i.exec(text.slice(text.indexOf(proc)));
-    if (m) return Number(m[1]) === 0 ? (kind === 'test' && FAIL_SIGNS.test(text) ? 'fail' : 'pass') : 'fail';
+  void run;
+  for (const l of c.late ?? []) {
+    const j = parse(l.text);
+    let code = asNum(j?.exit_code);
+    if (code === undefined || (j && j.status !== 'exited' && !/exited|completed|finished/i.test(l.text))) {
+      const at = l.text.indexOf(proc);
+      const m = /exit(?:ed)?(?: with)?(?: code)?[\s:=(]+(-?\d+)/i.exec(at >= 0 ? l.text.slice(at) : l.text);
+      code = m ? Number(m[1]) : code !== undefined && j?.status === 'exited' ? code : undefined;
+    }
+    if (code === undefined) continue;
+    const out = str(j?.output) ?? l.text;
+    return code === 0 ? (kind === 'test' && FAIL_SIGNS.test(out) ? 'fail' : 'pass') : 'fail';
   }
   return 'unknown';
 }
@@ -164,7 +172,7 @@ const COMMIT_CMD = /\bgit\b[\s\S]*?\b(commit|merge|cherry-pick|revert|am|rebase)
 export function commitsOf(c: RawCall, command: string | null): string[] {
   if (!command || !c.resultText || !COMMIT_CMD.test(command)) return [];
   const res = parse(c.resultText);
-  const text = str(res?.output) ?? c.resultText;
+  const text = [str(res?.output) ?? c.resultText, ...(c.late ?? []).map((l) => str(parse(l.text)?.output) ?? l.text)].join('\n');
   const out = new Set<string>();
   for (const m of text.matchAll(/^\[[^\]\s]+(?: \([^)]*\))? ([0-9a-f]{7,40})\]/gm)) out.add(m[1]!);
   for (const m of text.matchAll(/^commit ([0-9a-f]{7,40})\b/gm)) out.add(m[1]!);

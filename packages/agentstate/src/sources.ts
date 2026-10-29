@@ -20,6 +20,8 @@ export interface RawCall {
   resultTime?: number;
   resultError?: boolean; // the harness marked the result an error (Claude is_error)
   extra?: Record<string, unknown>; // harness-specific result detail (Claude toolUseResult)
+  /** a background command's later output: process polls/waits on its id and completion notices (Hermes) */
+  late?: Array<{ row: number; text: string; time: number }>;
 }
 
 export interface RawCompaction {
@@ -194,6 +196,25 @@ function hermesRunFromRows(file: string, summary: RunSummary, rows: MsgRow[]): R
       c.resultText = r.content ?? '';
       c.resultTime = r.timestamp * 1000;
     }
+  }
+  // background commands: their output arrives later, in process polls/waits that name the proc id or in a completion notice
+  const procs = new Map<string, RawCall>();
+  for (const c of calls.values()) {
+    const id = /"session_id":\s*"(proc_[0-9a-f]+)"/.exec(c.resultText ?? '')?.[1];
+    if (id && /Background process/i.test(c.resultText ?? '')) procs.set(id, c);
+  }
+  if (procs.size) {
+    for (const c of calls.values())
+      for (const m of c.argsText.matchAll(/proc_[0-9a-f]{6,}/g)) {
+        const launch = procs.get(m[0]);
+        if (launch && launch !== c && c.resultRow !== undefined) (launch.late ??= []).push({ row: c.resultRow, text: c.resultText ?? '', time: c.resultTime ?? c.time });
+      }
+    for (const [row, text] of notices)
+      for (const m of text.matchAll(/proc_[0-9a-f]{6,}/g)) {
+        const launch = procs.get(m[0]);
+        const r = rows.find((x) => x.id === row);
+        if (launch && r) (launch.late ??= []).push({ row, text, time: r.timestamp * 1000 });
+      }
   }
   compactions.sort((a, b) => a.order - b.order);
   return { summary: { ...summary, steps: calls.size, compactions: compactions.length }, file, calls: [...calls.values()].sort((a, b) => a.order - b.order), compactions, notices };

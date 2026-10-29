@@ -515,6 +515,7 @@ export function attribute(root: string, range: string, opts: Sources = {}): Attr
   const commits = log.split('\n').filter(Boolean).map((l) => ({ sha: l.slice(0, 40), t: Number(l.slice(41)) * 1000 }));
   const edits = new Map<string, Array<{ t: number; run: string; step: string; ref: Step['ref'] }>>();
   const made = new Map<string, Array<{ t: number; run: string; step: string; ref: Step['ref'] }>>();
+  const committers: Array<{ t: number; command: string; run: string; step: string; ref: Step['ref'] }> = [];
   for (const raw of candidateRuns({ ...opts, root }, [])) {
     for (const s of buildSteps(raw)) {
       const t = Date.parse(s.time);
@@ -523,15 +524,22 @@ export function attribute(root: string, range: string, opts: Sources = {}): Attr
           const rel = toRel(f, dirs);
           if (rel) edits.set(rel, [...(edits.get(rel) ?? []), { t, run: s.run, step: s.id, ref: s.ref }]);
         }
-      if ((s.kind === 'command' || s.kind === 'test') && isCommitCommand(s.command) && s.ref.resultRow !== undefined) {
+      if ((s.kind === 'command' || s.kind === 'test') && isCommitCommand(s.command)) {
         const call = raw.calls.find((c) => `${raw.summary.id}:${c.callId}` === s.id);
-        const rt = call?.resultTime ?? t;
-        for (const m of (call?.resultText ?? '').matchAll(/\b[0-9a-f]{7,40}\b/g)) {
-          const k = m[0].slice(0, 7);
-          const l = made.get(k) ?? [];
-          if (!l.some((x) => x.step === s.id)) l.push({ t: rt, run: s.run, step: s.id, ref: s.ref });
-          made.set(k, l);
-        }
+        if (!call) continue;
+        // the sha is printed by the command itself, or (background command) in a later poll / completion notice
+        const outs = [
+          ...(call.resultRow !== undefined ? [{ row: call.resultRow, text: call.resultText ?? '', time: call.resultTime ?? t }] : []),
+          ...(call.late ?? []),
+        ];
+        for (const o of outs)
+          for (const m of o.text.matchAll(/\b[0-9a-f]{7,40}\b/g)) {
+            const k = m[0].slice(0, 7);
+            const l = made.get(k) ?? [];
+            if (!l.some((x) => x.step === s.id)) l.push({ t: o.time, run: s.run, step: s.id, ref: { ...s.ref, resultRow: o.row } });
+            made.set(k, l);
+          }
+        if (outs.length) committers.push({ t, command: s.command ?? '', run: s.run, step: s.id, ref: { ...s.ref, resultRow: outs[0]!.row } });
       }
     }
   }
@@ -539,7 +547,16 @@ export function attribute(root: string, range: string, opts: Sources = {}): Attr
   const out: Attribution[] = [];
   for (const c of commits) {
     const files = (git(root, ['diff-tree', '--no-commit-id', '-r', '--name-only', '--root', c.sha]) ?? '').split('\n').filter(Boolean);
-    const viaCommit = (made.get(c.sha.slice(0, 7)) ?? []).filter((m) => m.t >= c.t - 120_000 && m.t <= c.t + 1_800_000).sort((a, b) => a.t - b.t)[0];
+    // 1) the commit-making command printed the sha; 2) it ran `git commit -q` (prints nothing): its -m message is the subject
+    const bySha = (made.get(c.sha.slice(0, 7)) ?? []).filter((m) => m.t >= c.t - 120_000 && m.t <= c.t + 1_800_000).sort((a, b) => a.t - b.t)[0];
+    const full = git(root, ['log', '-1', '--format=%s', c.sha]) ?? '';
+    const subject = full.split(/["'`$\\]/)[0]!.slice(0, 50);
+    // the ledger writes its own subject ('ledger move: tasks/T2-x verified → integrated'): match the command that asked for it
+    const lm = /^ledger (?:move|new): (\S+)(?: \S+ → (\S+)| proposed)?/.exec(full);
+    const said = (cmd: string): boolean =>
+      lm ? /\bledger\b/.test(cmd) && cmd.includes(lm[1]!.split('/').pop()!) && (!lm[2] || new RegExp(`\\b${lm[2]}\\b`).test(cmd)) : subject.length >= 12 && cmd.includes(subject);
+    const bySubject = committers.filter((m) => m.t >= c.t - 1_800_000 && m.t <= c.t + 60_000 && said(m.command)).sort((a, b) => b.t - a.t)[0];
+    const viaCommit = bySha ?? bySubject;
     for (const path of files) {
       const prev = lastTouch.get(path) ?? -Infinity;
       const e = (edits.get(path) ?? []).filter((x) => x.t > prev && x.t <= c.t + 60_000).sort((a, b) => b.t - a.t)[0];
