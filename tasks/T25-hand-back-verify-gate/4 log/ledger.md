@@ -8,4 +8,5 @@ ledger (newest last, nothing deleted)
     2026-10-29 15:45      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T25-hand-back-verify-gate · branch ledger/t25-hand-back-verify-gate · base d312d66
     2026-10-29 16:52      running → blocked      cause: round 3 (speed, Raymond 'make it work' 10-29 15:30): warm-worker + module-scope SourceFile/oldProgram cache implemented in packages/verify/src/gate/{index,typedelta}.ts (prior-art.md: tsc oldProgram reuse, warm La
     2026-10-29 17:31      blocked → ready      reclaim under lower host load (uptime ~50-92 vs round3's 190-208) to get trustworthy M17 numbers
+    2026-10-29 17:32      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T25-hand-back-verify-gate · branch ledger/t25-hand-back-verify-gate · base d1b7298
 ```
