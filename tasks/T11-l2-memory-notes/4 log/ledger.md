@@ -8,4 +8,6 @@ ledger (newest last, nothing deleted)
     2026-10-28 21:39      submitted → running      changes requested: P1-1 deleted symbol reported moved* to an unrelated same-named symbol in another file (locate() re-anchors on tail alone when exactly 1 candidate, contract says tail + body hash, deleted → orphaned). P
     2026-10-28 21:43      running → submitted      report: round 2: review-1 P1-1 fixed (no name-only re-anchoring: deleted symbol → orphaned) + P2-1 (overload signatures in hash, moved+changed no longer exists, closes P2-2), regression tests packages/memory/test/review-
     2026-10-28 21:43      checks ran: npm run check && node packages/memory/dist/bench/m1.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T11-l2-memory-notes → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-28 21:47      submitted → verified      reviewer reviewer-T11-r2 · findings: P2-6 moved+edited now orphaned (within contract, loses new-path hint), P2-7 same-tail+hash ambiguity picks first match silently, P2-8 container-rename branch fires while old container
+    2026-10-28 21:47      checks ran: npm run check && node packages/memory/dist/bench/m1.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T11-l2-memory-notes → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
