@@ -1,0 +1,142 @@
+{
+ "written": "2026-10-29T01:45:04-05:00",
+ "by": "tasks/T20-langgraph-checkpoint-export/4 log/m10-keygen.mjs with T18 getRun (no exporter existed)",
+ "values": "per checkpoint i: {step:{id,index,kind}, contextVersion:{repo,gitSha,files}, filesRead: context.read, tried, changed}; sha256 of JSON of the array with keys sorted recursively",
+ "target": "every run: getStateHistory on the exported file = same count, order (oldest->newest by parent links) and sha256; every fork ok; every empty case = empty thread + note",
+ "runs": [
+  {
+   "id": "20261013_171309_0d3665",
+   "harness": "hermes",
+   "group": "m7 (T18 M7 sessions, finished)",
+   "checkpoints": 1216,
+   "sha256": "5a93b609a6020f0dc276010eedab540e02036e8efe61f12347294acd93e81097"
+  },
+  {
+   "id": "20261015_061241_8d76d5",
+   "harness": "hermes",
+   "group": "m7 (T18 M7 sessions, finished)",
+   "checkpoints": 460,
+   "sha256": "2265fc8f752b266edbebb6a75c177d8a272aa4c6317c75cef140c9cfd418674d"
+  },
+  {
+   "id": "20261015_093703_d0be16",
+   "harness": "hermes",
+   "group": "m7 (T18 M7 sessions, finished)",
+   "checkpoints": 197,
+   "sha256": "6bdc99893f32a83e947eb80be01bd167df590c0ba229234d4fee72551250043c"
+  },
+  {
+   "id": "20261019_180211_ec7893",
+   "harness": "hermes",
+   "group": "m7 (T18 M7 sessions, finished)",
+   "checkpoints": 581,
+   "sha256": "e7a49a36b28501bbff71dc717cd6c72f391b62a8d82a21ff5df469a8839c638f"
+  },
+  {
+   "id": "20261027_165516_e608ed",
+   "harness": "hermes",
+   "group": "m7 (T18 M7 sessions, finished)",
+   "checkpoints": 160,
+   "sha256": "7206fb55070b714359d86dae9f089f882febbf0ee4b210ea4b1ea5d4abcdd031"
+  },
+  {
+   "id": "20261027_165516_e6ae5f",
+   "harness": "hermes",
+   "group": "m7 (T18 M7 sessions, finished)",
+   "checkpoints": 239,
+   "sha256": "d7940d24c95648da41f082e6211996b29d4870f6795445df612f9ec85f52915d"
+  },
+  {
+   "id": "940c0cc7-4804-4a75-9a43-6388e8312e4f",
+   "harness": "claude-code",
+   "group": "m7 (T18 M7 sessions, finished)",
+   "checkpoints": 341,
+   "sha256": "228d33b442a527d415671b47788789002049484784d704ab2ad315278a185f14"
+  },
+  {
+   "id": "local-9982f80bb24af4df83978288a29efe37787059dc551f460777cee252ae666045",
+   "harness": "hermes",
+   "group": "harness coverage (finished before 2026-10-28)",
+   "checkpoints": 12,
+   "sha256": "6c7370a4190eb9e127a79f148bd720496e5d6f0cc0d81a450f5c2689d9667536"
+  },
+  {
+   "id": "310207f1-103f-4eaa-93ac-f16cb30830a1",
+   "harness": "claude-code",
+   "group": "harness coverage (finished before 2026-10-28)",
+   "checkpoints": 6,
+   "sha256": "5ff940e8db54fab8968ca16b0da210619e0b00e7ffad08080b54d16b543503f8"
+  },
+  {
+   "id": "agent-a343760986d5b1c6c",
+   "harness": "claude-code",
+   "group": "harness coverage (finished before 2026-10-28)",
+   "checkpoints": 40,
+   "sha256": "fb38f155b66dca2c060cbeafaf2880b964626444bf429e988f5c1015fb59b98a"
+  },
+  {
+   "id": "39f30d8f-2c96-44bc-be28-395ba06f4518",
+   "harness": "claude-code",
+   "group": "harness coverage (finished before 2026-10-28)",
+   "checkpoints": 18,
+   "sha256": "c5fc6dbd5a1e1e0fb46caa909868249a52dd40429f22f12f094d71fde42d32f6"
+  },
+  {
+   "id": "01a178d6-672a-70e3-ae0e-21119dab5650",
+   "harness": "codex",
+   "group": "harness coverage (finished before 2026-10-28)",
+   "checkpoints": 1,
+   "sha256": "dc23b6d23c8301fc0fb5c34baadc8ca58fe61f47e4940effe424712c3c0a2a6e"
+  },
+  {
+   "id": "01a178cd-b8c7-7623-af1d-aeb45edf627b",
+   "harness": "codex",
+   "group": "harness coverage (finished before 2026-10-28)",
+   "checkpoints": 11,
+   "sha256": "ccfcf47201e8958f7409d849113750c95de9a914aae004b3a95ef646bdfc166b"
+  },
+  {
+   "id": "01a10c9a-5c46-7523-9adf-f9f539bb6a77",
+   "harness": "codex",
+   "group": "harness coverage (finished before 2026-10-28)",
+   "checkpoints": 95,
+   "sha256": "698b6aa741815dcc6707d689efb225f90dc43746ef0d946ba4d8b4790560c28a"
+  },
+  {
+   "id": "01a0c9f2-03b5-7080-9810-83e355e1130a",
+   "harness": "codex",
+   "group": "harness coverage (finished before 2026-10-28)",
+   "checkpoints": 370,
+   "sha256": "05b34c9cca2930d2909154785ebe463866923d2df69069983409fe43a5c76273"
+  }
+ ],
+ "forks": [
+  {
+   "id": "20261015_093703_d0be16",
+   "harness": "hermes",
+   "step": 98
+  },
+  {
+   "id": "940c0cc7-4804-4a75-9a43-6388e8312e4f",
+   "harness": "claude-code",
+   "step": 170
+  },
+  {
+   "id": "01a10c9a-5c46-7523-9adf-f9f539bb6a77",
+   "harness": "codex",
+   "step": 47
+  }
+ ],
+ "empty": [
+  {
+   "id": "e6d2803f-bac4-4d53-ae46-df97087e86cd",
+   "harness": "claude-code",
+   "checkpoints": 0
+  },
+  {
+   "id": "01a17e6e-42bd-77f1-86be-18e7d02d248b",
+   "harness": "codex",
+   "checkpoints": 0
+  }
+ ]
+}

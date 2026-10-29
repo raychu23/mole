@@ -1,11 +1,13 @@
 // `mole runs | run <id> | tried <run|file#Symbol> | agents <file[#Symbol]>` (registered in packages/daemon/src/cli.ts).
 // --json prints the library result unchanged; without it a short human view. Missing sources are listed, exit 0.
 import { agents, getRun, listRuns, tried } from './index.js';
+import { exportLangGraph } from './langgraph.js';
 import { defaultSources } from './sources.js';
 import type { RunGraph, Skipped, Step, TriedItem } from './types.js';
 
 const USAGE =
-  'usage: mole runs [--all] [--json] | mole run <id> [--json] | mole tried <run | file#Symbol> [--json] | mole agents <file[#Symbol]> [--json]   [--root DIR]\n' +
+  'usage: mole runs [--all] [--json] | mole run <id> [--json] [--export langgraph <file.sqlite>] | mole tried <run | file#Symbol> [--json] | mole agents <file[#Symbol]> [--json]   [--root DIR]\n' +
+  '  --export langgraph <file.sqlite>: write the run as a LangGraph thread (one checkpoint per step) with LangGraph\'s SqliteSaver; the file quotes commands, keep it local\n' +
   '  sources: MOLE_HERMES_DB, MOLE_CLAUDE_DIR, MOLE_CODEX_DIR (default ~/.hermes/state.db, ~/.claude/projects, ~/.codex/sessions), opened read-only';
 
 const short = (s: string, n: number): string => {
@@ -83,10 +85,21 @@ export async function agentCli(cmd: string, pos: string[], flags: Record<string,
     return 2;
   }
   if (cmd === 'run') {
+    const exp = flags.export;
+    const out = pos[1];
+    if (exp !== undefined && (exp !== 'langgraph' || !out)) {
+      console.error(`mole run: --export takes 'langgraph <file.sqlite>'\n${USAGE}`);
+      return 2;
+    }
     const g = getRun(target, { ...src, root });
     if (!g) {
       console.error(`mole: no run ${target} (or the prefix is not unique)`);
       return 1;
+    }
+    if (exp !== undefined) {
+      const r = await exportLangGraph(g, out!);
+      print(r, () => [`exported ${g.run.harness} run ${r.thread_id} to ${r.file}: thread ${r.thread_id}, ${r.checkpoints} checkpoint${r.checkpoints === 1 ? '' : 's'} (LangGraph SqliteSaver)`, ...(r.note ? [`note: ${r.note}`] : []), ...skippedLines(g.skipped)].join('\n'));
+      return 0;
     }
     print(g, () => formatRun(g));
     return 0;
