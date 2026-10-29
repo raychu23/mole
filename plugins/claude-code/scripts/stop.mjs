@@ -45,12 +45,21 @@ export function format(r, label) {
   return out.join('\n');
 }
 
+// T24: one line per claim in the session's last answer that its own tool calls don't back (unsupported / contradicted)
+function claimLines(mole, root, sessionId) {
+  if (!sessionId) return [];
+  const r = moleJson(mole, root, ['claims', String(sessionId), '--json']);
+  return (r?.claims ?? []).filter((c) => c.verdict !== 'supported').map((c) => `mole claims: ${c.verdict}: "${one(c.text, 200)}" (${one(c.why, 160)})`);
+}
+
 function main() {
   const input = readInput();
   const root = repoRoot(input.cwd || process.cwd());
   if (!root) return;
   const mole = findMole(root);
   if (!mole) return;
+  const claims = claimLines(mole, root, input.session_id);
+  const done = () => (claims.length ? emit({ systemMessage: clip(claims.join('\n')) }) : undefined);
   const head = git(root, ['rev-parse', '--verify', '-q', 'HEAD'])?.trim() ?? '';
   const sess = loadSession(input.session_id);
   const base = sess && sess.root === root && sess.head && sess.head !== head && git(root, ['cat-file', '-e', `${sess.head}^{commit}`]) !== undefined ? sess.head : undefined;
@@ -58,7 +67,7 @@ function main() {
   let label;
   if (base) {
     const diff = git(root, ['diff', '--no-color', '--no-ext-diff', base]);
-    if (!diff?.trim()) return;
+    if (!diff?.trim()) return done();
     const dir = mkdtempSync(join(tmpdir(), 'mole-stop-'));
     try {
       const file = join(dir, 'session.diff');
@@ -72,10 +81,10 @@ function main() {
     r = moleJson(mole, root, ['check', '--worktree', '--json']);
     label = 'the uncommitted change (working tree vs HEAD)';
   }
-  if (!r || !Array.isArray(r.hunks)) return;
+  if (!r || !Array.isArray(r.hunks)) return done();
   const fixes = r.hunks.some((h) => h.pastFixes.length > 0);
-  if (!fixes && !(r.questions?.length > 0)) return;
-  const text = clip(format(r, label));
+  if (!fixes && !(r.questions?.length > 0)) return done();
+  const text = clip([format(r, label), ...claims].join('\n'));
   const msg = { systemMessage: text };
   if (process.env.MOLE_STOP_CONTINUE === '1' && input.stop_hook_active !== true && r.questions?.length) {
     msg.hookSpecificOutput = { hookEventName: 'Stop', additionalContext: clip(`Mole asks about the lines you just edited (answer briefly, then stop):\n${r.questions.map((q, i) => `${i + 1}. ${q.text}`).join('\n')}`) };
