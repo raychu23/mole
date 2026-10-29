@@ -1,22 +1,22 @@
 ---
-state: running
+state: blocked
 owner: mole-builder-4
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t32-team-pr-check
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T32-team-pr-check
 base: fb240ab
 reviewer:
-updated: 2026-10-29 06:45
-status: ledger running
-next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+updated: 2026-10-29 07:52
+status: ledger blocked
+next: decision owner unblocks → ledger move <task> ready --note …
 claimed: 2026-10-29 06:45
 ---
 ```notes
 T32-team-pr-check      ledger task (rules.md §3 code features)      project tasks
     goal                    Team phase A, no server (Team mode.md §5): a GitHub Actions job runs `mole check --diff` on every pull request and posts ONE check run: the decision records (.mole/decisions, T29) and notes whose anchors the diff touches with their citator flag, the owners from CODEOWNERS for those folders, the past fixes on the touched lines (T12) and up to 3 read-back questions for the author (T14); silent (neutral, no comment) when nothing governs the changed lines; every teammate's agent reads the same records through the local MCP server (mole_check) at session start
     done-when               1) the workflow + a reusable action in the repo, check-run output with line annotations, proven locally by running the workflow's steps (as T16 did), never pushed, 2) M24 on 30 replayed merged PRs of 2 public repos with CODEOWNERS (key labeled before code: which records/notes/owners each PR should surface): precision >= 0.9 and recall >= 0.8 for 'record governs these lines', owners exact, p95 < 60 s for the local run of the job's steps, 3) noise rule: silent on PRs with nothing governed, at most 1 check run per push, never a PR comment, 4) dogfood on Mole's own repo with its builder agents as the team: share of builder tasks whose diffs surface the governing decision, 5) failure case: a renamed file whose anchor can't re-attach shows grey 'unanchored', never a wrong record, 6) npm run check passes
-    status                  2026-10-29 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T32-team-pr-check · branch ledger/t32-team-pr-check · base fb2
-    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+    status                  2026-10-29 blocked      cause: M24 missed at the official check: precision 0.63 (>= 0.9), recall 0.52 (>= 0.8), silent 27/30, owners 30/30 exact
+    next                    decision owner unblocks → ledger move <task> ready --note …
     pinned
     mode                    code
     boundary                .github/workflows/mole-pr-check.yml (new), .github/actions/mole-check/** (new), packages/decisions/src/check/** + bench m24*, packages/daemon/src/cli.ts (register the subcommand with one import + one call only), tasks/T32-team-pr-check/**
