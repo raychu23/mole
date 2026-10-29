@@ -33,6 +33,7 @@ import type {
 } from './types.js';
 
 export * from './types.js';
+export * from './claims/index.js';
 export { defaultSources } from './sources.js';
 export { agentCli } from './cli.js';
 export { exportLangGraph, runGraph, runValues, RunState, type LangGraphExport, type RunValues } from './langgraph.js';
