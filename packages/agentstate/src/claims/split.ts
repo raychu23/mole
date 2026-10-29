@@ -8,7 +8,7 @@ const CLAUSE = /,\s+and\s+|,\s+but\s+|,\s+so\s+|,\s+then\s+|\s+and\s+(?=(?:I|we|
 
 export const CATEGORY_ORDER: ClaimCategory[] = ['exit', 'push', 'merge', 'commit', 'test', 'fix', 'file'];
 
-const EXIT = /\bexit(?:ed|s)?(?:\s+code)?"?\s*[:=]?\s*-?\d+\b/i;
+const EXIT = /\bexit(?:ed|s)?(?:\s+(?:with\s+)?code)?"?\s*[:=]?\s*-?\d+\b/i;
 // first person or passive ('I pushed', 'was pushed', 'pushed to origin'), not 'the command pushed the exit code out'
 const PUSH = /\b(?:I|we)\b[^.;]*\bpushed\b|\bpushed to\b|\b(?:was|were|been|is|are|got)\s+pushed\b|^pushed\b/i;
 const MERGE = /\b(?:merged|integrated)\b/i;
@@ -39,6 +39,14 @@ const FILE_PRESENT = /\b(?:writes|deletes)\b/i;
 const LIST_INTRO =
   /(?:\b(?:reviewers?|review|subagents?|it|they)\b[^\n]*\b(?:found|confirmed|flagged|checked|verified|reported|noted)\b[^\n]*|\b(?:bugs?|issues?|problems?|findings?)\b[^\n:]*):\s*$/i;
 const BULLET = /^\s*(?:[-*•]|\d+[.)])\s+/;
+// review-2 P1-1 (d): what a tool or a thing does / is, not what the run did: a present-tense description verb with a
+// non-first-person subject ('`mole flows` lists the tests …', 'the hook prints …'), unless 'now' makes it a change
+const DESCRIBE_VERB = /\b(?:lists|prints|shows|returns|reports|emits|outputs|gives|names|marks|reads|asks|counts|finds|flags|exits|means|matches)\b/i;
+// a time clause's verb is not the claim's verb ('Before going green I changed …', 'after rebasing')
+const TIME_CLAUSE = /\b(?:before|after|while|until|when)\s+\w+ing\b[^,;]*/gi;
+// counts used as adjectives inside a list of contents ('contains the bench, the key and 3 failing test files')
+const CONTAINS = /\b(?:contains?|includes?|holds?|has|have|had|adds?|with)\b/i;
+const ATTR_COUNT = /\b\d+ (?:failing|passing|failed|passed|new|red) (?:tests?|test files?|test cases?)\b/gi;
 const LEDGER = /\bledger\b/i;
 
 const SHA = /(?<![\w#/.=-])`?([0-9a-f]{7,40})`?(?![\w/-])/g;
@@ -92,11 +100,18 @@ function exitClaim(clause: string): boolean {
   const m = EXIT.exec(clause);
   if (!m) return false;
   if (/^exits\b/i.test(m[0]) && !FIRST_PERSON.test(clause)) return false;
+  // 'the logged exit-0 run', 'an exit 2 case': exit used as an adjective
+  if (/^exit-?\s*-?\d+$/i.test(m[0].replace(/\s+/g, ' ')) && /^[-\s]*(?:runs?|lines?|cases?|paths?|codes?|status|results?)\b/i.test(clause.slice(m.index + m[0].length))) return false;
+  if (/^exit-\d/i.test(m[0])) return false;
+  // '<paths> are syntax errors with exit 2': a property of something, not a run's result
+  if (/\bwith\s+$/i.test(clause.slice(0, m.index)) && /\b(?:is|are|was|were|be)\b/i.test(clause.slice(0, m.index)) && !FIRST_PERSON.test(clause)) return false;
   return !/^\s*(?:when|whenever|if|unless|on (?:a|an|any|every)\b)/i.test(clause.slice(m.index + m[0].length));
 }
 
-export function categoriesOf(clause: string): ClaimCategory[] {
+export function categoriesOf(clause0: string, lead = ''): ClaimCategory[] {
   const out = new Set<ClaimCategory>();
+  let clause = clause0.replace(TIME_CLAUSE, ' ');
+  if (CONTAINS.test(lead + clause)) clause = clause.replace(ATTR_COUNT, ' ');
   if (exitClaim(clause)) out.add('exit');
   if (PUSH.test(clause)) out.add('push');
   if (MERGE.test(clause)) out.add('merge');
@@ -202,7 +217,8 @@ export function clauses(text: string): Clause[] {
       if (/\b(?:if|unless|whenever)\b/i.test(t)) conditional = true;
       if (t.length < 4 || question || afterIf || skipped(c.start)) continue;
       if (NOT_DONE.test(t) || (OTHERS.test(t) && !PRONOUN_PASS.test(t)) || LEDGER.test(t) || DESCRIBES.test(t)) continue;
-      const cats = categoriesOf(t);
+      if (DESCRIBE_VERB.test(t.replace(/`[^`]*`/g, ' ')) && !FIRST_PERSON.test(t) && !/\bnow\b/i.test(t) && !PRONOUN_PASS.test(t) && !SAME.test(t)) continue;
+      const cats = categoriesOf(t, text.slice(s.start, c.start));
       if (!cats.length) continue;
       out.push({ text: t, start: c.start, end: c.end, category: cats[0]!, categories: cats, sentence });
     }

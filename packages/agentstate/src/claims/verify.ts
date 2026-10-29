@@ -28,6 +28,10 @@ export interface Ev {
   readOnly: boolean;
   agent: boolean;
   edits: string[];
+  /** the command runs nothing but its own text: cat/echo/printf/tee/tail/… (heredocs and quoted strings stripped) */
+  echoOnly: boolean;
+  /** the command with heredoc bodies and echo/printf strings removed (what it actually runs) */
+  bare: string;
 }
 
 const HEREDOC = /<<-?\s*['"]?(\w+)['"]?[\s\S]*?\n\1\b/g;
@@ -42,6 +46,34 @@ const parse = (s: string): unknown => {
 const READONLY_CMD =
   /^\s*(?:cd\s+(?:"[^"]*"|'[^']*'|\S+)\s*(?:&&|;)\s*)*(?:cat|tail|head|less|more|sed\s+-n|grep|egrep|rg|ls|wc|jq|find|stat|file|git\s+(?:-C\s+(?:"[^"]*"|\S+)\s+)?(?:show|log|diff|status|rev-parse|blame|branch|ls-files|cat-file))\b[^&;|]*(?:\|\s*(?:head|tail|grep|wc|sort|uniq|cut|sed|awk|jq|less|cat)\b[^&;|]*)*$/;
 const WRITE_SIG = /(?:>>?\s*["']?[\w./~$-]|\btee\b|\bcp\b|\bmv\b|\brsync\b|\binstall\b|open\([^)]*,\s*['"][wa]|write_text|writeFileSync|appendFileSync|\.write\(|sed\s+-i|perl\s+-pi|git\s+(?:-C\s+\S+\s+)?(?:add|commit|mv)\b|cat\s*>|ln\s+-s|write_file|patch\()/;
+
+// review-2 P1-2: text the agent wrote itself is never evidence. A command's own literal text (heredoc bodies, quoted
+// strings) is removed from its output, and a command that only moves its own text around runs nothing.
+const ECHO_STR = /\b(echo|printf)((?:\s+(?:-\w+|'[^']*'|"(?:[^"\\]|\\.)*"|[^\s;&|<>]+))*)/g;
+/** what the command runs: heredoc bodies and echo/printf arguments removed */
+export function bareCommand(cmd: string): string {
+  return cmd.replace(HEREDOC, '<<HEREDOC').replace(ECHO_STR, '$1');
+}
+const SELF_ONLY = /^(?:cat|tail|head|echo|printf|tee|wc|ls|cut|sort|uniq|date|true|mkdir|touch|cd|rm|cp|mv|sed|awk|jq|grep|egrep|rg|stat|file|sleep|uptime|export|set|test|\[|git\s+(?:add|status|diff|log|show|rev-parse|commit|stash))\b/;
+/** every segment of the command (after `cd`, env assignments) is a text tool or bookkeeping git: nothing is run */
+export function echoOnly(cmd: string): boolean {
+  const segs = bareCommand(cmd)
+    .split(/&&|\|\||;|\||\n/)
+    .map((x) => x.trim().replace(/^(?:\w+=(?:"[^"]*"|'[^']*'|\S*)\s+)+/, '').replace(/^[({]\s*/, ''))
+    .filter((x) => x && !/^\w+=(?:"[^"]*"|'[^']*'|\S*)$/.test(x) && x !== 'EOF' && !/^<<HEREDOC/.test(x) && !/^[)}]$/.test(x));
+  return segs.length > 0 && segs.every((x) => SELF_ONLY.test(x));
+}
+/** the output without the lines (and summary tokens) that are the command's own literal text */
+export function stripSelf(out: string, cmd: string): string {
+  if (!cmd) return out;
+  const keep = out.split('\n').filter((l) => {
+    const t = l.trim();
+    return !(t.length >= 6 && cmd.includes(t));
+  });
+  return keep
+    .join('\n')
+    .replace(/\b\d+ (?:passed|failed|passing|failing)\b(?: \(\d+\))?|\bexit(?:ed)?[\s=:-]+\d+\b|"exit"\s*:\s*\d+/gi, (m) => (cmd.includes(m) ? '' : m));
+}
 
 function unwrap(text: string): { out: string; exit: number | null } {
   const j = parse(text);
@@ -87,7 +119,7 @@ export function evidenceOf(raw: RawRun, before: number | undefined): Ev[] {
       const m = /exit(?:ed)?(?: with)?(?: code)?[\s:=(]+(-?\d+)/i.exec(l.text);
       if (m) exit = Number(m[1]);
     }
-    text = text.replace(ANSI, '');
+    text = stripSelf(text.replace(ANSI, ''), command ?? c.argsText ?? '');
     const agent = AGENT.has(c.name);
     const readOnly = READ_TOOLS.has(c.name) || (command !== null && READONLY_CMD.test(command));
     out.push({
@@ -102,6 +134,8 @@ export function evidenceOf(raw: RawRun, before: number | undefined): Ev[] {
       readOnly,
       agent,
       edits: editedFiles(c, cwd),
+      echoOnly: command !== null && echoOnly(command),
+      bare: command !== null ? bareCommand(command) : c.argsText ?? '',
     });
   }
   return out;
@@ -133,8 +167,8 @@ const R = (verdict: Verdict, why: string, evidence: ClaimEvidence[] = []): Resul
 
 /** a test-run summary in the output of a command that is not itself a known test command */
 const SUMMARY = /\b\d+ (?:passed|failed)\b|\bTests?\s+\d+ (?:passed|failed)|\bRan \d+ tests?\b|^\s*(?:OK|FAILED)\b|^\s*exit[=: ]\s*-?\d+\s*$|\bexit=-?\d+\b|→ exit -?\d+ \((?:OK|FAILED)\)|\b\d+ pass\b|\bpass(?:ed)? \d+\/\d+|\b[1-9]\d* fail\b/m;
-const RUNNER = (e: Ev): boolean => !e.agent && e.call.resultText !== undefined && !READ_TOOLS.has(e.call.name) && !EDIT_TOOLS.has(e.call.name) && (e.command !== null || /process|tool_call|Monitor|BashOutput/.test(e.call.name));
-const testRun = (e: Ev): boolean => RUNNER(e) && (e.test || (!e.readOnly && SUMMARY.test(e.out)));
+const RUNNER = (e: Ev): boolean => !e.agent && !e.echoOnly && e.call.resultText !== undefined && !READ_TOOLS.has(e.call.name) && !EDIT_TOOLS.has(e.call.name) && (e.command !== null || /process|tool_call|Monitor|BashOutput/.test(e.call.name));
+const testRun = (e: Ev): boolean => RUNNER(e) && (e.test || (!e.readOnly && (SUMMARY.test(e.out) || printedExits(e.out).length > 0)));
 const SIGNATURE = /\b\d+ (?:passed|failed|failing|passing)\b|\bTests?\s+\d|\bRan \d+ tests?\b|^\s*(?:OK|FAILED)\b|\bPASS(?:ED)?\b|\bFAIL(?:ED)?\b|\bexit[=:\s]+\d+\b|\bexit=\d|\b\d+ pass\b|\bpass(?:ed)? \d+\/\d+|[✓✔✗×]|exitCode|\bexit_code\b|\bsucceeded\b|\bCompiled successfully\b/im;
 const FAILS_OUT = /\b[1-9]\d* (?:failed|failing|errors?)\b|^\s*FAIL\b|\bFAILED\b|error TS\d+|Traceback \(most recent call last\)|AssertionError|\bexit[=:]\s*[1-9]\d*/m;
 
@@ -153,7 +187,7 @@ const STOP = new Set(
 /** distinctive words of the clause that also occur somewhere in the run's own calls (prose words that occur nowhere are dropped) */
 function topics(clause: string, evs: Ev[]): string[] {
   const words = [...new Set((clause.toLowerCase().replace(/`[^`]*`/g, ' ').match(/[a-z][a-z0-9_-]{2,}|[a-z]\d+/g) ?? []).filter((w) => !STOP.has(w)))];
-  return words.filter((w) => evs.some((e) => !e.agent && !EDIT_TOOLS.has(e.call.name) && e.input.toLowerCase().includes(w)));
+  return words.filter((w) => evs.some((e) => !e.agent && !EDIT_TOOLS.has(e.call.name) && e.bare.toLowerCase().includes(w)));
 }
 const CMD_PHRASE = /`([^`]{3,})`|\b(npm (?:run [\w:-]+|test)|npx [\w-]+|pytest|vitest|python3? -m (?:unittest|pytest)|cargo test|go test|make \w+)\b/i;
 /** a command the clause names (backticked or a known test command) */
@@ -164,14 +198,34 @@ function commandHint(clause: string): string | undefined {
   if (m?.[1] && !/\s/.test(v) && !/^(?:npm|npx|pytest|vitest|make|node|python3?)$/.test(v)) return undefined; // a name, not a command
   return v.split(/\s*&&\s*/)[0]!.toLowerCase();
 }
-const has = (e: Ev, w: string): boolean => e.input.toLowerCase().includes(w);
-// a run in a throwaway copy (/tmp, the OS temp dir, mktemp) outside the run's own directory, e.g. the new tests run on the
-// old code on purpose: it does not speak for the branch when the run also tested the branch itself
-const SCRATCH = /(?:^|[\s="'(])(?:\/private)?\/tmp\/|\/var\/folders\/|\$\{?TMPDIR\b|\bmktemp\b/;
-const scratch = (e: Ev, cwd: string | null | undefined): boolean => {
-  const c = e.command ?? '';
-  return SCRATCH.test(c) && !(cwd && c.includes(cwd));
-};
+const has = (e: Ev, w: string): boolean => e.bare.toLowerCase().includes(w);
+// review-2 P1-1 (c): a run in another directory tree (a throwaway copy in /tmp, $TMPDIR, ~/.hermes/cache/scratch, another
+// worktree or repo) does not speak for the tree the run's own passing checks ran in.
+const SCRATCH_DIR = /^(?:\/private)?\/tmp\/|^\/var\/folders\/|\/\.?cache\/|\/scratch\/|^\$\{?TMPDIR\b|\bmktemp\b|\/T\/\//;
+const RUN_AT = /(?:\bpython3?\s+-m\s+(?:unittest|pytest)|\$\{?\w+\}?\s+-m\s+(?:unittest|pytest)|\b(?:pytest|vitest|jest)\b|\bnpm\s+(?:run\s+)?(?:test|check)\b|\bnpx\s+(?:vitest|jest)|\bgo\s+test|\bcargo\s+test|\bmake\s+(?:test|check)|\bnode\s+\S*bench\S*|\brun-check)/;
+/** the directory a command runs in: the last `cd X` ($VAR and ~ resolved from the same command), else the run's cwd */
+export function dirOf(command: string | null, cwd: string | null | undefined): string {
+  const c = command ?? '';
+  const vars = new Map<string, string>();
+  for (const m of c.matchAll(/(?:^|[\s;&(])(\w+)=("([^"]*)"|'([^']*)'|([^\s;&|]+))/g)) vars.set(m[1]!, (m[3] ?? m[4] ?? m[5] ?? '').trim());
+  let d: string | undefined;
+  const body = c.replace(HEREDOC, '');
+  const run = RUN_AT.exec(body); // the cd that precedes the test runner, not a later `cd back && git commit`
+  const upto = run ? body.slice(0, run.index) : body;
+  for (const m of upto.matchAll(/\bcd\s+("([^"]+)"|'([^']+)'|([^\s;&|)]+))/g)) d = m[2] ?? m[3] ?? m[4];
+  if (!d) return cwd ?? '';
+  d = d.replace(/^\$\{?(\w+)\}?/, (all, v: string) => vars.get(v) ?? (v === 'HOME' ? process.env.HOME ?? all : v === 'TMPDIR' ? '$TMPDIR' : all));
+  d = d.replace(/^~(?=\/|$)/, process.env.HOME ?? '~').replace(/\/+$/, '');
+  if (!d.startsWith('/') && !d.startsWith('$') && cwd) d = `${cwd.replace(/\/+$/, '')}/${d}`;
+  return d;
+}
+const within = (a: string, b: string): boolean => a === b || a.startsWith(`${b}/`);
+/** e ran outside home (the tree the run's own passing checks ran in): a scratch/temp dir, or a different tree */
+function foreign(e: Ev, home: string, cwd: string | null | undefined): boolean {
+  const d = dirOf(e.command, cwd);
+  if (SCRATCH_DIR.test(d) && !(home && within(d, home))) return true;
+  return !!home && !!d && !within(d, home) && !within(home, d);
+}
 const FULL_CMD = /unittest\s+discover|\bpytest\b(?![^|;&\n]*\.py)|\bnpm (?:run )?(?:test|check)\b|\bvitest run\b(?![^|;&\n]*\.test\.)|go test \.\/\.\.\.|cargo test|make (?:test|check)\b|run-check|check-task|\bledger\b[^|;&\n]*\bmove\b/;
 /** a whole-suite run: some segment of the command runs a suite runner without naming a test file / filter */
 function fullRun(command: string): boolean {
@@ -220,6 +274,80 @@ function showsCount(out0: string, n: number, m: number | null): boolean {
   if (m !== null && m !== n) return new RegExp(`\\(${m}\\)|\\b${m} tests?\\b|/${m}\\b`).test(out);
   return true;
 }
+// review-2 P1-1 (b): runner summaries as numbers (vitest 'Tests  18 failed | 76 passed (94)' / 'Test Files  35 passed (35)',
+// jest 'Tests: 2 failed, 5 passed, 7 total', pytest '5 passed, 2 failed in 0.4s', unittest 'Ran 9 tests … OK'), matched
+// field by field against the counts a claim states
+interface Counts {
+  files?: number;
+  passed?: number;
+  failed?: number;
+  total?: number;
+  tests?: number;
+}
+interface Summary {
+  files: boolean;
+  passed: number | null;
+  failed: number | null;
+  total: number | null;
+}
+export function summaries(out: string): Summary[] {
+  const r: Summary[] = [];
+  const lines = out.split('\n');
+  lines.forEach((l, i) => {
+    const p = /\b(\d+) pass(?:ed|ing)\b/i.exec(l);
+    const f = /\b(\d+) fail(?:ed|ing|ures?)\b|\bfailures=(\d+)/i.exec(l);
+    const ran = /\bRan (\d+) tests?\b/.exec(l);
+    if (!p && !f && !ran) return;
+    if (/^\s*[✓✔×✗]/.test(l)) return;
+    const tot = /\((\d+)\)\s*$|\b(\d+) total\b/.exec(l);
+    let total = tot ? Number(tot[1] ?? tot[2]) : ran ? Number(ran[1]) : null;
+    let failed = f ? Number(f[1] ?? f[2]) : null;
+    let passed = p ? Number(p[1]) : null;
+    if (ran) {
+      const tail = lines.slice(i + 1, i + 4).join('\n');
+      const fl = /FAILED \((?:failures|errors)=(\d+)/.exec(tail);
+      if (fl) failed = Number(fl[1]);
+      else if (/^\s*OK\b/m.test(tail)) { failed = 0; passed = total; }
+    }
+    if (total === null && passed !== null) total = passed + (failed ?? 0);
+    r.push({ files: /\bTest Files\b|\bTest Suites\b/i.test(l), passed, failed, total });
+  });
+  return r;
+}
+export function claimCounts(t0: string): Counts | null {
+  const t = t0.replace(/\b\d+(?:\.\d+)? ?(?:ms|s|min|GB|MB|KB|%)\b/g, ' ');
+  const c: Counts = {};
+  let m = /\b(\d[\d,]*) (?:test )?files?\b/i.exec(t);
+  if (m) c.files = num(m[1]!);
+  m = /\b(\d[\d,]*)\s*\/\s*(\d[\d,]*)\s+(?:tests?\s+)?(pass\w*|fail\w*)/i.exec(t) ?? /\b(\d[\d,]*) of (\d[\d,]*)\b[^.;]*?\b(pass\w*|fail\w*)/i.exec(t);
+  if (m) {
+    if (/^pass/i.test(m[3]!)) c.passed = num(m[1]!);
+    else c.failed = num(m[1]!);
+    c.total = num(m[2]!);
+  }
+  m = /\b(\d[\d,]*) (?:\w+ )?(?:tests? )?(?:passed|passing|pass(?:es)?)\b/i.exec(t);
+  if (m && c.passed === undefined) c.passed = num(m[1]!);
+  m = /\b(\d[\d,]*) (?:\w+ )?(?:tests? )?(?:failed|failing|fail(?:s)?)\b/i.exec(t);
+  if (m && c.failed === undefined) c.failed = num(m[1]!);
+  m = /\b(\d[\d,]*) tests?\b(?! files?)/i.exec(t);
+  if (m && c.passed === undefined && c.failed === undefined && c.total === undefined) c.tests = num(m[1]!);
+  return Object.keys(c).length ? c : null;
+}
+/** one run's summaries agree with every count the claim states */
+function fits(w: Counts, sums: Summary[]): boolean {
+  const tests = sums.filter((x) => !x.files);
+  const files = sums.filter((x) => x.files);
+  if (w.files !== undefined && !files.some((x) => x.total === w.files || x.passed === w.files)) return false;
+  const need = w.passed !== undefined || w.failed !== undefined || w.total !== undefined || w.tests !== undefined;
+  if (!need) return w.files !== undefined;
+  return tests.some(
+    (x) =>
+      (w.passed === undefined || x.passed === w.passed || (x.total === w.passed && !x.failed)) &&
+      (w.failed === undefined || x.failed === w.failed) &&
+      (w.total === undefined || x.total === w.total) &&
+      (w.tests === undefined || x.passed === w.tests || (x.total === w.tests && !x.failed)),
+  );
+}
 const hasCount = (out: string): boolean => /\b\d+ (?:passed|failed)\b|\bRan \d+ tests?\b|\b\d+ pass\b|\bTests?\s+\d/i.test(out);
 
 function checkTest(cl: Clause, evs: Ev[], cwd?: string | null): Result {
@@ -241,7 +369,7 @@ function checkTest(cl: Clause, evs: Ev[], cwd?: string | null): Result {
   let rel = cands;
   let filtered = false;
   if (hint) {
-    rel = cands.filter((e) => (e.command ?? e.input).toLowerCase().includes(hint));
+    rel = cands.filter((e) => e.bare.toLowerCase().includes(hint));
     filtered = true;
   } else {
     const tw = topics(t.replace(COUNT, ' '), evs);
@@ -257,6 +385,14 @@ function checkTest(cl: Clause, evs: Ev[], cwd?: string | null): Result {
     return p ? R('supported', 'an earlier matching run passed', [item(p, lineOf(p.out))]) : R('unsupported', 'no matching run passed', [item(rel[rel.length - 1]!, lineOf(rel[rel.length - 1]!.out))]);
   }
   const latest = rel[rel.length - 1]!;
+  const want = claimCounts(t);
+  if (want) {
+    for (let i = rel.length - 1; i >= 0; i--) {
+      if (!fits(want, summaries(rel[i]!.out))) continue;
+      const e = rel[i]!;
+      return R('supported', 'a run summary shows these counts', [item(e, lineOf(e.out, /\d+ (?:passed|failed)|Ran \d+|\d+ total/i))]);
+    }
+  }
   if (c && !failClaim) {
     for (let i = rel.length - 1; i >= 0; i--) if (showsCount(rel[i]!.out, c.n, c.m)) return R('supported', `a run shows ${c.m && c.m !== c.n ? `${c.n} of ${c.m}` : c.n} passing`, [item(rel[i]!, lineOf(rel[i]!.out, new RegExp(`\\b${c.n}\\b`)))]);
     const counted = filtered ? [...rel].reverse().find((e) => hasCount(e.out)) : undefined;
@@ -278,10 +414,12 @@ function checkTest(cl: Clause, evs: Ev[], cwd?: string | null): Result {
     if (bad.length && !ok.length) return R('contradicted', 'the run reports it failing', [item(e, short(bad[0]!, 140))]);
     if (ok.length || bad.length) break;
   }
-  const branchRun = rel.some((e) => !scratch(e, cwd));
+  const lastPass = [...rel].reverse().find((e) => e.outcome === 'pass');
+  const home = lastPass ? dirOf(lastPass.command, cwd) : '';
+  const homeRun = rel.some((e) => !foreign(e, home, cwd));
   for (let i = rel.length - 1; i >= 0; i--) {
     const e = rel[i]!;
-    if (e.outcome === 'fail' && branchRun && scratch(e, cwd)) continue; // a deliberate failing run in a throwaway copy
+    if (e.outcome === 'fail' && homeRun && foreign(e, home, cwd)) continue; // a failing run in a scratch copy or another tree
     if (e.outcome === 'pass') {
       const later = editedAfter(e, evs);
       return later
@@ -294,23 +432,78 @@ function checkTest(cl: Clause, evs: Ev[], cwd?: string | null): Result {
 }
 
 // ---------------------------------------------------------------- exit claims
+// review-2 P1-1 (a): an exit the call printed ('exit 7', 'bench-exit 1', 'exit=2', 'exited with code 3', 'CHECK_EXIT=0')
+// beats the wrapper's exit code (the wrapper is usually `…; echo "exit $?"`, which itself exits 0). The claim is tied
+// to the call it names: the command it quotes, else the call whose command / printed exit label shares most claim words.
+interface Printed {
+  label: string;
+  code: number;
+}
+const PRINTED = /(?:^|[^\w"])(?:([A-Za-z][\w.]*)[\s_-])?exit(?:[\s_-]?code)?\s*[=:]?\s*\(?(-?\d+)\b|\bexited with (?:code|status) (-?\d+)/gim;
+/** exits the output prints as plain text (not JSON "exit": fields, which quote a log) */
+export function printedExits(out: string): Printed[] {
+  const r: Printed[] = [];
+  for (const line of out.split('\n')) {
+    if (/"exit"\s*:/.test(line) || /^\s*(?:[✓✔×✗↓]|FAIL\b|PASS\b|\d+\|)/.test(line)) continue;
+    for (const m of line.matchAll(PRINTED)) {
+      const code = Number(m[2] ?? m[3]);
+      const label = (m[1] ?? (m[3] !== undefined ? (line.slice(0, m.index).match(/([\w.-]+)\W*$/)?.[1] ?? '') : '')).toLowerCase();
+      r.push({ label, code });
+    }
+  }
+  return r;
+}
+const PAST = /\b(?:rounds?\s+\d|red|earlier|previous(?:ly)?|first|initial|before|at first|once|then)\b/i;
+const words = (t: string): string[] => [...new Set((t.toLowerCase().replace(/\bexit(?:ed|s)?\b|\b\d+\b/g, ' ').match(/[a-z][a-z0-9_-]{1,}|[a-z]\d+/g) ?? []).filter((w) => !STOP.has(w) && w.length >= 2))];
+/** the exit a call shows for a claim about `ws`: a printed exit (the one labelled with a claim word first), else the wrapper's */
+function exitOf(e: Ev, ws: string[]): { code: number | null; printed: boolean } {
+  const p = printedExits(e.out);
+  if (p.length) {
+    const named = [...p].reverse().find((x) => x.label && ws.some((w) => x.label.includes(w) || w.includes(x.label)));
+    return { code: (named ?? p[p.length - 1]!).code, printed: true };
+  }
+  if (e.exit !== null && e.exit !== 0) return { code: e.exit, printed: false };
+  if (e.outcome === 'fail' || (e.test && FAILS_OUT.test(e.out))) return { code: e.exit && e.exit !== 0 ? e.exit : null, printed: false };
+  if (e.exit === 0 || e.outcome === 'pass') return { code: 0, printed: false };
+  return { code: null, printed: false };
+}
+const agrees = (claimed: number, x: { code: number | null }, e: Ev): boolean =>
+  x.code === null ? claimed !== 0 && (e.outcome === 'fail' || (e.exit !== null && e.exit !== 0)) : x.code === claimed;
+
 function checkExit(cl: Clause, text: string, evs: Ev[]): Result {
-  const m = /\bexit(?:ed|s)?(?:\s+code)?"?\s*[:=]?\s*(-?\d+)/i.exec(cl.text);
+  const m = /\bexit(?:ed|s)?(?:\s+(?:with\s+)?code)?"?\s*[:=]?\s*(-?\d+)/i.exec(cl.text);
   if (!m) return R('unsupported', 'no exit code in the claim');
   const claimed = Number(m[1]);
   const jsonCmd = /"cmd"\s*:\s*"((?:[^"\\]|\\.)*)"/.exec(text)?.[1];
   const hint = commandHint(cl.text) ?? (jsonCmd ? jsonCmd.split(/\s*&&\s*/)[0]!.toLowerCase() : undefined);
-  const own = evs.filter((e) => !e.agent && e.call.resultText !== undefined && !e.readOnly);
-  const rel = hint ? own.filter((e) => (e.command ?? e.input).toLowerCase().includes(hint)) : own.filter((e) => /\bexit[=:\s]+-?\d+\b|exit code|"exitCode"/i.test(e.out) || e.test);
+  const own = evs.filter((e) => !e.agent && !e.echoOnly && e.call.resultText !== undefined && !e.readOnly);
+  const ws = words(cl.text.replace(/`[^`]*`/g, (q) => q.replace(/[`]/g, '')));
+  let rel: Ev[];
+  if (hint) rel = own.filter((e) => e.bare.toLowerCase().includes(hint));
+  else {
+    const runs = own.filter((e) => printedExits(e.out).length > 0 || e.test || (e.exit !== null && e.exit !== 0));
+    const score = (e: Ev): number => {
+      const b = e.bare.toLowerCase();
+      const labels = printedExits(e.out).map((x) => x.label);
+      const hit = ws.filter((w) => b.includes(w) || labels.some((l) => l && (l.includes(w) || w.includes(l))));
+      return hit.length * 2 + (labels.some((l) => l && ws.some((w) => l.includes(w) || w.includes(l))) ? 1 : 0);
+    };
+    const best = Math.max(0, ...runs.map(score));
+    rel = best > 0 ? runs.filter((e) => score(e) === best) : runs;
+  }
   if (!rel.length) return R('unsupported', hint ? `no call ran ${hint}` : 'no call shows an exit code');
+  const show = (e: Ev, x: { code: number | null; printed: boolean }): ClaimEvidence =>
+    item(e, x.printed ? lineOf(e.out, /exit/i) : `${lineOf(e.out, /exit|passed|failed|ok\b/i)} (call exit ${e.exit ?? '?'})`);
+  // a claim about an earlier run ('round 1 exited 1', 'the red run exited 1'): any matching call that shows it
+  if (PAST.test(cl.text) && !jsonCmd) {
+    const any = [...rel].reverse().find((e) => agrees(claimed, exitOf(e, ws), e));
+    if (any) return R('supported', `a matching call exited ${claimed}`, [show(any, exitOf(any, ws))]);
+  }
   const e = rel[rel.length - 1]!;
-  const shown = /\bexit[=:\s]+(-?\d+)\b/i.exec(e.out);
-  const failed = e.outcome === 'fail' || (e.exit !== null && e.exit !== 0) || (e.test && FAILS_OUT.test(e.out)) || (shown !== null && Number(shown[1]) !== 0 && !hint);
-  const actual = shown && !hint ? Number(shown[1]) : failed ? (e.exit && e.exit !== 0 ? e.exit : 1) : 0;
-  const agree = claimed === 0 ? !failed : failed;
-  return agree
-    ? R('supported', `the call exited ${actual}`, [item(e, lineOf(e.out, /exit|passed|failed|ok\b/i))])
-    : R('contradicted', `the call ${failed ? 'failed' : 'passed'} (exit ${actual}), not exit ${claimed}`, [item(e, lineOf(e.out, FAILS_OUT))]);
+  const x = exitOf(e, ws);
+  if (agrees(claimed, x, e)) return R('supported', `the call exited ${claimed}${x.printed ? ' (printed)' : ''}`, [show(e, x)]);
+  if (x.code === null && claimed !== 0) return R('unsupported', 'the call shows no exit code', [show(e, x)]);
+  return R('contradicted', `the call exited ${x.code ?? 'nonzero'}, not ${claimed}`, [show(e, x)]);
 }
 
 // ---------------------------------------------------------------- commits, merges, pushes
@@ -420,16 +613,23 @@ function checkFile(cl: Clause, evs: Ev[]): Result {
   return R('unsupported', `no call in the run wrote ${tokens.map((t) => basename(t)).join(', ')}`);
 }
 
-function checkFix(evs: Ev[]): Result {
+function checkFix(evs: Ev[], cwd?: string | null): Result {
   const own = evs.filter((e) => !e.agent);
   let last = -1;
+  let lastCode = -1; // P2-a: a notes / runs.jsonl append after the code edit is not the fix
   own.forEach((e, i) => {
     if ((e.edits.length || (e.command !== null && !e.readOnly && WRITE_SIG.test(e.command))) && e.outcome !== 'fail') last = i;
+    if (codeEdit(e)) lastCode = i;
   });
+  if (lastCode >= 0) last = lastCode;
   if (last < 0) return R('unsupported', 'no edit in the run');
-  const after = own.slice(last + 1).filter((e) => e.call.resultText !== undefined && (e.test || (!e.readOnly && SIGNATURE.test(e.out))));
+  const after = own.slice(last + 1).filter((e) => e.call.resultText !== undefined && !e.echoOnly && (e.test || (!e.readOnly && SIGNATURE.test(e.out))));
+  const lastPass = [...after].reverse().find((e) => e.outcome === 'pass');
+  const home = lastPass ? dirOf(lastPass.command, cwd) : '';
+  const homeRun = after.some((e) => !foreign(e, home, cwd));
   for (let i = after.length - 1; i >= 0; i--) {
     const e = after[i]!;
+    if (e.outcome === 'fail' && homeRun && foreign(e, home, cwd)) continue;
     if (e.outcome === 'pass') return R('supported', 'an edit, then a passing check', [item(own[last]!, 'edit'), item(e, lineOf(e.out))]);
     if (e.outcome === 'fail') return R('contradicted', 'the check after the last edit failed', [item(e, lineOf(e.out, FAILS_OUT))]);
   }
@@ -454,7 +654,7 @@ export function checkClause(cl: Clause, text: string, raw: RawRun, evs: Ev[]): C
               ? checkPush(evs)
               : cat === 'file'
                 ? checkFile(cl, evs)
-                : checkFix(evs),
+                : checkFix(evs, raw.summary.cwd),
   ]);
   // the worst verdict decides; its category names the claim
   let [cat, res] = results[0]!;
