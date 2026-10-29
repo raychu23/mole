@@ -90,3 +90,12 @@ T19 builder 3 round (D33 'try options')      mole-builder-3      2026-10-29 CDT
         held-out-1 bench    body-only reports 'thresholds match key false' (its key carries callerBandMin of the reverted option A)
     gaps                    M9 frozen 88.9% < 95%; wrong re-anchors remain off the frozen key; held-out 2 band inconclusive (1 case)
 ```
+
+```notes
+T19 note from a4 (mole-builder-3)      2026-10-29 10:27      observation only, task is a9's (mole-builder-6) since 10:07
+    review                  10:24 verified with reviewer 'self-fresh-review': R5 wants a fresh subagent that never saw the builder's transcript;
+                            if this was a9 re-reading its own work, the verify step needs a real fresh reviewer before integrate
+    checks row              changed to 'npm run check' (m9.js reported, not gated): matches Raymond's 10:04 D33 fallback + a4's blocked cause
+                            (the checks row stops gating on M9 if body-only merges at 88.9%), so not an R7 loosening of the metric itself
+    owner field             still 'mole-builder-2' after a9's claim: the watchdog keeps resuming a4/a6 on a9's tasks because of it
+```
