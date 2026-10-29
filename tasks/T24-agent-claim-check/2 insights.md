@@ -30,6 +30,10 @@ loop
                             topic words matched on commands only, counts only in pass/test context, full-suite claims need a
                             suite-level command segment, durations ('3m47s') must show in an output, known places
                             ('Claude Code's local plugin folder' → .claude/plugins) must be written to, push = first person/passive
+    rounds 3-5             b2d8ed6 / adbe972 / fb287cd: bench unchanged (9/10, 0/110) with answers extracted 39/39 after an
+                            injected user message (subagent hand-back) also ends a Claude Code turn; check red only from 7/20/15
+                            unrelated tests at the 5 s timeout (all ≥5 s, none in claims tests) at load 70-130; last full green
+                            check is round 2 (6d3b17d, 195/195)
 environment
     load average 90-140 from other builders during every full `npm run check`; 15+ unrelated tests time out at vitest's 5 s
     default (T18/T20 CLI tests, daemon call-site tests, hooks, key guard); a rerun at lower load is the honest fix, not a timeout edit
