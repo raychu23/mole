@@ -5,4 +5,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 01:49      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T21-parallel-agent-collisions · branch ledger/t21-parallel-agent-collisions · base 17d9862
     2026-10-29 02:28      running → submitted      report: branch ledger/t21-parallel-agent-collisions @f793aef (red acd2737): packages/agentstate/src/collisions.ts (15-min window overlap + same fn / <=2 directed call hops via T1 indexer + note hits), mole collisions [--
     2026-10-29 02:28      checks ran: npm run check && node packages/agentstate/dist/bench/m11.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T21-parallel-agent-collisions → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 02:40      submitted → verified      reviewer reviewer-T21-r1 · findings: no P0/P1. P2: (1) hop limit unguarded: BFS d<=hops+1 passes vitest 9/9 and M11 (FA 1/17=5.9%, p08 only) - add 3-hop negatives via key-changes.md, (2) real bench reads live checkouts/w
+    2026-10-29 02:40      checks ran: npm run check && node packages/agentstate/dist/bench/m11.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T21-parallel-agent-collisions → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
