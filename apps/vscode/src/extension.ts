@@ -230,7 +230,7 @@ async function m26Check(mole: MolePanel, panelView: MolePanelView | undefined, r
     }
     if (!raw) await new Promise((r) => setTimeout(r, 250));
   }
-  const cfg = JSON.parse(raw || '{}') as { out?: string; files?: string[] };
+  const cfg = JSON.parse(raw || '{}') as { out?: string; files?: string[]; shot?: string };
   if (!cfg.out) {
     output.appendLine(`m26 check: could not read config at ${cfgPath}`);
     return;
@@ -269,6 +269,15 @@ async function m26Check(mole: MolePanel, panelView: MolePanelView | undefined, r
     out.refreshMs = panelView?.refreshMsSamples ?? [];
     out.diagnosticsCollections = vscode.languages.getDiagnostics().map(([, ds]) => ds.map((d) => d.source ?? '')).flat();
     out.diagnosticsNames = ['mole-rules']; // the collection name itself (for M26a's "rules" coverage)
+    if (cfg.shot) {
+      // the sidebar is already visible and focused from the check above: a fresh `code --new-window` session
+      // is the frontmost app with no AppleScript needed (scripts/selftest.mjs's osascript activate call is
+      // the only thing this screenshot deliberately avoids — it needs a macOS Automation grant this sandboxed
+      // run does not have; see tasks/T34-one-panel/2 insights.md).
+      await new Promise((r) => setTimeout(r, 1500));
+      writeFileSync(`${cfg.shot}.ready`, 'ok');
+      await new Promise((r) => setTimeout(r, 4000));
+    }
   } catch (e) {
     out.error = (e as Error).stack ?? (e as Error).message;
   }
