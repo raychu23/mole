@@ -515,7 +515,7 @@ export function attribute(root: string, range: string, opts: Sources = {}): Attr
   const commits = log.split('\n').filter(Boolean).map((l) => ({ sha: l.slice(0, 40), t: Number(l.slice(41)) * 1000 }));
   const edits = new Map<string, Array<{ t: number; run: string; step: string; ref: Step['ref'] }>>();
   const made = new Map<string, Array<{ t: number; run: string; step: string; ref: Step['ref'] }>>();
-  const committers: Array<{ t: number; command: string; run: string; step: string; ref: Step['ref'] }> = [];
+  const committers: Array<{ t: number; rt: number; command: string; run: string; step: string; ref: Step['ref'] }> = [];
   for (const raw of candidateRuns({ ...opts, root }, [])) {
     for (const s of buildSteps(raw)) {
       const t = Date.parse(s.time);
@@ -539,7 +539,7 @@ export function attribute(root: string, range: string, opts: Sources = {}): Attr
             if (!l.some((x) => x.step === s.id)) l.push({ t: o.time, run: s.run, step: s.id, ref: { ...s.ref, resultRow: o.row } });
             made.set(k, l);
           }
-        if (outs.length) committers.push({ t, command: s.command ?? '', run: s.run, step: s.id, ref: { ...s.ref, resultRow: outs[0]!.row } });
+        if (outs.length) committers.push({ t, rt: outs[0]!.time, command: s.command ?? '', run: s.run, step: s.id, ref: { ...s.ref, resultRow: outs[0]!.row } });
       }
     }
   }
@@ -555,7 +555,8 @@ export function attribute(root: string, range: string, opts: Sources = {}): Attr
     const lm = /^ledger (?:move|new): (\S+)(?: \S+ → (\S+)| proposed)?/.exec(full);
     const said = (cmd: string): boolean =>
       lm ? /\bledger\b/.test(cmd) && cmd.includes(lm[1]!.split('/').pop()!) && (!lm[2] || new RegExp(`\\b${lm[2]}\\b`).test(cmd)) : subject.length >= 12 && cmd.includes(subject);
-    const bySubject = committers.filter((m) => m.t >= c.t - 1_800_000 && m.t <= c.t + 60_000 && said(m.command)).sort((a, b) => b.t - a.t)[0];
+    // the commit must have happened while that call ran (git %ct is whole seconds): a failed retry right after doesn't count
+    const bySubject = committers.filter((m) => m.t <= c.t + 2_000 && m.rt >= c.t - 1_000 && said(m.command)).sort((a, b) => b.t - a.t)[0];
     const viaCommit = bySha ?? bySubject;
     for (const path of files) {
       const prev = lastTouch.get(path) ?? -Infinity;
