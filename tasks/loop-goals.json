@@ -498,6 +498,13 @@
    "task": "T37-plugin-decisions-first",
    "needs": [],
    "why": "the plugin carries people's decisions to agents and agents' effects back (USER 10-29 15:30)"
+  },
+  {
+   "task": "T38-bitemporal-decision-graph",
+   "needs": [
+    "T29-decision-graph-core"
+   ],
+   "why": "the decision graph with valid + record time in Postgres; registers on T33's server once T33 is integrated (USER 10-29 22:08)"
   }
  ],
  "checkpoints": [
