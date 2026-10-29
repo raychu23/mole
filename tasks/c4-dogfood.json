@@ -1,0 +1,248 @@
+{
+ "b2": [
+  {
+   "sha": "ac8e02d759",
+   "exit": 0,
+   "ms": 299,
+   "hunks": 10,
+   "pastFixes": [],
+   "questions": [],
+   "truth": []
+  },
+  {
+   "sha": "9e19c51865",
+   "exit": 0,
+   "ms": 349,
+   "hunks": 25,
+   "pastFixes": [],
+   "questions": [],
+   "truth": []
+  },
+  {
+   "sha": "6a546ecfce",
+   "exit": 0,
+   "ms": 340,
+   "hunks": 138,
+   "pastFixes": [],
+   "questions": [],
+   "truth": []
+  },
+  {
+   "sha": "61564ebf85",
+   "exit": 0,
+   "ms": 339,
+   "hunks": 11,
+   "pastFixes": [
+    "fd7ed34"
+   ],
+   "questions": [
+    {
+     "kind": "past-fix",
+     "text": "You edit apps/vscode/webview/main.ts:67, lines fd7ed34 \"T2 review fixes: atomic full reindex (no false not-indexed), per-root lock/db/socket\u2026\" wrote as a fix (why: First user-visible Mole: a VS Code map panel (always-on split beside the code, ~half screen) that follows the open file, served by a\u2026). Does your change keep that fix working? Its guarding test: apps/vscode/test/render.test.ts \u00bb \"empty states and header\". (source: fd7ed34 apps/vscode/webview/main.ts:67)"
+    }
+   ],
+   "truth": [
+    "fd7ed34c68"
+   ]
+  },
+  {
+   "sha": "da799b56e2",
+   "exit": 0,
+   "ms": 391,
+   "hunks": 7,
+   "pastFixes": [
+    "fd7ed34"
+   ],
+   "questions": [
+    {
+     "kind": "past-fix",
+     "text": "You edit apps/vscode/scripts/selftest.mjs:140, lines fd7ed34 \"T2 review fixes: atomic full reindex (no false not-indexed), per-root lock/db/socket\u2026\" wrote as a fix (why: First user-visible Mole: a VS Code map panel (always-on split beside the code, ~half screen) that follows the open file, served by a\u2026). Does your change keep that fix working? Its guarding test: apps/vscode/test/render.test.ts \u00bb \"empty states and header\". (source: fd7ed34 apps/vscode/scripts/selftest.mjs:140)"
+    }
+   ],
+   "truth": [
+    "fd7ed34c68"
+   ]
+  },
+  {
+   "sha": "bb4d23cc57",
+   "exit": 0,
+   "ms": 508,
+   "hunks": 6,
+   "pastFixes": [
+    "78c0c94",
+    "b903a6f",
+    "fd7ed34"
+   ],
+   "questions": [
+    {
+     "kind": "guard-test",
+     "text": "This change edits packages/daemon/test/daemon.test.ts \u00bb \"a full re-index never makes an indexed file look \"not-indexed\"\", a test guarding fd7ed34 \"T2 review fixes: atomic full reindex (no false not-indexed), per-root lock/db/socket\u2026\". If that fix breaks again, what will catch it? (source: packages/daemon/test/daemon.test.ts:262 at b4548581f1; fix fd7ed34)"
+    }
+   ],
+   "truth": [
+    "78c0c941bb",
+    "fd7ed34c68"
+   ]
+  },
+  {
+   "sha": "8664b8bfe4",
+   "exit": 0,
+   "ms": 196,
+   "hunks": 3,
+   "pastFixes": [],
+   "questions": [],
+   "truth": []
+  },
+  {
+   "sha": "bb3846f6ae",
+   "exit": 0,
+   "ms": 201,
+   "hunks": 12,
+   "pastFixes": [],
+   "questions": [],
+   "truth": []
+  },
+  {
+   "sha": "de22e1baa2",
+   "exit": 0,
+   "ms": 309,
+   "hunks": 50,
+   "pastFixes": [],
+   "questions": [],
+   "truth": []
+  },
+  {
+   "sha": "fd7ed34c68",
+   "exit": 0,
+   "ms": 437,
+   "hunks": 83,
+   "pastFixes": [],
+   "questions": [],
+   "truth": []
+  },
+  {
+   "sha": "7149cfce44",
+   "exit": 0,
+   "ms": 217,
+   "hunks": 6,
+   "pastFixes": [],
+   "questions": [],
+   "truth": []
+  },
+  {
+   "sha": "05089bca20",
+   "exit": 0,
+   "ms": 371,
+   "hunks": 46,
+   "pastFixes": [],
+   "questions": [],
+   "truth": []
+  },
+  {
+   "sha": "78c0c941bb",
+   "exit": 0,
+   "ms": 224,
+   "hunks": 14,
+   "pastFixes": [],
+   "questions": [],
+   "truth": []
+  }
+ ],
+ "recent": [
+  {
+   "sha": "89f015b",
+   "exit": 0,
+   "ms": 403,
+   "hunks": 34,
+   "pastFixes": [],
+   "questions": [],
+   "subject": "T13: seen log + mole since/seen + VS Code recorder (mole.recordSeen)"
+  },
+  {
+   "sha": "b56bbe8",
+   "exit": 0,
+   "ms": 215,
+   "hunks": 10,
+   "pastFixes": [],
+   "questions": [],
+   "subject": "T13 red: M3 key + bench + failing tests"
+  },
+  {
+   "sha": "9e19c51",
+   "exit": 0,
+   "ms": 228,
+   "hunks": 25,
+   "pastFixes": [],
+   "questions": [],
+   "subject": "T9 review fixes: Node-too-old message shown in panel, whole-folder default when no src/, marketplace image base, idle clock counts editing + running index, fake-host harness"
+  },
+  {
+   "sha": "6a546ec",
+   "exit": 0,
+   "ms": 252,
+   "hunks": 138,
+   "pastFixes": [],
+   "questions": [],
+   "subject": "T9: self-contained .vsix (extension + bundled daemon/worker + TypeScript libs), silent without TypeScript, idle shutdown + restart, old-Node message, marketplace files, install check in a clean profile"
+  },
+  {
+   "sha": "61564eb",
+   "exit": 0,
+   "ms": 330,
+   "hunks": 11,
+   "pastFixes": [
+    "fd7ed34"
+   ],
+   "questions": [
+    {
+     "kind": "past-fix",
+     "text": "You edit apps/vscode/webview/main.ts:67, lines fd7ed34 \"T2 review fixes: atomic full reindex (no false not-indexed), per-root lock/db/socket\u2026\" wrote as a fix (why: First user-visible Mole: a VS Code map panel (always-on split beside the code, ~half screen) that follows the open file, served by a\u2026). Does your change keep that fix working? Its guarding test: apps/vscode/test/render.test.ts \u00bb \"empty states and header\". (source: fd7ed34 apps/vscode/webview/main.ts:67)"
+    }
+   ],
+   "subject": "T8 review fixes: park editor on package.json:1 before every open, strict call regex, real DOM click path (96/96), selftest writes m1-click-all.json with per-node records, id-matched click waiters"
+  },
+  {
+   "sha": "da799b5",
+   "exit": 0,
+   "ms": 324,
+   "hunks": 7,
+   "pastFixes": [
+    "fd7ed34"
+   ],
+   "questions": [
+    {
+     "kind": "past-fix",
+     "text": "You edit apps/vscode/scripts/selftest.mjs:140, lines fd7ed34 \"T2 review fixes: atomic full reindex (no false not-indexed), per-root lock/db/socket\u2026\" wrote as a fix (why: First user-visible Mole: a VS Code map panel (always-on split beside the code, ~half screen) that follows the open file, served by a\u2026). Does your change keep that fix working? Its guarding test: apps/vscode/test/render.test.ts \u00bb \"empty states and header\". (source: fd7ed34 apps/vscode/scripts/selftest.mjs:140)"
+    }
+   ],
+   "subject": "T8: selftest opens every node of 40 file maps + top-function symbol maps in real VS Code; clickLine exported"
+  },
+  {
+   "sha": "fd7ed34",
+   "exit": 0,
+   "ms": 347,
+   "hunks": 83,
+   "pastFixes": [],
+   "questions": [],
+   "subject": "T2 review fixes: atomic full reindex (no false not-indexed), per-root lock/db/socket (worktrees), impact view (host-owned state, transitive count, no self-call false positive), LIKE-escape + target normalisation + alternatives, leading-edge debounce, fixed columns + recency rows + sticky viewport, EEXIST race, +7 tests, honest stability report"
+  },
+  {
+   "sha": "7149cfc",
+   "exit": 0,
+   "ms": 179,
+   "hunks": 6,
+   "pastFixes": [],
+   "questions": [],
+   "subject": "T2: click-to-open verified in the real editor (selftest openCheck)"
+  },
+  {
+   "sha": "05089bc",
+   "exit": 0,
+   "ms": 249,
+   "hunks": 46,
+   "pastFixes": [],
+   "questions": [],
+   "subject": "T2: apps/vscode map panel (locked 50% group, follows open file, impact, restore), layout stability, query fixes, m1 measurements + real-editor selftest"
+  }
+ ]
+}
