@@ -7,4 +7,5 @@ ledger (newest last, nothing deleted)
     2026-10-29 10:04      blocked → ready      Raymond 10-29 10:04 'sure t30 harder questions': done-when 2 replaced by M22b (harder questions, steps + time measured, prior-art.md first), review 1 already verified the build. owner mole-builder-6
     2026-10-29 10:10      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T30-annotated-file-tree · branch ledger/t30-annotated-file-tree · base 7893a2d
     2026-10-29 10:38      running → blocked      cause: M22b (harder questions) missed 3 rounds running: 27/27 correct on both arms every round (claude-sonnet-5 answers the 9 hand-labeled backstage-ADR why-questions correctly with or without the tree, since the 16-ADR 
+    2026-10-29 15:39      blocked → ready      USER 10-29 15:30 'tjhe reamining stuff that dont work make it work': integrate the built decorations (p95 0.004 ms and the empty case met) at the real M22/M22b number (benefit not shown on the LLM proxy, claim changed, m
 ```
