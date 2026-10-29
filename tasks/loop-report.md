@@ -67,3 +67,39 @@ next
     T15 (hover + panel list + MCP mole_check + Claude Code hooks), then C5
     small follow-ups: default fix rule "regression" → "^revert\b|\bregression\b" only in subject prefix / per-repo .mole/config.json for Mole · why-clip order
 ```
+
+## T18 agent states (2026-10-29 01:15): integrated, C6 metrics at target
+
+What it is: `mole runs | run <id> | tried <run|file#Symbol> | agents <file[#Symbol]>` + MCP `mole_tried`. Reads the agent runs already on this Mac (Hermes state.db, Claude Code + Codex transcripts, read-only) into one state graph per run: steps, subagent fan-out, compaction points, LangGraph-shaped checkpoints that record the context version (git sha + AGENTS.md / .mole object ids). Package `packages/agentstate`, evidence `tasks/T18-agent-states/4 log/`.
+
+```notes
+metric      latest (on main 3a3fce7)                                                        target                         verdict
+    M6          542/542 file edits = 100% (via edit step 50, via commit step 492) · 179 commits      >= 95% linked                  MET
+    M7          recall 100% (3116/3116) · wrong 0.8% (25 outcome mismatches) · 10 sessions, 25 compactions   recall 100% · wrong <= 5%   MET
+    checks      npm run check 145/145 · M1 M2 M3 M4 benches still exit 0 on main
+how it went
+    key         M7 key by a separate subagent at 00:24, before red 9add41d (00:31) · gitignored, sha256 in 4 log/key.md
+    loop        4 rounds · round 1-2 M6 94.8%: bench only accepted a commit link whose output printed the sha, but agents commit with
+                `git commit -q` (prints nothing) → key ruling 1 by a fresh reviewer: accept the -m subject only if the call was
+                running when the commit happened (it caught a wrong link: a failed ledger retry 4 s after 637956f) → 100%
+    reviews     r1: 2 P1 (unreadable transcript crashed `mole runs`; `mole agents <file>` missed quiet commits) → fixed 39baf15,
+                regression tests fail before · r2 verified
+what missed / risks
+    M6 honesty  most edits link via the commit step (492), only 50 via an edit-tool step: agents wrote most files with scripts
+                (python / heredocs), which a transcript can't tie to a file before the commit
+    M7          25 outcome mismatches: mostly tests that exit 0 while printing failures, judged differently by the key subagent
+    contract    "7 Hermes + 4 Claude Code" compacted sessions didn't reproduce: 9 + 1 on 10-29 (the key covers those)
+    P2 open     checkpoint gitSha = the checkout's `git log HEAD`, so a branch merged later can show up as context (r2 R2-F1:
+                use --first-parent) · zone label uses today's UTC offset (wrong by 1 h for October runs after DST ends)
+                · mole agents <file#Symbol> counts edit-tool steps only (commit steps count for file targets)
+    T15 merge   T15's packages/mcp/test/check.test.ts expects the MCP tool list == [mole_check, mole_map] → add mole_tried when
+                T15 lands · both tasks touch packages/mcp/tsconfig.json references (union them)
+real example (3C1 line 289: "it gets compacted, and the agent forgets which fix it already tried, so it tries it again")
+    session     Hermes 20261017_092042_a6584e (second-brain reading run, 3 compactions)
+    mole tried  before compaction 3 (10-25 18:50): `caffeinate -dimsu python3 …/run_loop.py` failed 4 times (10-22 20:09,
+                10-23 11:09, 10-25 23:16 + 1 unknown) · right after the compaction the agent ran the same command again
+                (10-26 00:03) and it failed again, then passed at 00:04 · `mole tried 20261017_092042` lists all of those
+                tries with their outcome under "before compaction 3", which is what the agent would have needed
+next
+    T20 (LangGraph checkpoint export) and T21 (parallel-agent collisions) need T18: both now unblocked
+```
