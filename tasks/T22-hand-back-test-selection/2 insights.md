@@ -21,8 +21,12 @@ key design (M14)
                          up. Mole's suite is mostly CLI/integration, so several plausible Mole breaks (diff header off-by-one, layout row
                          heuristics, dry-run test detection, impact depth, question ranking) fail no test at all. Waves 2-3 were picked by
                          reading which behaviour a test asserts (needed for validity): a bias toward unit-tested code, disclosed here.
-                         Before the freeze I ran the draft selector (scratch copy, not committed) on m05-m08 to debug the runner; no patch
-                         was changed after that, and m05's truth changed only through the flake filter above
+                         Before the freeze a draft selector existed (scratch impl/graph.ts 05:27, graph-mole.sqlite 05:48) and ran on bench
+                         patches: m05-m08 to debug the runner AND x02-x08 (try.mjs 06:21, try-x.log 06:24); its m12 miss drove the
+                         nearest-per-branch policy, so the frozen set is NOT held out from tuning (corrected after review-1 P2-1; the
+                         earlier line said "m05-m08" only). No patch file changed after 05:48 (patch mtimes 05:20-05:48) and the freeze
+                         rule is mechanical, so the truth is not selector-made; the reviewer's blind regressions (2/2 caught) are the
+                         held-out evidence. m05's truth changed only through the flake filter above
     run all / run none   run all = the key's full-suite run (catches every valid regression by construction; share = fullSuiteTests/reach);
                          run none = 0 tests, 0 caught. Not re-run by the bench (minutes of Excalidraw suite per regression)
 
@@ -71,4 +75,28 @@ known gaps
     stale graph          the SQLite graph is reused while HEAD is unchanged; uncommitted edits that add new calls are not seen until a commit
     details file         m14-details.json shows status undefined for it.each templates (display lookup by exact name); the metric counts
                          vitest's own outcomes, so it is unaffected; the bench is frozen (R2), so this stays
+```
+
+```notes
+review-1 fixes (round 3)
+    P1-1 fixed           the vitest name filter is built from the test's title ARRAY (testMap now keeps titles unjoined; runner outcomes keep
+                         ancestorTitles + title), each title regex-escaped and joined by a space; a title like 'ranks a > b' is no longer
+                         split. Outcome matching (sameTest) compares title arrays. Red first: test/review-1.test.ts (3e62e1c, new file;
+                         the red commit's tests untouched) with the reviewer's fixture failed 3/3, then passed
+    not run = error      a selected test with no passed/failed outcome is RunResult.notRun, printed "✗ NOT RUN", counted in the header
+                         ("N selected not run (error)") and makes `mole check --run-tests` exit 1. Assumption: a selected test that
+                         vitest skips on purpose (it.skip, describe.skipIf true) is also reported NOT RUN + exit 1 (the filter cannot tell
+                         a deliberate skip from a filter miss; vitest reports both as skipped). In Mole only indexer's fixture-repo
+                         describe.skipIf could hit this, and only when tsconfig.build.json is missing
+    Mole check           the reviewer's parseDiff edit (newLn = c) via --diff: 27 selected, 27 "✓ pass" incl. questions.test.ts:169
+                         'ranks past fix > note > guard-test, …' (was 26 run + "- skip")
+    P2-3 fixed (half)    nearest guarding test: past-fix guard file, then the test file importing an edited file in the fewest import
+                         hops (graph `imports` edges), then name mention, then path prefix. NOT done: a no-source-hunk change (README
+                         only / clean worktree) still says "no test reaches this change" rather than "no code change" (noted, cheap later)
+    P2-2 noted           M14 mean share 18.4% is carried by Excalidraw (reach 2256-2470 of 2632 tests via barrel imports, shares 0.2-3.2%);
+                         Mole's 5 rows alone: 3.5%, 3.0%, 33.3%, 100%, 38.8% -> mean 35.7%, above the 1/3 line. The bench is frozen (R2)
+                         so its decision is unchanged; run-check.sh now appends "per repo mean share: mole X, excalidraw Y" (from
+                         m14-details.json) to the runs.jsonl M14 string
+    P2-4 noted           daemon package.json/tsconfig.json + root tsconfig.json one-line references are outside the listed boundary;
+                         required scaffolding for a new package (brief §7), left as is for the coordinator to accept
 ```

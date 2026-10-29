@@ -39,6 +39,8 @@ export interface SelectedTest {
   file: string;
   /** full name as the runner reports it: describe titles + test title joined by ' > ' */
   name: string;
+  /** describe titles + test title, unjoined; the runner's name filter is built from these (a title may contain ' > ') */
+  titles?: string[];
   /** 1-based line of the test call (the runner's location filter) */
   line: number;
   via: Via[];
@@ -70,6 +72,8 @@ export interface Selection {
 export interface TestOutcome {
   file: string;
   name: string;
+  /** ancestor titles + title as the runner reports them */
+  titles?: string[];
   line: number | null;
   status: 'passed' | 'failed' | 'skipped';
   message?: string;
@@ -81,6 +85,8 @@ export interface RunResult {
   outcomes: TestOutcome[];
   passed: number;
   failed: number;
+  /** selected tests the runner reported no pass/fail for: an error (exit 1), never a silent skip */
+  notRun: SelectedTest[];
   ms: number;
   error?: string;
 }
@@ -122,11 +128,11 @@ export async function selectTests(rootIn: string, change: Change, opts: SelectOp
   const maxDepth = opts.maxDepth ?? DEFAULT_MAX_DEPTH;
   const maps = new Maps(root);
   const picked = new Map<string, SelectedTest>();
-  const add = (file: string, t: { name: string; line: number }, via: Via, extra: Partial<SelectedTest> & { reason: string }): void => {
+  const add = (file: string, t: { name: string; titles?: string[]; line: number }, via: Via, extra: Partial<SelectedTest> & { reason: string }): void => {
     const k = `${file}\0${t.line}\0${t.name}`;
     const cur = picked.get(k);
     if (!cur) {
-      picked.set(k, { file, name: t.name, line: t.line, via: [via], ...extra, targets: extra.targets ? [...extra.targets] : undefined });
+      picked.set(k, { file, name: t.name, titles: t.titles ? [...t.titles] : undefined, line: t.line, via: [via], ...extra, targets: extra.targets ? [...extra.targets] : undefined });
       return;
     }
     if (!cur.via.includes(via)) cur.via.push(via);
@@ -199,6 +205,7 @@ export async function selectTests(rootIn: string, change: Change, opts: SelectOp
   // 2) call graph: per edited symbol, the nearest test cases that reach it (reverse calls edges)
   const graph = seeds.size || fileSeeds.size ? openGraph(root, opts.graphDb) : undefined;
   let reachable = 0;
+  let importNearest: Selection['nearest'];
   if (graph) {
     const reachAll = new Set<string>();
     // per edited symbol, per BRANCH (each direct caller, and the tests calling it directly): the nearest tests of that
@@ -261,6 +268,27 @@ export async function selectTests(rootIn: string, change: Change, opts: SelectOp
       }
     }
     reachable = reachAll.size;
+    if (!picked.size) {
+      // nothing calls the edit: the nearest guarding test is a test file that imports the edited file (fewest import hops)
+      const start = [...new Set(facts.hunks.map((h) => h.file).filter((f) => SOURCE.test(f) && !RUNNER_TEST.test(f)))];
+      const origin = new Map<string, string>(start.map((f) => [f, f]));
+      let frontier = start;
+      for (let d = 1; d <= maxDepth && frontier.length && !importNearest; d++) {
+        const next: string[] = [];
+        const hits: Array<{ test: string; of: string }> = [];
+        for (const f of frontier) {
+          for (const imp of importersOf(graph.db, f)) {
+            if (origin.has(imp.path)) continue;
+            origin.set(imp.path, origin.get(f)!);
+            if (RUNNER_TEST.test(imp.path)) hits.push({ test: imp.path, of: origin.get(f)! });
+            else next.push(imp.path);
+          }
+        }
+        hits.sort((a, b) => a.test.localeCompare(b.test));
+        if (hits[0]) importNearest = { file: hits[0].test, why: `imports ${hits[0].of}${d > 1 ? ` (${d} import hops)` : ''}, but no test calls the edited code` };
+        frontier = next;
+      }
+    }
     graph.close();
   }
 
@@ -276,15 +304,16 @@ export async function selectTests(rootIn: string, change: Change, opts: SelectOp
     graph: { built: graph !== undefined, ms: 0 },
     ms: 0,
   };
-  if (sel.noTestReaches) sel.nearest = nearestTest(root, facts, edited, unrunGuards);
+  if (sel.noTestReaches) sel.nearest = nearestTest(root, facts, edited, unrunGuards, importNearest);
   sel.ms = performance.now() - t0;
   return sel;
 }
 
-/** the nearest guarding test when nothing reaches the change: a past fix's test file, else a test naming an edited
- *  symbol, else the test file sharing the longest path prefix with an edited file */
-function nearestTest(root: string, facts: CheckResult, edited: EditedSymbol[], unrun: Array<{ file: string; fix: string }>): Selection['nearest'] {
+/** the nearest guarding test when nothing reaches the change: a past fix's test file, else a test file importing an edited
+ *  file (closest by import, review-1 P2-3), else a test naming an edited symbol, else the longest shared path prefix */
+function nearestTest(root: string, facts: CheckResult, edited: EditedSymbol[], unrun: Array<{ file: string; fix: string }>, byImport?: Selection['nearest']): Selection['nearest'] {
   if (unrun[0]) return { file: unrun[0].file, why: `guarding test of past fix ${unrun[0].fix}` };
+  if (byImport) return byImport;
   const all = (gitText(root, ['ls-files', '--cached', '--others', '--exclude-standard']) ?? '').split('\n').filter((f) => RUNNER_TEST.test(f));
   if (!all.length) return undefined;
   for (const e of edited) {
@@ -330,25 +359,32 @@ function vitestConfig(root: string): string {
   return file;
 }
 
-/** regex source for a test's full name as vitest matches it (titles joined by a space); it.each placeholders
- *  (%s %d %i %f %j %o %O %p %#, $field, template ${...}) match anything */
-export function namePattern(name: string): string {
-  return name
-    .split(' > ')
-    .map((part) =>
-      part
-        .split(/(%[sdifjoOp#%]|\$\{[^}]*\}|\$[A-Za-z_][\w.]*)/)
-        .map((seg, i) => (i % 2 === 1 ? (seg === '%%' ? '%' : '.*') : seg.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')))
-        .join(''),
-    )
-    .join(' ');
+/** regex source for one title: literal text; it.each placeholders (%s %d %i %f %j %o %O %p %#, $field, template ${...})
+ *  match anything */
+function titlePattern(part: string): string {
+  return part
+    .split(/(%[sdifjoOp#%]|\$\{[^}]*\}|\$[A-Za-z_][\w.]*)/)
+    .map((seg, i) => (i % 2 === 1 ? (seg === '%%' ? '%' : '.*') : seg.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')))
+    .join('');
 }
 
-/** does a runner outcome belong to this selected test (same file, same name or an it.each row of it) */
-export function sameTest(t: { file: string; name: string }, o: { file: string; name: string }): boolean {
+/** regex source for a test's full name as vitest matches it (titles joined by a space). Pass the title array: a full-name
+ *  string is split on ' > ', which breaks a title that itself contains ' > ' (review-1 P1-1); strings stay for old callers */
+export function namePattern(name: string | string[]): string {
+  return (Array.isArray(name) ? name : name.split(' > ')).map(titlePattern).join(' ');
+}
+
+const titlesOf = (t: { name: string; titles?: string[] }): string[] => t.titles ?? t.name.split(' > ');
+
+/** does a runner outcome belong to this selected test (same file, same titles or an it.each row of them) */
+export function sameTest(t: { file: string; name: string; titles?: string[] }, o: { file: string; name: string; titles?: string[] }): boolean {
   if (t.file !== o.file) return false;
+  if (t.titles && o.titles) {
+    if (t.titles.length !== o.titles.length) return false;
+    return t.titles.every((x, i) => x === o.titles![i] || new RegExp(`^${titlePattern(x)}$`).test(o.titles![i]!));
+  }
   if (t.name === o.name) return true;
-  return new RegExp(`^${namePattern(t.name)}$`).test(o.name.split(' > ').join(' '));
+  return new RegExp(`^${namePattern(titlesOf(t))}$`).test(titlesOf(o).join(' '));
 }
 
 interface VitestJson {
@@ -361,11 +397,11 @@ export async function runTests(root: string, sel: Selection, opts: { vitest?: st
   // by name, not by `file:line`: vitest places it.each/test.each rows on another line than the call, and one location it
   // cannot match fails the whole file. The pattern is anchored at the end and only loose before the outermost title.
   const targets = [...new Set(sel.tests.map((t) => t.file))];
-  const pattern = `(?:^|\\s)(?:${[...new Set(sel.tests.map((t) => namePattern(t.name)))].join('|')})$`;
+  const pattern = `(?:^|\\s)(?:${[...new Set(sel.tests.map((t) => namePattern(titlesOf(t))))].join('|')})$`;
   const out = mkdtempSync(join(tmpdir(), 'mole-verify-'));
   const report = join(out, 'report.json');
   const command = [process.execPath, entry ?? 'vitest', 'run', ...targets, '--testNamePattern', pattern, '--root', root, '--config', vitestConfig(root), '--reporter=json', `--outputFile=${report}`];
-  const result: RunResult = { runner: 'vitest', command, outcomes: [], passed: 0, failed: 0, ms: 0 };
+  const result: RunResult = { runner: 'vitest', command, outcomes: [], passed: 0, failed: 0, notRun: [], ms: 0 };
   try {
     if (!entry) throw new Error('vitest not found (node_modules/vitest)');
     if (!targets.length) return result;
@@ -376,12 +412,14 @@ export async function runTests(root: string, sel: Selection, opts: { vitest?: st
       const file = relative(root, f.name).split('\\').join('/');
       for (const a of f.assertionResults) {
         const status = a.status === 'passed' ? 'passed' : a.status === 'failed' ? 'failed' : 'skipped';
-        result.outcomes.push({ file, name: [...a.ancestorTitles, a.title].join(' > '), line: a.location?.line ?? null, status, message: a.failureMessages?.[0]?.split('\n')[0] });
+        result.outcomes.push({ file, name: [...a.ancestorTitles, a.title].join(' > '), titles: [...a.ancestorTitles, a.title], line: a.location?.line ?? null, status, message: a.failureMessages?.[0]?.split('\n')[0] });
       }
       if (f.assertionResults.length === 0 && f.status === 'failed') result.outcomes.push({ file, name: '(file failed to load)', line: null, status: 'failed', message: f.message?.split('\n')[0] });
     }
     result.passed = result.outcomes.filter((o) => o.status === 'passed').length;
     result.failed = result.outcomes.filter((o) => o.status === 'failed').length;
+    // a selected test with no pass/fail outcome did not run (name filter missed it, skipped, file failed to collect)
+    result.notRun = sel.tests.filter((t) => !result.outcomes.some((o) => o.status !== 'skipped' && sameTest(t, o)));
   } catch (e) {
     result.error = e instanceof Error ? e.message : String(e);
   } finally {
@@ -397,8 +435,10 @@ export function formatVerify(sel: Selection, run?: RunResult): string {
   const status = (t: SelectedTest): string => {
     if (!run) return '·';
     const os = run.outcomes.filter((x) => sameTest(t, x));
-    const o = os.find((x) => x.status === 'failed') ?? os.find((x) => x.status === 'passed') ?? os[0];
-    return o ? MARK[o.status]! + (os.length > 1 ? ` ×${os.length}` : '') : '- not run';
+    const n = os.length > 1 ? ` ×${os.length}` : '';
+    if (os.some((x) => x.status === 'failed')) return MARK.failed! + n;
+    if (os.some((x) => x.status === 'passed')) return MARK.passed! + n;
+    return '✗ NOT RUN'; // selected but the runner gave no pass/fail: an error, counted in the header and the exit code
   };
   const line = (t: SelectedTest): string => `${status(t)}  ${t.file}:${t.line}  ${t.name}  [${t.reason}]`;
   const out: string[] = [];
@@ -409,7 +449,7 @@ export function formatVerify(sel: Selection, run?: RunResult): string {
     return out.join('\n');
   }
   const head = run
-    ? `${run.error ? `runner error: ${run.error}` : `vitest: ${run.failed} failed, ${run.passed} passed`} (${(run.ms / 1000).toFixed(1)} s)`
+    ? `${run.error ? `runner error: ${run.error}` : `vitest: ${run.failed} failed, ${run.passed} passed${run.notRun.length ? `, ${run.notRun.length} selected not run (error)` : ''}`} (${(run.ms / 1000).toFixed(1)} s)`
     : 'not run';
   out.push(`mole check --run-tests: ${sel.tests.length} test${sel.tests.length === 1 ? '' : 's'} selected (past-fix lineage + call graph; ${sel.reachable} reachable) · ${head}`);
   const shown = new Set<SelectedTest>();
@@ -451,5 +491,5 @@ export async function verifyCli(pos: string[], flags: Record<string, string | tr
   const run = sel.tests.length ? await runTests(top, sel) : undefined;
   if (flags.json) console.log(JSON.stringify({ selection: { ...sel, check: undefined, hunks: sel.check.hunks }, run: run ?? null }, null, 2));
   else console.log(formatVerify(sel, run));
-  return run && (run.failed > 0 || run.error) ? 1 : 0;
+  return run && (run.failed > 0 || run.error || run.notRun.length) ? 1 : 0;
 }

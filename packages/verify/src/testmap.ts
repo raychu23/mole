@@ -6,6 +6,8 @@ export interface TestCase {
   /** describe titles + test title joined by ' > ' (the runner's full name) */
   name: string;
   title: string;
+  /** describe titles + test title, unjoined (a title may itself contain ' > ') */
+  titles: string[];
   /** 1-based line of the call (vitest's location filter) */
   line: number;
   start: number;
@@ -16,6 +18,7 @@ export interface TestCase {
 
 export interface Suite {
   name: string;
+  titles: string[];
   start: number;
   end: number;
 }
@@ -61,15 +64,16 @@ export function testMap(path: string, text: string): TestMap {
         const title = titleOf(n.arguments[0], sf);
         // a suite's name already holds its ancestors' titles: the prefix is the innermost suite's name
         const names = stack.length ? [suites[stack[stack.length - 1]!]!.name] : [];
+        const parents = stack.length ? suites[stack[stack.length - 1]!]!.titles : [];
         const start = lineOf(n.getStart(sf));
         const end = lineOf(n.getEnd());
         if (SUITE_FN.has(base)) {
-          suites.push({ name: [...names, title].join(' > '), start, end });
+          suites.push({ name: [...names, title].join(' > '), titles: [...parents, title], start, end });
           const idx = suites.length - 1;
           if (fnArg) ts.forEachChild(fnArg, (c) => visit(c, [...stack, idx]));
           return;
         }
-        tests.push({ name: [...names, title].join(' > '), title, line: start, start, end, suites: [...stack] });
+        tests.push({ name: [...names, title].join(' > '), title, titles: [...parents, title], line: start, start, end, suites: [...stack] });
         return;
       }
     }
