@@ -1,22 +1,22 @@
 ---
-state: verified
+state: integrated
 owner: mole-builder (Hermes chat)
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t13-l1-since-you-last-looked
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T13-l1-since-you-last-looked
 base: b91c6a9
 reviewer: reviewer-T13-r1
-updated: 2026-10-28 22:29
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+updated: 2026-10-28 22:45
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-10-28 22:05
 ---
 ```notes
 T13-l1-since-you-last-looked      ledger task (rules.md §3 code features)      project Mole
     goal                    L1 observe, personal: record what you've looked at (VS Code: a symbol visible in the editor >= 5 s, hovered, or noted) into .mole/local/seen.jsonl (gitignored, never leaves the machine), and mole since lists the symbols you saw whose normalized body changed after your last look, with the commit, author and agent (Co-authored-by trailer when present) that changed them
     done-when               1) seen events written by the extension (apps/vscode) with a setting to turn it off; 2) mole since [--json] lists exactly the seen-then-changed symbols, newest first, grouped by file; unseen symbols never listed; looking again clears an entry; 3) M3 fixture (5 seen + 2 unseen symbols, commits change 3 seen + 2 unseen) → precision 100%, recall 100%; 4) failure case: no seen log yet → 'nothing seen yet' with how to start, exit 0; 5) .mole/local/ added to .gitignore; 6) npm run check passes
-    status                  2026-10-28 verified      reviewer reviewer-T13-r1 · findings: P2-1 torn last line in seen.jsonl swallows the next appended look (appendSeen doesn
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-10-28 integrated      merge 094e877 · combined checks exit 0 · note: npm run check on main 094e877 → 110/110 passed · m3.js on main → precisio
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    code
     boundary                packages/memory/** (seen + since, reusing T11's anchor), apps/vscode/src (seen events + setting only), packages/daemon/src/cli.ts (since subcommand), .gitignore, tasks/T13-l1-since-you-last-looked/**
