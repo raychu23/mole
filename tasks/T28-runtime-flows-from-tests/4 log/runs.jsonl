@@ -1,0 +1,1 @@
+{"time":"2026-10-29T05:37:48-0500","commit":"5b447f7","cmd":"npm run check && node packages/flows/dist/bench/m20.js","exit":1,"metrics":{"M20":"FAIL @mole/flows: recordFlows not implemented (T28)"},"check":"fail: 11 failed | 180 passed (191)"}

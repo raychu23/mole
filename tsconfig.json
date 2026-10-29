@@ -32,6 +32,9 @@
       "path": "packages/layout"
     },
     {
+      "path": "packages/flows"
+    },
+    {
       "path": "apps/vscode"
     }
   ]
