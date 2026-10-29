@@ -1,22 +1,22 @@
 ---
-state: running
+state: submitted
 owner: mole-builder-2 (Hermes chat)
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t16-traces-runs-ci
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T16-traces-runs-ci
 base: c8e53f7
 reviewer:
-updated: 2026-10-29 01:11
-status: ledger running
-next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+updated: 2026-10-29 02:22
+status: ledger submitted
+next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
 claimed: 2026-10-29 01:11
 ---
 ```notes
 T16-traces-runs-ci      ledger task (rules.md §3 code features)      project tasks
     goal                    Make the build loop's evidence industry-standard without moving the record: OpenTelemetry traces for mole check + daemon + MCP tool calls, MLflow 3 as a local viewer over tasks/*/4 log/runs.jsonl, and a GitHub Actions workflow running npm run check + every bench
     done-when               1) mole check emits OTel spans (git blame, index, questions) to a local OTLP endpoint when MOLE_OTEL=1, nothing otherwise; 2) a script loads every runs.jsonl line into a local MLflow (file store) as runs with params task+commit and metrics M1–M5; re-running it adds nothing twice; 3) .github/workflows/check.yml runs npm run check + benches and fails when a bench key file differs from its checks-first commit (R2); tested locally on a branch where a key was edited → fails; 4) no network, no accounts; 5) npm run check passes
-    status                  2026-10-29 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T16-traces-runs-ci · branch ledger/t16-traces-runs-ci · base c
-    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+    status                  2026-10-29 submitted      report: branch ledger/t16-traces-runs-ci @9147fc5 (red d81d48d, key ruling 1 f8468f6 applied b23abcb): packages/telemetr
+    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
     pinned
     mode                    code
     boundary                packages/telemetry/** (new), packages/history/src + packages/daemon/src (span calls only, behind MOLE_OTEL=1), scripts/mlflow/** (new, Python loader), .github/workflows/check.yml (new), tasks/T16-traces-runs-ci/**
