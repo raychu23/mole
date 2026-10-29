@@ -1,6 +1,15 @@
 // T16 done-when 1 (on half): MOLE_OTEL=1 exports spans over OTLP/HTTP JSON; mole check emits one span per stage under a
 // root mole.check span and flushes them before the CLI exits; tool calls follow the OTel GenAI execute_tool convention.
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
+const spawnAsync = (cmd: string, args: string[], opts: { env: NodeJS.ProcessEnv }) =>
+  new Promise<{ status: number | null; stdout: string }>((res) => {
+    const c = spawn(cmd, args, { env: opts.env, stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = '';
+    c.stdout.setEncoding('utf8');
+    c.stdout.on('data', (d: string) => (stdout += d));
+    c.stderr.resume();
+    c.on('close', (status) => res({ status, stdout }));
+  });
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -59,10 +68,10 @@ describe('telemetry on (MOLE_OTEL=1)', () => {
     expect(boom.attributes['error.type']).toBe('TypeError');
   });
 
-  it('mole check emits git blame, fix lookup, symbol resolution and questions stages under mole.check, flushed before exit', () => {
+  it('mole check emits git blame, fix lookup, symbol resolution and questions stages under mole.check, flushed before exit', async () => {
     rec.reset();
     const env = { ...process.env, MOLE_OTEL: '1', OTEL_EXPORTER_OTLP_ENDPOINT: rec.url };
-    const r = spawnSync(process.execPath, ['--no-warnings', cli, 'check', '61564ebf85', '--root', repoRoot, '--json'], { env, encoding: 'utf8' });
+    const r = await spawnAsync(process.execPath, ['--no-warnings', cli, 'check', '61564ebf85', '--root', repoRoot, '--json'], { env });
     expect(r.status).toBe(0);
     const out = JSON.parse(r.stdout) as { hunks: unknown[]; questions: unknown[] };
     const spans = [...rec.spans]; // read at once: the CLI has exited, so the spans must already be here

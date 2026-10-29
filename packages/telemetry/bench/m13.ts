@@ -7,7 +7,7 @@
 //   3) CI: .github/workflows/check.yml has the required steps; its "key guard" step's command is green on a temp worktree of
 //      HEAD, red after a protected key is edited and committed, green with an approved hashed ruling, red with a wrong hash.
 // usage: node packages/telemetry/dist/bench/m13.js [--metrics-out FILE] [--details FILE]
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
@@ -105,6 +105,16 @@ function matches(spec: SpanSpec, service: string, spans: ReceivedSpan[]): { ok: 
 
 const run = (cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; input?: string } = {}) =>
   spawnSync(cmd, args, { cwd: opts.cwd ?? repoRoot, env: opts.env ?? process.env, input: opts.input, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: 240_000 });
+const runAsync = (cmd: string, args: string[], opts: { env?: NodeJS.ProcessEnv } = {}) =>
+  new Promise<{ status: number | null; stdout: string; stderr: string }>((res) => {
+    const c = spawn(cmd, args, { cwd: repoRoot, env: opts.env ?? process.env, stdio: ['ignore', 'pipe', 'pipe'], timeout: 240_000 });
+    let stdout = '', stderr = '';
+    c.stdout.setEncoding('utf8');
+    c.stderr.setEncoding('utf8');
+    c.stdout.on('data', (d: string) => (stdout += d));
+    c.stderr.on('data', (d: string) => (stderr += d));
+    c.on('close', (status) => res({ status, stdout, stderr }));
+  });
 
 // ---------- 1) OTel ----------
 const stageResults: Array<{ span: string; ok: boolean; why: string }> = [];
@@ -113,7 +123,7 @@ let offSpans = -1;
 const receiver = await startReceiver();
 try {
   const onEnv = { ...process.env, MOLE_OTEL: '1', OTEL_EXPORTER_OTLP_ENDPOINT: receiver.url };
-  const c = run(process.execPath, ['--no-warnings', cli, 'check', key.otel.check.commit, '--root', repoRoot, '--json'], { env: onEnv });
+  const c = await runAsync(process.execPath, ['--no-warnings', cli, 'check', key.otel.check.commit, '--root', repoRoot, '--json'], { env: onEnv });
   details.checkExit = c.status;
   if (c.status !== 0) errors.push(`mole check exit ${c.status}: ${(c.stderr ?? '').slice(0, 300)}`);
   // no waiting: spans must already be flushed when the CLI has exited
@@ -124,7 +134,7 @@ try {
   receiver.reset();
   const offEnv: NodeJS.ProcessEnv = { ...process.env, OTEL_EXPORTER_OTLP_ENDPOINT: receiver.url };
   delete offEnv.MOLE_OTEL;
-  const off = run(process.execPath, ['--no-warnings', cli, 'check', key.otel.check.commit, '--root', repoRoot, '--json'], { env: offEnv });
+  const off = await runAsync(process.execPath, ['--no-warnings', cli, 'check', key.otel.check.commit, '--root', repoRoot, '--json'], { env: offEnv });
   if (off.status !== 0) errors.push(`mole check (MOLE_OTEL unset) exit ${off.status}`);
   await new Promise((r) => setTimeout(r, 500));
   offRequests = receiver.requests;
