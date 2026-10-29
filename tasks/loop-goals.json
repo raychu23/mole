@@ -54,7 +54,7 @@
   },
   {
    "id": "E5",
-   "goal": "you can see each agent run as states: what context (and which version of it) the agent had, what it already tried, what it changed, across compaction and across agents, linked to the code it touched (3C1 lines 171, 177, 232, 289)",
+   "goal": "you can see each agent run as states: what context (and which version of it) the agent had, what it already tried, what it changed, across compaction and across agents, linked to the code it touched (3C1 lines 171, 177, 232, 289-290)",
    "measured_by": [
     "M6",
     "M7"
