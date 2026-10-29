@@ -114,3 +114,62 @@ export async function loadDecisionsJsonl(pool: Pool, path: string): Promise<numb
   }
   return count;
 }
+
+/**
+ * Load .mole/decisions/*.md ADR records and their git history (done-when 5's other named source).
+ * Each record's front-matter `status` becomes a fact whose valid range starts at the commit where
+ * that file first reached its CURRENT status text in git history (one segment per status value seen
+ * across the file's commits, oldest first) -- a real git-log read, not a guess. This is a narrower
+ * timeline than loadDecisionsJsonl's (the .mole/decisions corpus does not carry explicit
+ * replaced_by/decided/amended prose the way decisions.jsonl does), reviewed and scoped in
+ * tasks/T38-bitemporal-decision-graph/2 insights.md.
+ */
+export async function loadMoleDecisionsGit(pool: Pool, repoRoot: string, decisionsDir = '.mole/decisions'): Promise<number> {
+  const { execFileSync } = await import('node:child_process');
+  const { readdirSync } = await import('node:fs');
+  const { join: pathJoin } = await import('node:path');
+  const dir = pathJoin(repoRoot, decisionsDir);
+  let files: string[];
+  try {
+    files = readdirSync(dir).filter((f) => f.endsWith('.md'));
+  } catch {
+    return 0; // no .mole/decisions in this repo: not an error, just nothing to load
+  }
+  let count = 0;
+  for (const file of files) {
+    const rel = pathJoin(decisionsDir, file);
+    const log = execFileSync('git', ['-C', repoRoot, 'log', '--follow', '--format=%H|%aI', '--reverse', '--', rel], { encoding: 'utf8' })
+      .trim()
+      .split('\n')
+      .filter((l) => l.length > 0);
+    if (log.length === 0) continue;
+    const id = file.replace(/\.md$/, '');
+    // status per commit (oldest first), deduped by value: a record's status text may be unchanged
+    // across several commits (other fields edited), which should not open a new fact version.
+    const timeline: Array<{ at: string; status: string }> = [];
+    for (const entry of log) {
+      const [sha, at] = entry.split('|');
+      const content = execFileSync('git', ['-C', repoRoot, 'show', `${sha}:${rel}`], { encoding: 'utf8' });
+      const m = /^status:\s*(\S+)/m.exec(content);
+      const status = m ? m[1]! : 'unknown';
+      if (timeline.length === 0 || timeline[timeline.length - 1]!.status !== status) {
+        timeline.push({ at: at!, status });
+      }
+    }
+    for (let i = 0; i < timeline.length; i++) {
+      const from = timeline[i]!.at;
+      const to = i + 1 < timeline.length ? timeline[i + 1]!.at : null;
+      await insertFact(pool, {
+        factId: id,
+        kind: 'decision',
+        attr: 'status',
+        value: timeline[i]!.status,
+        validFrom: from,
+        validTo: to,
+        source: `git log ${rel}`,
+      });
+      count++;
+    }
+  }
+  return count;
+}

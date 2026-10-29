@@ -120,4 +120,4 @@ export async function decisionToCode(
   return r.rows;
 }
 
-export { loadDecisionsJsonl } from './loader.js';
+export { loadDecisionsJsonl, loadMoleDecisionsGit } from './loader.js';

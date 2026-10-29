@@ -4,9 +4,12 @@
 -- Local Postgres here is 16, so the same guarantee is written as btree_gist + EXCLUDE USING gist: the
 -- database itself refuses two overlapping valid ranges for the same (fact_id, attr) -- not an app check.
 --
--- Each row is one *version* of one fact's one attribute. History is immutable: nothing here is ever
--- UPDATEd or DELETEd; "closing" a fact writes a bound on valid_to via INSERT ... the old row keeps its
--- own (now-closed) valid range forever, as Graphiti's valid_at/invalid_at edges do (arXiv 2501.13956).
+-- Each row is one *version* of one fact's one attribute. History is append-only in spirit: a row's
+-- VALUE and KIND are never changed or removed once written. The one controlled exception is closing:
+-- when a fact's successor arrives, the still-open row's valid UPPER BOUND is set exactly once (an
+-- UPDATE of that one bound, never of value/kind, and never a DELETE) -- the same "invalidate, never
+-- delete" pattern as Graphiti's valid_at/invalid_at edges (arXiv 2501.13956), which also update a
+-- bound rather than removing the edge. See closeFact in src/index.ts.
 --
 -- Two time axes (Snodgrass bitemporal model, SQL:2011 application time + system-versioned time):
 --   valid    = when the fact held in the world/code (application time, Graphiti's valid_at/invalid_at)

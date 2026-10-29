@@ -8,7 +8,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client } from 'pg';
 import { applySchema, asOf, insertFact, openPool } from '../src/index.js';
-import { loadDecisionsJsonl } from '../src/loader.js';
+import { loadDecisionsJsonl, loadMoleDecisionsGit } from '../src/loader.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 // bench fixtures (m32-key.json, decisions-fixture.jsonl) are checked-in, not emitted by tsc.
@@ -64,7 +64,7 @@ function percentile(sorted: number[], p: number): number {
   return sorted[idx]!;
 }
 
-async function part1AsOf(): Promise<{ accPct: number; baselinePct: number; n: number }> {
+async function part1AsOf(): Promise<{ accPct: number; baselinePct: number; n: number; moleGitCount: number }> {
   const dbName = `mole_t38_bench_asof_${process.pid}`;
   const pool = await freshDb(dbName);
   try {
@@ -72,6 +72,11 @@ async function part1AsOf(): Promise<{ accPct: number; baselinePct: number; n: nu
       questions: Array<{ decisionId: string; asOf: string; expected: string; baselineLatestOnly: string }>;
     };
     await loadDecisionsJsonl(pool, join(benchDir, 'decisions-fixture.jsonl'));
+    // also exercise the OTHER named source in done-when 1/5 (.mole/decisions + its git history):
+    // real `git log`/`git show` reads, not a guess. Distinct fact ids from decisions.jsonl's D-ids,
+    // so this never affects the frozen key's scoring, only shows both loaders run for real.
+    const repoRoot = resolve(benchDir, '../../..');
+    const moleGitCount = await loadMoleDecisionsGit(pool, repoRoot);
     let right = 0;
     let baselineRight = 0;
     for (const q of key.questions) {
@@ -79,7 +84,7 @@ async function part1AsOf(): Promise<{ accPct: number; baselinePct: number; n: nu
       if (got === q.expected) right++;
       if (q.baselineLatestOnly === q.expected) baselineRight++;
     }
-    return { accPct: (100 * right) / key.questions.length, baselinePct: (100 * baselineRight) / key.questions.length, n: key.questions.length };
+    return { accPct: (100 * right) / key.questions.length, baselinePct: (100 * baselineRight) / key.questions.length, n: key.questions.length, moleGitCount };
   } finally {
     await pool.end();
     await dropDb(dbName);
@@ -224,7 +229,7 @@ async function main() {
     cmd: 'node packages/temporal/dist/bench/m32.js',
     exit: 0,
     metrics: {
-      M32: `as-of ${asOfResult.accPct.toFixed(1)}% (${asOfResult.n} q) vs latest-only ${asOfResult.baselinePct.toFixed(1)}% \u00b7 overlaps ${integrity.overlaps}/${integrity.attempted} \u00b7 p95 ${speed.p95IndexedMs.toFixed(2)} ms indexed vs ${speed.p95SeqMs.toFixed(2)} ms seq (${speed.speedup.toFixed(1)}x) at ${speed.n} \u00b7 model calls ${fetchCalls}`,
+      M32: `as-of ${asOfResult.accPct.toFixed(1)}% (${asOfResult.n} q, +${asOfResult.moleGitCount} .mole/decisions git-history facts loaded) vs latest-only ${asOfResult.baselinePct.toFixed(1)}% \u00b7 overlaps ${integrity.overlaps}/${integrity.attempted} (${integrity.committed} committed, ${integrity.attempted - integrity.committed} rejected by the database, bounded-concurrency writers) \u00b7 p95 ${speed.p95IndexedMs.toFixed(2)} ms indexed vs ${speed.p95SeqMs.toFixed(2)} ms seq (${speed.speedup.toFixed(1)}x) at ${speed.n} \u00b7 model calls ${fetchCalls}`,
     },
   };
   appendFileSync(runsOut, JSON.stringify(line) + '\n');

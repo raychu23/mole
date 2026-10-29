@@ -1,16 +1,16 @@
-Limit  (cost=5631.95..5631.96 rows=1 width=13) (actual time=30.575..31.668 rows=1 loops=1)
+Limit  (cost=5631.04..5631.04 rows=1 width=13) (actual time=34.045..35.854 rows=1 loops=1)
   Buffers: shared hit=3237
-  ->  Sort  (cost=5631.95..5631.96 rows=1 width=13) (actual time=30.575..31.667 rows=1 loops=1)
+  ->  Sort  (cost=5631.04..5631.04 rows=1 width=13) (actual time=34.044..35.853 rows=1 loops=1)
         Sort Key: id DESC
         Sort Method: quicksort  Memory: 25kB
         Buffers: shared hit=3237
-        ->  Gather  (cost=1000.00..5631.94 rows=1 width=13) (actual time=0.083..31.660 rows=1 loops=1)
+        ->  Gather  (cost=1000.00..5631.03 rows=1 width=13) (actual time=1.159..35.847 rows=1 loops=1)
               Workers Planned: 2
               Workers Launched: 2
               Buffers: shared hit=3237
-              ->  Parallel Seq Scan on fact_versions  (cost=0.00..4631.84 rows=1 width=13) (actual time=15.992..26.135 rows=0 loops=3)
+              ->  Parallel Seq Scan on fact_versions  (cost=0.00..4630.93 rows=1 width=13) (actual time=6.181..17.116 rows=0 loops=3)
                     Filter: ((valid @> '2020-05-31 19:00:00-05'::timestamp with time zone) AND (fact_id = 'synthetic-0'::text) AND (attr = 'status'::text))
                     Rows Removed by Filter: 66666
                     Buffers: shared hit=3237
-Planning Time: 0.197 ms
-Execution Time: 31.678 ms
+Planning Time: 0.112 ms
+Execution Time: 35.870 ms
