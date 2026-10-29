@@ -13,6 +13,9 @@
     },
     {
       "path": "../indexer"
+    },
+    {
+      "path": "../memory"
     }
   ]
 }
