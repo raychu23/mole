@@ -1,0 +1,46 @@
+{
+  "answers": {
+    "q1": {
+      "answer": "ADR013 (node-fetch) is no longer in force — it was superseded by ADR014. ADR014 says frontend plugins and packages should prefer the injected fetchApiRef (which is why NotificationsClient takes fetchApi in its constructor rather than importing a fetch library directly); native fetch is used instead in Node.js code, and isomorphic packages accept an injected typeof fetch.",
+      "source": "plugins/notifications file tree card adr014 (replaces adr013); docs/architecture-decisions/adr014-use-fetch.md"
+    },
+    "q2": {
+      "answer": "ADR007 requires MSW (setupServer + express-style route handlers like http.get) to mock any fetch/XMLHttpRequest in tests across the whole repo. It avoids each test mocking network requests its own way, which otherwise leads to inconsistent test setups and makes it harder to reason about/trust what's actually being tested versus mocked.",
+      "source": "plugins/notifications file tree card adr007"
+    },
+    "q3": {
+      "answer": "ADR006 cites two technical problems with React.FC: it implicitly adds a children prop, and it does not support generic types on children. It also notes that Facebook removed React.FC from the create-react-app TypeScript base template because it was found to be an unnecessary feature with next to no benefits.",
+      "source": "docs/architecture-decisions/adr006-avoid-react-fc.md"
+    },
+    "q4": {
+      "answer": "ADR010 names Moment.js as the library Luxon replaces. The two reasons given: Moment.js suffers from large bundle sizes and mutable state issues, and the Moment.js project itself is being sunset/recommends using one of the more modern alternatives.",
+      "source": "docs/architecture-decisions/adr010-luxon-date-library.md"
+    },
+    "q5": {
+      "answer": "ADR004 (Module Export Structure) requires every exported symbol to be traceable through index files all the way down to src/index.ts. It was written to make it easy to answer 'Is the export in this module also exported by the package?' (and the related 'What is exported from this directory?'), which had become hard to answer as packages like core-components grew.",
+      "source": "docs/architecture-decisions/adr004-module-export-structure.md"
+    },
+    "q6": {
+      "answer": "No — under ADR004's rule, a symbol is only public if it can be traced through an unbroken chain of index files up to src/index.ts. Since there is no src/utils/index.ts at all (the chain is broken at the very first step) and src/index.ts never mentions these files, notificationLinks.ts and plainText.ts are not part of the plugin's public API, even though nothing explicitly marks them private — the absence of an index re-export is itself what makes them private under the rule.",
+      "source": "docs/architecture-decisions/adr004-module-export-structure.md"
+    },
+    "q7": {
+      "answer": "ADR011 defines x-react as a package for shared widgets, hooks and similar code that both the plugin itself and third-party frontend plugins can depend on. A -react split would only be justified once another, separate frontend plugin needs to reuse this plugin's components/hooks; currently notifications' components/hooks are only consumed internally by the notifications plugin itself, so no x-react package is needed.",
+      "source": "docs/architecture-decisions/adr011-plugin-package-structure.md"
+    },
+    "q8": {
+      "answer": "ADR003 allows a default export only for React.lazy modules (since React.lazy's dynamic import expects a default export). The workaround for teams that want to avoid even that: write `React.lazy(() => import('../path/to/Component').then(m => ({ default: m.Component })))`, converting a named export into the required default shape inline rather than using an actual default export in the source file.",
+      "source": "docs/architecture-decisions/adr003-avoid-default-exports.md"
+    },
+    "q9": {
+      "answer": "ADR015 defines the loader/component option pattern (element, component, loader as sync/async element or component providers). Its Consequences section says the new pattern will be applied to the new frontend system's `@backstage/frontend-*` packages, but existing APIs for the old frontend system in `@backstage/core-*` packages (the style dev/index.tsx is written in) will not be updated/retrofitted.",
+      "source": "docs/architecture-decisions/adr015-jsx-loader-structure.md"
+    }
+  },
+  "meta": {
+    "arm": "with",
+    "run": 2,
+    "numTurns": 8,
+    "durationMs": 48331
+  }
+}
