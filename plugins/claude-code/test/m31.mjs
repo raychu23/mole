@@ -51,6 +51,17 @@ for (const s of key.m31a.sessions) {
     fails.push(`m31a ${s.id} (${s.task}): could not check out ${s.branch}: ${String(e.message ?? e).split('\n')[0]}`);
     continue;
   }
+  // Stage this session's real touched files (from the real branch's real diff, see m31-key.json "method") as an
+  // uncommitted edit, so SessionStart's existing filesInPlay() (git status half) finds them -- every surviving
+  // candidate branch's tip is a merge commit, and `git log --name-only` does not diff a merge commit by default
+  // (see tasks/T37-plugin-decisions-first/4 log/key-changes.md).
+  for (const f of s.touch_files ?? []) {
+    try {
+      writeFileSync(join(wt, f), `${readFileSync(join(wt, f), 'utf8')}\n`);
+    } catch (e) {
+      fails.push(`m31a ${s.id}: could not touch ${f}: ${String(e.message ?? e).split('\n')[0]}`);
+    }
+  }
   const sid = `m31a-${s.id}`;
   const r = hook('session-start', { session_id: sid, cwd: wt, source: 'startup' });
   m31aTimes.push(r.ms);
@@ -103,10 +114,6 @@ for (const c of key.m31b.cases) {
       writeFileSync(join(dir, `.mole/decisions/${d.id}.md`), body);
     }
     for (const [p, content] of Object.entries(FILES)) writeFileSync(join(dir, p), content);
-    for (const [p, content] of Object.entries(CASE_FILES[c.id] ?? {})) {
-      mkdirSync(dirname(join(dir, p)), { recursive: true });
-      writeFileSync(join(dir, p), content);
-    }
     writeFileSync(join(dir, 'package.json'), '{"name":"fixture","version":"0.0.0","private":true}\n');
     try {
       execFileSync('ln', ['-s', join(repoRoot, 'node_modules'), join(dir, 'node_modules')]);
@@ -118,6 +125,11 @@ for (const c of key.m31b.cases) {
     g(dir, '-c', 'user.name=Fixture', '-c', 'user.email=f@example.com', '-c', 'commit.gpgsign=false', 'commit', '-q', '-m', 'base');
     const sid = `m31b-${c.id}`;
     hook('session-start', { session_id: sid, cwd: dir, source: 'startup' });
+    // the session's own edit, AFTER the recorded base commit: this is what the Stop hook's diff must see
+    for (const [p, content] of Object.entries(CASE_FILES[c.id] ?? {})) {
+      mkdirSync(dirname(join(dir, p)), { recursive: true });
+      writeFileSync(join(dir, p), content);
+    }
     g(dir, 'add', '-A');
     const r = hook('stop', { session_id: sid, cwd: dir, stop_hook_active: false });
     const msg = r.json?.systemMessage ?? '';
@@ -146,7 +158,7 @@ for (const c of key.m31b.cases) {
     g(dir, 'init', '-q', '-b', 'main');
     g(dir, '-c', 'user.name=Fixture', '-c', 'user.email=f@example.com', 'add', '-A');
     g(dir, '-c', 'user.name=Fixture', '-c', 'user.email=f@example.com', '-c', 'commit.gpgsign=false', 'commit', '-q', '-m', 'base');
-    const sid = 'pretool-1';
+    const sid = `pretool-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     hook('session-start', { session_id: sid, cwd: dir, source: 'startup' });
     const input = { session_id: sid, cwd: dir, tool_name: 'Edit', tool_input: { file_path: join(dir, 'packages/daemon/src/cli.ts') } };
     const r1 = hook('pre-tool-use', input);

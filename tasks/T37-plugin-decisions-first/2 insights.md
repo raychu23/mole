@@ -33,6 +33,30 @@ workspace deps) are used as the "forbidden"/"allowed" import targets instead of 
 (`left-pad`), so dependency-cruiser resolves them against the real `node_modules` — verified
 empirically against `mole rules --json` before freezing the key (see prior-art.md method section).
 
+## npm run check under load
+
+The shared machine was running `uptime` load averages of 186-265 throughout this task (confirmed
+repeatedly), clearly from many concurrent builder agents' processes (9+ other ledger tasks running in
+parallel worktrees per the HANDOFF.md full-build roster). `npm run check`'s default vitest timeout
+(5,000 ms) is tight under that contention: a full run intermittently shows 6-27 failing tests, ALL of
+them "Test timed out in 5000ms", and NONE of them in `plugins/claude-code/**` or `packages/mcp/**` (the
+only packages this task touches) in the cleanest of several runs — failures land in `packages/daemon`,
+`packages/history`, `packages/indexer`, `packages/telemetry`, `packages/decisions/test/cli.test.ts` and
+one unrelated `mcp.test.ts` case (`mole_map`, a tool this task never touches), none of which this diff
+modifies. Re-running the exact suite this task's hooks live in with a generous timeout
+(`npx vitest run --testTimeout=30000 plugins/claude-code/test/`) is 5/5 files, 15/15 tests green. A
+direct, un-vitest'd timing of the Stop hook on the `hooks.test.ts` fixture repo (10 runs) showed
+0.6-4.2 s WALL time but only ~0.28 s of USER CPU time per call — almost all of the wall time is OS
+scheduling delay under the shared machine's load, not work the hook is doing. Two real latency fixes
+were made along the way regardless (both already folded into the implementation, not left for
+"later"): `ruleViolationsText` now skips spawning `mole rules` entirely when the repo has no
+`.mole/decisions` directory (previously it always spawned, even with 0 rules to check), and
+`governingDecisions` only fetches LIVE citator flags (`mole decisions --json`, which walks git history)
+when the caller asks for them (`{ liveFlags: true }`, used only by Stop); SessionStart and PreToolUse,
+which M31a's p95 budget actually gates, use the record's own `status:` field instead and never pay for
+the live-flag subprocess at all. `runs.jsonl`'s `npm run check` line records the honest number
+(11/372 failed) rather than a clean pass, per R7.
+
 ## Disk (boundary: "disk ~6 GB free")
 Actual free disk at claim time was ~1.6 GB (`df -h /`). Symlinked this worktree's `node_modules` to
 the main checkout's (`ln -s`) instead of `npm ci`, which would not have fit. `npm run build` (tsc -b)

@@ -92,6 +92,7 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         worktree: z.boolean().optional().describe('check the uncommitted working-tree change vs HEAD'),
         fixRule: z.string().optional().describe('regex for which commits count as fixes (default: fix/revert/regression/review fixes, or .mole/config.json)'),
         notesRoot: z.string().optional().describe('read .mole/notes from this directory instead of the root'),
+        files: z.array(z.string()).optional().describe('T37: only report hunks on these repo-relative files (e.g. the files Edit/Write just touched); others are dropped from the result'),
       },
     },
     async (args) => {
@@ -100,6 +101,14 @@ export function createServer(opts: MoleMcpOptions): McpServer {
       const root = resolve(opts.root, args.root ?? '.');
       try {
         const json = await checkJson(root, args);
+        // T37: files-scoped view, so a hook can ask "what does mole_check say about just the file I'm about to touch"
+        if (args.files?.length) {
+          const want = new Set(args.files);
+          const hunks = Array.isArray(json.result.hunks) ? (json.result.hunks as Array<{ file: string }>).filter((h) => want.has(h.file)) : json.result.hunks;
+          const keptFiles = new Set((Array.isArray(hunks) ? hunks : []).map((h) => h.file));
+          const questions = Array.isArray(json.result.questions) ? (json.result.questions as Array<{ source?: { file?: string } }>).filter((q) => !q.source?.file || keptFiles.has(q.source.file)) : json.result.questions;
+          json.result = { ...json.result, hunks, questions };
+        }
         return { content: [{ type: 'text' as const, text: JSON.stringify(json.result, null, 2) }, ...json.notices.map((n) => ({ type: 'text' as const, text: `mole: ${n}` }))] };
       } catch (e) {
         return { content: [{ type: 'text' as const, text: `mole_check: ${(e as Error).message}` }], isError: true };
@@ -120,13 +129,25 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         root: z.string().optional().describe('repository root (default: the server root, MOLE_ROOT or cwd)'),
         adrDir: z.array(z.string()).optional().describe('plain ADR folders to include, relative to root (e.g. docs/architecture-decisions)'),
         testReport: z.string().optional().describe('a vitest JSON report: evidence tests that fail there turn their decisions yellow'),
+        files: z.array(z.string()).optional().describe('T37: only decisions whose scope: covers one of these repo-relative files or symbols in them (file exact match, path#Symbol by its file, folder/ by prefix) -- this is what the Claude Code / Codex / Cursor plugins call for "the decisions governing the files in play"'),
       },
     },
     async (args) => {
       const root = resolve(opts.root, args.root ?? '.');
       try {
-        const { decisions } = await import('@mole/decisions');
+        const { decisions, loadGraph } = await import('@mole/decisions');
         const json = decisions(root, { adrDirs: args.adrDir ?? [], testReport: args.testReport ? resolve(root, args.testReport) : undefined });
+        if (args.files?.length) {
+          const want = new Set(args.files);
+          const scopeMatches = (scopeFile: string, changed: string) => scopeFile === changed || (scopeFile.endsWith('/') && (changed === scopeFile.slice(0, -1) || changed.startsWith(scopeFile)));
+          const graph = loadGraph(root, { adrDirs: args.adrDir ?? [] });
+          const governedIds = new Set(
+            graph.nodes
+              .filter((n) => n.scope.some((a) => [...want].some((f) => scopeMatches(a.target.split('#')[0]!, f))))
+              .map((n) => n.id),
+          );
+          json.decisions = json.decisions.filter((d) => governedIds.has(d.id));
+        }
         return { content: [{ type: 'text' as const, text: JSON.stringify(json, null, 2) }] };
       } catch (e) {
         return { content: [{ type: 'text' as const, text: `mole_decisions: ${(e as Error).message}` }], isError: true };
