@@ -1,0 +1,3 @@
+These decision records are written for the M19 bench (Mole T27). They describe facts of the Excalidraw repository
+(https://github.com/excalidraw/excalidraw, MIT) at e7b534668a60add7f725531f3c9abf32508c7b4e; they are not Excalidraw's own documents.
+The bench copies them over a git-archive export of that commit taken from the local clone (no network).

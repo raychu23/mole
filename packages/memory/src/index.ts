@@ -26,6 +26,7 @@ export interface Note {
   hash: string;
   author: string;
   written: string;
+  commit?: string; // HEAD when the note was written (T19: the tree a rename is re-anchored from)
   text: string;
 }
 
@@ -40,6 +41,9 @@ export interface MemoryEntry {
   newPath?: string; // where the symbol is now, when moved (or stale at a new path)
   line?: number; // current 1-based start line of the symbol, or the bad line for 'invalid'
   changed?: boolean; // the symbol's normalized body differs from the note's hash
+  renamedTo?: string; // T19: the symbol was renamed (maybe moved): its qualifiedName now ('fresh' = only the name changed, 'stale' = renamed + changed)
+  similarity?: number; // renamed: normalized-body similarity to the noted body (1 = same)
+  candidates?: string[]; // 'orphaned' only: an ambiguous rename's equal candidates (never guessed)
   text: string;
   author?: string;
   written?: string;
@@ -50,3 +54,5 @@ export { findSymbol, normalizedHash, relPath, sourceFiles, splitTarget, symbolsI
 export { addNote, memory, NOTES_DIR, parseNote } from './notes.js';
 export { appendSeen, formatSince, readSeen, SEEN_LOG, since } from './seen.js';
 export type { SeenEvent, SeenHow, SeenInput, SinceChange, SinceEntry, SinceFile, SinceResult } from './seen.js';
+export { dirTree, gitTree, REANCHOR, reanchor } from './reanchor.js';
+export type { Anchor, Reanchor, SourceTree } from './reanchor.js';

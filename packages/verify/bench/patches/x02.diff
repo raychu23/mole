@@ -1,0 +1,13 @@
+diff --git a/packages/math/src/polygon.ts b/packages/math/src/polygon.ts
+index 63b187d..ac987f6 100644
+--- a/packages/math/src/polygon.ts
++++ b/packages/math/src/polygon.ts
+@@ -30,7 +30,7 @@ export const polygonIncludesPoint = <Point extends LocalPoint | GlobalPoint>(
+     const yj = polygon[j][1];
+ 
+     if (
+-      ((yi > y && yj <= y) || (yi <= y && yj > y)) &&
++      ((yi > y && yj < y) || (yi <= y && yj > y)) &&
+       x < ((xj - xi) * (y - yi)) / (yj - yi) + xi
+     ) {
+       inside = !inside;

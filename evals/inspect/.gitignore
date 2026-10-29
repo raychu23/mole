@@ -1,0 +1,5 @@
+.venv/
+logs/
+docker/context/
+__pycache__/
+.pytest_cache/

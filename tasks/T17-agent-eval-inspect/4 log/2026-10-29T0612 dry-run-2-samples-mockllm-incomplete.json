@@ -1,0 +1,43 @@
+{
+ "label": "dry run 2 samples mockllm",
+ "model": "mockllm/model",
+ "incomplete": "2 of 2 samples errored or have no score (no partial score): B3-review-mole, B3-review-none",
+ "records": [
+  {
+   "id": "B3-review-mole",
+   "arm": "mole",
+   "case": "B3-review",
+   "epoch": 1,
+   "label": null,
+   "error": "RuntimeError('Error executing claude code agent 1: ')",
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "total_tokens": 0,
+   "seconds": 207.974,
+   "working_seconds": 122.621,
+   "model_answers": null
+  },
+  {
+   "id": "B3-review-none",
+   "arm": "none",
+   "case": "B3-review",
+   "epoch": 1,
+   "label": null,
+   "error": "RuntimeError('Error executing claude code agent 1: ')",
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "total_tokens": 0,
+   "seconds": 185.532,
+   "working_seconds": 184.935,
+   "model_answers": null
+  }
+ ],
+ "inspect_log": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T17-agent-eval-inspect/evals/inspect/logs/2026-10-29T11-09-04-00-00_mole-regression_R28kqtvBVuR6UQcdnixd5D.eval",
+ "status": "success",
+ "epochs": 1,
+ "cases": "B3-review",
+ "arms": "none,mole",
+ "break_model_route": false,
+ "model_config": "claude-sonnet-4-5",
+ "paid_run_approved": null
+}

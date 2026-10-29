@@ -1,0 +1,13 @@
+diff --git a/packages/layout/src/layout.ts b/packages/layout/src/layout.ts
+index 3c848cd..9587061 100644
+--- a/packages/layout/src/layout.ts
++++ b/packages/layout/src/layout.ts
+@@ -53,7 +53,7 @@ export const maxChars = (w: number): number => Math.max(6, Math.floor((w - 44) /
+ /** Free row nearest `center` (ties go below), skipping rows in `taken`. */
+ function nearestFree(center: number, taken: Set<number>, downOnly = false): number {
+   for (let d = 0; ; d++) {
+-    for (const r of d === 0 ? [center] : downOnly ? [center + d] : [center + d, center - d]) if (!taken.has(r)) return r;
++    for (const r of d === 0 ? [center] : downOnly ? [center + d] : [center - d, center + d]) if (!taken.has(r)) return r;
+   }
+ }
+ 

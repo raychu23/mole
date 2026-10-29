@@ -19,6 +19,7 @@
     "@mole/questions": "*",
     "@mole/agentstate": "*",
     "@mole/telemetry": "*",
-    "@mole/decisions": "*"
+    "@mole/decisions": "*",
+    "@mole/verify": "*"
   }
 }

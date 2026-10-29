@@ -6,3 +6,5 @@ export { computeFlags } from './flags.js';
 export { contentHash } from './anchors.js';
 export { decisions, decisionsCli, formatDecisions } from './cli.js';
 export * from './check/index.js';
+export { CALL_RULES_FILE, checkRules, DEPCRUISE_FILE, depcruiseRuleSet, emitConfig, formatRules, loadRules, rulesCli } from './rules/index.js';
+export type { RuleDecision, RuleKind, RuleSpec, RulesLoad, RulesOptions, RulesResult, SkippedRules, Violation } from './rules/index.js';

@@ -1,0 +1,775 @@
+{
+ "metric": "M20",
+ "task": "T28-runtime-flows-from-tests",
+ "written": "2026-10-29T05:31:53-05:00",
+ "written_by": "the T28 implementer (mole-builder-5 subagent) by hand-reading source and tests, before any recorder code existed",
+ "repos": {
+  "mole": {
+   "sha": "5b447f756fe790d200b9118f59cfa80edb72b7a7",
+   "root": "<this repository>",
+   "graph": {
+    "tsconfig": "packages/flows/bench/mole-graph.tsconfig.json",
+    "srcDir": "packages"
+   },
+   "tests": [
+    "packages/agentstate/test/agentstate.test.ts",
+    "packages/questions/test/questions.test.ts",
+    "packages/indexer/test/indexer.test.ts"
+   ]
+  },
+  "excalidraw": {
+   "sha": "e7b534668a60add7f725531f3c9abf32508c7b4e",
+   "root": "$MOLE_EXCALIDRAW or /Users/a1/.hermes/cache/scratch/mole-builder-5/excalidraw",
+   "graph": {
+    "tsconfig": "tsconfig.json",
+    "srcDir": "packages"
+   },
+   "tests": [
+    "packages/element/tests/align.test.tsx",
+    "packages/element/tests/zindex.test.tsx",
+    "packages/excalidraw/tests/flip.test.tsx"
+   ]
+  }
+ },
+ "definition": {
+  "real_edge": "A -> B is a real call when code that the static graph attributes to A (A's own body, or a function/lambda nested in A that has no node of its own) starts executing the body of B, either directly or through code outside the repo (built-ins such as Array.prototype.map/sort, node_modules such as React), inside the same synchronous stack or in A's own continuation after an await/yield. A constructor body counts as the class node (as the static graph names `new C()`); a lambda nested in a variable/class/file node X (a registry entry such as `const actionX = register({ perform: () => ... })`) counts as X.",
+  "not_real": "storing, registering or passing a function without running it; a call made by another repo function that received the callback (that function is the caller); code nested in some other node (that node is the caller); a callback run later from the event loop (timer, I/O) is a root, not a call from whoever scheduled it.",
+  "dynamic": "kind=dynamic: the call goes through a value (callback parameter, array-method callback, registry/object lookup, stored event callback, option hook). Whether the static graph misses it is computed by the bench (TsIndexer calls edges), not assumed here.",
+  "exercised": "exercised=true: the edge runs at least once while vitest runs the repo's listed test files (hand trace from the test to the call site, evidence column).",
+  "recovery": "M20 recovery = recorded / (key edges with kind=dynamic, exercised=true, and no static calls edge from->to). Target >= 80%.",
+  "invented": "an invented edge is a recorded calls edge that (a) equals a nonEdges pair of the same repo, or (b) names a from/to id that is not a node of that repo's static graph (an id the recorder made up). Target 0. Every recorded edge that touches a key symbol and is neither a key edge nor a static calls edge is listed in the bench details as unverified, for a hand check against the source (procedure in tasks/T28-runtime-flows-from-tests/4 log/key.md); it is reported, and counted as invented if the hand check finds it is not a real call.",
+  "overhead": "wall time of `vitest run <the repo test files>` instrumented / plain, median of 3 runs each, measured per repo; target <= 2.0x for each."
+ },
+ "edges": [
+  {
+   "id": "E01",
+   "repo": "excalidraw",
+   "from": "method:packages/excalidraw/actions/manager.tsx#ActionManager.executeAction",
+   "to": "variable:packages/excalidraw/actions/actionFlip.ts#actionFlipHorizontal",
+   "kind": "dynamic",
+   "mechanism": "registry: action.perform() on an Action object; perform is a lambda inside register({...})",
+   "exercised": true,
+   "tests": [
+    "packages/excalidraw/tests/flip.test.tsx"
+   ],
+   "evidence": "manager.tsx:176 this.updater(action.perform(...)); flip.test.tsx:219 API.executeAction(actionFlipHorizontal) -> api.ts:577"
+  },
+  {
+   "id": "E02",
+   "repo": "excalidraw",
+   "from": "method:packages/excalidraw/actions/manager.tsx#ActionManager.executeAction",
+   "to": "variable:packages/excalidraw/actions/actionFlip.ts#actionFlipVertical",
+   "kind": "dynamic",
+   "mechanism": "registry: action.perform()",
+   "exercised": true,
+   "tests": [
+    "packages/excalidraw/tests/flip.test.tsx"
+   ],
+   "evidence": "manager.tsx:176; flip.test.tsx:250 API.executeAction(actionFlipVertical)"
+  },
+  {
+   "id": "E03",
+   "repo": "excalidraw",
+   "from": "method:packages/excalidraw/actions/manager.tsx#ActionManager.executeAction",
+   "to": "variable:packages/excalidraw/actions/actionZindex.tsx#actionSendToBack",
+   "kind": "dynamic",
+   "mechanism": "registry: action.perform()",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/zindex.test.tsx"
+   ],
+   "evidence": "manager.tsx:176; zindex.test.tsx:156 API.executeAction(action) over operations incl. actionSendToBack"
+  },
+  {
+   "id": "E04",
+   "repo": "excalidraw",
+   "from": "method:packages/excalidraw/actions/manager.tsx#ActionManager.executeAction",
+   "to": "variable:packages/excalidraw/actions/actionZindex.tsx#actionBringToFront",
+   "kind": "dynamic",
+   "mechanism": "registry: action.perform()",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/zindex.test.tsx"
+   ],
+   "evidence": "manager.tsx:176; zindex.test.tsx operations actionBringToFront"
+  },
+  {
+   "id": "E05",
+   "repo": "excalidraw",
+   "from": "method:packages/excalidraw/actions/manager.tsx#ActionManager.executeAction",
+   "to": "variable:packages/excalidraw/actions/actionZindex.tsx#actionSendBackward",
+   "kind": "dynamic",
+   "mechanism": "registry: action.perform()",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/zindex.test.tsx"
+   ],
+   "evidence": "manager.tsx:176; zindex.test.tsx operations actionSendBackward"
+  },
+  {
+   "id": "E06",
+   "repo": "excalidraw",
+   "from": "method:packages/excalidraw/actions/manager.tsx#ActionManager.executeAction",
+   "to": "variable:packages/excalidraw/actions/actionZindex.tsx#actionBringForward",
+   "kind": "dynamic",
+   "mechanism": "registry: action.perform()",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/zindex.test.tsx"
+   ],
+   "evidence": "manager.tsx:176; zindex.test.tsx operations actionBringForward"
+  },
+  {
+   "id": "E07",
+   "repo": "excalidraw",
+   "from": "method:packages/excalidraw/actions/manager.tsx#ActionManager.executeAction",
+   "to": "variable:packages/excalidraw/actions/actionDuplicateSelection.tsx#actionDuplicateSelection",
+   "kind": "dynamic",
+   "mechanism": "registry: action.perform()",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/zindex.test.tsx"
+   ],
+   "evidence": "manager.tsx:176; zindex.test.tsx:924 API.executeAction(actionDuplicateSelection)"
+  },
+  {
+   "id": "E08",
+   "repo": "excalidraw",
+   "from": "method:packages/excalidraw/actions/manager.tsx#ActionManager.handleKeyDown",
+   "to": "variable:packages/excalidraw/actions/actionAlign.tsx#actionAlignTop",
+   "kind": "dynamic",
+   "mechanism": "registry: action.keyTest() for every registered action on a keydown",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "manager.tsx:105-111 filter(... action.keyTest(event,...)); align.test.tsx:81 Ctrl+Shift+ArrowUp -> App onKeyDown (App.tsx:5308)"
+  },
+  {
+   "id": "E09",
+   "repo": "excalidraw",
+   "from": "method:packages/excalidraw/actions/manager.tsx#ActionManager.handleKeyDown",
+   "to": "variable:packages/excalidraw/actions/actionAlign.tsx#actionAlignBottom",
+   "kind": "dynamic",
+   "mechanism": "registry: action.keyTest() (evaluated for all actions)",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "manager.tsx:105-111; actionAlign.tsx:131 keyTest; align.test.tsx keyboard shortcuts"
+  },
+  {
+   "id": "E10",
+   "repo": "excalidraw",
+   "from": "method:packages/excalidraw/actions/manager.tsx#ActionManager.handleKeyDown",
+   "to": "variable:packages/excalidraw/actions/actionAlign.tsx#actionAlignLeft",
+   "kind": "dynamic",
+   "mechanism": "registry: action.keyTest() (evaluated for all actions)",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "manager.tsx:105-111; actionAlign.tsx:165 keyTest"
+  },
+  {
+   "id": "E11",
+   "repo": "excalidraw",
+   "from": "method:packages/excalidraw/actions/manager.tsx#ActionManager.handleKeyDown",
+   "to": "variable:packages/excalidraw/actions/actionFlip.ts#actionFlipHorizontal",
+   "kind": "dynamic",
+   "mechanism": "registry: action.keyTest() (evaluated for all actions)",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "manager.tsx:105-111; actionFlip.ts keyTest: (event) => event.shiftKey && event.code === CODES.H"
+  },
+  {
+   "id": "E12",
+   "repo": "excalidraw",
+   "from": "function:packages/element/src/zindex.ts#shiftElementsAccountingForFrames",
+   "to": "function:packages/element/src/zindex.ts#shiftElementsToEnd",
+   "kind": "dynamic",
+   "mechanism": "callback parameter shiftFunction(...)",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/zindex.test.tsx"
+   ],
+   "evidence": "zindex.ts:614 return shiftFunction(...); moveAllLeft passes shiftElementsToEnd (zindex.ts:650); actionSendToBack.perform -> moveAllLeft"
+  },
+  {
+   "id": "E13",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/Scene.ts#Scene.triggerUpdate",
+   "to": "method:packages/excalidraw/components/App.tsx#App.triggerRender",
+   "kind": "dynamic",
+   "mechanism": "event callback stored by scene.onUpdate(this.triggerRender) (App.tsx:3858), called in a loop",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx",
+    "packages/element/tests/zindex.test.tsx",
+    "packages/excalidraw/tests/flip.test.tsx"
+   ],
+   "evidence": "Scene.ts:306-308 for (const callback of this.callbacks) callback(); replaceAllElements -> triggerUpdate on every scene change"
+  },
+  {
+   "id": "E14",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/delta.ts#ElementsDelta.validate",
+   "to": "method:packages/element/src/delta.ts#ElementsDelta.satisfiesAddition",
+   "kind": "dynamic",
+   "mechanism": "callback parameter satifiesSpecialInvariants(delta)",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "delta.ts:1153 !satifiesSpecialInvariants(delta); create() passes this.satisfiesAddition (1086) when isTestEnv(); drawing rectangles (align.test.tsx:25-33) records added elements"
+  },
+  {
+   "id": "E15",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/delta.ts#ElementsDelta.validate",
+   "to": "method:packages/element/src/delta.ts#ElementsDelta.satisfiesUpdate",
+   "kind": "dynamic",
+   "mechanism": "callback parameter satifiesSpecialInvariants(delta)",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "delta.ts:1088 + 1153; aligning moves elements -> updated deltas"
+  },
+  {
+   "id": "E16",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/delta.ts#ElementsDelta.validate",
+   "to": "method:packages/element/src/delta.ts#ElementsDelta.satisfiesRemoval",
+   "kind": "dynamic",
+   "mechanism": "callback parameter satifiesSpecialInvariants(delta)",
+   "exercised": false,
+   "tests": [],
+   "evidence": "delta.ts:1087 + 1153; needs a removed element delta; none of the 3 test files deletes an element (hand-read), so labelled not exercised"
+  },
+  {
+   "id": "E17",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/delta.ts#Delta.create",
+   "to": "method:packages/element/src/delta.ts#ElementsDelta.stripIrrelevantProps",
+   "kind": "dynamic",
+   "mechanism": "callback parameter modifier(...)",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "delta.ts:94-95 modifier(deleted, \"deleted\"); ElementsDelta.calculate passes stripIrrelevantProps (1199/1227/1244)"
+  },
+  {
+   "id": "E18",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/delta.ts#Delta.calculate",
+   "to": "method:packages/element/src/delta.ts#ElementsDelta.postProcess",
+   "kind": "dynamic",
+   "mechanism": "callback parameter postProcess(...)",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "delta.ts:139-140; ElementsDelta.calculate passes ElementsDelta.postProcess (1245) for an element whose versionNonce changed (align moves)"
+  },
+  {
+   "id": "E19",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/delta.ts#Delta.calculate",
+   "to": "method:packages/element/src/delta.ts#AppStateDelta.postProcess",
+   "kind": "dynamic",
+   "mechanism": "callback parameter postProcess(...)",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "delta.ts:139-140; AppStateDelta.calculate passes AppStateDelta.postProcess (543) when appState changed (selection) in a durable increment"
+  },
+  {
+   "id": "E20",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/delta.ts#Delta.create",
+   "to": "method:packages/element/src/delta.ts#AppStateDelta.orderAppStateKeys",
+   "kind": "dynamic",
+   "mechanism": "callback parameter modifier forwarded by Delta.calculate to Delta.create",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "delta.ts:142 Delta.create(..., modifier) -> 94-99 modifier(...); AppStateDelta.calculate passes orderAppStateKeys (542)"
+  },
+  {
+   "id": "E21",
+   "repo": "excalidraw",
+   "from": "function:packages/element/src/align.ts#alignElements",
+   "to": "function:packages/element/src/index.ts#getNonDeletedElements",
+   "kind": "dynamic",
+   "mechanism": "callback argument .map(getNonDeletedElements)",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "align.ts:28-32 getSelectedElementsByGroup(...).map(getNonDeletedElements)"
+  },
+  {
+   "id": "E22",
+   "repo": "mole",
+   "from": "function:packages/agentstate/src/index.ts#listRuns",
+   "to": "function:packages/agentstate/src/index.ts#newestFirst",
+   "kind": "dynamic",
+   "mechanism": "callback argument runs.sort(newestFirst)",
+   "exercised": true,
+   "tests": [
+    "packages/agentstate/test/agentstate.test.ts"
+   ],
+   "evidence": "agentstate/src/index.ts:163; agentstate.test.ts:147 listRuns over 3 sources (>= 2 runs, so sort calls the comparator)"
+  },
+  {
+   "id": "E23",
+   "repo": "mole",
+   "from": "function:packages/questions/src/index.ts#questions",
+   "to": "file:packages/questions/test/questions.test.ts#packages/questions/test/questions.test.ts",
+   "kind": "dynamic",
+   "mechanism": "option hook: await opts.model(q.text), the model stub is a lambda in the test file",
+   "exercised": true,
+   "tests": [
+    "packages/questions/test/questions.test.ts"
+   ],
+   "evidence": "questions/src/index.ts:519; questions.test.ts:228 model: async (t) => ..."
+  },
+  {
+   "id": "E24",
+   "repo": "mole",
+   "from": "file:packages/questions/test/questions.test.ts#packages/questions/test/questions.test.ts",
+   "to": "function:packages/questions/test/questions.test.ts#clickable",
+   "kind": "dynamic",
+   "mechanism": "callback argument parsed.questions.every(clickable)",
+   "exercised": true,
+   "tests": [
+    "packages/questions/test/questions.test.ts"
+   ],
+   "evidence": "questions.test.ts:96"
+  },
+  {
+   "id": "E25",
+   "repo": "mole",
+   "from": "function:packages/agentstate/src/cli.ts#formatRun",
+   "to": "function:packages/agentstate/src/cli.ts#stepLine",
+   "kind": "dynamic",
+   "mechanism": "callback argument g.steps.map(stepLine)",
+   "exercised": false,
+   "tests": [],
+   "evidence": "agentstate/src/cli.ts:51; formatRun is reached only through the spawned CLI (agentstate.test.ts:195 spawnSync), never in the vitest process"
+  },
+  {
+   "id": "E26",
+   "repo": "excalidraw",
+   "from": "variable:packages/excalidraw/actions/actionAlign.tsx#actionAlignTop",
+   "to": "function:packages/excalidraw/actions/actionAlign.tsx#alignSelectedElements",
+   "kind": "static",
+   "mechanism": "direct call inside perform",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "actionAlign.tsx:91"
+  },
+  {
+   "id": "E27",
+   "repo": "excalidraw",
+   "from": "function:packages/excalidraw/actions/actionAlign.tsx#alignSelectedElements",
+   "to": "function:packages/element/src/align.ts#alignElements",
+   "kind": "static",
+   "mechanism": "direct call",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "actionAlign.tsx:62"
+  },
+  {
+   "id": "E28",
+   "repo": "excalidraw",
+   "from": "function:packages/element/src/align.ts#alignElements",
+   "to": "function:packages/element/src/bounds.ts#getCommonBoundingBox",
+   "kind": "static",
+   "mechanism": "direct call",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "align.ts:33"
+  },
+  {
+   "id": "E29",
+   "repo": "excalidraw",
+   "from": "function:packages/element/src/align.ts#alignElements",
+   "to": "function:packages/element/src/align.ts#calculateTranslation",
+   "kind": "static",
+   "mechanism": "direct call in a flatMap lambda",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "align.ts:36"
+  },
+  {
+   "id": "E30",
+   "repo": "excalidraw",
+   "from": "variable:packages/excalidraw/actions/actionZindex.tsx#actionSendToBack",
+   "to": "function:packages/element/src/zindex.ts#moveAllLeft",
+   "kind": "static",
+   "mechanism": "direct call inside perform",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/zindex.test.tsx"
+   ],
+   "evidence": "actionZindex.tsx:91"
+  },
+  {
+   "id": "E31",
+   "repo": "excalidraw",
+   "from": "function:packages/element/src/zindex.ts#moveAllLeft",
+   "to": "function:packages/element/src/zindex.ts#shiftElementsAccountingForFrames",
+   "kind": "static",
+   "mechanism": "direct call",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/zindex.test.tsx"
+   ],
+   "evidence": "zindex.ts:646"
+  },
+  {
+   "id": "E32",
+   "repo": "excalidraw",
+   "from": "variable:packages/excalidraw/actions/actionFlip.ts#actionFlipHorizontal",
+   "to": "function:packages/excalidraw/actions/actionFlip.ts#flipSelectedElements",
+   "kind": "static",
+   "mechanism": "direct call inside perform",
+   "exercised": true,
+   "tests": [
+    "packages/excalidraw/tests/flip.test.tsx"
+   ],
+   "evidence": "actionFlip.ts:42"
+  },
+  {
+   "id": "E33",
+   "repo": "excalidraw",
+   "from": "function:packages/excalidraw/actions/actionFlip.ts#flipSelectedElements",
+   "to": "function:packages/excalidraw/actions/actionFlip.ts#flipElements",
+   "kind": "static",
+   "mechanism": "direct call",
+   "exercised": true,
+   "tests": [
+    "packages/excalidraw/tests/flip.test.tsx"
+   ],
+   "evidence": "actionFlip.ts:84-112"
+  },
+  {
+   "id": "E34",
+   "repo": "excalidraw",
+   "from": "method:packages/excalidraw/actions/manager.tsx#ActionManager.executeAction",
+   "to": "method:packages/excalidraw/actions/manager.tsx#ActionManager.isActionBlockedByViewportTransition",
+   "kind": "static",
+   "mechanism": "direct this. call",
+   "exercised": true,
+   "tests": [
+    "packages/excalidraw/tests/flip.test.tsx",
+    "packages/element/tests/zindex.test.tsx"
+   ],
+   "evidence": "manager.tsx:167"
+  },
+  {
+   "id": "E35",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/Scene.ts#Scene.replaceAllElements",
+   "to": "method:packages/element/src/Scene.ts#Scene.triggerUpdate",
+   "kind": "static",
+   "mechanism": "direct this. call",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx",
+    "packages/element/tests/zindex.test.tsx",
+    "packages/excalidraw/tests/flip.test.tsx"
+   ],
+   "evidence": "Scene.ts:300"
+  },
+  {
+   "id": "E36",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/delta.ts#ElementsDelta.create",
+   "to": "method:packages/element/src/delta.ts#ElementsDelta.validate",
+   "kind": "static",
+   "mechanism": "direct call (isTestEnv())",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "delta.ts:1086"
+  },
+  {
+   "id": "E37",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/delta.ts#ElementsDelta.validate",
+   "to": "method:packages/element/src/delta.ts#ElementsDelta.satisfiesCommmonInvariants",
+   "kind": "static",
+   "mechanism": "direct this. call",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "delta.ts:1151"
+  },
+  {
+   "id": "E38",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/delta.ts#ElementsDelta.calculate",
+   "to": "method:packages/element/src/delta.ts#Delta.calculate",
+   "kind": "static",
+   "mechanism": "direct call",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "delta.ts:1241"
+  },
+  {
+   "id": "E39",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/delta.ts#AppStateDelta.calculate",
+   "to": "method:packages/element/src/delta.ts#Delta.calculate",
+   "kind": "static",
+   "mechanism": "direct call",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "delta.ts:538"
+  },
+  {
+   "id": "E40",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/delta.ts#Delta.calculate",
+   "to": "method:packages/element/src/delta.ts#Delta.create",
+   "kind": "static",
+   "mechanism": "direct call",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "delta.ts:142"
+  },
+  {
+   "id": "E41",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/store.ts#StoreDelta.calculate",
+   "to": "method:packages/element/src/delta.ts#ElementsDelta.calculate",
+   "kind": "static",
+   "mechanism": "direct call",
+   "exercised": true,
+   "tests": [
+    "packages/element/tests/align.test.tsx"
+   ],
+   "evidence": "store.ts:527"
+  },
+  {
+   "id": "E42",
+   "repo": "mole",
+   "from": "function:packages/agentstate/src/index.ts#listRuns",
+   "to": "function:packages/agentstate/src/index.ts#listAll",
+   "kind": "static",
+   "mechanism": "direct call",
+   "exercised": true,
+   "tests": [
+    "packages/agentstate/test/agentstate.test.ts"
+   ],
+   "evidence": "agentstate/src/index.ts:159-163"
+  },
+  {
+   "id": "E43",
+   "repo": "mole",
+   "from": "function:packages/agentstate/src/index.ts#listRuns",
+   "to": "function:packages/agentstate/src/index.ts#dedupeSkipped",
+   "kind": "static",
+   "mechanism": "direct call",
+   "exercised": true,
+   "tests": [
+    "packages/agentstate/test/agentstate.test.ts"
+   ],
+   "evidence": "agentstate/src/index.ts:163"
+  },
+  {
+   "id": "E44",
+   "repo": "mole",
+   "from": "function:packages/agentstate/src/index.ts#tried",
+   "to": "function:packages/agentstate/src/index.ts#buildSteps",
+   "kind": "static",
+   "mechanism": "direct call",
+   "exercised": true,
+   "tests": [
+    "packages/agentstate/test/agentstate.test.ts"
+   ],
+   "evidence": "agentstate/src/index.ts:413; agentstate.test.ts:216 tried(H1)"
+  },
+  {
+   "id": "E45",
+   "repo": "mole",
+   "from": "function:packages/agentstate/src/index.ts#tried",
+   "to": "function:packages/agentstate/src/index.ts#triedOf",
+   "kind": "static",
+   "mechanism": "direct call (file branch) and callback .map(triedOf) (run branch)",
+   "exercised": true,
+   "tests": [
+    "packages/agentstate/test/agentstate.test.ts"
+   ],
+   "evidence": "agentstate/src/index.ts:413 + 424; agentstate.test.ts:216"
+  },
+  {
+   "id": "E46",
+   "repo": "mole",
+   "from": "function:packages/agentstate/src/index.ts#agents",
+   "to": "function:packages/agentstate/src/index.ts#agentsIn",
+   "kind": "static",
+   "mechanism": "direct call",
+   "exercised": true,
+   "tests": [
+    "packages/agentstate/test/agentstate.test.ts"
+   ],
+   "evidence": "agentstate/src/index.ts:510; agentstate.test.ts:288"
+  },
+  {
+   "id": "E47",
+   "repo": "mole",
+   "from": "function:packages/agentstate/src/index.ts#agentsIn",
+   "to": "function:packages/agentstate/src/index.ts#meaningful",
+   "kind": "static",
+   "mechanism": "direct call in a lambda and callback .filter(meaningful)",
+   "exercised": true,
+   "tests": [
+    "packages/agentstate/test/agentstate.test.ts"
+   ],
+   "evidence": "agentstate/src/index.ts:477 + 488; agentstate.test.ts:288 agents(src/a.ts#add)"
+  },
+  {
+   "id": "E48",
+   "repo": "mole",
+   "from": "method:packages/indexer/src/ts-engine.ts#TsIndexer.indexAll",
+   "to": "method:packages/indexer/src/ts-engine.ts#TsIndexer.build",
+   "kind": "static",
+   "mechanism": "direct this. call",
+   "exercised": true,
+   "tests": [
+    "packages/indexer/test/indexer.test.ts"
+   ],
+   "evidence": "indexer/src/ts-engine.ts:158; indexer.test.ts:24"
+  },
+  {
+   "id": "E49",
+   "repo": "mole",
+   "from": "method:packages/indexer/src/ts-engine.ts#TsIndexer.extractFile",
+   "to": "method:packages/indexer/src/ts-engine.ts#TsIndexer.edgesFor",
+   "kind": "static",
+   "mechanism": "direct this. call in the visit lambda",
+   "exercised": true,
+   "tests": [
+    "packages/indexer/test/indexer.test.ts"
+   ],
+   "evidence": "ts-engine.ts:337"
+  },
+  {
+   "id": "E50",
+   "repo": "mole",
+   "from": "method:packages/indexer/src/ts-engine.ts#TsIndexer.edgesFor",
+   "to": "method:packages/indexer/src/ts-engine.ts#TsIndexer.targetOf",
+   "kind": "static",
+   "mechanism": "direct this. call",
+   "exercised": true,
+   "tests": [
+    "packages/indexer/test/indexer.test.ts"
+   ],
+   "evidence": "ts-engine.ts:366"
+  }
+ ],
+ "nonEdges": [
+  {
+   "id": "N01",
+   "repo": "excalidraw",
+   "from": "method:packages/excalidraw/actions/manager.tsx#ActionManager.registerAll",
+   "to": "variable:packages/excalidraw/actions/actionFlip.ts#actionFlipHorizontal",
+   "why": "registration only: actions.forEach(a => this.registerAction(a)) stores the action, never runs its code"
+  },
+  {
+   "id": "N02",
+   "repo": "excalidraw",
+   "from": "method:packages/excalidraw/actions/manager.tsx#ActionManager.registerAction",
+   "to": "variable:packages/excalidraw/actions/actionAlign.tsx#actionAlignTop",
+   "why": "registration only: this.actions[action.name] = action"
+  },
+  {
+   "id": "N03",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/Scene.ts#Scene.onUpdate",
+   "to": "method:packages/excalidraw/components/App.tsx#App.triggerRender",
+   "why": "subscription only: callbacks.add(cb)"
+  },
+  {
+   "id": "N04",
+   "repo": "excalidraw",
+   "from": "function:packages/element/src/zindex.ts#moveAllLeft",
+   "to": "function:packages/element/src/zindex.ts#shiftElementsToEnd",
+   "why": "passes the function as an argument; the call is made by shiftElementsAccountingForFrames"
+  },
+  {
+   "id": "N05",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/delta.ts#AppStateDelta.calculate",
+   "to": "method:packages/element/src/delta.ts#AppStateDelta.postProcess",
+   "why": "passes it to Delta.calculate, which calls it"
+  },
+  {
+   "id": "N06",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/delta.ts#ElementsDelta.calculate",
+   "to": "method:packages/element/src/delta.ts#ElementsDelta.postProcess",
+   "why": "passes it to Delta.calculate, which calls it"
+  },
+  {
+   "id": "N07",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/delta.ts#ElementsDelta.calculate",
+   "to": "method:packages/element/src/delta.ts#ElementsDelta.stripIrrelevantProps",
+   "why": "passes it to Delta.create/Delta.calculate, which call it"
+  },
+  {
+   "id": "N08",
+   "repo": "excalidraw",
+   "from": "method:packages/element/src/delta.ts#ElementsDelta.create",
+   "to": "method:packages/element/src/delta.ts#ElementsDelta.satisfiesUpdate",
+   "why": "passes it to validate(); create calls only satisfiesAddition/satisfiesRemoval directly"
+  },
+  {
+   "id": "N09",
+   "repo": "mole",
+   "from": "function:packages/agentstate/src/index.ts#newestFirst",
+   "to": "function:packages/agentstate/src/index.ts#listRuns",
+   "why": "reverse direction"
+  },
+  {
+   "id": "N10",
+   "repo": "mole",
+   "from": "function:packages/questions/src/index.ts#questions",
+   "to": "method:packages/questions/src/index.ts#QuestionsOptions.model",
+   "why": "an interface property signature has no body; the static graph has this edge, a runtime call lands in the implementation (the test stub)"
+  },
+  {
+   "id": "N11",
+   "repo": "mole",
+   "from": "function:packages/agentstate/src/index.ts#listRuns",
+   "to": "function:packages/agentstate/src/index.ts#triedOf",
+   "why": "unrelated: listRuns never reaches triedOf"
+  }
+ ]
+}

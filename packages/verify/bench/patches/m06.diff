@@ -1,0 +1,13 @@
+diff --git a/packages/telemetry/src/index.ts b/packages/telemetry/src/index.ts
+index 3b972c9..7d028d9 100644
+--- a/packages/telemetry/src/index.ts
++++ b/packages/telemetry/src/index.ts
+@@ -29,7 +29,7 @@ let state: State | undefined;
+ let loaded = false;
+ 
+ export function telemetryEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
+-  return env.MOLE_OTEL === '1';
++  return Boolean(env.MOLE_OTEL);
+ }
+ 
+ /** true once the OpenTelemetry SDK has been imported in this process (never while MOLE_OTEL is unset) */

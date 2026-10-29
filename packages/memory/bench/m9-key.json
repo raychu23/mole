@@ -1,0 +1,3220 @@
+{
+ "written": "2026-10-29T01:26:19-0500",
+ "about": "M9 key (T19), written before any re-anchor code. cases: every candidate pair produced mechanically by bench/m9-key-builder.ts (TS/TSX function, const-arrow, class and method symbols whose name disappears from a commit's touched files paired with same-kind symbols whose name appears: same file, git -M renamed file, or another touched file when the token Jaccard >= 0.5), from the Mole repo history and the Excalidraw clone (250 commits). Each pair was then LABELLED BY HAND from reading the diff (label + reason): rename = same symbol, new name, body same; rename+change = same symbol renamed and edited (callers switched to it, or its code is the clear bulk of the new symbol); not-rename = different symbols (new helper, split, merge into a generalized function, small placeholder bodies). Labels are not produced by the re-anchor algorithm. synthetic: planted fixtures (counted separately in the bench), including the ambiguous cases.",
+ "labelRules": [
+  "rename: same role, callers (if any) now use the new name, normalized body identical except the symbol's own name",
+  "rename+change: same role continued under a new name (callers switched, or the old code is the clear bulk of the new symbol) and the body was edited",
+  "not-rename: the old symbol was dropped, split across several new symbols, or merged with another into one generalized symbol (no single successor), or the bodies are too small to tell"
+ ],
+ "thresholds": {
+  "similarity": "Dice coefficient over token bigrams: TypeScript tokens of the declaration with trivia removed, the symbol's own name replaced by $SELF and (methods) its class name by $CLS",
+  "renamedChangedMin": 0.55,
+  "tieEpsilon": 0.01,
+  "minTokens": 16,
+  "note": "fixed before the re-anchor code was written; similarity >= renamedChangedMin (and not identical) = renamed + changed (stale); identical normalized tokens = renamed (fresh); two best candidates within tieEpsilon after neighbor tie-breaks = ambiguous; declarations under minTokens tokens never re-anchor on body alone"
+ },
+ "scoring": "per old symbol: expected = its rename / rename+change pair if any, else none. right = re-anchored to the labelled symbol with the labelled outcome (rename -> renamed/fresh, rename+change -> renamed+changed/stale). wrong = re-anchored to any other symbol, or re-anchored when expected none. silentFresh = rename+change reported as renamed (fresh). Target: right >= 95% of expected re-anchors (real cases), wrong = 0, silentFresh = 0; synthetic must be all right.",
+ "repos": {
+  "mole": {
+   "path": "this repository (git history up to base b96d272)"
+  },
+  "excalidraw": {
+   "path": "~/.hermes/cache/scratch/impact/excalidraw",
+   "head": "e7b534668a60add7f725531f3c9abf32508c7b4e",
+   "commits": 250,
+   "note": "B7 clone; scratch dir pruned after 24 h idle: the bench exits non-zero with \"B7 clone missing\" when it is gone"
+  }
+ },
+ "cases": [
+  {
+   "id": "mole-f233906f-0",
+   "repo": "mole",
+   "commit": "f233906ffead353bafa6e6932debb36adff36662",
+   "parent": "54647b0443f97f907769c20febd8af31c44c0c47",
+   "subject": "T14 review-1 fixes: guard-test rule narrowed to tests the fix wrote (blame inside a block / it() whose title the fix added / whole deleted block T12 names), guard never evicts an asked fix (merged), no .snap guards, no questions on non-code lines, why = body sentence or in-hunk comment, word-boundary clip; regression tests review-fixes.test.ts",
+   "old": {
+    "path": "packages/questions/src/index.ts",
+    "tail": "enclosingTitles",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/questions/src/index.ts",
+    "tail": "isTest",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "isTest is a new 2-line predicate; enclosingTitles' walk continues in innermostTitled"
+  },
+  {
+   "id": "mole-f233906f-1",
+   "repo": "mole",
+   "commit": "f233906ffead353bafa6e6932debb36adff36662",
+   "parent": "54647b0443f97f907769c20febd8af31c44c0c47",
+   "subject": "T14 review-1 fixes: guard-test rule narrowed to tests the fix wrote (blame inside a block / it() whose title the fix added / whole deleted block T12 names), guard never evicts an asked fix (merged), no .snap guards, no questions on non-code lines, why = body sentence or in-hunk comment, word-boundary clip; regression tests review-fixes.test.ts",
+   "old": {
+    "path": "packages/questions/src/index.ts",
+    "tail": "enclosingTitles",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/questions/src/index.ts",
+    "tail": "innermostTitled",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "rename+change",
+   "reason": "same indent walk-up loop over enclosing titles; now returns the innermost titled block instead of the list (callers switched)"
+  },
+  {
+   "id": "mole-f233906f-2",
+   "repo": "mole",
+   "commit": "f233906ffead353bafa6e6932debb36adff36662",
+   "parent": "54647b0443f97f907769c20febd8af31c44c0c47",
+   "subject": "T14 review-1 fixes: guard-test rule narrowed to tests the fix wrote (blame inside a block / it() whose title the fix added / whole deleted block T12 names), guard never evicts an asked fix (merged), no .snap guards, no questions on non-code lines, why = body sentence or in-hunk comment, word-boundary clip; regression tests review-fixes.test.ts",
+   "old": {
+    "path": "packages/questions/src/index.ts",
+    "tail": "enclosingTitles",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/questions/src/index.ts",
+    "tail": "blockEnd",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "blockEnd scans forward for a block end; a new helper, not the title walk"
+  },
+  {
+   "id": "mole-f233906f-3",
+   "repo": "mole",
+   "commit": "f233906ffead353bafa6e6932debb36adff36662",
+   "parent": "54647b0443f97f907769c20febd8af31c44c0c47",
+   "subject": "T14 review-1 fixes: guard-test rule narrowed to tests the fix wrote (blame inside a block / it() whose title the fix added / whole deleted block T12 names), guard never evicts an asked fix (merged), no .snap guards, no questions on non-code lines, why = body sentence or in-hunk comment, word-boundary clip; regression tests review-fixes.test.ts",
+   "old": {
+    "path": "packages/questions/src/index.ts",
+    "tail": "enclosingTitles",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/questions/src/index.ts",
+    "tail": "editedItTitles",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "editedItTitles is a new consumer that calls the title walk, different job"
+  },
+  {
+   "id": "mole-f233906f-4",
+   "repo": "mole",
+   "commit": "f233906ffead353bafa6e6932debb36adff36662",
+   "parent": "54647b0443f97f907769c20febd8af31c44c0c47",
+   "subject": "T14 review-1 fixes: guard-test rule narrowed to tests the fix wrote (blame inside a block / it() whose title the fix added / whole deleted block T12 names), guard never evicts an asked fix (merged), no .snap guards, no questions on non-code lines, why = body sentence or in-hunk comment, word-boundary clip; regression tests review-fixes.test.ts",
+   "old": {
+    "path": "packages/questions/src/index.ts",
+    "tail": "enclosingTitles",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/questions/src/index.ts",
+    "tail": "deletedBlockTitles",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "deletedBlockTitles is a new consumer over removed lines, different job"
+  },
+  {
+   "id": "mole-f233906f-5",
+   "repo": "mole",
+   "commit": "f233906ffead353bafa6e6932debb36adff36662",
+   "parent": "54647b0443f97f907769c20febd8af31c44c0c47",
+   "subject": "T14 review-1 fixes: guard-test rule narrowed to tests the fix wrote (blame inside a block / it() whose title the fix added / whole deleted block T12 names), guard never evicts an asked fix (merged), no .snap guards, no questions on non-code lines, why = body sentence or in-hunk comment, word-boundary clip; regression tests review-fixes.test.ts",
+   "old": {
+    "path": "packages/questions/src/index.ts",
+    "tail": "enclosingTitles",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/questions/src/index.ts",
+    "tail": "bodySentence",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "bodySentence extracts a sentence; unrelated new helper"
+  },
+  {
+   "id": "mole-f233906f-6",
+   "repo": "mole",
+   "commit": "f233906ffead353bafa6e6932debb36adff36662",
+   "parent": "54647b0443f97f907769c20febd8af31c44c0c47",
+   "subject": "T14 review-1 fixes: guard-test rule narrowed to tests the fix wrote (blame inside a block / it() whose title the fix added / whole deleted block T12 names), guard never evicts an asked fix (merged), no .snap guards, no questions on non-code lines, why = body sentence or in-hunk comment, word-boundary clip; regression tests review-fixes.test.ts",
+   "old": {
+    "path": "packages/questions/src/index.ts",
+    "tail": "enclosingTitles",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/questions/src/index.ts",
+    "tail": "rank",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "rank orders guard tests; unrelated new helper"
+  },
+  {
+   "id": "excalidraw-b9a25540-0",
+   "repo": "excalidraw",
+   "commit": "b9a255407fc5e68893016de56057614da26df50c",
+   "parent": "cc6c29c0b9298653301a0d18b9c6511730e0b480",
+   "subject": "refactor: update SCSS syntax & remove open-color dep (#10633)",
+   "old": {
+    "path": "packages/common/src/colors.ts",
+    "tail": "getSpecificColorShades",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/common/src/colors.ts",
+    "tail": "colorToHex",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "open-color shade lookup removed with the dep; colorToHex is a new converter"
+  },
+  {
+   "id": "excalidraw-063533ae-1",
+   "repo": "excalidraw",
+   "commit": "063533aede8365bf18b8f08ec949a1e93697c17d",
+   "parent": "b43260d97be0cd36faaa630595c299963de2cb6c",
+   "subject": "feat(packages/excalidraw): support nested dropdown menu (#10749)",
+   "old": {
+    "path": "packages/excalidraw/components/dropdownMenu/common.ts",
+    "tail": "useHandleDropdownMenuItemClick",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/dropdownMenu/common.ts",
+    "tail": "useHandleDropdownMenuItemSelect",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "rename+change",
+   "reason": "both call sites now call the Select hook; same composeEventHandlers shape, simplified to onSelect only"
+  },
+  {
+   "id": "excalidraw-063533ae-2",
+   "repo": "excalidraw",
+   "commit": "063533aede8365bf18b8f08ec949a1e93697c17d",
+   "parent": "b43260d97be0cd36faaa630595c299963de2cb6c",
+   "subject": "feat(packages/excalidraw): support nested dropdown menu (#10749)",
+   "old": {
+    "path": "packages/excalidraw/components/dropdownMenu/dropdownMenuUtils.ts",
+    "tail": "getMenuTriggerComponent",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/dropdownMenu/dropdownMenuUtils.ts",
+    "tail": "getMenuComponent",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "merge: Trigger and Content lookups both became getMenuComponent(name); old names survive as curried consts, no single successor"
+  },
+  {
+   "id": "excalidraw-063533ae-3",
+   "repo": "excalidraw",
+   "commit": "063533aede8365bf18b8f08ec949a1e93697c17d",
+   "parent": "b43260d97be0cd36faaa630595c299963de2cb6c",
+   "subject": "feat(packages/excalidraw): support nested dropdown menu (#10749)",
+   "old": {
+    "path": "packages/excalidraw/components/dropdownMenu/dropdownMenuUtils.ts",
+    "tail": "getMenuContentComponent",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/dropdownMenu/dropdownMenuUtils.ts",
+    "tail": "getMenuComponent",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "merge: same as the Trigger pair; getMenuComponent generalizes two old functions"
+  },
+  {
+   "id": "excalidraw-46ddd609-4",
+   "repo": "excalidraw",
+   "commit": "46ddd60948b82f804c36b7c6325b6144187185cf",
+   "parent": "89a9badc27d30947882be7f2d6230d95141dd18b",
+   "subject": "feat(editor): support embedding google drive videos (#10788)",
+   "old": {
+    "path": "packages/element/src/embeddable.ts",
+    "tail": "parseYouTubeTimestamp",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/embeddable.ts",
+    "tail": "parseYouTubeLikeTimestamp",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "rename",
+   "reason": "body identical; renamed to cover YouTube-like links"
+  },
+  {
+   "id": "excalidraw-46ddd609-5",
+   "repo": "excalidraw",
+   "commit": "46ddd60948b82f804c36b7c6325b6144187185cf",
+   "parent": "89a9badc27d30947882be7f2d6230d95141dd18b",
+   "subject": "feat(editor): support embedding google drive videos (#10788)",
+   "old": {
+    "path": "packages/element/src/embeddable.ts",
+    "tail": "parseYouTubeTimestamp",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/embeddable.ts",
+    "tail": "parseGoogleDriveVideoLink",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "parseGoogleDriveVideoLink is a new parser; the timestamp parser is the Like-renamed one"
+  },
+  {
+   "id": "excalidraw-5852d0d4-6",
+   "repo": "excalidraw",
+   "commit": "5852d0d41005e67ca00124079b9eee91e4ab716d",
+   "parent": "c1e00c44f57841b18ea14bde30b8d1f5aff95c7e",
+   "subject": "fix: Arrow overlap arrow behavior (#10732)",
+   "old": {
+    "path": "packages/element/src/binding.ts",
+    "tail": "compareElementArea",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/binding.ts",
+    "tail": "extractBinding",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "extractBinding is unrelated new logic"
+  },
+  {
+   "id": "excalidraw-5852d0d4-7",
+   "repo": "excalidraw",
+   "commit": "5852d0d41005e67ca00124079b9eee91e4ab716d",
+   "parent": "c1e00c44f57841b18ea14bde30b8d1f5aff95c7e",
+   "subject": "fix: Arrow overlap arrow behavior (#10732)",
+   "old": {
+    "path": "packages/element/src/binding.ts",
+    "tail": "compareElementArea",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/binding.ts",
+    "tail": "elementArea",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "hard negative, small bodies: comparator (a,b) replaced by a different area(el) helper used inside a new sort"
+  },
+  {
+   "id": "excalidraw-4c3d037f-8",
+   "repo": "excalidraw",
+   "commit": "4c3d037f9cddcec92472cb2f61c0840097649cc1",
+   "parent": "5852d0d41005e67ca00124079b9eee91e4ab716d",
+   "subject": "feat(editor): allow clicking on links and embeds with laser tool (#10797)",
+   "old": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.handleEmbeddableCenterClick",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.handleIframeLikeCenterClick",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "label": "rename+change",
+   "reason": "the 3 call sites of the Embeddable handler became one call of the IframeLike handler; activation logic kept, hit test moved inside"
+  },
+  {
+   "id": "excalidraw-60b27588-9",
+   "repo": "excalidraw",
+   "commit": "60b275880da7d1eb7dff3782e8d491188790597a",
+   "parent": "cae9d2bcbd3e6c70c579a52574d91ea8898a80bb",
+   "subject": "feat(editor): support radar chart and multiple series for other chart types (#10824)",
+   "old": {
+    "path": "packages/excalidraw/charts.ts",
+    "tail": "chartTypeLine",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/charts/charts.line.ts",
+    "tail": "renderLineChart",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "chart rewrite split charts by type: the line-chart renderer moved to charts.line.ts and got multi-series support"
+  },
+  {
+   "id": "excalidraw-21dd1cfa-10",
+   "repo": "excalidraw",
+   "commit": "21dd1cfacc6beb5d259fdda5c50582a1d9b29894",
+   "parent": "fa1f7d9f2258375214b02a442b130185a5a1540c",
+   "subject": "feat(packages/excalidraw): state tracking, api hook, and others (#10870)",
+   "old": {
+    "path": "packages/excalidraw/components/Toast.tsx",
+    "tail": "Toast",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/Toast.tsx",
+    "tail": "ProgressBar",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "ProgressBar is a new sub-component"
+  },
+  {
+   "id": "excalidraw-21dd1cfa-11",
+   "repo": "excalidraw",
+   "commit": "21dd1cfacc6beb5d259fdda5c50582a1d9b29894",
+   "parent": "fa1f7d9f2258375214b02a442b130185a5a1540c",
+   "subject": "feat(packages/excalidraw): state tracking, api hook, and others (#10870)",
+   "old": {
+    "path": "packages/excalidraw/components/Toast.tsx",
+    "tail": "Toast",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/Toast.tsx",
+    "tail": "ToastComponent",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "rename+change",
+   "reason": "the Toast component body is now ToastComponent (Toast becomes a wrapper object); message type and markup edited"
+  },
+  {
+   "id": "excalidraw-3f5fdec0-12",
+   "repo": "excalidraw",
+   "commit": "3f5fdec04e2fdb7239432a436a6580c4d5e465b0",
+   "parent": "278cd357724b17e1119b6c76416520c42958d0e3",
+   "subject": "fix: group defragmenting (#11269)",
+   "old": {
+    "path": "packages/element/src/sortElements.ts",
+    "tail": "normalizeGroupElementOrder",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/sortElements.ts",
+    "tail": "defragmentGroups",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "rename+change",
+   "reason": "same caller (normalizeElementOrder) and error text renamed; group defragmenting rewritten"
+  },
+  {
+   "id": "excalidraw-b42b1a19-13",
+   "repo": "excalidraw",
+   "commit": "b42b1a193d5311d319861cd925ba89ca073ab2d4",
+   "parent": "f6d85bc80fe328e8f472636eb0d541f7bb891aa0",
+   "subject": "fix(editor): excessive battery usage (#11377)",
+   "old": {
+    "path": "packages/excalidraw/laser-trails.ts",
+    "tail": "LaserTrails.onFrame",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/laserTrails.ts",
+    "tail": "LaserTrails.stopCollabTrails",
+    "kind": "method"
+   },
+   "how": "renamed-file",
+   "label": "not-rename",
+   "reason": "onFrame removed; stopCollabTrails is a different method in the renamed file"
+  },
+  {
+   "id": "excalidraw-e4c70cb6-14",
+   "repo": "excalidraw",
+   "commit": "e4c70cb6c6493c816da94ec23188321854296e64",
+   "parent": "20f694d110d1e9048a7037ce84a82eb50d84e9dd",
+   "subject": "feat(editor): AnimationController for scrollToContent (#11553)",
+   "old": {
+    "path": "packages/excalidraw/tests/fitToContent.test.tsx",
+    "tail": "waitForNextAnimationFrame",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/tests/fitToContent.test.tsx",
+    "tail": "waitForAnimationProgress",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "rename+change",
+   "reason": "test helper generalized from 2 frames to N frames; all awaits switched to it"
+  },
+  {
+   "id": "excalidraw-e4c70cb6-15",
+   "repo": "excalidraw",
+   "commit": "e4c70cb6c6493c816da94ec23188321854296e64",
+   "parent": "20f694d110d1e9048a7037ce84a82eb50d84e9dd",
+   "subject": "feat(editor): AnimationController for scrollToContent (#11553)",
+   "old": {
+    "path": "packages/excalidraw/tests/fitToContent.test.tsx",
+    "tail": "waitForNextAnimationFrame",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/tests/fitToContent.test.tsx",
+    "tail": "waitForAnimationToStop",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "waitForAnimationToStop is a second new helper with a different stop condition"
+  },
+  {
+   "id": "excalidraw-51ca8abd-16",
+   "repo": "excalidraw",
+   "commit": "51ca8abde450e44f8f0db1b2708e0408915c7ab1",
+   "parent": "cce5001aaafe0286855984cf1b4e154b6ce86754",
+   "subject": "feat(packages/excalidraw): viewport locking (#11554)",
+   "old": {
+    "path": "packages/excalidraw/scene/scroll.ts",
+    "tail": "isOutsideViewPort",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/viewport.ts",
+    "tail": "doBoundsExceedViewport",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "same viewport-overflow predicate, moved to viewport.ts and reimplemented with zoom instead of coord conversion"
+  },
+  {
+   "id": "excalidraw-51ca8abd-17",
+   "repo": "excalidraw",
+   "commit": "51ca8abde450e44f8f0db1b2708e0408915c7ab1",
+   "parent": "cce5001aaafe0286855984cf1b4e154b6ce86754",
+   "subject": "feat(packages/excalidraw): viewport locking (#11554)",
+   "old": {
+    "path": "packages/excalidraw/scene/scroll.ts",
+    "tail": "calculateScrollCenter",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/viewport.ts",
+    "tail": "getScrollToContentState",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "scroll-center computation moved to viewport.ts as getScrollToContentState with a changed center point"
+  },
+  {
+   "id": "excalidraw-51ca8abd-18",
+   "repo": "excalidraw",
+   "commit": "51ca8abde450e44f8f0db1b2708e0408915c7ab1",
+   "parent": "cce5001aaafe0286855984cf1b4e154b6ce86754",
+   "subject": "feat(packages/excalidraw): viewport locking (#11554)",
+   "old": {
+    "path": "packages/excalidraw/scroll.ts",
+    "tail": "scrollToElements",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/viewport.ts",
+    "tail": "setViewportToBounds",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "scroll-to-elements moved to viewport.ts as setViewportToBounds taking bounds instead of elements"
+  },
+  {
+   "id": "excalidraw-339d3c37-19",
+   "repo": "excalidraw",
+   "commit": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "parent": "ed7c0c1d7d5510c961f09f6904c5c317b665d443",
+   "subject": "feat(editor): toolbar / active tool rewrites (#11649)",
+   "old": {
+    "path": "packages/excalidraw/components/MobileToolBar.tsx",
+    "tail": "MobileToolBar",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/MobileToolbar.tsx",
+    "tail": "MobileToolbar",
+    "kind": "function"
+   },
+   "how": "renamed-file",
+   "label": "rename+change",
+   "reason": "file and component MobileToolBar -> MobileToolbar (case), toolbar logic rewritten"
+  },
+  {
+   "id": "excalidraw-d331bb49-20",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getLinkDirectionFromKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "mergeIntervals",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-21",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getLinkDirectionFromKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "intervalIsFree",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-22",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getLinkDirectionFromKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "findNearestFreeSlot",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-23",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getLinkDirectionFromKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getConnectedFlowchartNodes",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-24",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getLinkDirectionFromKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "placeCluster",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-25",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getLinkDirectionFromKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "cloneFlowchartNode",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-26",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getNodeRelatives",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "mergeIntervals",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-27",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getNodeRelatives",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "intervalIsFree",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-28",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getNodeRelatives",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "findNearestFreeSlot",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-29",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getNodeRelatives",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getConnectedFlowchartNodes",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-30",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getNodeRelatives",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "placeCluster",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-31",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getNodeRelatives",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "cloneFlowchartNode",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-32",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getSuccessors",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "mergeIntervals",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-33",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getSuccessors",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "intervalIsFree",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-34",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getSuccessors",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "findNearestFreeSlot",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-35",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getSuccessors",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getConnectedFlowchartNodes",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-36",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getSuccessors",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "placeCluster",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-37",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getSuccessors",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "cloneFlowchartNode",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-38",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getPredecessors",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "mergeIntervals",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-39",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getPredecessors",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "intervalIsFree",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-40",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getPredecessors",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "findNearestFreeSlot",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-41",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getPredecessors",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getConnectedFlowchartNodes",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-42",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getPredecessors",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "placeCluster",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-43",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getPredecessors",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "cloneFlowchartNode",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-44",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getOffsets",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "mergeIntervals",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-45",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getOffsets",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "intervalIsFree",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-46",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getOffsets",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "findNearestFreeSlot",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-47",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getOffsets",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getConnectedFlowchartNodes",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-48",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getOffsets",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "placeCluster",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-49",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getOffsets",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "cloneFlowchartNode",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-50",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "addNewNode",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "mergeIntervals",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-51",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "addNewNode",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "intervalIsFree",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-52",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "addNewNode",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "findNearestFreeSlot",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-53",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "addNewNode",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "getConnectedFlowchartNodes",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-54",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "addNewNode",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "placeCluster",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-d331bb49-55",
+   "repo": "excalidraw",
+   "commit": "d331bb49fce8975819bae1c55c7a43bcd778a8af",
+   "parent": "339d3c373314d6b6bd0093949215ca00c1fb0c89",
+   "subject": "fix(editor): avoid overlap of flowchart children (#11532)",
+   "old": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "addNewNode",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/flowchart.ts",
+    "tail": "cloneFlowchartNode",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "flowchart placement rewrite: old relative/offset helpers dropped or moved into FlowChartNavigator; new interval helpers do other jobs"
+  },
+  {
+   "id": "excalidraw-37471630-56",
+   "repo": "excalidraw",
+   "commit": "374716304a7ded17769aa931b27e166cdc8ca2b2",
+   "parent": "5ca083436d44a51a0705d43ea22d323839d5fe8e",
+   "subject": "fix(editor): improve UX around locked animations (#11671)",
+   "old": {
+    "path": "packages/excalidraw/scene/zoom.ts",
+    "tail": "getStateForZoom",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/viewport.ts",
+    "tail": "getViewportForZoom",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "zoom math identical, moved from scene/zoom.ts to viewport.ts as getViewportForZoom with typed options"
+  },
+  {
+   "id": "excalidraw-37471630-57",
+   "repo": "excalidraw",
+   "commit": "374716304a7ded17769aa931b27e166cdc8ca2b2",
+   "parent": "5ca083436d44a51a0705d43ea22d323839d5fe8e",
+   "subject": "fix(editor): improve UX around locked animations (#11671)",
+   "old": {
+    "path": "packages/excalidraw/viewport.ts",
+    "tail": "isViewportOverscrolled",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/viewport.ts",
+    "tail": "getViewportForZoom",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "isViewportOverscrolled removed; different job from zoom math"
+  },
+  {
+   "id": "excalidraw-37471630-58",
+   "repo": "excalidraw",
+   "commit": "374716304a7ded17769aa931b27e166cdc8ca2b2",
+   "parent": "5ca083436d44a51a0705d43ea22d323839d5fe8e",
+   "subject": "fix(editor): improve UX around locked animations (#11671)",
+   "old": {
+    "path": "packages/excalidraw/viewport.ts",
+    "tail": "isViewportOverscrolled",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/viewport.ts",
+    "tail": "getViewportForZoomWithScrollConstraints",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "overscroll check removed; the WithScrollConstraints function is new constraint resolution"
+  },
+  {
+   "id": "excalidraw-37471630-59",
+   "repo": "excalidraw",
+   "commit": "374716304a7ded17769aa931b27e166cdc8ca2b2",
+   "parent": "5ca083436d44a51a0705d43ea22d323839d5fe8e",
+   "subject": "fix(editor): improve UX around locked animations (#11671)",
+   "old": {
+    "path": "packages/excalidraw/viewport.ts",
+    "tail": "animateToConstraints",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/viewport.ts",
+    "tail": "getViewportForZoom",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "animateToConstraints removed; different job"
+  },
+  {
+   "id": "excalidraw-37471630-60",
+   "repo": "excalidraw",
+   "commit": "374716304a7ded17769aa931b27e166cdc8ca2b2",
+   "parent": "5ca083436d44a51a0705d43ea22d323839d5fe8e",
+   "subject": "fix(editor): improve UX around locked animations (#11671)",
+   "old": {
+    "path": "packages/excalidraw/viewport.ts",
+    "tail": "animateToConstraints",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/viewport.ts",
+    "tail": "getViewportForZoomWithScrollConstraints",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "animation removed; new function resolves constraints, does not animate"
+  },
+  {
+   "id": "excalidraw-37471630-61",
+   "repo": "excalidraw",
+   "commit": "374716304a7ded17769aa931b27e166cdc8ca2b2",
+   "parent": "5ca083436d44a51a0705d43ea22d323839d5fe8e",
+   "subject": "fix(editor): improve UX around locked animations (#11671)",
+   "old": {
+    "path": "packages/excalidraw/viewport.ts",
+    "tail": "setViewportToBounds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/viewport.ts",
+    "tail": "getViewportForZoom",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "setViewportToBounds removed; different job"
+  },
+  {
+   "id": "excalidraw-37471630-62",
+   "repo": "excalidraw",
+   "commit": "374716304a7ded17769aa931b27e166cdc8ca2b2",
+   "parent": "5ca083436d44a51a0705d43ea22d323839d5fe8e",
+   "subject": "fix(editor): improve UX around locked animations (#11671)",
+   "old": {
+    "path": "packages/excalidraw/viewport.ts",
+    "tail": "setViewportToBounds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/viewport.ts",
+    "tail": "getViewportForZoomWithScrollConstraints",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "setViewportToBounds removed; different job"
+  },
+  {
+   "id": "excalidraw-f179f7ff-63",
+   "repo": "excalidraw",
+   "commit": "f179f7ffd23cd47a8f013c3fd0051cb07a83d1d6",
+   "parent": "e6ae6bf05755eb3845d9635953bd6477e948a8f6",
+   "subject": "feat(editor): draw to shape (auto-detection) (#9313)",
+   "old": {
+    "path": "packages/math/src/polygon.ts",
+    "tail": "pointOnPolygon",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/math/src/polygon.ts",
+    "tail": "polygonSignedArea",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "pointOnPolygon moved out; polygonSignedArea is new math"
+  },
+  {
+   "id": "excalidraw-f179f7ff-64",
+   "repo": "excalidraw",
+   "commit": "f179f7ffd23cd47a8f013c3fd0051cb07a83d1d6",
+   "parent": "e6ae6bf05755eb3845d9635953bd6477e948a8f6",
+   "subject": "feat(editor): draw to shape (auto-detection) (#9313)",
+   "old": {
+    "path": "packages/math/src/polygon.ts",
+    "tail": "pointOnPolygon",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/math/src/polygon.ts",
+    "tail": "polygonArea",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "polygonArea is new math"
+  },
+  {
+   "id": "excalidraw-f179f7ff-65",
+   "repo": "excalidraw",
+   "commit": "f179f7ffd23cd47a8f013c3fd0051cb07a83d1d6",
+   "parent": "e6ae6bf05755eb3845d9635953bd6477e948a8f6",
+   "subject": "feat(editor): draw to shape (auto-detection) (#9313)",
+   "old": {
+    "path": "packages/math/src/polygon.ts",
+    "tail": "pointOnPolygon",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/math/src/polygon.ts",
+    "tail": "convexHull",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "convexHull is new math"
+  },
+  {
+   "id": "excalidraw-f179f7ff-66",
+   "repo": "excalidraw",
+   "commit": "f179f7ffd23cd47a8f013c3fd0051cb07a83d1d6",
+   "parent": "e6ae6bf05755eb3845d9635953bd6477e948a8f6",
+   "subject": "feat(editor): draw to shape (auto-detection) (#9313)",
+   "old": {
+    "path": "packages/math/src/polygon.ts",
+    "tail": "pointOnPolygon",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/math/src/polygon.ts",
+    "tail": "simplifyConvexPolygon",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "simplifyConvexPolygon is new math"
+  },
+  {
+   "id": "excalidraw-f179f7ff-67",
+   "repo": "excalidraw",
+   "commit": "f179f7ffd23cd47a8f013c3fd0051cb07a83d1d6",
+   "parent": "e6ae6bf05755eb3845d9635953bd6477e948a8f6",
+   "subject": "feat(editor): draw to shape (auto-detection) (#9313)",
+   "old": {
+    "path": "packages/math/src/polygon.ts",
+    "tail": "pointOnPolygon",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/math/src/polygon.ts",
+    "tail": "normalizeTurn",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "normalizeTurn is new math"
+  },
+  {
+   "id": "excalidraw-1acf66ed-68",
+   "repo": "excalidraw",
+   "commit": "1acf66edabc2ac5bbd4aed0714aed7dca7cc2aab",
+   "parent": "7c0b3295760d3492a980f2f6416a36c9ef592103",
+   "subject": "feat(editor): bind text to hovered arrow endpoint (#11777)",
+   "old": {
+    "path": "packages/excalidraw/renderer/interactiveScene.ts",
+    "tail": "renderFocusPointHighlight",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/renderer/interactiveScene.ts",
+    "tail": "renderHoveredArrowTextAnchor",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "focus-point highlight dropped; arrow-text-anchor highlight is a new feature that only shares highlightPoint"
+  },
+  {
+   "id": "excalidraw-219571a7-69",
+   "repo": "excalidraw",
+   "commit": "219571a7187651c79648de08c9a98a3b2f7f607a",
+   "parent": "e4ab626739f5f163c5eca56190f615643218b61c",
+   "subject": "fix(editor): viewportportStatusFrame UI fixes (#11841)",
+   "old": {
+    "path": "packages/excalidraw/components/ViewportStatusFrame/ViewportStatusFrame.tsx",
+    "tail": "ViewportStatusFrame",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/ViewportStatusFrame/ViewportStatusFrame.tsx",
+    "tail": "ViewportStatusBorder",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "ViewportStatusBorder is a small piece split out of the frame"
+  },
+  {
+   "id": "excalidraw-219571a7-70",
+   "repo": "excalidraw",
+   "commit": "219571a7187651c79648de08c9a98a3b2f7f607a",
+   "parent": "e4ab626739f5f163c5eca56190f615643218b61c",
+   "subject": "fix(editor): viewportportStatusFrame UI fixes (#11841)",
+   "old": {
+    "path": "packages/excalidraw/components/ViewportStatusFrame/ViewportStatusFrame.tsx",
+    "tail": "ViewportStatusFrame",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/ViewportStatusFrame/ViewportStatusFrame.tsx",
+    "tail": "ViewportStatusBadge",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "rename+change",
+   "reason": "the frame's badge markup continues as ViewportStatusBadge; border split out"
+  },
+  {
+   "id": "excalidraw-cf212b2f-71",
+   "repo": "excalidraw",
+   "commit": "cf212b2f3354c09bd6f960b53a9cfb0a3ecbfa58",
+   "parent": "4872083c044491b6d5c96ae134a75464f96d6831",
+   "subject": "feat(editor): eyedropper fixes and improvements (#11859)",
+   "old": {
+    "path": "packages/common/src/colors.ts",
+    "tail": "getBucketFillBackgroundColor",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/common/src/colors.ts",
+    "tail": "_reverseDarkModeInvert",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "new dark-mode helper"
+  },
+  {
+   "id": "excalidraw-cf212b2f-72",
+   "repo": "excalidraw",
+   "commit": "cf212b2f3354c09bd6f960b53a9cfb0a3ecbfa58",
+   "parent": "4872083c044491b6d5c96ae134a75464f96d6831",
+   "subject": "feat(editor): eyedropper fixes and improvements (#11859)",
+   "old": {
+    "path": "packages/common/src/colors.ts",
+    "tail": "getBucketFillBackgroundColor",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/common/src/colors.ts",
+    "tail": "removeDarkModeFilter",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "new dark-mode helper"
+  },
+  {
+   "id": "excalidraw-abeeaeba-73",
+   "repo": "excalidraw",
+   "commit": "abeeaeba217ab3b5193b78c8d8d63c373b518ced",
+   "parent": "c5a50d223feb5fceaebc916ad75f2dcecb399467",
+   "subject": "feat(editor): customizing color top picks (#11872)",
+   "old": {
+    "path": "packages/excalidraw/components/ColorPicker/ColorPicker.tsx",
+    "tail": "ColorPicker",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/ColorPicker/ColorPicker.tsx",
+    "tail": "isColorPickerPopup",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "new popup predicate"
+  },
+  {
+   "id": "excalidraw-abeeaeba-74",
+   "repo": "excalidraw",
+   "commit": "abeeaeba217ab3b5193b78c8d8d63c373b518ced",
+   "parent": "c5a50d223feb5fceaebc916ad75f2dcecb399467",
+   "subject": "feat(editor): customizing color top picks (#11872)",
+   "old": {
+    "path": "packages/excalidraw/components/ColorPicker/ColorPicker.tsx",
+    "tail": "ColorPicker",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/ColorPicker/ColorPicker.tsx",
+    "tail": "ColorPickerComponent",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "rename+change",
+   "reason": "ColorPicker body is now ColorPickerComponent (ColorPicker becomes a memo wrapper); top-picks customization added"
+  },
+  {
+   "id": "excalidraw-abeeaeba-75",
+   "repo": "excalidraw",
+   "commit": "abeeaeba217ab3b5193b78c8d8d63c373b518ced",
+   "parent": "c5a50d223feb5fceaebc916ad75f2dcecb399467",
+   "subject": "feat(editor): customizing color top picks (#11872)",
+   "old": {
+    "path": "packages/excalidraw/components/ColorPicker/ColorPicker.tsx",
+    "tail": "ColorPicker",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/ColorPicker/ColorPicker.tsx",
+    "tail": "areColorPickerPropsEqual",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "props comparator for memo, new"
+  },
+  {
+   "id": "excalidraw-a9186480-76",
+   "repo": "excalidraw",
+   "commit": "a9186480121afc16ccdec789fc533e6a9ee68c10",
+   "parent": "4e758db17e10715aafcdfb98e6741b292631c300",
+   "subject": "feat(packages/excalidraw): add renderOverrides to allow overriding of element rendering (#12100)",
+   "old": {
+    "path": "packages/element/src/renderElement.ts",
+    "tail": "getRenderOpacity",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/renderElement.ts",
+    "tail": "getElementRenderOffset",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "new offset helper"
+  },
+  {
+   "id": "excalidraw-a9186480-77",
+   "repo": "excalidraw",
+   "commit": "a9186480121afc16ccdec789fc533e6a9ee68c10",
+   "parent": "4e758db17e10715aafcdfb98e6741b292631c300",
+   "subject": "feat(packages/excalidraw): add renderOverrides to allow overriding of element rendering (#12100)",
+   "old": {
+    "path": "packages/element/src/renderElement.ts",
+    "tail": "getRenderOpacity",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/renderElement.ts",
+    "tail": "getRenderElementWithPositionOverride",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "new override helper"
+  },
+  {
+   "id": "excalidraw-a9186480-78",
+   "repo": "excalidraw",
+   "commit": "a9186480121afc16ccdec789fc533e6a9ee68c10",
+   "parent": "4e758db17e10715aafcdfb98e6741b292631c300",
+   "subject": "feat(packages/excalidraw): add renderOverrides to allow overriding of element rendering (#12100)",
+   "old": {
+    "path": "packages/element/src/renderElement.ts",
+    "tail": "getRenderOpacity",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/renderElement.ts",
+    "tail": "resolveElementRenderState",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "rename+change",
+   "reason": "both opacity call sites now call resolveElementRenderState, which computes opacity plus overrides"
+  },
+  {
+   "id": "excalidraw-a9186480-79",
+   "repo": "excalidraw",
+   "commit": "a9186480121afc16ccdec789fc533e6a9ee68c10",
+   "parent": "4e758db17e10715aafcdfb98e6741b292631c300",
+   "subject": "feat(packages/excalidraw): add renderOverrides to allow overriding of element rendering (#12100)",
+   "old": {
+    "path": "packages/element/src/renderElement.ts",
+    "tail": "getRenderOpacity",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/renderElement.ts",
+    "tail": "drawElement",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "drawElement is a different renderer"
+  },
+  {
+   "id": "excalidraw-4850bf33-80",
+   "repo": "excalidraw",
+   "commit": "4850bf336fe0a8501af49d84deebc7fb56357cc2",
+   "parent": "2b9da9610083254edaec68871d593fb6b08e9072",
+   "subject": "fix(editor): Binding hit test based on distance (#10753)",
+   "old": {
+    "path": "packages/element/src/collision.ts",
+    "tail": "bindingBorderTest",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/collision.ts",
+    "tail": "isPointClippedByEnclosingFrame",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "frame clipping extracted into a new predicate"
+  },
+  {
+   "id": "excalidraw-4850bf33-81",
+   "repo": "excalidraw",
+   "commit": "4850bf336fe0a8501af49d84deebc7fb56357cc2",
+   "parent": "2b9da9610083254edaec68871d593fb6b08e9072",
+   "subject": "fix(editor): Binding hit test based on distance (#10753)",
+   "old": {
+    "path": "packages/element/src/collision.ts",
+    "tail": "bindingBorderTest",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/collision.ts",
+    "tail": "bindableElementBorderDistanceIfClose",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "rename+change",
+   "reason": "border hit test became a border distance: same bounds pre-check, frame clip and distance, returns a number"
+  },
+  {
+   "id": "excalidraw-4850bf33-82",
+   "repo": "excalidraw",
+   "commit": "4850bf336fe0a8501af49d84deebc7fb56357cc2",
+   "parent": "2b9da9610083254edaec68871d593fb6b08e9072",
+   "subject": "fix(editor): Binding hit test based on distance (#10753)",
+   "old": {
+    "path": "packages/element/src/collision.ts",
+    "tail": "bindingBorderTest",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/collision.ts",
+    "tail": "getBindingCandidates",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "getBindingCandidates is new list logic"
+  },
+  {
+   "id": "excalidraw-4850bf33-83",
+   "repo": "excalidraw",
+   "commit": "4850bf336fe0a8501af49d84deebc7fb56357cc2",
+   "parent": "2b9da9610083254edaec68871d593fb6b08e9072",
+   "subject": "fix(editor): Binding hit test based on distance (#10753)",
+   "old": {
+    "path": "packages/element/src/collision.ts",
+    "tail": "getHoveredElementForFocusPoint",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/collision.ts",
+    "tail": "isPointClippedByEnclosingFrame",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "new predicate"
+  },
+  {
+   "id": "excalidraw-4850bf33-84",
+   "repo": "excalidraw",
+   "commit": "4850bf336fe0a8501af49d84deebc7fb56357cc2",
+   "parent": "2b9da9610083254edaec68871d593fb6b08e9072",
+   "subject": "fix(editor): Binding hit test based on distance (#10753)",
+   "old": {
+    "path": "packages/element/src/collision.ts",
+    "tail": "getHoveredElementForFocusPoint",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/collision.ts",
+    "tail": "bindableElementBorderDistanceIfClose",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "distance helper is the bindingBorderTest successor, not this one"
+  },
+  {
+   "id": "excalidraw-4850bf33-85",
+   "repo": "excalidraw",
+   "commit": "4850bf336fe0a8501af49d84deebc7fb56357cc2",
+   "parent": "2b9da9610083254edaec68871d593fb6b08e9072",
+   "subject": "fix(editor): Binding hit test based on distance (#10753)",
+   "old": {
+    "path": "packages/element/src/collision.ts",
+    "tail": "getHoveredElementForFocusPoint",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/collision.ts",
+    "tail": "getBindingCandidates",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "single hovered-element finder dropped; its caller now uses other code; candidate list is a new API"
+  },
+  {
+   "id": "excalidraw-c10499ee-86",
+   "repo": "excalidraw",
+   "commit": "c10499eebb6267f24c056a03c5daf436aada0446",
+   "parent": "c12a8cd037f562d07c96d1df8a6b74bd06d3069b",
+   "subject": "feat(editor): text tool edits what you click, shows what a click will do, drags out free text in shapes (#12082)",
+   "old": {
+    "path": "packages/excalidraw/renderer/interactiveScene.ts",
+    "tail": "renderHoveredArrowTextAnchor",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/renderer/interactiveScene.ts",
+    "tail": "renderTextToolHover",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "rename+change",
+   "reason": "the hovered-arrow-anchor renderer became the arrow case of renderTextToolHover; same call site"
+  },
+  {
+   "id": "excalidraw-39478830-87",
+   "repo": "excalidraw",
+   "commit": "39478830637a8f234ec6032bcaa1616ed730a5de",
+   "parent": "3d056dbc8a552cf4e66a65e60da93e8e950bde27",
+   "subject": "refactor(editor): move text editing out of App into AppText (app.text) (#12195)",
+   "old": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.handleTextWysiwyg",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.text.ts",
+    "tail": "AppText.handleTextWysiwyg",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "method moved from App to AppText (App.text.ts); this.* became this.app.*"
+  },
+  {
+   "id": "excalidraw-39478830-88",
+   "repo": "excalidraw",
+   "commit": "39478830637a8f234ec6032bcaa1616ed730a5de",
+   "parent": "3d056dbc8a552cf4e66a65e60da93e8e950bde27",
+   "subject": "refactor(editor): move text editing out of App into AppText (app.text) (#12195)",
+   "old": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.getSelectedTextElement",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.text.ts",
+    "tail": "AppText.getSelectedTextElement",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "method moved from App to AppText (App.text.ts); this.* became this.app.*"
+  },
+  {
+   "id": "excalidraw-39478830-89",
+   "repo": "excalidraw",
+   "commit": "39478830637a8f234ec6032bcaa1616ed730a5de",
+   "parent": "3d056dbc8a552cf4e66a65e60da93e8e950bde27",
+   "subject": "refactor(editor): move text editing out of App into AppText (app.text) (#12195)",
+   "old": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.getSelectedTextElement",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.text.ts",
+    "tail": "AppText.getSelectedTextEditingContainerAtPosition",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "not-rename",
+   "reason": "cross pair: the moved getSelectedTextElement is a different method"
+  },
+  {
+   "id": "excalidraw-39478830-90",
+   "repo": "excalidraw",
+   "commit": "39478830637a8f234ec6032bcaa1616ed730a5de",
+   "parent": "3d056dbc8a552cf4e66a65e60da93e8e950bde27",
+   "subject": "refactor(editor): move text editing out of App into AppText (app.text) (#12195)",
+   "old": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.getSelectedTextEditingContainerAtPosition",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.text.ts",
+    "tail": "AppText.getSelectedTextElement",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "not-rename",
+   "reason": "cross pair: the moved getSelectedTextEditingContainerAtPosition is a different method"
+  },
+  {
+   "id": "excalidraw-39478830-91",
+   "repo": "excalidraw",
+   "commit": "39478830637a8f234ec6032bcaa1616ed730a5de",
+   "parent": "3d056dbc8a552cf4e66a65e60da93e8e950bde27",
+   "subject": "refactor(editor): move text editing out of App into AppText (app.text) (#12195)",
+   "old": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.getSelectedTextEditingContainerAtPosition",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.text.ts",
+    "tail": "AppText.getSelectedTextEditingContainerAtPosition",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "method moved from App to AppText (App.text.ts); this.* became this.app.*"
+  },
+  {
+   "id": "excalidraw-39478830-92",
+   "repo": "excalidraw",
+   "commit": "39478830637a8f234ec6032bcaa1616ed730a5de",
+   "parent": "3d056dbc8a552cf4e66a65e60da93e8e950bde27",
+   "subject": "refactor(editor): move text editing out of App into AppText (app.text) (#12195)",
+   "old": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.getTextElementAtPosition",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.text.ts",
+    "tail": "AppText.getTextElementAtPosition",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "method moved from App to AppText (App.text.ts); this.* became this.app.*"
+  },
+  {
+   "id": "excalidraw-39478830-93",
+   "repo": "excalidraw",
+   "commit": "39478830637a8f234ec6032bcaa1616ed730a5de",
+   "parent": "3d056dbc8a552cf4e66a65e60da93e8e950bde27",
+   "subject": "refactor(editor): move text editing out of App into AppText (app.text) (#12195)",
+   "old": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.getTextBindableContainerAtPosition",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.text.ts",
+    "tail": "AppText.getTextBindableContainerAtPosition",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "method moved from App to AppText (App.text.ts); this.* became this.app.*"
+  },
+  {
+   "id": "excalidraw-39478830-94",
+   "repo": "excalidraw",
+   "commit": "39478830637a8f234ec6032bcaa1616ed730a5de",
+   "parent": "3d056dbc8a552cf4e66a65e60da93e8e950bde27",
+   "subject": "refactor(editor): move text editing out of App into AppText (app.text) (#12195)",
+   "old": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.isEditingTextContent",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.text.ts",
+    "tail": "AppText.isEditingTextContent",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "method moved from App to AppText (App.text.ts); this.* became this.app.*"
+  },
+  {
+   "id": "excalidraw-39478830-95",
+   "repo": "excalidraw",
+   "commit": "39478830637a8f234ec6032bcaa1616ed730a5de",
+   "parent": "3d056dbc8a552cf4e66a65e60da93e8e950bde27",
+   "subject": "refactor(editor): move text editing out of App into AppText (app.text) (#12195)",
+   "old": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.getTextWysiwygSnappedToCenterPosition",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.text.ts",
+    "tail": "AppText.getTextWysiwygSnappedToCenterPosition",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "method moved from App to AppText (App.text.ts); this.* became this.app.*"
+  },
+  {
+   "id": "excalidraw-e283f724-96",
+   "repo": "excalidraw",
+   "commit": "e283f724c89a3aaa027b330fa0460ad4e0e4625b",
+   "parent": "39478830637a8f234ec6032bcaa1616ed730a5de",
+   "subject": "refactor(editor): move the clipboard out of App into AppClipboard (app.clipboard) (#12197)",
+   "old": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.insertClipboardContent",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.clipboard.ts",
+    "tail": "AppClipboard.insertClipboardContent",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "method moved from App to AppClipboard (App.clipboard.ts); this.* became this.app.*"
+  },
+  {
+   "id": "excalidraw-e283f724-97",
+   "repo": "excalidraw",
+   "commit": "e283f724c89a3aaa027b330fa0460ad4e0e4625b",
+   "parent": "39478830637a8f234ec6032bcaa1616ed730a5de",
+   "subject": "refactor(editor): move the clipboard out of App into AppClipboard (app.clipboard) (#12197)",
+   "old": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.addElementsFromMixedContentPaste",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.clipboard.ts",
+    "tail": "AppClipboard.addElementsFromMixedContentPaste",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "method moved from App to AppClipboard (App.clipboard.ts); this.* became this.app.*"
+  },
+  {
+   "id": "excalidraw-e283f724-98",
+   "repo": "excalidraw",
+   "commit": "e283f724c89a3aaa027b330fa0460ad4e0e4625b",
+   "parent": "39478830637a8f234ec6032bcaa1616ed730a5de",
+   "subject": "refactor(editor): move the clipboard out of App into AppClipboard (app.clipboard) (#12197)",
+   "old": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.addTextFromPaste",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.clipboard.ts",
+    "tail": "AppClipboard.addTextFromPaste",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "method moved from App to AppClipboard (App.clipboard.ts); this.* became this.app.*"
+  },
+  {
+   "id": "excalidraw-ed10ac7d-99",
+   "repo": "excalidraw",
+   "commit": "ed10ac7dca7e40f3f4a31269b4bfba980d0db41e",
+   "parent": "9ba66ed9b5bfbd4ca5bdfa23859cc48fedca5ac3",
+   "subject": "feat(editor): alt-drag the text being edited to duplicate it (#12219)",
+   "old": {
+    "path": "packages/excalidraw/components/App.duplicate.ts",
+    "tail": "AppDuplicate.editListItemText",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.duplicate.ts",
+    "tail": "AppDuplicate.editDuplicatedText",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "label": "rename+change",
+   "reason": "same text-edit entry, renamed for duplicated text in general; list item now optional"
+  },
+  {
+   "id": "excalidraw-53973c3a-100",
+   "repo": "excalidraw",
+   "commit": "53973c3a423fbd75a4ce68107786b4fcb90e4968",
+   "parent": "ed10ac7dca7e40f3f4a31269b4bfba980d0db41e",
+   "subject": "feat(editor): alt-click to cycle the selection through overlapping elements (#12237)",
+   "old": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.isASelectedElement",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.selectionTool.ts",
+    "tail": "AppSelectionTool.isASelectedElement",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "method moved from App to AppSelectionTool; this.* became this.app.*"
+  },
+  {
+   "id": "excalidraw-53973c3a-101",
+   "repo": "excalidraw",
+   "commit": "53973c3a423fbd75a4ce68107786b4fcb90e4968",
+   "parent": "ed10ac7dca7e40f3f4a31269b4bfba980d0db41e",
+   "subject": "feat(editor): alt-click to cycle the selection through overlapping elements (#12237)",
+   "old": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.isHittingCommonBoundingBoxOfSelectedElements",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.selectionTool.ts",
+    "tail": "AppSelectionTool.isHittingCommonBoundingBoxOfSelectedElements",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "method moved from App to AppSelectionTool; this.* became this.app.*"
+  },
+  {
+   "id": "excalidraw-53973c3a-102",
+   "repo": "excalidraw",
+   "commit": "53973c3a423fbd75a4ce68107786b4fcb90e4968",
+   "parent": "ed10ac7dca7e40f3f4a31269b4bfba980d0db41e",
+   "subject": "feat(editor): alt-click to cycle the selection through overlapping elements (#12237)",
+   "old": {
+    "path": "packages/excalidraw/components/App.tsx",
+    "tail": "App.clearSelection",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.selectionTool.ts",
+    "tail": "AppSelectionTool.clearSelection",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "method moved from App to AppSelectionTool; this.* became this.app.*"
+  },
+  {
+   "id": "excalidraw-e65eca99-103",
+   "repo": "excalidraw",
+   "commit": "e65eca999e071503efb893d3379a29fb96ff37c4",
+   "parent": "4c00f31ddcc20086bac1020428819fe0b9a30bce",
+   "subject": "refactor(editor): app.selection, and the rest of the selection tool out of App (#12258)",
+   "old": {
+    "path": "packages/element/src/selection.ts",
+    "tail": "_getLinearElementEditor",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.selection.ts",
+    "tail": "getLinearElementEditor",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "label": "rename+change",
+   "reason": "linear-editor getter moved from element/selection.ts to App.selection.ts, keeps the current editor"
+  },
+  {
+   "id": "excalidraw-e65eca99-104",
+   "repo": "excalidraw",
+   "commit": "e65eca999e071503efb893d3379a29fb96ff37c4",
+   "parent": "4c00f31ddcc20086bac1020428819fe0b9a30bce",
+   "subject": "refactor(editor): app.selection, and the rest of the selection tool out of App (#12258)",
+   "old": {
+    "path": "packages/excalidraw/components/App.selectionTool.ts",
+    "tail": "AppSelectionTool.isASelectedElement",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.selection.ts",
+    "tail": "AppSelection.isASelectedElement",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "rename",
+   "reason": "method moved from AppSelectionTool to AppSelection unchanged"
+  },
+  {
+   "id": "excalidraw-e65eca99-105",
+   "repo": "excalidraw",
+   "commit": "e65eca999e071503efb893d3379a29fb96ff37c4",
+   "parent": "4c00f31ddcc20086bac1020428819fe0b9a30bce",
+   "subject": "refactor(editor): app.selection, and the rest of the selection tool out of App (#12258)",
+   "old": {
+    "path": "packages/excalidraw/components/App.selectionTool.ts",
+    "tail": "AppSelectionTool.isASelectedElement",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.selectionTool.ts",
+    "tail": "AppSelectionTool.getTransformHandleAt",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "getTransformHandleAt is a different method"
+  },
+  {
+   "id": "excalidraw-e65eca99-106",
+   "repo": "excalidraw",
+   "commit": "e65eca999e071503efb893d3379a29fb96ff37c4",
+   "parent": "4c00f31ddcc20086bac1020428819fe0b9a30bce",
+   "subject": "refactor(editor): app.selection, and the rest of the selection tool out of App (#12258)",
+   "old": {
+    "path": "packages/excalidraw/components/App.selectionTool.ts",
+    "tail": "AppSelectionTool.isHittingCommonBoundingBoxOfSelectedElements",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.selection.ts",
+    "tail": "AppSelection.isHittingCommonBoundingBoxOfSelectedElements",
+    "kind": "method"
+   },
+   "how": "cross-file",
+   "label": "rename",
+   "reason": "method moved from AppSelectionTool to AppSelection unchanged"
+  },
+  {
+   "id": "excalidraw-e65eca99-107",
+   "repo": "excalidraw",
+   "commit": "e65eca999e071503efb893d3379a29fb96ff37c4",
+   "parent": "4c00f31ddcc20086bac1020428819fe0b9a30bce",
+   "subject": "refactor(editor): app.selection, and the rest of the selection tool out of App (#12258)",
+   "old": {
+    "path": "packages/excalidraw/components/App.selectionTool.ts",
+    "tail": "AppSelectionTool.isHittingCommonBoundingBoxOfSelectedElements",
+    "kind": "method"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/App.selectionTool.ts",
+    "tail": "AppSelectionTool.getTransformHandleAt",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "getTransformHandleAt is a different method"
+  },
+  {
+   "id": "excalidraw-ef53e541-108",
+   "repo": "excalidraw",
+   "commit": "ef53e5417b2df6b2b8663e385bb8b9a39fea8428",
+   "parent": "e65eca999e071503efb893d3379a29fb96ff37c4",
+   "subject": "feat(editor): crop editor modifiers as resizing, and double-click a handle to uncrop (#12260)",
+   "old": {
+    "path": "packages/element/src/cropElement.ts",
+    "tail": "recomputeOrigin",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/cropElement.ts",
+    "tail": "cropElementToBounds",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "recomputeOrigin math replaced; cropElementToBounds is a new higher-level crop"
+  },
+  {
+   "id": "excalidraw-ef53e541-109",
+   "repo": "excalidraw",
+   "commit": "ef53e5417b2df6b2b8663e385bb8b9a39fea8428",
+   "parent": "e65eca999e071503efb893d3379a29fb96ff37c4",
+   "subject": "feat(editor): crop editor modifiers as resizing, and double-click a handle to uncrop (#12260)",
+   "old": {
+    "path": "packages/element/src/cropElement.ts",
+    "tail": "recomputeOrigin",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/cropElement.ts",
+    "tail": "uncropElementSides",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "new uncrop helper"
+  },
+  {
+   "id": "excalidraw-e1b7aacb-110",
+   "repo": "excalidraw",
+   "commit": "e1b7aacb356a492aa1e0fc6eb57b8896124027f0",
+   "parent": "4c37956ba5f04ec342a9d9d5891a38f22c5b7b4e",
+   "subject": "feat(packages/excalidraw): replace the export functions with `exportScene` (#12347)",
+   "old": {
+    "path": "packages/excalidraw/scene/export.ts",
+    "tail": "getExportSize",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/scene/export.ts",
+    "tail": "clampPadding",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "export size replaced by a config pipeline; clampPadding is a new helper"
+  },
+  {
+   "id": "excalidraw-e1b7aacb-111",
+   "repo": "excalidraw",
+   "commit": "e1b7aacb356a492aa1e0fc6eb57b8896124027f0",
+   "parent": "4c37956ba5f04ec342a9d9d5891a38f22c5b7b4e",
+   "subject": "feat(packages/excalidraw): replace the export functions with `exportScene` (#12347)",
+   "old": {
+    "path": "packages/excalidraw/scene/export.ts",
+    "tail": "getExportSize",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/scene/export.ts",
+    "tail": "getExportConfigFromAppState",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "new config builder"
+  },
+  {
+   "id": "excalidraw-e1b7aacb-112",
+   "repo": "excalidraw",
+   "commit": "e1b7aacb356a492aa1e0fc6eb57b8896124027f0",
+   "parent": "4c37956ba5f04ec342a9d9d5891a38f22c5b7b4e",
+   "subject": "feat(packages/excalidraw): replace the export functions with `exportScene` (#12347)",
+   "old": {
+    "path": "packages/excalidraw/scene/export.ts",
+    "tail": "getExportSize",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/scene/export.ts",
+    "tail": "configExportDimension",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "new dimension helper"
+  },
+  {
+   "id": "excalidraw-1d4dc2c0-113",
+   "repo": "excalidraw",
+   "commit": "1d4dc2c0e6e476911d0760e9c3cf3694f2d43384",
+   "parent": "6f0a4d19b577e781ee5491d6cb89799b3fba7ee8",
+   "subject": "feat(editor): Lazy load and don't precache Firebase, lazy load mermaid (#12274)",
+   "old": {
+    "path": "excalidraw-app/data/firebase.ts",
+    "tail": "_initializeFirebase",
+    "kind": "function"
+   },
+   "new": {
+    "path": "excalidraw-app/data/firebase.ts",
+    "tail": "lazy",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "firebase init getters replaced by a generic lazy() loader and an upload helper; no one-to-one successor"
+  },
+  {
+   "id": "excalidraw-1d4dc2c0-114",
+   "repo": "excalidraw",
+   "commit": "1d4dc2c0e6e476911d0760e9c3cf3694f2d43384",
+   "parent": "6f0a4d19b577e781ee5491d6cb89799b3fba7ee8",
+   "subject": "feat(editor): Lazy load and don't precache Firebase, lazy load mermaid (#12274)",
+   "old": {
+    "path": "excalidraw-app/data/firebase.ts",
+    "tail": "_initializeFirebase",
+    "kind": "function"
+   },
+   "new": {
+    "path": "excalidraw-app/data/firebase.ts",
+    "tail": "uploadBytesToFirebase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "firebase init getters replaced by a generic lazy() loader and an upload helper; no one-to-one successor"
+  },
+  {
+   "id": "excalidraw-1d4dc2c0-115",
+   "repo": "excalidraw",
+   "commit": "1d4dc2c0e6e476911d0760e9c3cf3694f2d43384",
+   "parent": "6f0a4d19b577e781ee5491d6cb89799b3fba7ee8",
+   "subject": "feat(editor): Lazy load and don't precache Firebase, lazy load mermaid (#12274)",
+   "old": {
+    "path": "excalidraw-app/data/firebase.ts",
+    "tail": "_getFirestore",
+    "kind": "function"
+   },
+   "new": {
+    "path": "excalidraw-app/data/firebase.ts",
+    "tail": "lazy",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "firebase init getters replaced by a generic lazy() loader and an upload helper; no one-to-one successor"
+  },
+  {
+   "id": "excalidraw-1d4dc2c0-116",
+   "repo": "excalidraw",
+   "commit": "1d4dc2c0e6e476911d0760e9c3cf3694f2d43384",
+   "parent": "6f0a4d19b577e781ee5491d6cb89799b3fba7ee8",
+   "subject": "feat(editor): Lazy load and don't precache Firebase, lazy load mermaid (#12274)",
+   "old": {
+    "path": "excalidraw-app/data/firebase.ts",
+    "tail": "_getFirestore",
+    "kind": "function"
+   },
+   "new": {
+    "path": "excalidraw-app/data/firebase.ts",
+    "tail": "uploadBytesToFirebase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "firebase init getters replaced by a generic lazy() loader and an upload helper; no one-to-one successor"
+  },
+  {
+   "id": "excalidraw-1d4dc2c0-117",
+   "repo": "excalidraw",
+   "commit": "1d4dc2c0e6e476911d0760e9c3cf3694f2d43384",
+   "parent": "6f0a4d19b577e781ee5491d6cb89799b3fba7ee8",
+   "subject": "feat(editor): Lazy load and don't precache Firebase, lazy load mermaid (#12274)",
+   "old": {
+    "path": "excalidraw-app/data/firebase.ts",
+    "tail": "_getStorage",
+    "kind": "function"
+   },
+   "new": {
+    "path": "excalidraw-app/data/firebase.ts",
+    "tail": "lazy",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "firebase init getters replaced by a generic lazy() loader and an upload helper; no one-to-one successor"
+  },
+  {
+   "id": "excalidraw-1d4dc2c0-118",
+   "repo": "excalidraw",
+   "commit": "1d4dc2c0e6e476911d0760e9c3cf3694f2d43384",
+   "parent": "6f0a4d19b577e781ee5491d6cb89799b3fba7ee8",
+   "subject": "feat(editor): Lazy load and don't precache Firebase, lazy load mermaid (#12274)",
+   "old": {
+    "path": "excalidraw-app/data/firebase.ts",
+    "tail": "_getStorage",
+    "kind": "function"
+   },
+   "new": {
+    "path": "excalidraw-app/data/firebase.ts",
+    "tail": "uploadBytesToFirebase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "firebase init getters replaced by a generic lazy() loader and an upload helper; no one-to-one successor"
+  },
+  {
+   "id": "excalidraw-1d4dc2c0-119",
+   "repo": "excalidraw",
+   "commit": "1d4dc2c0e6e476911d0760e9c3cf3694f2d43384",
+   "parent": "6f0a4d19b577e781ee5491d6cb89799b3fba7ee8",
+   "subject": "feat(editor): Lazy load and don't precache Firebase, lazy load mermaid (#12274)",
+   "old": {
+    "path": "excalidraw-app/data/firebase.ts",
+    "tail": "loadFirebaseStorage",
+    "kind": "function"
+   },
+   "new": {
+    "path": "excalidraw-app/data/firebase.ts",
+    "tail": "lazy",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "firebase init getters replaced by a generic lazy() loader and an upload helper; no one-to-one successor"
+  },
+  {
+   "id": "excalidraw-1d4dc2c0-120",
+   "repo": "excalidraw",
+   "commit": "1d4dc2c0e6e476911d0760e9c3cf3694f2d43384",
+   "parent": "6f0a4d19b577e781ee5491d6cb89799b3fba7ee8",
+   "subject": "feat(editor): Lazy load and don't precache Firebase, lazy load mermaid (#12274)",
+   "old": {
+    "path": "excalidraw-app/data/firebase.ts",
+    "tail": "loadFirebaseStorage",
+    "kind": "function"
+   },
+   "new": {
+    "path": "excalidraw-app/data/firebase.ts",
+    "tail": "uploadBytesToFirebase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "firebase init getters replaced by a generic lazy() loader and an upload helper; no one-to-one successor"
+  },
+  {
+   "id": "excalidraw-c711e80e-121",
+   "repo": "excalidraw",
+   "commit": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "parent": "808d068e18266ff9311809c23c19261fa0eb1014",
+   "subject": "fix(editor): route elbow arrows with a single corner where one fits (#12458)",
+   "old": {
+    "path": "packages/element/src/elbowArrow.ts",
+    "tail": "routeElbowArrow",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/elbowArrow.ts",
+    "tail": "updateElbowArrowRoute",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "new routing helper; the old router is the GridRoute rename"
+  },
+  {
+   "id": "excalidraw-c711e80e-122",
+   "repo": "excalidraw",
+   "commit": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "parent": "808d068e18266ff9311809c23c19261fa0eb1014",
+   "subject": "fix(editor): route elbow arrows with a single corner where one fits (#12458)",
+   "old": {
+    "path": "packages/element/src/elbowArrow.ts",
+    "tail": "routeElbowArrow",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/elbowArrow.ts",
+    "tail": "segmentCrossesBounds",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "new routing helper; the old router is the GridRoute rename"
+  },
+  {
+   "id": "excalidraw-c711e80e-123",
+   "repo": "excalidraw",
+   "commit": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "parent": "808d068e18266ff9311809c23c19261fa0eb1014",
+   "subject": "fix(editor): route elbow arrows with a single corner where one fits (#12458)",
+   "old": {
+    "path": "packages/element/src/elbowArrow.ts",
+    "tail": "routeElbowArrow",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/elbowArrow.ts",
+    "tail": "getSimpleRoute",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "new routing helper; the old router is the GridRoute rename"
+  },
+  {
+   "id": "excalidraw-c711e80e-124",
+   "repo": "excalidraw",
+   "commit": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "parent": "808d068e18266ff9311809c23c19261fa0eb1014",
+   "subject": "fix(editor): route elbow arrows with a single corner where one fits (#12458)",
+   "old": {
+    "path": "packages/element/src/elbowArrow.ts",
+    "tail": "routeElbowArrow",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/elbowArrow.ts",
+    "tail": "getElbowArrowRoute",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "new routing helper; the old router is the GridRoute rename"
+  },
+  {
+   "id": "excalidraw-c711e80e-125",
+   "repo": "excalidraw",
+   "commit": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "parent": "808d068e18266ff9311809c23c19261fa0eb1014",
+   "subject": "fix(editor): route elbow arrows with a single corner where one fits (#12458)",
+   "old": {
+    "path": "packages/element/src/elbowArrow.ts",
+    "tail": "routeElbowArrow",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/element/src/elbowArrow.ts",
+    "tail": "getElbowArrowGridRoute",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "rename",
+   "reason": "body identical; renamed to getElbowArrowGridRoute next to a new simple router"
+  },
+  {
+   "id": "excalidraw-14bb42ed-126",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "getIndentation",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-127",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "closeUnclosedBlocks",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-128",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "getUnclosedBlockCandidates",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-129",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "mapOutsideLabels",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-130",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "quoteLabelsWithBrackets",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-131",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "closeUnclosedShape",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-132",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "removeUnmatchedClosers",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-133",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "replaceSingleDashArrows",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-134",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "fixSingleDashArrows",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-135",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "fixStateSingleDashArrows",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-136",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "capitalizeEndNodes",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-137",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "addSequenceMessageColon",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-138",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "addRelationshipColon",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-139",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "fixFlowchartDirection",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-140",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "fixDirectionStatements",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-141",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "fixHeaderDirection",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-142",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "getEditDistance",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  },
+  {
+   "id": "excalidraw-14bb42ed-143",
+   "repo": "excalidraw",
+   "commit": "14bb42edee3d6fee6be264e3ee78670b3b9cee79",
+   "parent": "c711e80ec55b3d3713ce0e796540d16c401b2fbe",
+   "subject": "feat(editor): lay Mermaid diagrams out with Pele (mermaid-to-excalidraw v3) (#12480)",
+   "old": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "appendMissingEnds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "packages/excalidraw/components/TTDDialog/utils/mermaidAutoFix.ts",
+    "tail": "getDiagramTypeCandidates",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "label": "not-rename",
+   "reason": "mermaid auto-fix rewrite: appendMissingEnds dropped, logic spread over several new helpers, no single successor"
+  }
+ ],
+ "synthetic": [
+  {
+   "id": "syn-rename-recursive",
+   "label": "rename",
+   "reason": "only the name changed; the self-call is renamed with it",
+   "old": {
+    "src/a.ts": "export function countDown(n: number): number {\n  if (n <= 0) return 0;\n  return countDown(n - 1) + 1;\n}\n\nexport function other(): string {\n  return 'x';\n}\n"
+   },
+   "new": {
+    "src/a.ts": "export function countdownSteps(n: number): number {\n  if (n <= 0) return 0;\n  return countdownSteps(n - 1) + 1;\n}\n\nexport function other(): string {\n  return 'x';\n}\n"
+   },
+   "anchor": "src/a.ts#countDown",
+   "expect": {
+    "outcome": "renamed",
+    "to": "src/a.ts#countdownSteps"
+   }
+  },
+  {
+   "id": "syn-rename-move",
+   "label": "rename",
+   "reason": "renamed and moved to a new file, body unchanged",
+   "old": {
+    "src/a.ts": "export function formatPrice(cents: number): string {\n  const whole = Math.floor(cents / 100);\n  const rest = String(cents % 100).padStart(2, '0');\n  return '$' + whole + '.' + rest;\n}\n\nexport function keep(): number {\n  return 1;\n}\n"
+   },
+   "new": {
+    "src/a.ts": "export function keep(): number {\n  return 1;\n}\n",
+    "src/money.ts": "// money helpers\nexport function formatCents(cents: number): string {\n  const whole = Math.floor(cents / 100);\n  const rest = String(cents % 100).padStart(2, '0');\n  return '$' + whole + '.' + rest;\n}\n"
+   },
+   "anchor": "src/a.ts#formatPrice",
+   "expect": {
+    "outcome": "renamed",
+    "to": "src/money.ts#formatCents"
+   }
+  },
+  {
+   "id": "syn-method-rename",
+   "label": "rename",
+   "reason": "method renamed inside its class, body unchanged",
+   "old": {
+    "src/cart.ts": "export class Cart {\n  private items: number[] = [];\n  total(): number {\n    return this.items.reduce((a, b) => a + b, 0) * 1.0;\n  }\n  add(p: number): void {\n    this.items.push(p);\n  }\n}\n"
+   },
+   "new": {
+    "src/cart.ts": "export class Cart {\n  private items: number[] = [];\n  sum(): number {\n    return this.items.reduce((a, b) => a + b, 0) * 1.0;\n  }\n  add(p: number): void {\n    this.items.push(p);\n  }\n}\n"
+   },
+   "anchor": "src/cart.ts#Cart.total",
+   "expect": {
+    "outcome": "renamed",
+    "to": "src/cart.ts#Cart.sum"
+   }
+  },
+  {
+   "id": "syn-class-rename",
+   "label": "rename",
+   "reason": "class renamed, members unchanged",
+   "old": {
+    "src/shop.ts": "export class ShoppingCart {\n  private items: string[] = [];\n  add(name: string): number {\n    this.items.push(name);\n    return this.items.length;\n  }\n  clear(): void {\n    this.items = [];\n  }\n}\n"
+   },
+   "new": {
+    "src/shop.ts": "export class Basket {\n  private items: string[] = [];\n  add(name: string): number {\n    this.items.push(name);\n    return this.items.length;\n  }\n  clear(): void {\n    this.items = [];\n  }\n}\n"
+   },
+   "anchor": "src/shop.ts#ShoppingCart",
+   "expect": {
+    "outcome": "renamed",
+    "to": "src/shop.ts#Basket"
+   }
+  },
+  {
+   "id": "syn-rename-change",
+   "label": "rename+change",
+   "reason": "renamed and one validation line added: must come out stale",
+   "old": {
+    "src/user.ts": "export function parseUser(raw: string): { name: string; age: number } {\n  const [name, age] = raw.split(',');\n  return { name: name.trim(), age: Number(age) };\n}\n"
+   },
+   "new": {
+    "src/user.ts": "export function parseAccount(raw: string): { name: string; age: number } {\n  const [name, age] = raw.split(',');\n  if (!name) throw new Error('empty');\n  return { name: name.trim(), age: Number(age) };\n}\n"
+   },
+   "anchor": "src/user.ts#parseUser",
+   "expect": {
+    "outcome": "renamed+changed",
+    "to": "src/user.ts#parseAccount"
+   }
+  },
+  {
+   "id": "syn-ambiguous-two-files",
+   "label": "ambiguous",
+   "reason": "two new functions in two new files with the same body: never guess",
+   "old": {
+    "src/a.ts": "export function computeTotal(items: number[]): number {\n  let t = 0;\n  for (const i of items) t += i;\n  return t;\n}\n\nexport function keep(): number {\n  return 1;\n}\n"
+   },
+   "new": {
+    "src/a.ts": "export function keep(): number {\n  return 1;\n}\n",
+    "src/x.ts": "export function sumItems(items: number[]): number {\n  let t = 0;\n  for (const i of items) t += i;\n  return t;\n}\n",
+    "src/y.ts": "export function addUp(items: number[]): number {\n  let t = 0;\n  for (const i of items) t += i;\n  return t;\n}\n"
+   },
+   "anchor": "src/a.ts#computeTotal",
+   "expect": {
+    "outcome": "ambiguous",
+    "candidates": [
+     "src/x.ts#sumItems",
+     "src/y.ts#addUp"
+    ]
+   }
+  },
+  {
+   "id": "syn-ambiguous-same-file",
+   "label": "ambiguous",
+   "reason": "two new functions in the same file with the same body: never guess",
+   "old": {
+    "src/n.ts": "export function normalizeName(s: string): string {\n  return s.trim().toLowerCase().replace(/\\s+/g, ' ');\n}\n"
+   },
+   "new": {
+    "src/n.ts": "export function normalizeFirst(s: string): string {\n  return s.trim().toLowerCase().replace(/\\s+/g, ' ');\n}\n\nexport function normalizeLast(s: string): string {\n  return s.trim().toLowerCase().replace(/\\s+/g, ' ');\n}\n"
+   },
+   "anchor": "src/n.ts#normalizeName",
+   "expect": {
+    "outcome": "ambiguous",
+    "candidates": [
+     "src/n.ts#normalizeFirst",
+     "src/n.ts#normalizeLast"
+    ]
+   }
+  },
+  {
+   "id": "syn-tiny-negative",
+   "label": "not-rename",
+   "reason": "hard negative: a tiny () => null placeholder removed and another added; too small to be evidence",
+   "old": {
+    "src/ui.tsx": "export const renderNothing = () => null;\n\nexport function Panel(): string {\n  return 'panel';\n}\n"
+   },
+   "new": {
+    "src/ui.tsx": "export const emptyCell = () => null;\n\nexport function Panel(): string {\n  return 'panel';\n}\n"
+   },
+   "anchor": "src/ui.tsx#renderNothing",
+   "expect": {
+    "outcome": "none"
+   }
+  },
+  {
+   "id": "syn-duplicated-helper",
+   "label": "not-rename",
+   "reason": "hard negative: a duplicate helper deleted in favour of an existing identical one; the survivor is not new",
+   "old": {
+    "src/a.ts": "export function clamp(v: number, lo: number, hi: number): number {\n  return Math.min(hi, Math.max(lo, v));\n}\n",
+    "src/util.ts": "export function clampValue(v: number, lo: number, hi: number): number {\n  return Math.min(hi, Math.max(lo, v));\n}\n"
+   },
+   "new": {
+    "src/a.ts": "export const VERSION = 1;\n",
+    "src/util.ts": "export function clampValue(v: number, lo: number, hi: number): number {\n  return Math.min(hi, Math.max(lo, v));\n}\n"
+   },
+   "anchor": "src/a.ts#clamp",
+   "expect": {
+    "outcome": "none"
+   }
+  },
+  {
+   "id": "syn-unrelated-delete",
+   "label": "not-rename",
+   "reason": "deleted; the added function is unrelated",
+   "old": {
+    "src/mail.ts": "export function sendEmail(to: string, body: string): boolean {\n  if (!to.includes('@')) return false;\n  console.log('sending', to, body.length);\n  return true;\n}\n"
+   },
+   "new": {
+    "src/mail.ts": "export function parseDate(s: string): Date | undefined {\n  const d = new Date(s);\n  return Number.isNaN(d.getTime()) ? undefined : d;\n}\n"
+   },
+   "anchor": "src/mail.ts#sendEmail",
+   "expect": {
+    "outcome": "none"
+   }
+  }
+ ]
+}

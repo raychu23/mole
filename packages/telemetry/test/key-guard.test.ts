@@ -89,7 +89,7 @@ describe('key guard (R2)', () => {
     rmSync(join(root, 'tasks'), { recursive: true });
     put('notes/key-ruling-1.md', `ruling    APPROVE\nallowed key    packages/a/bench/m9-key.json    sha256 ${h}\n`);
     expect(runGuard(root).status).toBe(1);
-  });
+  }, 30_000); // key-ruling-3 (tasks/T21-parallel-agent-collisions/4 log)
 
   it('refuses a shallow clone (exit 2): the checks-first commit cannot be found there', () => {
     const { root } = repo();

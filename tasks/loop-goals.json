@@ -14,6 +14,7 @@
   }
  ],
  "loop_rules": [
+  "R0 prior art first (prior-art-first skill, Raymond 10-29 'dont just make shit up pls … search up all th ebest resources alaready availble before you start building'): before the checks-first commit, tasks/<T>/4 log/prior-art.md lists the standard approaches for this exact problem (papers, open-source code, vendor docs, recent blogs, benchmarks; pages saved with URL + date), the method picked and why, and how the field measures it; the bench uses the field's metric and bar where one exists; a reviewer rejects a bench or method without it",
   "R1 checks first: each task commits its benchmark keys + failing tests (red) in a commit of their own before any implementation commit; the keys carry a written date earlier than the first implementation commit",
   "R2 can't change: after R1's commit the implementer never edits those keys or tests; a needed change goes to tasks/<T>/4 log/key-changes.md with the reason and waits for the reviewer (or Raymond)",
   "R3 repeat until green: run the task's checks after every change; cap 6 rounds per task; the same failure 3 rounds in a row -> ledger blocked with the cause",

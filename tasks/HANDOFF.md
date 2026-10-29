@@ -65,6 +65,32 @@ You are Mole builder 5 (ledger owner mole-builder-5, agent a7 in context/agents/
 8. Raymond is away: make reasonable choices and write assumptions in the task's 0 start.md or 2 insights.md. Final answer, 6 lines max: each task's state + metric vs target, and the path tasks/loop-report.md.
 ```
 
+### Added 10:05 (Raymond's answers, 10-29 10:00)
+
+Raymond: "make sure future agent spawns use sonnet. at least for now" · "sure t30 harder questions whatever. uh ok use better ways. again dont just make shit up pls for any given issue search up all th ebest resources alaready availble before you start building" · "for the decisions 31 to 34 just do it right as ive priorly instructed".
+
+- Every new spawn: `-m claude-sonnet-5 --provider anthropic`; subagents follow `delegation.model: claude-sonnet-5` in `~/.hermes/config.yaml`.
+- New loop rule R0 (prior art first, `prior-art-first` skill, auto-loaded): `tasks/<T>/4 log/prior-art.md` before the checks-first commit.
+- D31 and D34 are now USER (the recs). T19 / T30 / T32 → ready for a9; the resume lines → a10 (`context/product-plan/systems/resume/industry-metrics brief.md`).
+
+Prompt for a9 (mole-builder-6):
+
+```text
+You are Mole builder 6 (ledger owner mole-builder-6, agent a9 in context/agents/registry.json, main file context/agents/a9-mole-builder-6.md), running on Sonnet. Raymond said (10-29 10:00): "sure t30 harder questions whatever. uh ok use better ways. again dont just make shit up pls for any given issue search up all th ebest resources alaready availble before you start building". Other chats work in this repo right now: builder 5 (a7: T22, T24, T25) and the resume-metrics chat (a10, context/product-plan/systems/resume/ only). Never touch their tasks.
+1. Read AGENTS.md, context/0 start.md, context/1 takeaways.md (startup packet), then tasks/loop-goals.json (your metrics, loop rules R1-R7, never-list), each of your tasks' tasks/<T>/0 start.md (goal, done-when, boundary, checks, non-goals, proof, stop) and tasks/HANDOFF.md section 'Now (2026-10-28 21:10)' steps a-g (the loop). Run python3 -B tasks/loop_status.py.
+2. Load skills: prior-art-first, ledger, metric-gated-build-loop, test-driven-development, verify-pyramid, code-work.
+3. Your queue (all three were blocked; Raymond answered 10-29 10:00):
+   a. T19-rename-proof-anchors: D33's fallback, confirmed. Claim with --worktree "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T19-rename-proof-anchors" --owner mole-builder-6; merge main into the branch; keep the 0-wrong body-only version (frozen 88.9%, 0 wrong), log M9's real number, fresh review, integrate. No new options.
+   b. T30-annotated-file-tree: done-when 2 is now M22b (harder questions, tool calls + time per arm; read its 0 start.md). Claim with --worktree "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T30-annotated-file-tree" --owner mole-builder-6 (review 1 already verified the build). Prior art first: how program-comprehension studies and code question-answering benchmarks choose and score questions. New key (m22b) labelled before any score, fresh subagents, >= 3 runs per arm.
+   c. T32-team-pr-check: an options round on record → lines matching (precision 0.63, recall 0.52 vs 0.9 / 0.8). Claim with --worktree "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T32-team-pr-check" --owner mole-builder-6. Prior art first: traceability link recovery (information retrieval and embedding methods and how they're scored), co-change mining (e.g. Zimmermann's ROSE), scope globs as in CODEOWNERS, symbol anchors. Up to 3 options on the frozen key, targets unchanged; none passes → block again with the best real number.
+   R0 for every task: tasks/<T>/4 log/prior-art.md (load the prior-art-first skill) before the checks-first commit or any new option.
+4. Per task, the loop exactly as in HANDOFF 'Now' a-g: claim (cd "/Users/a1/Desktop/CS Code" && python3 systems/ledger --root Project/Mole --no-orca move tasks/<T> running --owner mole-builder-6 --git-worktree); FIRST commit = bench + key dated now + failing tests, nothing else (the key's truth comes from a different method than the code under test; if a write gate blocks test files, create them with a terminal heredoc and note it in the task's 2 insights.md); produce → run the checks → correct, at most 6 rounds; append every run to tasks/<T>/4 log/runs.jsonl with the metric id as key ({"metrics":{"M21":...}}); never edit the step-1 keys or tests (R2: tasks/<T>/4 log/key-changes.md + a fresh-subagent ruling); review by a FRESH subagent given only the contract + the diff (test diff first, P0-P2 each with a reproducer, at most 2 rounds); integrate: merge main into the task branch first, rerun the checks, then ledger move <T> integrated --merge <sha> --checks-result "npm run check on main → …". Independent tasks run in parallel, one worktree + one subagent each; integrate one at a time.
+5. Shared files (packages/daemon/src/cli.ts, the MCP tool list in packages/mcp/src, root package.json + package-lock.json): one import + one call each, tests assert with toContain, never an exact set. git index.lock → wait 10 s and retry. Disk is ~21 GB free: npm ci only where needed, delete node_modules in a worktree once its task is integrated. Never push, publish, use Raymond's accounts or spend on paid APIs.
+6. At every transition (claimed, submitted, verified, integrated, blocked) append one dated line to tasks/loop-report.md (append only) and run python3 context/agents/build_agents.py. After each integration also run: cd context/product-plan && python3 systems/resume/render_resume.py (don't edit that page or claims.json by hand). Write under '## Handoff notes' in context/agents/a9-mole-builder-6.md at each integration and before you stop: what you did, what's next, anything odd.
+7. A miss is not a stop: log the real number, move that task to blocked with the cause (--cause … --decision-owner raymond) and go to the next task. Never loosen a check to go green (R7). Don't touch context/product-plan/*.md pages (the planning chat owns them).
+8. Raymond is away: make reasonable choices and write assumptions in the task's 0 start.md or 2 insights.md. Final answer, 6 lines max: each task's state + metric vs target, and the path tasks/loop-report.md.
+```
+
 ## Every builder chat has a main file (2026-10-29)
 
 Raymond, 10-29: "is thre a page managing all the different executing worker agents active or upcoming. and also for each to have their own main file at least with sections including a main info/handoff, progress timeline, further work".

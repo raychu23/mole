@@ -1,0 +1,13 @@
+diff --git a/packages/common/src/colors.ts b/packages/common/src/colors.ts
+index b0d6c7d..bae918b 100644
+--- a/packages/common/src/colors.ts
++++ b/packages/common/src/colors.ts
+@@ -129,7 +129,7 @@ const _reverseDarkModeInvert = (
+   const p = DARK_MODE_FILTER_INVERT_PERCENT / 100;
+   const denominator = 1 - 2 * p;
+   const restore = (color: number) =>
+-    Math.round(clamp((color - 255 * p) / denominator, 0, 255));
++    Math.floor(clamp((color - 255 * p) / denominator, 0, 255));
+ 
+   return {
+     r: restore(r),

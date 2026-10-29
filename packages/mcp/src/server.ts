@@ -2,7 +2,8 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { formatNeighborhood } from '@mole/core';
 import { ensureDaemon, MoleClient, type EnsureOptions } from '@mole/daemon';
-import { defaultSources, tried } from '@mole/agentstate';
+import { claims, defaultSources, tried } from '@mole/agentstate';
+import { registerCollisionsTool } from './collisions-tool.js';
 import { executeTool, GEN_AI } from '@mole/telemetry';
 import type { Change } from '@mole/history';
 import { resolve } from 'node:path';
@@ -54,6 +55,26 @@ export function createServer(opts: MoleMcpOptions): McpServer {
     },
     async ({ target }) => ({ content: [{ type: 'text' as const, text: JSON.stringify(tried(target, { ...defaultSources(), root: opts.root }), null, 2) }] }),
   );
+  // T24: what an agent says it did (its final answer) checked against what it did (its own tool calls + git)
+  server.registerTool(
+    'mole_claims',
+    {
+      title: 'Mole claims',
+      description:
+        "Checks an agent run's last answer: each claim (tests pass, N/N passed, exit 0, committed <sha>, merged, pushed, wrote <file>, fixed) " +
+        "against the run's own tool calls and results and git, as supported / unsupported / contradicted with the evidence (tool call id, exit code, commit). " +
+        'A claim only a subagent reported is unsupported. Same JSON as `mole claims <run> --json`. Deterministic patterns, no LLM.',
+      inputSchema: { run: z.string().describe('run id (Hermes session, Claude Code or Codex session id, or a unique prefix)'), at: z.number().int().optional().describe('check the answer at this row instead of the last one') },
+    },
+    async ({ run, at }) => {
+      try {
+        return { content: [{ type: 'text' as const, text: JSON.stringify(claims(run, { ...defaultSources(), at }), null, 2) }] };
+      } catch (e) {
+        return { content: [{ type: 'text' as const, text: `mole_claims: ${(e as Error).message}` }], isError: true };
+      }
+    },
+  );
+  registerCollisionsTool(server, opts); // T21: parallel-agent collisions
   server.registerTool(
     'mole_check',
     {

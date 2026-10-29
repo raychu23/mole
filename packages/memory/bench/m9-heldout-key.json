@@ -1,0 +1,3513 @@
+{
+ "written": "2026-10-29T02:15:02-0500",
+ "about": "M9 HELD-OUT key (T19, key ruling 1 §conditions 2), written and committed BEFORE the call-graph path (option A) existed and before any similarity score, re-anchor run or option A code touched these pairs. cases: every candidate pair produced mechanically by bench/m9-heldout-builder.ts (same pairing rules as bench/m9-key-builder.ts: same file, git -M renamed file, cross-file when token Jaccard >= 0.5) over the hermes-agent ui-tui TS/TSX history, newest commits first. Each pair was LABELLED BY HAND from reading the declarations and the commit diff lines naming the old/new symbol (label + reason), with the same 3 labelRules as m9-key.json; a positive reason cites body or role continuity, not only switched callers. Hard negatives (generalizations, merges, splits, replacements, surviving names) are kept as they came.",
+ "labelRules": [
+  "rename: same role, callers (if any) now use the new name, normalized body identical except the symbol's own name",
+  "rename+change: same role continued under a new name (callers switched, or the old code is the clear bulk of the new symbol) and the body was edited",
+  "not-rename: the old symbol was dropped, split across several new symbols, or merged with another into one generalized symbol (no single successor), or the bodies are too small to tell"
+ ],
+ "stopRule": "fixed before labelling, on label counts only: walk the ui-tui TS/TSX commits newest first from the pinned head and stop after the first commit at which the running count of expected re-anchors (rename + rename+change) reaches >= 20; every candidate pair of the commits walked so far is in the key",
+ "stop": {
+  "commit": "d8fcab47",
+  "walk": 507,
+  "expectedReanchors": 22,
+  "note": "walk = position in `git rev-list --no-merges <head> -- ui-tui/*.ts ui-tui/*.tsx`; 600 commits were generated, the 9 pairs of walk 529-557 were labelled too but lie past the stop and are not in the key"
+ },
+ "thresholds": {
+  "similarity": "Dice coefficient over token bigrams: TypeScript tokens of the declaration with trivia removed, the symbol's own name replaced by $SELF and (methods) its class name by $CLS",
+  "renamedChangedMin": 0.55,
+  "tieEpsilon": 0.01,
+  "minTokens": 16,
+  "callerBandMin": 0.4,
+  "callerBand": "option A (ruling 1 §4, constants exactly as in 4 log/key-changes.md): 0.40 <= similarity < renamedChangedMin re-anchors only when >= 1 caller of the old name in the parent tree still exists in the new tree and now references the candidate, one-to-one (no rival vanished symbol, no rival candidate), never under minTokens; outcome always renamed+changed (stale), never fresh",
+  "note": "fixed before this key was scored; REANCHOR must carry these exact values or the held-out bench reports thresholds match key false"
+ },
+ "scoring": "per old symbol: expected = its rename / rename+change pair if any, else none. right = re-anchored to the labelled symbol with the labelled outcome (rename -> renamed/fresh, rename+change -> renamed+changed/stale). wrong = re-anchored to any other symbol, or re-anchored when expected none. silentFresh = rename+change reported as renamed (fresh). Target: right >= 95% of expected re-anchors (held-out cases), wrong = 0, silentFresh = 0. Band check (ruling 1 §5): count the old symbols whose best key candidate (labelled target for positives, best candidate for negatives) has key similarity in [0.40, 0.55); fewer than 5 = inconclusive.",
+ "repos": {
+  "hermes": {
+   "path": "~/.hermes/cache/scratch/t19-hermes-git",
+   "source": "~/.hermes/hermes-agent (read-only)",
+   "head": "bf0203a794a07aac3ff764972ab9087baa4e4f4e",
+   "prefix": "ui-tui/",
+   "note": "hermes-agent is a blob:none partial clone: the bench reads it through a bare scratch repo whose objects/info/alternates points at ~/.hermes/hermes-agent/.git/objects (promisor remote origin, gc.auto 0) so lazily fetched blobs land in scratch, never in hermes-agent. Recreate: git init --bare <path>; echo ~/.hermes/hermes-agent/.git/objects > <path>/objects/info/alternates; set core.repositoryformatversion 1, extensions.partialClone origin, remote.origin.url https://github.com/NousResearch/hermes-agent.git, remote.origin.promisor true, remote.origin.partialclonefilter blob:none, gc.auto 0. The bench exits 2 when it is missing."
+  }
+ },
+ "cases": [
+  {
+   "id": "hermes-c8136a8f-0",
+   "repo": "hermes",
+   "commit": "c8136a8f0ab30fa4fd87a7e60cfff2f558cd71dc",
+   "parent": "6928c538f99835efd08d3d48e2da6afe8952cd70",
+   "subject": "fix(tui): report a locally answered command to pre_command only once it ran",
+   "old": {
+    "path": "ui-tui/src/app/createSlashHandler.ts",
+    "tail": "runObserved",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/app/createSlashHandler.ts",
+    "tail": "observer",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.57,
+   "walk": 50,
+   "label": "rename+change",
+   "reason": "command.observe reporting for a typed slash command continues: observer's body is runObserved's final observe/unknown_method block verbatim; the sole call site switched (observer passed as ran)"
+  },
+  {
+   "id": "hermes-cc7981a8-1",
+   "repo": "hermes",
+   "commit": "cc7981a817bc428dcad0b9c05473aa646fdbfa45",
+   "parent": "3187905d0776ba281d5a6be47dc069a4582f7f99",
+   "subject": "fix: a voice-origin busy correction consumes the TUI voice marker",
+   "old": {
+    "path": "ui-tui/src/app/submissionCore.ts",
+    "tail": "takeVoiceTurn",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/app/submissionCore.ts",
+    "tail": "takeVoiceTranscript",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.52,
+   "walk": 149,
+   "label": "rename+change",
+   "reason": "same role (consume the pending voice transcript marker and clear it); returns the transcript instead of a boolean; call site switched"
+  },
+  {
+   "id": "hermes-4ca6f9e9-2",
+   "repo": "hermes",
+   "commit": "4ca6f9e91c2231d0cba40a3059b96bbb0a6be4f7",
+   "parent": "69a12d2203673cebf7f3833abfeb70ede149f1b3",
+   "subject": "fix(free-tier): a failed stdio announce still shows the challenge link",
+   "old": {
+    "path": "ui-tui/src/app/gatewayBrowserLinks.ts",
+    "tail": "presentBillingVerification",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/app/gatewayBrowserLinks.ts",
+    "tail": "createBillingVerificationPresenter",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.94,
+   "walk": 172,
+   "label": "rename",
+   "reason": "body identical; import and the one call site switched"
+  },
+  {
+   "id": "hermes-5eea8788-3",
+   "repo": "hermes",
+   "commit": "5eea87882aebdeded8204b083b36acb17f7247f8",
+   "parent": "bc7f58f3b0270f62aafc9283f57887b25d560e9b",
+   "subject": "Clarify: one question shape and one result shape on every surface (skip, cancel, timeout and undelivered are told apart) (#127760)",
+   "old": {
+    "path": "ui-tui/src/lib/text.ts",
+    "tail": "formatAbandonedClarifyBatch",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/lib/text.ts",
+    "tail": "clarifyAnswerItems",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.29,
+   "walk": 182,
+   "label": "not-rename",
+   "reason": "formatAbandonedClarifyBatch dropped with its callers; clarifyAnswerItems is a new JSON-array parse helper"
+  },
+  {
+   "id": "hermes-5eea8788-4",
+   "repo": "hermes",
+   "commit": "5eea87882aebdeded8204b083b36acb17f7247f8",
+   "parent": "bc7f58f3b0270f62aafc9283f57887b25d560e9b",
+   "subject": "Clarify: one question shape and one result shape on every surface (skip, cancel, timeout and undelivered are told apart) (#127760)",
+   "old": {
+    "path": "ui-tui/src/lib/text.ts",
+    "tail": "formatAbandonedClarifyBatch",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/lib/text.ts",
+    "tail": "clarifyRevisitState",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.32,
+   "walk": 182,
+   "label": "not-rename",
+   "reason": "clarifyRevisitState continues clarifyBatchRevisitState, not the batch formatter"
+  },
+  {
+   "id": "hermes-5eea8788-5",
+   "repo": "hermes",
+   "commit": "5eea87882aebdeded8204b083b36acb17f7247f8",
+   "parent": "bc7f58f3b0270f62aafc9283f57887b25d560e9b",
+   "subject": "Clarify: one question shape and one result shape on every surface (skip, cancel, timeout and undelivered are told apart) (#127760)",
+   "old": {
+    "path": "ui-tui/src/lib/text.ts",
+    "tail": "formatAbandonedClarifyBatch",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/lib/text.ts",
+    "tail": "clarifyAnswerText",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.35,
+   "walk": 182,
+   "label": "not-rename",
+   "reason": "clarifyAnswerText is a new 3-line join helper; the batch formatter was dropped"
+  },
+  {
+   "id": "hermes-5eea8788-6",
+   "repo": "hermes",
+   "commit": "5eea87882aebdeded8204b083b36acb17f7247f8",
+   "parent": "bc7f58f3b0270f62aafc9283f57887b25d560e9b",
+   "subject": "Clarify: one question shape and one result shape on every surface (skip, cancel, timeout and undelivered are told apart) (#127760)",
+   "old": {
+    "path": "ui-tui/src/lib/text.ts",
+    "tail": "clarifyBatchRevisitState",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/lib/text.ts",
+    "tail": "clarifyAnswerItems",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.36,
+   "walk": 182,
+   "label": "not-rename",
+   "reason": "clarifyAnswerItems is a new JSON parse helper, unrelated to the revisit-state logic"
+  },
+  {
+   "id": "hermes-5eea8788-7",
+   "repo": "hermes",
+   "commit": "5eea87882aebdeded8204b083b36acb17f7247f8",
+   "parent": "bc7f58f3b0270f62aafc9283f57887b25d560e9b",
+   "subject": "Clarify: one question shape and one result shape on every surface (skip, cancel, timeout and undelivered are told apart) (#127760)",
+   "old": {
+    "path": "ui-tui/src/lib/text.ts",
+    "tail": "clarifyBatchRevisitState",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/lib/text.ts",
+    "tail": "clarifyRevisitState",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.7,
+   "walk": 182,
+   "label": "rename+change",
+   "reason": "same empty/choiceIndex/custom fallthrough logic, extended with multiSelect + picked; call site and tests switched"
+  },
+  {
+   "id": "hermes-5eea8788-8",
+   "repo": "hermes",
+   "commit": "5eea87882aebdeded8204b083b36acb17f7247f8",
+   "parent": "bc7f58f3b0270f62aafc9283f57887b25d560e9b",
+   "subject": "Clarify: one question shape and one result shape on every surface (skip, cancel, timeout and undelivered are told apart) (#127760)",
+   "old": {
+    "path": "ui-tui/src/lib/text.ts",
+    "tail": "clarifyBatchRevisitState",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/lib/text.ts",
+    "tail": "clarifyAnswerText",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.41,
+   "walk": 182,
+   "label": "not-rename",
+   "reason": "clarifyAnswerText is a new join helper, not the revisit-state logic"
+  },
+  {
+   "id": "hermes-70f5dc5f-9",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "mayAnswer",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.47,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); mayAnswer is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-10",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isSending",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.32,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); isSending is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-11",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "phaseOf",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.38,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor)"
+  },
+  {
+   "id": "hermes-70f5dc5f-12",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "failureLine",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.41,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); failureLine is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-13",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "hasFailed",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.57,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); hasFailed is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-14",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "Header",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.17,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); Header is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-15",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleNavKey",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.18,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); handleNavKey is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-16",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "Selector",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.2,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); Selector is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-17",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "DetailLine",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.23,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); DetailLine is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-18",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "FinishingPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.13,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); FinishingPhase is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-19",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.22,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); AuthorizedPhase is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-20",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "BrowserPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.12,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); BrowserPhase is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-21",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "WorkingPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.13,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); WorkingPhase is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-22",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "RetryPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.13,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); RetryPhase is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-23",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "FormPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.12,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); FormPhase is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-24",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "mayAnswer",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.47,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); mayAnswer is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-25",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isSending",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.32,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); isSending is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-26",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "phaseOf",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.42,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor)"
+  },
+  {
+   "id": "hermes-70f5dc5f-27",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "failureLine",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.41,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); failureLine is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-28",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "hasFailed",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.57,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); hasFailed is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-29",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "Header",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.17,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); Header is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-30",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleNavKey",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.18,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); handleNavKey is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-31",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "Selector",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.2,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); Selector is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-32",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "DetailLine",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.23,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); DetailLine is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-33",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "FinishingPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.13,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); FinishingPhase is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-34",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.2,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); AuthorizedPhase is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-35",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "BrowserPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.14,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); BrowserPhase is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-36",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "WorkingPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.13,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); WorkingPhase is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-37",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "RetryPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.13,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); RetryPhase is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-38",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isAwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "FormPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.12,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "isAuthorizedWithoutTools and isAwaitingBrowser were merged into the generalized phaseOf (no single successor); FormPhase is a new helper"
+  },
+  {
+   "id": "hermes-70f5dc5f-39",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleFormKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "mayAnswer",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.21,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "handleFormKey continues as handleNavKey; mayAnswer is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-40",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleFormKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isSending",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.25,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "handleFormKey continues as handleNavKey; isSending is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-41",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleFormKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "phaseOf",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.2,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "handleFormKey continues as handleNavKey; phaseOf is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-42",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleFormKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "failureLine",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.14,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "handleFormKey continues as handleNavKey; failureLine is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-43",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleFormKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "hasFailed",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.15,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "handleFormKey continues as handleNavKey; hasFailed is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-44",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleFormKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "Header",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.17,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "handleFormKey continues as handleNavKey; Header is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-45",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleFormKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleNavKey",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.77,
+   "walk": 222,
+   "label": "rename+change",
+   "reason": "same tab/shift-tab/arrow focus cycling and selector toggle/confirm logic (submitting guard dropped, connect -> confirm); the input handler call switched"
+  },
+  {
+   "id": "hermes-70f5dc5f-46",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleFormKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "Selector",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.23,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "handleFormKey continues as handleNavKey; Selector is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-47",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleFormKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "DetailLine",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.21,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "handleFormKey continues as handleNavKey; DetailLine is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-48",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleFormKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "FinishingPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.16,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "handleFormKey continues as handleNavKey; FinishingPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-49",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleFormKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.16,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "handleFormKey continues as handleNavKey; AuthorizedPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-50",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleFormKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "BrowserPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.15,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "handleFormKey continues as handleNavKey; BrowserPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-51",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleFormKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "WorkingPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.16,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "handleFormKey continues as handleNavKey; WorkingPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-52",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleFormKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "RetryPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.15,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "handleFormKey continues as handleNavKey; RetryPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-53",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleFormKey",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "FormPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.15,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "handleFormKey continues as handleNavKey; FormPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-54",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "mayAnswer",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.15,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AuthorizedWithoutTools continues as AuthorizedPhase; mayAnswer is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-55",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isSending",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.18,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AuthorizedWithoutTools continues as AuthorizedPhase; isSending is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-56",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "phaseOf",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.16,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AuthorizedWithoutTools continues as AuthorizedPhase; phaseOf is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-57",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "failureLine",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.14,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AuthorizedWithoutTools continues as AuthorizedPhase; failureLine is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-58",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "hasFailed",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.13,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AuthorizedWithoutTools continues as AuthorizedPhase; hasFailed is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-59",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "Header",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.39,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AuthorizedWithoutTools continues as AuthorizedPhase; Header is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-60",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleNavKey",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.15,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AuthorizedWithoutTools continues as AuthorizedPhase; handleNavKey is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-61",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "Selector",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.41,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AuthorizedWithoutTools continues as AuthorizedPhase; Selector is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-62",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "DetailLine",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.49,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AuthorizedWithoutTools continues as AuthorizedPhase; DetailLine is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-63",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "FinishingPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.5,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AuthorizedWithoutTools continues as AuthorizedPhase; FinishingPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-64",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.71,
+   "walk": 222,
+   "label": "rename+change",
+   "reason": "same \"Authorized. Tools unavailable.\" markup with error/Continue lines, error now read from target.discovery_error; the render branch switched"
+  },
+  {
+   "id": "hermes-70f5dc5f-65",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "BrowserPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.4,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AuthorizedWithoutTools continues as AuthorizedPhase; BrowserPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-66",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "WorkingPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.4,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AuthorizedWithoutTools continues as AuthorizedPhase; WorkingPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-67",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "RetryPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.31,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AuthorizedWithoutTools continues as AuthorizedPhase; RetryPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-68",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedWithoutTools",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "FormPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.21,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AuthorizedWithoutTools continues as AuthorizedPhase; FormPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-69",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "mayAnswer",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.16,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AwaitingBrowser continues as BrowserPhase; mayAnswer is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-70",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isSending",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.22,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AwaitingBrowser continues as BrowserPhase; isSending is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-71",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "phaseOf",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.24,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AwaitingBrowser continues as BrowserPhase; phaseOf is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-72",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "failureLine",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.17,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AwaitingBrowser continues as BrowserPhase; failureLine is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-73",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "hasFailed",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.16,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AwaitingBrowser continues as BrowserPhase; hasFailed is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-74",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "Header",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.5,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AwaitingBrowser continues as BrowserPhase; Header is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-75",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleNavKey",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.17,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AwaitingBrowser continues as BrowserPhase; handleNavKey is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-76",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "Selector",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.37,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AwaitingBrowser continues as BrowserPhase; Selector is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-77",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "DetailLine",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.46,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AwaitingBrowser continues as BrowserPhase; DetailLine is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-78",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "FinishingPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.39,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AwaitingBrowser continues as BrowserPhase; FinishingPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-79",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.54,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AwaitingBrowser continues as BrowserPhase; AuthorizedPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-80",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "BrowserPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.53,
+   "walk": 222,
+   "label": "rename+change",
+   "reason": "same awaiting-browser screen (name header, connect_url, detail, open-in-browser hint) with the header factored into Header; the render branch switched"
+  },
+  {
+   "id": "hermes-70f5dc5f-81",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "WorkingPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.41,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AwaitingBrowser continues as BrowserPhase; WorkingPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-82",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "RetryPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.38,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AwaitingBrowser continues as BrowserPhase; RetryPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-83",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AwaitingBrowser",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "FormPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.27,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "AwaitingBrowser continues as BrowserPhase; FormPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-84",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "SetupForm",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "mayAnswer",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.12,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "SetupForm continues as FormPhase; mayAnswer is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-85",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "SetupForm",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "isSending",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.15,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "SetupForm continues as FormPhase; isSending is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-86",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "SetupForm",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "phaseOf",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.14,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "SetupForm continues as FormPhase; phaseOf is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-87",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "SetupForm",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "failureLine",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.11,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "SetupForm continues as FormPhase; failureLine is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-88",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "SetupForm",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "hasFailed",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.12,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "SetupForm continues as FormPhase; hasFailed is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-89",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "SetupForm",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "Header",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.34,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "SetupForm continues as FormPhase; Header is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-90",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "SetupForm",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "handleNavKey",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.18,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "SetupForm continues as FormPhase; handleNavKey is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-91",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "SetupForm",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "Selector",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.27,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "SetupForm continues as FormPhase; Selector is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-92",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "SetupForm",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "DetailLine",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.23,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "SetupForm continues as FormPhase; DetailLine is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-93",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "SetupForm",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "FinishingPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.23,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "SetupForm continues as FormPhase; FinishingPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-94",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "SetupForm",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "AuthorizedPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.3,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "SetupForm continues as FormPhase; AuthorizedPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-95",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "SetupForm",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "BrowserPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.26,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "SetupForm continues as FormPhase; BrowserPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-96",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "SetupForm",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "WorkingPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.26,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "SetupForm continues as FormPhase; WorkingPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-97",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "SetupForm",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "RetryPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.34,
+   "walk": 222,
+   "label": "not-rename",
+   "reason": "SetupForm continues as FormPhase; RetryPhase is a different new symbol"
+  },
+  {
+   "id": "hermes-70f5dc5f-98",
+   "repo": "hermes",
+   "commit": "70f5dc5f46d6a8e99b593fa26ae3b987fd0c5e94",
+   "parent": "966d091d6af13689f49306708ad568cb169dafda",
+   "subject": "feat(connectors): the backend API for the desktop Connectors page; connect an app without a chat session (#115191)",
+   "old": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "SetupForm",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/connectionSetupOverlay.tsx",
+    "tail": "FormPhase",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.64,
+   "walk": 222,
+   "label": "rename+change",
+   "reason": "same setup form (title + instructions, FieldRow per field, Connect/Cancel selector, required notice, Pending) with header/selector factored out; the render call switched"
+  },
+  {
+   "id": "hermes-d6a69ea5-99",
+   "repo": "hermes",
+   "commit": "d6a69ea5a3667045a0fd75ce26b546c226731893",
+   "parent": "addf6949018cd37ae07835a793acb2432e9eef58",
+   "subject": "fix(tui): treat every ctrl chord as a binding name, never typed text",
+   "old": {
+    "path": "ui-tui/packages/hermes-ink/src/ink/events/input-event.ts",
+    "tail": "isBareControlByteChord",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/packages/hermes-ink/src/ink/events/input-event.ts",
+    "tail": "isControlChord",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.52,
+   "walk": 229,
+   "label": "rename+change",
+   "reason": "same ctrl && !isPasted predicate, minus the single-control-byte restriction; the constructor call switched"
+  },
+  {
+   "id": "hermes-98f83a16-100",
+   "repo": "hermes",
+   "commit": "98f83a16aa1bf121498b7e47ee171c3063b944a7",
+   "parent": "caa329904c6e3b2fd0a942bd129cb680bf8a80e9",
+   "subject": "fix(ink): finish the gatewayClient merge onto the shared JsonRpcRequestChannel",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.dispatch",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.publishWire",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.41,
+   "walk": 260,
+   "label": "rename+change",
+   "reason": "dispatch's event branch (gateway.ready heartbeat, canonical payload rewrite, publish) is publishWire's whole body; the pending-settle branch moved into the shared channel, not to another new symbol"
+  },
+  {
+   "id": "hermes-98f83a16-101",
+   "repo": "hermes",
+   "commit": "98f83a16aa1bf121498b7e47ee171c3063b944a7",
+   "parent": "caa329904c6e3b2fd0a942bd129cb680bf8a80e9",
+   "subject": "fix(ink): finish the gatewayClient merge onto the shared JsonRpcRequestChannel",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.dispatch",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.requestOverWebSocket",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.21,
+   "walk": 260,
+   "label": "not-rename",
+   "reason": "requestOverWebSocket is a new request wrapper over the channel, not message dispatch"
+  },
+  {
+   "id": "hermes-98f83a16-102",
+   "repo": "hermes",
+   "commit": "98f83a16aa1bf121498b7e47ee171c3063b944a7",
+   "parent": "caa329904c6e3b2fd0a942bd129cb680bf8a80e9",
+   "subject": "fix(ink): finish the gatewayClient merge onto the shared JsonRpcRequestChannel",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.toError",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.publishWire",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.24,
+   "walk": 260,
+   "label": "not-rename",
+   "reason": "toError dropped (errors now typed by the shared channel); publishWire is dispatch's event branch"
+  },
+  {
+   "id": "hermes-98f83a16-103",
+   "repo": "hermes",
+   "commit": "98f83a16aa1bf121498b7e47ee171c3063b944a7",
+   "parent": "caa329904c6e3b2fd0a942bd129cb680bf8a80e9",
+   "subject": "fix(ink): finish the gatewayClient merge onto the shared JsonRpcRequestChannel",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.toError",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.requestOverWebSocket",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.31,
+   "walk": 260,
+   "label": "not-rename",
+   "reason": "toError dropped; requestOverWebSocket is a new request wrapper"
+  },
+  {
+   "id": "hermes-98f83a16-104",
+   "repo": "hermes",
+   "commit": "98f83a16aa1bf121498b7e47ee171c3063b944a7",
+   "parent": "caa329904c6e3b2fd0a942bd129cb680bf8a80e9",
+   "subject": "fix(ink): finish the gatewayClient merge onto the shared JsonRpcRequestChannel",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.settle",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.publishWire",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.16,
+   "walk": 260,
+   "label": "not-rename",
+   "reason": "settle dropped (the channel settles pending RPCs); publishWire is unrelated"
+  },
+  {
+   "id": "hermes-98f83a16-105",
+   "repo": "hermes",
+   "commit": "98f83a16aa1bf121498b7e47ee171c3063b944a7",
+   "parent": "caa329904c6e3b2fd0a942bd129cb680bf8a80e9",
+   "subject": "fix(ink): finish the gatewayClient merge onto the shared JsonRpcRequestChannel",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.settle",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.requestOverWebSocket",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.21,
+   "walk": 260,
+   "label": "not-rename",
+   "reason": "settle dropped; requestOverWebSocket is a new request wrapper"
+  },
+  {
+   "id": "hermes-6b406f1c-106",
+   "repo": "hermes",
+   "commit": "6b406f1c899735c2dd234e8eacddca20c575d673",
+   "parent": "36773e0d78b04a0fd06dfd22c6541e2618d2f192",
+   "subject": "refactor(ts): ui-tui rides apps/shared's JSON-RPC request channel; one pending map, one heartbeat, typed RPC errors",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.startHeartbeat",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.onHeartbeatFailure",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.44,
+   "walk": 270,
+   "label": "not-rename",
+   "reason": "the heartbeat loop moved into the shared channel (channel.startHeartbeat); onHeartbeatFailure is a new failure callback holding only the close-on-timeout lines"
+  },
+  {
+   "id": "hermes-6b406f1c-107",
+   "repo": "hermes",
+   "commit": "6b406f1c899735c2dd234e8eacddca20c575d673",
+   "parent": "36773e0d78b04a0fd06dfd22c6541e2618d2f192",
+   "subject": "refactor(ts): ui-tui rides apps/shared's JSON-RPC request channel; one pending map, one heartbeat, typed RPC errors",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.startHeartbeat",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.protocolError",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.2,
+   "walk": 270,
+   "label": "not-rename",
+   "reason": "protocolError is a new logging helper; the heartbeat loop moved to the shared channel"
+  },
+  {
+   "id": "hermes-6b406f1c-108",
+   "repo": "hermes",
+   "commit": "6b406f1c899735c2dd234e8eacddca20c575d673",
+   "parent": "36773e0d78b04a0fd06dfd22c6541e2618d2f192",
+   "subject": "refactor(ts): ui-tui rides apps/shared's JSON-RPC request channel; one pending map, one heartbeat, typed RPC errors",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.stopHeartbeat",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.onHeartbeatFailure",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.25,
+   "walk": 270,
+   "label": "not-rename",
+   "reason": "stopHeartbeat dropped (the channel owns the heartbeat timer); onHeartbeatFailure is a new callback"
+  },
+  {
+   "id": "hermes-6b406f1c-109",
+   "repo": "hermes",
+   "commit": "6b406f1c899735c2dd234e8eacddca20c575d673",
+   "parent": "36773e0d78b04a0fd06dfd22c6541e2618d2f192",
+   "subject": "refactor(ts): ui-tui rides apps/shared's JSON-RPC request channel; one pending map, one heartbeat, typed RPC errors",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.stopHeartbeat",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.protocolError",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.21,
+   "walk": 270,
+   "label": "not-rename",
+   "reason": "stopHeartbeat dropped; protocolError is a new logging helper"
+  },
+  {
+   "id": "hermes-6b406f1c-110",
+   "repo": "hermes",
+   "commit": "6b406f1c899735c2dd234e8eacddca20c575d673",
+   "parent": "36773e0d78b04a0fd06dfd22c6541e2618d2f192",
+   "subject": "refactor(ts): ui-tui rides apps/shared's JSON-RPC request channel; one pending map, one heartbeat, typed RPC errors",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.dispatch",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.onHeartbeatFailure",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.18,
+   "walk": 270,
+   "label": "not-rename",
+   "reason": "dispatch (pending/heartbeat/event routing) moved into the shared channel; onHeartbeatFailure is unrelated"
+  },
+  {
+   "id": "hermes-6b406f1c-111",
+   "repo": "hermes",
+   "commit": "6b406f1c899735c2dd234e8eacddca20c575d673",
+   "parent": "36773e0d78b04a0fd06dfd22c6541e2618d2f192",
+   "subject": "refactor(ts): ui-tui rides apps/shared's JSON-RPC request channel; one pending map, one heartbeat, typed RPC errors",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.dispatch",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.protocolError",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.26,
+   "walk": 270,
+   "label": "not-rename",
+   "reason": "dispatch moved into the shared channel; protocolError takes the callers' malformed-frame catch blocks, not dispatch"
+  },
+  {
+   "id": "hermes-6b406f1c-112",
+   "repo": "hermes",
+   "commit": "6b406f1c899735c2dd234e8eacddca20c575d673",
+   "parent": "36773e0d78b04a0fd06dfd22c6541e2618d2f192",
+   "subject": "refactor(ts): ui-tui rides apps/shared's JSON-RPC request channel; one pending map, one heartbeat, typed RPC errors",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.toError",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.onHeartbeatFailure",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.2,
+   "walk": 270,
+   "label": "not-rename",
+   "reason": "toError dropped (typed RPC errors in the channel)"
+  },
+  {
+   "id": "hermes-6b406f1c-113",
+   "repo": "hermes",
+   "commit": "6b406f1c899735c2dd234e8eacddca20c575d673",
+   "parent": "36773e0d78b04a0fd06dfd22c6541e2618d2f192",
+   "subject": "refactor(ts): ui-tui rides apps/shared's JSON-RPC request channel; one pending map, one heartbeat, typed RPC errors",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.toError",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.protocolError",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.24,
+   "walk": 270,
+   "label": "not-rename",
+   "reason": "toError dropped; protocolError is a new logging helper"
+  },
+  {
+   "id": "hermes-6b406f1c-114",
+   "repo": "hermes",
+   "commit": "6b406f1c899735c2dd234e8eacddca20c575d673",
+   "parent": "36773e0d78b04a0fd06dfd22c6541e2618d2f192",
+   "subject": "refactor(ts): ui-tui rides apps/shared's JSON-RPC request channel; one pending map, one heartbeat, typed RPC errors",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.settle",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.onHeartbeatFailure",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.18,
+   "walk": 270,
+   "label": "not-rename",
+   "reason": "settle dropped (channel settles pending RPCs)"
+  },
+  {
+   "id": "hermes-6b406f1c-115",
+   "repo": "hermes",
+   "commit": "6b406f1c899735c2dd234e8eacddca20c575d673",
+   "parent": "36773e0d78b04a0fd06dfd22c6541e2618d2f192",
+   "subject": "refactor(ts): ui-tui rides apps/shared's JSON-RPC request channel; one pending map, one heartbeat, typed RPC errors",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.settle",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.protocolError",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.2,
+   "walk": 270,
+   "label": "not-rename",
+   "reason": "settle dropped; protocolError unrelated"
+  },
+  {
+   "id": "hermes-6b406f1c-116",
+   "repo": "hermes",
+   "commit": "6b406f1c899735c2dd234e8eacddca20c575d673",
+   "parent": "36773e0d78b04a0fd06dfd22c6541e2618d2f192",
+   "subject": "refactor(ts): ui-tui rides apps/shared's JSON-RPC request channel; one pending map, one heartbeat, typed RPC errors",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.rejectPending",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.onHeartbeatFailure",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.2,
+   "walk": 270,
+   "label": "not-rename",
+   "reason": "rejectPending dropped (channel rejects pending); onHeartbeatFailure unrelated"
+  },
+  {
+   "id": "hermes-6b406f1c-117",
+   "repo": "hermes",
+   "commit": "6b406f1c899735c2dd234e8eacddca20c575d673",
+   "parent": "36773e0d78b04a0fd06dfd22c6541e2618d2f192",
+   "subject": "refactor(ts): ui-tui rides apps/shared's JSON-RPC request channel; one pending map, one heartbeat, typed RPC errors",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.rejectPending",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.protocolError",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.2,
+   "walk": 270,
+   "label": "not-rename",
+   "reason": "rejectPending dropped; protocolError unrelated"
+  },
+  {
+   "id": "hermes-6b406f1c-118",
+   "repo": "hermes",
+   "commit": "6b406f1c899735c2dd234e8eacddca20c575d673",
+   "parent": "36773e0d78b04a0fd06dfd22c6541e2618d2f192",
+   "subject": "refactor(ts): ui-tui rides apps/shared's JSON-RPC request channel; one pending map, one heartbeat, typed RPC errors",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.requestOverWebSocket",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.onHeartbeatFailure",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.21,
+   "walk": 270,
+   "label": "not-rename",
+   "reason": "requestOverWebSocket's pending-map request moved into channel.request; onHeartbeatFailure unrelated"
+  },
+  {
+   "id": "hermes-6b406f1c-119",
+   "repo": "hermes",
+   "commit": "6b406f1c899735c2dd234e8eacddca20c575d673",
+   "parent": "36773e0d78b04a0fd06dfd22c6541e2618d2f192",
+   "subject": "refactor(ts): ui-tui rides apps/shared's JSON-RPC request channel; one pending map, one heartbeat, typed RPC errors",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.requestOverWebSocket",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.protocolError",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.19,
+   "walk": 270,
+   "label": "not-rename",
+   "reason": "requestOverWebSocket moved into the channel; protocolError unrelated"
+  },
+  {
+   "id": "hermes-ae43fd6d-120",
+   "repo": "hermes",
+   "commit": "ae43fd6df6c198a965f969d37d89394dbc56903f",
+   "parent": "b4d04eb8fd427740fb47b1af496c409a50bd5d8d",
+   "subject": "fix(tui): bare URLs render verbatim instead of a derived site label (#106843)",
+   "old": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "defaultLinkLabel",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "urlAsText",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.71,
+   "walk": 298,
+   "label": "rename+change",
+   "reason": "same role (fallback text for a link URL): the mailto strip / else url body continues with the derived site-label branch removed; the fallback call switched to urlAsText"
+  },
+  {
+   "id": "hermes-ae43fd6d-121",
+   "repo": "hermes",
+   "commit": "ae43fd6df6c198a965f969d37d89394dbc56903f",
+   "parent": "b4d04eb8fd427740fb47b1af496c409a50bd5d8d",
+   "subject": "fix(tui): bare URLs render verbatim instead of a derived site label (#106843)",
+   "old": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "defaultLinkLabel",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "authoredLabel",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.32,
+   "walk": 298,
+   "label": "not-rename",
+   "reason": "authoredLabel continues pickAuthoredLabel (trimmed authored label), not the URL fallback"
+  },
+  {
+   "id": "hermes-ae43fd6d-122",
+   "repo": "hermes",
+   "commit": "ae43fd6df6c198a965f969d37d89394dbc56903f",
+   "parent": "b4d04eb8fd427740fb47b1af496c409a50bd5d8d",
+   "subject": "fix(tui): bare URLs render verbatim instead of a derived site label (#106843)",
+   "old": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "defaultLinkLabel",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "renderLink",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.27,
+   "walk": 298,
+   "label": "not-rename",
+   "reason": "renderLink continues renderResolvedLink, not the URL fallback"
+  },
+  {
+   "id": "hermes-ae43fd6d-123",
+   "repo": "hermes",
+   "commit": "ae43fd6df6c198a965f969d37d89394dbc56903f",
+   "parent": "b4d04eb8fd427740fb47b1af496c409a50bd5d8d",
+   "subject": "fix(tui): bare URLs render verbatim instead of a derived site label (#106843)",
+   "old": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "pickAuthoredLabel",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "urlAsText",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.32,
+   "walk": 298,
+   "label": "not-rename",
+   "reason": "urlAsText continues defaultLinkLabel, not the authored-label picker"
+  },
+  {
+   "id": "hermes-ae43fd6d-124",
+   "repo": "hermes",
+   "commit": "ae43fd6df6c198a965f969d37d89394dbc56903f",
+   "parent": "b4d04eb8fd427740fb47b1af496c409a50bd5d8d",
+   "subject": "fix(tui): bare URLs render verbatim instead of a derived site label (#106843)",
+   "old": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "pickAuthoredLabel",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "authoredLabel",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.54,
+   "walk": 298,
+   "label": "rename+change",
+   "reason": "same role (trimmed authored label or undefined), the comparison against the normalized target dropped; its use in the link render switched to authoredLabel"
+  },
+  {
+   "id": "hermes-ae43fd6d-125",
+   "repo": "hermes",
+   "commit": "ae43fd6df6c198a965f969d37d89394dbc56903f",
+   "parent": "b4d04eb8fd427740fb47b1af496c409a50bd5d8d",
+   "subject": "fix(tui): bare URLs render verbatim instead of a derived site label (#106843)",
+   "old": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "pickAuthoredLabel",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "renderLink",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.4,
+   "walk": 298,
+   "label": "not-rename",
+   "reason": "renderLink continues renderResolvedLink"
+  },
+  {
+   "id": "hermes-ae43fd6d-126",
+   "repo": "hermes",
+   "commit": "ae43fd6df6c198a965f969d37d89394dbc56903f",
+   "parent": "b4d04eb8fd427740fb47b1af496c409a50bd5d8d",
+   "subject": "fix(tui): bare URLs render verbatim instead of a derived site label (#106843)",
+   "old": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "ResolvedLink",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "urlAsText",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.29,
+   "walk": 298,
+   "label": "not-rename",
+   "reason": "ResolvedLink component dropped (no title fetch any more); urlAsText continues defaultLinkLabel"
+  },
+  {
+   "id": "hermes-ae43fd6d-127",
+   "repo": "hermes",
+   "commit": "ae43fd6df6c198a965f969d37d89394dbc56903f",
+   "parent": "b4d04eb8fd427740fb47b1af496c409a50bd5d8d",
+   "subject": "fix(tui): bare URLs render verbatim instead of a derived site label (#106843)",
+   "old": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "ResolvedLink",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "authoredLabel",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.29,
+   "walk": 298,
+   "label": "not-rename",
+   "reason": "ResolvedLink dropped; authoredLabel continues pickAuthoredLabel"
+  },
+  {
+   "id": "hermes-ae43fd6d-128",
+   "repo": "hermes",
+   "commit": "ae43fd6df6c198a965f969d37d89394dbc56903f",
+   "parent": "b4d04eb8fd427740fb47b1af496c409a50bd5d8d",
+   "subject": "fix(tui): bare URLs render verbatim instead of a derived site label (#106843)",
+   "old": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "ResolvedLink",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "renderLink",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.52,
+   "walk": 298,
+   "label": "not-rename",
+   "reason": "ResolvedLink's Link/Text markup was inlined into renderResolvedLink's successor renderLink: a merge, renderLink's one predecessor is renderResolvedLink"
+  },
+  {
+   "id": "hermes-ae43fd6d-129",
+   "repo": "hermes",
+   "commit": "ae43fd6df6c198a965f969d37d89394dbc56903f",
+   "parent": "b4d04eb8fd427740fb47b1af496c409a50bd5d8d",
+   "subject": "fix(tui): bare URLs render verbatim instead of a derived site label (#106843)",
+   "old": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "renderResolvedLink",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "urlAsText",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.31,
+   "walk": 298,
+   "label": "not-rename",
+   "reason": "urlAsText continues defaultLinkLabel"
+  },
+  {
+   "id": "hermes-ae43fd6d-130",
+   "repo": "hermes",
+   "commit": "ae43fd6df6c198a965f969d37d89394dbc56903f",
+   "parent": "b4d04eb8fd427740fb47b1af496c409a50bd5d8d",
+   "subject": "fix(tui): bare URLs render verbatim instead of a derived site label (#106843)",
+   "old": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "renderResolvedLink",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "authoredLabel",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.31,
+   "walk": 298,
+   "label": "not-rename",
+   "reason": "authoredLabel continues pickAuthoredLabel"
+  },
+  {
+   "id": "hermes-ae43fd6d-131",
+   "repo": "hermes",
+   "commit": "ae43fd6df6c198a965f969d37d89394dbc56903f",
+   "parent": "b4d04eb8fd427740fb47b1af496c409a50bd5d8d",
+   "subject": "fix(tui): bare URLs render verbatim instead of a derived site label (#106843)",
+   "old": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "renderResolvedLink",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "renderLink",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.69,
+   "walk": 298,
+   "label": "rename+change",
+   "reason": "same signature and normalizeExternalUrl(target) start; all three call sites switched; now renders the Link inline instead of the ResolvedLink component"
+  },
+  {
+   "id": "hermes-08f628f9-132",
+   "repo": "hermes",
+   "commit": "08f628f9f5b0f5a2ebcaf7ece45e76e3ff71f457",
+   "parent": "256cab2b78ef549183636650f07586f0741b74c9",
+   "subject": "feat: attach Ink local transport through canonical gateway bootstrap",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "describeChild",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "bootstrapLocalGateway",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.17,
+   "walk": 305,
+   "label": "not-rename",
+   "reason": "describeChild (pid/killed/exit string) dropped with the spawned child; bootstrapLocalGateway runs a bootstrap script"
+  },
+  {
+   "id": "hermes-08f628f9-133",
+   "repo": "hermes",
+   "commit": "08f628f9f5b0f5a2ebcaf7ece45e76e3ff71f457",
+   "parent": "256cab2b78ef549183636650f07586f0741b74c9",
+   "subject": "feat: attach Ink local transport through canonical gateway bootstrap",
+   "old": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.startSpawnedGateway",
+    "kind": "method"
+   },
+   "new": {
+    "path": "ui-tui/src/gatewayClient.ts",
+    "tail": "GatewayClient.startLocalGateway",
+    "kind": "method"
+   },
+   "how": "same-file",
+   "jaccard": 0.16,
+   "walk": 305,
+   "label": "not-rename",
+   "reason": "spawn-a-child implementation replaced by bootstrap-and-attach: no spawn, stdout/stderr or exit handling carried over, only the call slot in start() is shared"
+  },
+  {
+   "id": "hermes-e69d2fda-134",
+   "repo": "hermes",
+   "commit": "e69d2fda8a55e9c4e5bf8126533331343d4539cc",
+   "parent": "43f395a4f88402adf79faed3aea8049e45d8d138",
+   "subject": "feat(tui): one reference vocabulary for the composer and the transcript",
+   "old": {
+    "path": "ui-tui/src/domain/slash.ts",
+    "tail": "splitSlashSkillRefs",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/domain/composerHighlights.ts",
+    "tail": "highlightMask",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "jaccard": 0.56,
+   "walk": 382,
+   "label": "not-rename",
+   "reason": "highlightMask builds a boolean mask from splitComposerHighlights segments; the splitter itself is not highlightMask"
+  },
+  {
+   "id": "hermes-68391930-135",
+   "repo": "hermes",
+   "commit": "68391930d0aa2bd580d8ba9f0e65a8624a15171d",
+   "parent": "7598bc6c9527ca3abc5471662ddf861e3a6d80d6",
+   "subject": "perf(tui): bound scroll rendering and preserve anchors",
+   "old": {
+    "path": "ui-tui/packages/hermes-ink/src/ink/render-border.ts",
+    "tail": "embedTextInBorder",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/packages/hermes-ink/src/ink/render-border.ts",
+    "tail": "sliceAnsiToWidth",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.31,
+   "walk": 431,
+   "label": "not-rename",
+   "reason": "sliceAnsiToWidth is a new ANSI slicing helper"
+  },
+  {
+   "id": "hermes-68391930-136",
+   "repo": "hermes",
+   "commit": "68391930d0aa2bd580d8ba9f0e65a8624a15171d",
+   "parent": "7598bc6c9527ca3abc5471662ddf861e3a6d80d6",
+   "subject": "perf(tui): bound scroll rendering and preserve anchors",
+   "old": {
+    "path": "ui-tui/packages/hermes-ink/src/ink/render-border.ts",
+    "tail": "embedTextInBorder",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/packages/hermes-ink/src/ink/render-border.ts",
+    "tail": "borderRun",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.43,
+   "walk": 431,
+   "label": "not-rename",
+   "reason": "borderRun is a new border-run builder"
+  },
+  {
+   "id": "hermes-68391930-137",
+   "repo": "hermes",
+   "commit": "68391930d0aa2bd580d8ba9f0e65a8624a15171d",
+   "parent": "7598bc6c9527ca3abc5471662ddf861e3a6d80d6",
+   "subject": "perf(tui): bound scroll rendering and preserve anchors",
+   "old": {
+    "path": "ui-tui/packages/hermes-ink/src/ink/render-border.ts",
+    "tail": "embedTextInBorder",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/packages/hermes-ink/src/ink/render-border.ts",
+    "tail": "renderHorizontalBorder",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.43,
+   "walk": 431,
+   "label": "not-rename",
+   "reason": "embedTextInBorder's position math is inlined into a new, larger row renderer extracted from the border painter; its before/text/after return role is gone"
+  },
+  {
+   "id": "hermes-68391930-138",
+   "repo": "hermes",
+   "commit": "68391930d0aa2bd580d8ba9f0e65a8624a15171d",
+   "parent": "7598bc6c9527ca3abc5471662ddf861e3a6d80d6",
+   "subject": "perf(tui): bound scroll rendering and preserve anchors",
+   "old": {
+    "path": "ui-tui/src/app/useMainApp.ts",
+    "tail": "capHistory",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/lib/messages.ts",
+    "tail": "capTranscriptHistory",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "jaccard": 0.87,
+   "walk": 431,
+   "label": "rename+change",
+   "reason": "same body moved to lib/messages.ts (only the items[0]! non-null assertion dropped); every call site and a new test use capTranscriptHistory"
+  },
+  {
+   "id": "hermes-ca5ee5ed-139",
+   "repo": "hermes",
+   "commit": "ca5ee5ed331dbbe029157f7bcbb5f8b8f3fc8566",
+   "parent": "fead8c8d6ad3fa6f422937e97a35936929159a79",
+   "subject": "feat(tui): attach images inline at the cursor, delete the token to unattach",
+   "old": {
+    "path": "ui-tui/src/app/useComposerState.ts",
+    "tail": "trimSnips",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/app/useComposerState.ts",
+    "tail": "trimTokens",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.72,
+   "walk": 438,
+   "label": "rename+change",
+   "reason": "same newest-first budget loop (count + total bytes), renamed from snips to composer tokens; both call sites switched"
+  },
+  {
+   "id": "hermes-fead8c8d-140",
+   "repo": "hermes",
+   "commit": "fead8c8d6ad3fa6f422937e97a35936929159a79",
+   "parent": "5d6aae02bffa7714c4a94f3a0900b37774442dea",
+   "subject": "feat(tui): one token type for everything deferred in the composer",
+   "old": {
+    "path": "ui-tui/src/app/useSubmission.test.ts",
+    "tail": "snip",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/__tests__/attachments.test.ts",
+    "tail": "paste",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "jaccard": 0.67,
+   "walk": 439,
+   "label": "not-rename",
+   "reason": "one-line test fixture builders, too small to tell; the expandSnips tests were rewritten in another file"
+  },
+  {
+   "id": "hermes-f244deff-141",
+   "repo": "hermes",
+   "commit": "f244deffee34870207bf2c910225c7fe17518867",
+   "parent": "6c9718151c59638bd562433cc8d6f55d6ecf0d1d",
+   "subject": "fix(tui,desktop): let authored link text outrank the fetched page title",
+   "old": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "pickFallbackLabel",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/markdown.tsx",
+    "tail": "pickAuthoredLabel",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.84,
+   "walk": 479,
+   "label": "rename+change",
+   "reason": "same logic (trimmed label unless it normalizes to the target) restructured into one expression; the call site switched"
+  },
+  {
+   "id": "hermes-1f652214-142",
+   "repo": "hermes",
+   "commit": "1f652214df465b86b5ac8cd1d8eaf78215e9d501",
+   "parent": "2244be2282e29a155379e83c20a99942045d5172",
+   "subject": "fix(ui-tui): skin owns BOTH terminal defaults — OSC-10 foreground beside the OSC-11 background",
+   "old": {
+    "path": "ui-tui/src/lib/terminalModes.ts",
+    "tail": "setTerminalBackground",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/lib/terminalModes.ts",
+    "tail": "isPaintableHex",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.18,
+   "walk": 491,
+   "label": "not-rename",
+   "reason": "setTerminalBackground keeps its name (now bound to a defaultColorSlot setter); isPaintableHex is a new predicate"
+  },
+  {
+   "id": "hermes-1f652214-143",
+   "repo": "hermes",
+   "commit": "1f652214df465b86b5ac8cd1d8eaf78215e9d501",
+   "parent": "2244be2282e29a155379e83c20a99942045d5172",
+   "subject": "fix(ui-tui): skin owns BOTH terminal defaults — OSC-10 foreground beside the OSC-11 background",
+   "old": {
+    "path": "ui-tui/src/lib/terminalModes.ts",
+    "tail": "setTerminalBackground",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/lib/terminalModes.ts",
+    "tail": "defaultColorSlot",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.69,
+   "walk": 491,
+   "label": "not-rename",
+   "reason": "the name setTerminalBackground survives as a binding; defaultColorSlot is a generalized OSC 10/11 factory, not a renamed successor"
+  },
+  {
+   "id": "hermes-2ed61d48-144",
+   "repo": "hermes",
+   "commit": "2ed61d486c98214d57ea66c896e174fe27dc7314",
+   "parent": "9627d4f43f756ff1f7705e284bfec87113f58312",
+   "subject": "refactor(ui-tui): host placement router + grid-test width-floor fix",
+   "old": {
+    "path": "ui-tui/src/sdk/host.tsx",
+    "tail": "dockWith",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/sdk/host.tsx",
+    "tail": "place",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.28,
+   "walk": 501,
+   "label": "not-rename",
+   "reason": "dockWith is a one-liner whose spread is inlined into the new place router (which also handles the non-ambient case)"
+  },
+  {
+   "id": "hermes-2ed61d48-145",
+   "repo": "hermes",
+   "commit": "2ed61d486c98214d57ea66c896e174fe27dc7314",
+   "parent": "9627d4f43f756ff1f7705e284bfec87113f58312",
+   "subject": "refactor(ui-tui): host placement router + grid-test width-floor fix",
+   "old": {
+    "path": "ui-tui/src/sdk/host.tsx",
+    "tail": "dockWith",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/sdk/host.tsx",
+    "tail": "useRenderCtx",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.24,
+   "walk": 501,
+   "label": "not-rename",
+   "reason": "useRenderCtx continues useAmbientCtx, not dockWith"
+  },
+  {
+   "id": "hermes-2ed61d48-146",
+   "repo": "hermes",
+   "commit": "2ed61d486c98214d57ea66c896e174fe27dc7314",
+   "parent": "9627d4f43f756ff1f7705e284bfec87113f58312",
+   "subject": "refactor(ui-tui): host placement router + grid-test width-floor fix",
+   "old": {
+    "path": "ui-tui/src/sdk/host.tsx",
+    "tail": "dockWith",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/sdk/host.tsx",
+    "tail": "CardStack",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.34,
+   "walk": 501,
+   "label": "not-rename",
+   "reason": "CardStack is a new component"
+  },
+  {
+   "id": "hermes-2ed61d48-147",
+   "repo": "hermes",
+   "commit": "2ed61d486c98214d57ea66c896e174fe27dc7314",
+   "parent": "9627d4f43f756ff1f7705e284bfec87113f58312",
+   "subject": "refactor(ui-tui): host placement router + grid-test width-floor fix",
+   "old": {
+    "path": "ui-tui/src/sdk/host.tsx",
+    "tail": "useAmbientCtx",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/sdk/host.tsx",
+    "tail": "place",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.2,
+   "walk": 501,
+   "label": "not-rename",
+   "reason": "place is a new router; useAmbientCtx continues as useRenderCtx"
+  },
+  {
+   "id": "hermes-2ed61d48-148",
+   "repo": "hermes",
+   "commit": "2ed61d486c98214d57ea66c896e174fe27dc7314",
+   "parent": "9627d4f43f756ff1f7705e284bfec87113f58312",
+   "subject": "refactor(ui-tui): host placement router + grid-test width-floor fix",
+   "old": {
+    "path": "ui-tui/src/sdk/host.tsx",
+    "tail": "useAmbientCtx",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/sdk/host.tsx",
+    "tail": "useRenderCtx",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.89,
+   "walk": 501,
+   "label": "rename+change",
+   "reason": "same body (theme + stdout cols/rows) with a RenderCtx return type added; all call sites switched"
+  },
+  {
+   "id": "hermes-2ed61d48-149",
+   "repo": "hermes",
+   "commit": "2ed61d486c98214d57ea66c896e174fe27dc7314",
+   "parent": "9627d4f43f756ff1f7705e284bfec87113f58312",
+   "subject": "refactor(ui-tui): host placement router + grid-test width-floor fix",
+   "old": {
+    "path": "ui-tui/src/sdk/host.tsx",
+    "tail": "useAmbientCtx",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/sdk/host.tsx",
+    "tail": "CardStack",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.22,
+   "walk": 501,
+   "label": "not-rename",
+   "reason": "CardStack is a new component"
+  },
+  {
+   "id": "hermes-ed93d6af-150",
+   "repo": "hermes",
+   "commit": "ed93d6afe028fa1ce952b754a42fdee87fc02da5",
+   "parent": "ca0b1b130c9ab997eb8115e3f9f70bf336ae1610",
+   "subject": "feat(ui-tui): widget primitives — charts, accordion, shimmer, stable streams",
+   "old": {
+    "path": "ui-tui/src/components/branding.tsx",
+    "tail": "CollapseToggle",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/components/accordion.tsx",
+    "tail": "Accordion",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "jaccard": 0.54,
+   "walk": 503,
+   "label": "rename+change",
+   "reason": "same header markup (caret, bold title, count, suffix) now wrapped around children with optional uncontrolled state; every call site switched to Accordion"
+  },
+  {
+   "id": "hermes-ed93d6af-151",
+   "repo": "hermes",
+   "commit": "ed93d6afe028fa1ce952b754a42fdee87fc02da5",
+   "parent": "ca0b1b130c9ab997eb8115e3f9f70bf336ae1610",
+   "subject": "feat(ui-tui): widget primitives — charts, accordion, shimmer, stable streams",
+   "old": {
+    "path": "ui-tui/src/sdk/apps/ticker.tsx",
+    "tail": "spark",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/lib/charts.ts",
+    "tail": "normalize",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "jaccard": 0.54,
+   "walk": 503,
+   "label": "not-rename",
+   "reason": "normalize is a new windowing helper"
+  },
+  {
+   "id": "hermes-ed93d6af-152",
+   "repo": "hermes",
+   "commit": "ed93d6afe028fa1ce952b754a42fdee87fc02da5",
+   "parent": "ca0b1b130c9ab997eb8115e3f9f70bf336ae1610",
+   "subject": "feat(ui-tui): widget primitives — charts, accordion, shimmer, stable streams",
+   "old": {
+    "path": "ui-tui/src/sdk/apps/ticker.tsx",
+    "tail": "spark",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/lib/charts.ts",
+    "tail": "sparkline",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "jaccard": 0.67,
+   "walk": 503,
+   "label": "rename+change",
+   "reason": "same min/span block-ramp mapping, now windowed and padded to width, moved to lib/charts; the ticker call site switched"
+  },
+  {
+   "id": "hermes-d8fcab47-153",
+   "repo": "hermes",
+   "commit": "d8fcab47360812027eee49cf82d659cd663b0c8c",
+   "parent": "32a9f2acbcc5c0da9e8e90ccd4c2c1189e5e5da6",
+   "subject": "feat(ui-tui): widget-app SDK — registry, host, dispatch; demos become apps",
+   "old": {
+    "path": "ui-tui/src/app/slash/commands/debug.ts",
+    "tail": "clampGridSize",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/app/slash/commands/debug.ts",
+    "tail": "widgetCommand",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.3,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "widgetCommand is a new slash-command factory"
+  },
+  {
+   "id": "hermes-d8fcab47-154",
+   "repo": "hermes",
+   "commit": "d8fcab47360812027eee49cf82d659cd663b0c8c",
+   "parent": "32a9f2acbcc5c0da9e8e90ccd4c2c1189e5e5da6",
+   "subject": "feat(ui-tui): widget-app SDK — registry, host, dispatch; demos become apps",
+   "old": {
+    "path": "ui-tui/src/app/slash/commands/debug.ts",
+    "tail": "clampGridSize",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/sdk/apps/gridTest.tsx",
+    "tail": "clampSize",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "jaccard": 0.5,
+   "walk": 507,
+   "label": "rename+change",
+   "reason": "same finite-check fallback + clamp to 1..MAX, trunc -> round, moved to gridTest.tsx; parseSize's calls switched"
+  },
+  {
+   "id": "hermes-d8fcab47-155",
+   "repo": "hermes",
+   "commit": "d8fcab47360812027eee49cf82d659cd663b0c8c",
+   "parent": "32a9f2acbcc5c0da9e8e90ccd4c2c1189e5e5da6",
+   "subject": "feat(ui-tui): widget-app SDK — registry, host, dispatch; demos become apps",
+   "old": {
+    "path": "ui-tui/src/app/slash/commands/debug.ts",
+    "tail": "parseGridTestSize",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/app/slash/commands/debug.ts",
+    "tail": "widgetCommand",
+    "kind": "function"
+   },
+   "how": "same-file",
+   "jaccard": 0.23,
+   "walk": 507,
+   "label": "not-rename",
+   "reason": "widgetCommand is a new slash-command factory; the parser moved as parseSize"
+  },
+  {
+   "id": "hermes-d8fcab47-156",
+   "repo": "hermes",
+   "commit": "d8fcab47360812027eee49cf82d659cd663b0c8c",
+   "parent": "32a9f2acbcc5c0da9e8e90ccd4c2c1189e5e5da6",
+   "subject": "feat(ui-tui): widget-app SDK — registry, host, dispatch; demos become apps",
+   "old": {
+    "path": "ui-tui/src/app/slash/commands/debug.ts",
+    "tail": "parseGridTestSize",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/sdk/apps/gridTest.tsx",
+    "tail": "parseSize",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "jaccard": 0.84,
+   "walk": 507,
+   "label": "rename+change",
+   "reason": "same parse (empty default, NxM regex, two-number split) moved to gridTest.tsx with the clamp renamed and a return type; the call site switched"
+  },
+  {
+   "id": "hermes-d8fcab47-157",
+   "repo": "hermes",
+   "commit": "d8fcab47360812027eee49cf82d659cd663b0c8c",
+   "parent": "32a9f2acbcc5c0da9e8e90ccd4c2c1189e5e5da6",
+   "subject": "feat(ui-tui): widget-app SDK — registry, host, dispatch; demos become apps",
+   "old": {
+    "path": "ui-tui/src/app/useInputHandlers.ts",
+    "tail": "keepGridCursorInBounds",
+    "kind": "function"
+   },
+   "new": {
+    "path": "ui-tui/src/sdk/apps/gridTest.tsx",
+    "tail": "keepCursorInBounds",
+    "kind": "function"
+   },
+   "how": "cross-file",
+   "jaccard": 0.91,
+   "walk": 507,
+   "label": "rename",
+   "reason": "body identical, moved from useInputHandlers.ts to gridTest.tsx; the update helper calls it"
+  }
+ ]
+}
