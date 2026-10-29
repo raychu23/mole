@@ -78,3 +78,50 @@ review round 1 → 2 (4 log/review-1.md, key-ruling-1.md)
     limits                  the precision rules are English patterns tuned on the review's examples + the 14 flags of this one sample;
                             an out-of-sample metric phrased without a metric word, or a bug description without was/were being or 'if',
                             can still be read as a claim
+
+round 8 · 2026-10-29 (last fix round, review-2 P1-1 + P1-2)
+```notes
+held-out key            4 log/heldout-key.md (sha only; key gitignored, both checkouts): 16 real answers from 10-28/29 Hermes runs
+                        (11 subagent hand-ins, 5 coordinator chats), none in the M16 key or review-2's 8; 158 claims hand-labelled
+                        from each run's own tool rows with a read-only sqlite grep helper (not the code under test), committed
+                        (e3ed678 09:33) before any code change. Only 1 flagged claim (a coordinator relaying a subagent's "two
+                        blocking problems are fixed"): the agents in these runs mostly did re-run their checks, so recall on this
+                        key is 0/1 or 1/1 and says little; precision is the useful number. No Claude Code answer (none on 10-28/29).
+    before (round-7 code)  18 flags, 0 correct (precision 0%), recall 0/1  (runs.jsonl line e101cb3)
+P1-2 (fixed)            a command's own literal text (heredoc bodies, echo/printf strings) is cut from its output before any matcher
+                        sees it; a command that only moves its own text (cat/echo/printf/tee/tail/sed/git add|commit …) is not a
+                        run; command hints match the command without heredocs/echo strings. Fixture A: 3/3 now unsupported; a real
+                        run before the notes append stays the evidence (callId of the run, not the append).
+P1-1 (a) (fixed)        printed exits ('bench-exit 1', 'exit=2', 'exit 7', 'exited with code 3', 'CHECK_EXIT=0'; not JSON "exit": and
+                        not vitest test titles) beat the wrapper's exit; exit claims pick the call whose command / printed label
+                        shares most claim words; 'round N / red / earlier / first' exit claims accept any matching call; the
+                        exit number must match exactly (P2-a: exit 2 is no longer backed by exit 1).
+P1-1 (b) (fixed)        runner summaries parsed into numbers (vitest Tests / Test Files, jest 'x failed, y passed, z total', pytest
+                        'N passed, M failed', unittest Ran N + OK/FAILED) and matched field by field with the claim's counts
+                        (files, passed, failed, total); 'Round 3 passed', 'step 2', 'P1', 'M16' numbers are labels, not counts;
+                        `npm run X` claims also match a wrapper call whose output carries npm's '> pkg@ver X' banner.
+P1-1 (c) (fixed)        a failing run outside the tree of the run's last passing check (cd target before the runner, $VAR and ~
+                        resolved; /tmp, $TMPDIR, /var/folders, any /scratch/ or /cache/ dir, another worktree or repo) does not
+                        contradict a pass claim, for test and fix claims.
+P1-1 (d) (fixed)        present-tense description verbs (lists, prints, shows, returns, reports, gives, exits, …) without I/we or
+                        'now' are not claims (except 'returns the same', a check result in the M16 rule); 'with exit N' after
+                        is/are, adjectival 'exit-0 run'; test verbs inside 'before/after/while … -ing' clauses; '3 failing test
+                        files' after contains/includes/has/with.
+P2-a (fixed)            fix claims check after the last CODE edit (a notes / runs.jsonl append no longer counts as the fix).
+precision guard (step 3)  after the P1 fixes the verdicts were still wrong out of sample: held-out 15 flags, 0 correct; with a first
+                        guard (success claims, contradicted or absent class) the hook would have sent 5 lines, all wrong (counts /
+                        exits read off the wrong call), then 2 ('reverted' = a working-tree undo, not git revert). Per the brief
+                        I restricted the Stop hook to success claims whose whole class is absent from the run (no test or check
+                        at all, no commit, no push, no merge, no edit, no write to the named file, a sha in no repository).
+                        Claim.hook carries it; stop.mjs filters on it; `mole claims` still prints every verdict and marks the
+                        rest "weak: not sent by the Stop hook".
+    cost                Stop-hook recall on the frozen M16 key drops to 1/9 (C05; the frozen bench scores verdicts, still 9/9).
+                        The hook now catches only the crude lie ("tests pass" with no test run, "pushed" with no push); count,
+                        exit and stale-pass errors are visible in `mole claims` but not pushed.
+after                   frozen M16 9/9, 0/111 · held-out verdict flags 15, correct 0 (precision 0%), recall 0/1 · held-out Stop-hook
+                        lines 0 (precision n/a), recall 0/1 · review-2's 8 sessions: verdict flags 16, hook lines 0
+honesty notes           I read the held-out flag list after the first fix (to decide the guard, as the brief allows), so the held-
+                        out numbers for the guard are not blind; the matcher fixes were designed from review-2's examples only, and
+                        two held-out-inspired matcher changes were dropped (a broader 'reverted' rule broke M16 H06). A new held-
+                        out set is the real test of the guard. Tests for the guard (claim.hook) were written with it, not red-first.
+```

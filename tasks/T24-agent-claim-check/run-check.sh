@@ -12,8 +12,10 @@ grep -E '^\s*(Test Files|Tests)\s' "$T.check" | tail -2
 [ $c -ne 0 ] && grep -E 'FAIL|error TS|✗|×' "$T.check" | head -20
 node packages/agentstate/dist/bench/m16.js --metrics-out "$T.m16.json" --details "$D/m16-details.json" >"$T.m16" 2>&1; m=$?
 head -25 "$T.m16"
+# round 8 (review-2 P1-1): held-out key outside the frozen bench (4 log/heldout-key.md); reported, not part of exit
+node --no-warnings tasks/T24-agent-claim-check/heldout.mjs --json "$T.ho.json" --details "$D/m16-heldout-details.json" 2>&1 | tail -1
 if [ $c -ne 0 ]; then ex=$c; else ex=$m; fi
-TIME="$(date +%Y-%m-%dT%H:%M:%S%z)" COMMIT="$(git rev-parse --short HEAD)" EX=$ex C=$c M16="$T.m16.json" CHK="$T.check" node -e '
+TIME="$(date +%Y-%m-%dT%H:%M:%S%z)" COMMIT="$(git rev-parse --short HEAD)" EX=$ex C=$c M16="$T.m16.json" HO="$T.ho.json" CHK="$T.check" node -e '
 const fs = require("fs");
 const rd = (f, k) => { try { return JSON.parse(fs.readFileSync(f, "utf8"))[k]; } catch { return "bench did not produce metrics"; } };
 const chk = fs.readFileSync(process.env.CHK, "utf8");
@@ -33,7 +35,7 @@ try {
 } catch { outside = " · outside-key flags: no details"; }
 const line = { time: process.env.TIME, commit: process.env.COMMIT,
   cmd: "npm run check && node packages/agentstate/dist/bench/m16.js", exit: Number(process.env.EX),
-  metrics: { M16: rd(process.env.M16, "M16") + outside }, check: (Number(process.env.C) === 0 ? "pass: " : "fail: ") + tests.trim() };
+  metrics: { M16: rd(process.env.M16, "M16") + outside + " · " + (rd(process.env.HO, "heldout") || "held-out: not run") }, check: (Number(process.env.C) === 0 ? "pass: " : "fail: ") + tests.trim() };
 fs.appendFileSync("tasks/T24-agent-claim-check/4 log/runs.jsonl", JSON.stringify(line) + "\n");
 console.log(JSON.stringify(line));
 '
