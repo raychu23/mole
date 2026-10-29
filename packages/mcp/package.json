@@ -7,5 +7,5 @@
   "types": "dist/index.d.ts",
   "bin": { "mole-mcp": "dist/cli.js" },
   "scripts": { "build": "tsc -b" },
-  "dependencies": { "@mole/core": "*", "@mole/daemon": "*", "@mole/agentstate": "*", "@mole/telemetry": "*", "@mole/history": "*", "@mole/questions": "*", "@mole/decisions": "*", "@modelcontextprotocol/sdk": "^1.32.1", "zod": "^3.25.0" }
+  "dependencies": { "@mole/core": "*", "@mole/daemon": "*", "@mole/agentstate": "*", "@mole/telemetry": "*", "@mole/history": "*", "@mole/questions": "*", "@mole/decisions": "*", "@mole/intake": "*", "@modelcontextprotocol/sdk": "^1.32.1", "zod": "^3.25.0" }
 }

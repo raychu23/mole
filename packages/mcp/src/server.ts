@@ -133,6 +133,40 @@ export function createServer(opts: MoleMcpOptions): McpServer {
       }
     },
   );
+  // T23: agents interrogate, people write (D38). Up to 3 pointed questions + which decision(s) govern the change,
+  // built only from facts Mole already found (diff hunks, past fixes, governing decisions); silent when nothing
+  // governs the change. Mole never drafts a decision record's own why/context/consequences text (R6).
+  server.registerTool(
+    'mole_interrogate',
+    {
+      title: 'Mole interrogate',
+      description:
+        'For a code change, which decisions (.mole/decisions) govern the files it touches, and up to 3 pointed questions ' +
+        'built from evidence Mole already found (diff hunks, past fixes + guarding tests, the governing decision) — never ' +
+        'a question invented about something code did not find. Silent (governed: false, 0 questions) when nothing governs ' +
+        'the change. Files + git only, no model calls by default (R6).',
+      inputSchema: {
+        root: z.string().optional().describe('repository root (default: the server root, MOLE_ROOT or cwd)'),
+        sha: z.string().optional().describe('a commit sha to interrogate'),
+        diff: z.string().optional().describe('a diff file to interrogate (with base)'),
+        base: z.string().optional().describe('base sha for diff'),
+        worktree: z.boolean().optional().describe('interrogate the uncommitted working tree'),
+      },
+    },
+    async (args) => {
+      const modes = [args.sha !== undefined, args.diff !== undefined, args.worktree === true].filter(Boolean).length;
+      if (modes !== 1) return { content: [{ type: 'text' as const, text: 'mole_interrogate: give exactly one of sha, diff (+ base) or worktree: true' }], isError: true };
+      const root = resolve(opts.root, args.root ?? '.');
+      try {
+        const { interrogate } = await import('@mole/intake');
+        const change = args.sha ? { sha: args.sha } : args.diff ? { diffFile: args.diff, base: args.base } : { worktree: true as const };
+        const result = await interrogate(root, change);
+        return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
+      } catch (e) {
+        return { content: [{ type: 'text' as const, text: `mole_interrogate: ${(e as Error).message}` }], isError: true };
+      }
+    },
+  );
   return server;
 }
 
