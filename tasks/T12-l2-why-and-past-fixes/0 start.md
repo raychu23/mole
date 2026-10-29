@@ -1,22 +1,22 @@
 ---
-state: verified
+state: integrated
 owner: mole-builder (Hermes chat)
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t12-l2-why-and-past-fixes
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T12-l2-why-and-past-fixes
 base: 1a003c5
 reviewer: reviewer-T12-r1
-updated: 2026-10-28 21:48
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+updated: 2026-10-28 21:53
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-10-28 21:13
 ---
 ```notes
 T12-l2-why-and-past-fixes      ledger task (rules.md §3 code features)      project Mole
     goal                    L2 the why + what broke before: for a change (commit, diff or working tree) mole check finds, per edited hunk, the past fix commits that last wrote those lines (git blame on the parent, -U0 hunks, fix rule configurable) and returns for each: the fix's reason (subject + body, linked task file or .mole note when one names it), the guarding tests (test files that fix commit touched or that reference the symbol), and a clickable source (sha + file:line)
     done-when               1) mole check <sha|--diff file|--worktree> [--json] prints, per hunk, past fixes with reason + guarding tests + source; 2) M2 on tasks' benchmark B1 (context/product-plan/systems/tool-trials/keys/m8-key.json) scored by that key's own rule: >= 4 of 5 on R1-R5 and R6 = 1; 3) on the planted regression B3 (fixtures/planted-m8.diff applied to Mole) it names 9e19c51, the reason (editing counts as use; an index never counts idle) and the daemon idle test; 4) B2 recall: every change past-fix-overlap.json counts as touching a fix gets >= 1 past fix; 5) M5: p95 < 2 s per change on the excalidraw clone, 0 model calls; 6) failure/empty case: a change to brand-new lines or a repo with no fix commits prints 'no past fixes on these lines', exit 0; 7) npm run check passes
-    status                  2026-10-28 verified      reviewer reviewer-T12-r1 · findings: P2 only: (1) fix rule also matched on commit body -> feat afa3a65 listed as past fi
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-10-28 integrated      merge 7b47c51 · combined checks exit 0 · note: npm run check on main 7b47c51 → 87/87 passed · m2.js on main → M2 R1-R5 5
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    code
     boundary                packages/history/** (new), packages/daemon/src/cli.ts (new subcommands only), workspace wiring, tasks/T12-l2-why-and-past-fixes/**

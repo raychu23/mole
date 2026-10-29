@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-10-28 21:43      checks ran: npm run check && node packages/history/dist/bench/m2.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T12-l2-why-and-past-fixes → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-28 21:48      submitted → verified      reviewer reviewer-T12-r1 · findings: P2 only: (1) fix rule also matched on commit body -> feat afa3a65 listed as past fix on R4 53973c3a42, (2) diff not applying to --base or non-diff input silently prints 'no past fixes
     2026-10-28 21:48      checks ran: npm run check && node packages/history/dist/bench/m2.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T12-l2-why-and-past-fixes → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-28 21:53      verified → integrated      merge 7b47c51 · combined checks exit 0 · note: npm run check on main 7b47c51 → 87/87 passed · m2.js on main → M2 R1-R5 5/5, R6 1, B2 21/21, B3 pass, contract 7/7, M5 p95 370 ms over 53 changes, model calls 0
+    2026-10-28 21:53      combined checks ran: npm run check && node packages/history/dist/bench/m2.js in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
