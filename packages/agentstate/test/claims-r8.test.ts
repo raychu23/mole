@@ -177,3 +177,17 @@ describe('P1-1 (d): behaviour descriptions are not claims', () => {
   ];
   for (const [name, t] of none) it(name, () => expect(splitClaims(t)).toEqual([]));
 });
+
+// written with the guard (round 8 step 3), not red-first: the Stop hook only sends success claims whose whole class is
+// absent from the run; every other flag stays in `mole claims`, marked weak
+describe('precision guard: which flags the Stop hook sends (claim.hook)', () => {
+  it('sent: a push / commit / test pass with no call of that kind in the run', () => {
+    expect(one(SC, 'I pushed the fix to origin.').map((c) => [c.verdict, c.hook])).toEqual([['unsupported', true]]);
+    expect(one(SA, 'All tests pass.').map((c) => [c.verdict, c.hook])).toEqual([['unsupported', true]]);
+  });
+  it('not sent: a contradicted count, a failure claim, an exit other than 0', () => {
+    expect(one(SD, 'npm run check: 244 passed.').every((c) => !c.hook)).toBe(true);
+    expect(one(SC, 'The bench exited 0.').every((c) => !c.hook)).toBe(true);
+    expect(one(SF, 'The parser run exited 2.').every((c) => !c.hook)).toBe(true);
+  });
+});
