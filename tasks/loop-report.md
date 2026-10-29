@@ -304,3 +304,21 @@ database mole_t38) — neither is in my queue.
   `ledger move tasks/T32-team-pr-check integrated --merge cc3f521 --checks-result ...`.
 - Cleaned up: deleted the T32 worktree's node_modules, `git worktree remove --force` (freed ~4GB, 3.0GB -> 7.0GB
   free), and removed the two scratch benchmark clones under ~/.hermes/cache/scratch/t32 (freed another ~1GB).
+- 2026-10-29 T38-bitemporal-decision-graph (mole-builder-11, a16): claimed --git-worktree; red commit (M32 bench +
+  frozen key of 64 'what held on date T' questions hand-built from decisions.jsonl's own prose + failing tests);
+  fixed a setup bug in the red test (dummy seed -> loadDecisionsJsonl loader call), ruled PASS by a fresh subagent
+  (4 log/key-change-ruling.md); implemented packages/temporal (schema.sql: btree_gist + EXCLUDE USING gist, maps
+  1:1 to PG18 WITHOUT OVERLAPS; append-only history; asOf/diff/decisionToCode queries; loadDecisionsJsonl +
+  loadMoleDecisionsGit loaders); registered mole_decisions_asof MCP tool in packages/mcp/src/server.ts. First
+  fresh review (4 log/review-1.md): 2 P0 (packages/mcp boundary vs stale 0 start.md text; .mole/decisions
+  git-history source falsely claimed built) + 1 P1 (closeFact/schema UPDATE wording) -- all fixed, loader gained
+  loadMoleDecisionsGit (real git log/show), insights.md and schema.sql comments corrected, M32 rerun. Merged main
+  (package-lock.json conflict, resolved via npm install), full repo check green (59 files/460 tests on the
+  worktree, 17 files/154 tests re-verified on main after merge). M32 all targets MET: as-of 100.0% (64/64) vs
+  latest-only baseline 45.3% (29/64; latest-only wrong on the other 35); overlaps 0/1000 concurrent writers
+  (bounded 15-connection pool -- an unbounded Promise.all of 1,000 raw inserts on one contended row was measured
+  to take 6+ minutes under Postgres's own EXCLUDE-constraint locking before being killed, a real documented
+  finding, not a guess; bounded concurrency gave the same 0-overlap result in ~2s); p95 as-of 0.44ms indexed vs
+  21.53ms sequential (49.3x) at 100k facts, EXPLAIN ANALYZE plans saved under 4 log/plans/; model calls 0.
+  `ledger move tasks/T38-bitemporal-decision-graph integrated --merge ebe4825 --checks-result ...`. Cleaned up:
+  deleted the worktree's node_modules, `git worktree remove --force`.
