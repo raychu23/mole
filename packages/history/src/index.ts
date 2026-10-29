@@ -226,7 +226,8 @@ class Run {
 
   isFix(sha: string): boolean {
     const c = this.infos.get(sha);
-    return !!c && (this.rule.test(c.subject) || (c.body.length > 0 && this.rule.test(c.body)));
+    // subject only: a feature commit whose body mentions "regression tests" is not a fix (T12 review P2-1; B2's rule is subject-based too)
+    return !!c && this.rule.test(c.subject);
   }
 
   info(sha: string): CommitInfo | undefined {
