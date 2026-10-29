@@ -8,6 +8,9 @@
       "path": "packages/indexer"
     },
     {
+      "path": "packages/memory"
+    },
+    {
       "path": "packages/daemon"
     },
     {
