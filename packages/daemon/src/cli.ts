@@ -4,10 +4,11 @@
 import { defaultSources } from './detect.js';
 import { resolve } from 'node:path';
 import { formatNeighborhood } from '@mole/core';
-import { addNote, memory, type MemoryEntry } from '@mole/memory';
+import type { MemoryEntry } from '@mole/memory';
+import type { Change } from '@mole/history';
 import { ensureDaemon, MoleClient } from './client.js';
-import { Daemon } from './server.js';
-import { check, formatCheck, type Change } from '@mole/history';
+// heavy modules (TypeScript compiler, SQLite, git history) load only in the subcommand that needs them:
+// every CLI call loading all of them made a 3-call CLI test exceed 5 s on a loaded machine
 
 function parse(argv: string[]): { cmd: string; pos: string[]; flags: Record<string, string | true> } {
   const [cmd = 'help', ...rest] = argv;
@@ -50,11 +51,13 @@ async function main(): Promise<number> {
       console.error('usage: mole note add <file#Symbol> "text" [--root DIR] [--author NAME]');
       return 2;
     }
+    const { addNote } = await import('@mole/memory');
     const n = addNote(root, target, words.join(' '), { author: str(flags.author) });
     console.log(`wrote ${n.file} on ${n.symbol} (hash ${n.hash})`);
     return 0;
   }
   if (cmd === 'memory') {
+    const { memory } = await import('@mole/memory');
     const list = memory(root);
     console.log(flags.json ? JSON.stringify(list, null, 2) : formatMemory(list));
     return 0;
@@ -65,6 +68,7 @@ async function main(): Promise<number> {
   if (cmd === 'daemon') {
     // a background process nobody asked for must not outlive its editor: stop after 30 idle minutes (0 = never)
     const idleMinutes = Number(str(flags['idle-minutes']) ?? 30);
+    const { Daemon } = await import('./server.js');
     const d = new Daemon({ ...common, idleMs: Number.isFinite(idleMinutes) && idleMinutes > 0 ? idleMinutes * 60_000 : 0, log: (l) => console.error(`[mole] ${l}`) });
     await d.start();
     for (const sig of ['SIGINT', 'SIGTERM'] as const) process.on(sig, () => void d.stop());
@@ -96,6 +100,7 @@ async function main(): Promise<number> {
       return 2;
     }
     const change: Change = diffFile !== undefined ? { diffFile: resolve(diffFile), base: str(flags.base) } : sha !== undefined ? { sha } : { worktree: true };
+    const { check, formatCheck } = await import('@mole/history');
     const r = await check(root, change, { fixRule: str(flags['fix-rule']) });
     console.log(flags.json ? JSON.stringify(r, null, 2) : formatCheck(r));
     return 0;
