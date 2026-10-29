@@ -97,6 +97,18 @@
    "measured_by": [
     "M20"
    ]
+  },
+  {
+   "id": "E10",
+   "what": "the whole product works where people already are: VS Code view + hover + file tree + Problems, the agent plugin and MCP, the team server, each serving the decisions behind the code",
+   "measured_by": [
+    "M26",
+    "M27",
+    "M25",
+    "M29",
+    "M30",
+    "M31"
+   ]
   }
  ],
  "metrics": [
@@ -239,6 +251,48 @@
    "how": "30 replayed merged PRs of 2 public repos with CODEOWNERS, key labeled before code: which records/notes/owners each PR should surface; run locally, never pushed",
    "target": "precision >= 0.9 and recall >= 0.8 for 'record governs these lines', owners exact, silent when nothing governed",
    "task": "T32"
+  },
+  {
+   "id": "M25",
+   "name": "team server replay + leaks + latency",
+   "how": "1,000 recorded webhook deliveries (10% duplicates, shuffled) replayed; permission-leak key; p95 timings; OTel spans via in-memory exporter",
+   "target": "0 duplicate effects, index == rebuild from git, 0 lost notifications, 0 leaked records, ack p95 < 1 s, check run < 60 s",
+   "task": "T33"
+  },
+  {
+   "id": "M26",
+   "name": "everything in VS Code, nothing in the terminal",
+   "how": "m26.mjs: CLI read features vs package.json contributes + real-VS-Code DOM dump of the Mole view on the Mole repo; refresh timing over 3 runs",
+   "target": "14/14 features with a non-terminal surface; refresh p95 <= 300 ms; install-check passes",
+   "task": "T34"
+  },
+  {
+   "id": "M27",
+   "name": "agent coverage + weak spots",
+   "how": "key = files each 10-29 builder session changed, from their ledger branches in git (independent of transcript parsing); 20 weak-spot reasons recomputed by a fresh reviewer",
+   "target": "attribution precision + recall >= 0.95; 0 wrong reasons; one-file query p95 <= 200 ms",
+   "task": "T35"
+  },
+  {
+   "id": "M29",
+   "name": "spec-kit + ADR import",
+   "how": "hand-labelled key from 3 pinned public repos (1 spec-kit, 2 ADR folders)",
+   "target": "record recall 100%, fields >= 95% exact, flags on anchored records >= 95%",
+   "task": "T36"
+  },
+  {
+   "id": "M30",
+   "name": "agents interrogate, people write",
+   "how": "Mole's own records + 10 seeded flawed records, labelled before code",
+   "target": ">= 9/10 seeded flaws caught, <= 1 false flag on 10 real records, evidence links 100% real, no generated text in a record's why",
+   "task": "T23"
+  },
+  {
+   "id": "M31",
+   "name": "the agent plugin serves the decisions",
+   "how": "10 replayed builder sessions + 5 planted rule violations",
+   "target": "governing decisions 10/10 at session start within 1,500 chars, p95 <= 2 s; violations 5/5, silent on clean",
+   "task": "T37"
   }
  ],
  "benchmarks": [
@@ -407,6 +461,36 @@
    "task": "T28-runtime-flows-from-tests",
    "needs": [],
    "why": "runtime edges from test runs fill the static graph's dynamic gaps (D30)"
+  },
+  {
+   "task": "T34-one-panel",
+   "needs": [],
+   "why": "every feature where the user already works (USER 10-29 15:30)"
+  },
+  {
+   "task": "T35-agent-coverage",
+   "needs": [],
+   "why": "which agents cover which code; weak spots + blast radius"
+  },
+  {
+   "task": "T36-spec-kit-and-adr-import",
+   "needs": [],
+   "why": "read decisions where teams keep them (spec-kit, ADRs)"
+  },
+  {
+   "task": "T23-decision-traces-intake",
+   "needs": [],
+   "why": "agents interrogate, people write (nuanced, D38)"
+  },
+  {
+   "task": "T33-team-server",
+   "needs": [],
+   "why": "team phase B on established OSS designs (D34 amended)"
+  },
+  {
+   "task": "T37-plugin-decisions-first",
+   "needs": [],
+   "why": "the plugin carries people's decisions to agents and agents' effects back (USER 10-29 15:30)"
   }
  ],
  "checkpoints": [
@@ -449,6 +533,11 @@
    "id": "C8",
    "when": "overnight 10-29: after T22 T24 T25 T27 T28 T29 T30 T32 + the T19 retry (D33) + T17 harness",
    "pass": "every metric above at target or its miss logged with the real number; npm run check green on main after the last integration; tasks/loop-report.md block per task; overnight report at context/product-plan/systems/overnight/report.md"
+  },
+  {
+   "id": "C9",
+   "when": "after builders 7-10 finish (10-29 evening)",
+   "pass": "M25 M26 M27 M29 M30 at target or blocked with real numbers; extension re-packaged + install-check + installed in Raymond's VS Code; 0 Try Mole.txt updated to the panel; report written"
   }
  ],
  "never": [
@@ -461,12 +550,6 @@
  "asked_10_28_2210": "USER: \"huh what the fuck. werent we supposed to include as part of the observe and verify aspects of the project include stuff like langraph all that agent states as a way to mange context verisoning all that.\"",
  "proposed_next": [
   {
-   "task": "T23-decision-traces-intake",
-   "state": "proposed, waits for D29",
-   "metric": "M15",
-   "why": "decision traces from Slack/meetings/PRs → approved .mole/ records; the one place a model is needed"
-  },
-  {
    "task": "T26-big-picture-view",
    "state": "proposed, replaced by T30 if D31 = yes",
    "metric": "M18",
@@ -477,13 +560,8 @@
    "state": "proposed, waits for D31",
    "metric": "M23",
    "why": "the 1:1 problem, measured; read-back = evidence of understanding"
-  },
-  {
-   "task": "T33-team-server",
-   "state": "proposed, waits for D34 and a passing pilot",
-   "metric": "M25",
-   "why": "team phase B: GitHub App + Postgres index rebuilt from git, question routing, remote MCP, outbox, row-level security"
   }
  ],
- "asked_10_29_0501": "now uy sure the agnets stuff fully updated with all this?if not update and if so can you continue with exisintg agents or new agents if needed to finish work also i want another agent dedicated to again further understaning trying out diff tools ineither to be integrated from agentic workflow or similar to som parts of my ideas. get them loaded evaluated, learn info from them etc. heres a part from that agent doing the trials if it helps add mroe info to how to test some tools out: waht were the metrics exactly how did you get them in first palce what is it measuring core do those tools themsleves advwerrtise those epsecialy in recent blogs lets say. and then whats the ucrrent result can you like use tables or something. also what do the results indicate exactly both themselves and larger implciations for usefulness of tools or ideas for my project or stuff to integrate within also ill leaving comupter several hours so just keep running until all tasks done got it loops same metrics vverify make sure stuff changed eval all that loop keep going in seuequence or try options got it"
+ "asked_10_29_0501": "now uy sure the agnets stuff fully updated with all this?if not update and if so can you continue with exisintg agents or new agents if needed to finish work also i want another agent dedicated to again further understaning trying out diff tools ineither to be integrated from agentic workflow or similar to som parts of my ideas. get them loaded evaluated, learn info from them etc. heres a part from that agent doing the trials if it helps add mroe info to how to test some tools out: waht were the metrics exactly how did you get them in first palce what is it measuring core do those tools themsleves advwerrtise those epsecialy in recent blogs lets say. and then whats the ucrrent result can you like use tables or something. also what do the results indicate exactly both themselves and larger implciations for usefulness of tools or ideas for my project or stuff to integrate within also ill leaving comupter several hours so just keep running until all tasks done got it loops same metrics vverify make sure stuff changed eval all that loop keep going in seuequence or try options got it",
+ "asked_10_29_1530": "wait what i told you build full system based on establisseh dopen soruce repos or big company systs or startups. also uh what. why termianl stuff., i mean ok but why arent that stuff in the panel in vscode. also plugins are ours right how are they inque exactly whats the pt it's not clear you're aligngin all apsects of project with our united vision of grunding in the decision based senior dev human centered thing.\n\nall things including other agent plugins interactions (for instance reading or knowing which agents cover which files, to see like blast radius or weaknesses in codebase not covered). well full server i guess dependds but what baout the diff graphs relations other advanced infra for ml ops or other technical interview desired skils stuffs. look at for instance these pics and go into their details too the vid and repos more understand thats similar to my sort of gronded vision that all tools need to be powering for complete end user experience for junior devs and highly integrate which my advantage again not needing ot have sep page or whatever mess up user workflow.\nalso tjhe reamining stuff that dont work make it work."
 }

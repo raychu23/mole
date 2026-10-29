@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+
+- Hover on a function: your notes on it, and the past fixes behind its lines (from git history), with a link to each commit.
+- Gutter marks on lines that a past fix touched.
+- Map panel lists what changed since you last looked, only in code you have read.
+- Records what you look at (a symbol visible 5 s or hovered) in `.mole/local/`, never sent anywhere (setting `mole.recordSeen`).
+
 ## 0.1.0
 
 First packaged version.
