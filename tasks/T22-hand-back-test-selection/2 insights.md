@@ -100,3 +100,10 @@ review-1 fixes (round 3)
     P2-4 noted           daemon package.json/tsconfig.json + root tsconfig.json one-line references are outside the listed boundary;
                          required scaffolding for a new package (brief §7), left as is for the coordinator to accept
 ```
+
+```notes
+results (round 3, ff21589)
+    M14                  caught 10/10 · mean share 18.5% (aggregate 1.3%, 163/12159) · MET. m12 now 27/67 (40.3%, was 26/67): the
+                         ' > ' test that used to be skipped now runs. Per repo mean share: mole 36.0% (above 1/3), excalidraw 1.1%
+    npm run check        189 passed (189) incl. the 3 new review-1 tests; exit 0
+```
