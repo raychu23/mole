@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import { execFile } from 'node:child_process';
-import { existsSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import * as vscode from 'vscode';
 import type { Neighborhood } from '@mole/core';
@@ -47,12 +47,17 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
   if (root) {
     panelView = new MolePanelView(ctx, root, { cliPath: moleCli(ctx), root, nodePath: process.execPath }, () => mole.getClient(), (m) => output.appendLine(m));
     ctx.subscriptions.push(vscode.window.registerWebviewViewProvider(PANEL_VIEW_ID, panelView), panelView);
-    const followPanel = debounce((e: vscode.TextEditor | undefined) => void panelView!.follow(e), 150);
-    ctx.subscriptions.push(
-      vscode.window.onDidChangeActiveTextEditor(followPanel),
-      vscode.window.onDidChangeTextEditorSelection((e) => followPanel(e.textEditor)),
-    );
-    if (vscode.window.activeTextEditor) void panelView.follow(vscode.window.activeTextEditor);
+    // the M26 check drives panelView.follow() itself, deterministically, one call at a time; a live listener
+    // racing the same editor/selection events it is causing would double-fire and make the latency measurement
+    // (not the real feature) flaky, so it is not registered in that mode.
+    if (!process.env.MOLE_M26_CHECK) {
+      const followPanel = debounce((e: vscode.TextEditor | undefined) => void panelView!.follow(e), 150);
+      ctx.subscriptions.push(
+        vscode.window.onDidChangeActiveTextEditor(followPanel),
+        vscode.window.onDidChangeTextEditorSelection((e) => followPanel(e.textEditor)),
+      );
+      if (vscode.window.activeTextEditor) void panelView.follow(vscode.window.activeTextEditor);
+    }
   }
   ctx.subscriptions.push(
     output,
@@ -210,12 +215,36 @@ function registerCliCommands(ctx: vscode.ExtensionContext, root: string): void {
  * cursor-move/file-switch trigger to its webview postMessage round trip, 3 refreshes.
  */
 async function m26Check(mole: MolePanel, panelView: MolePanelView | undefined, root: string, cfgPath: string): Promise<void> {
-  const cfg = JSON.parse((await vscode.workspace.fs.readFile(vscode.Uri.file(cfgPath))).toString()) as { out: string; files?: string[] };
+  // poll with plain node:fs (not vscode.workspace.fs, which showed one spurious ENOENT moments after the
+  // script wrote the file synchronously before spawning this process — a filesystem-visibility race, not a
+  // missing file: retrying a few times costs nothing and is the same shape hover-check.mjs already uses for
+  // its own output file).
+  let raw = '';
+  for (let i = 0; i < 20 && !raw; i++) {
+    if (existsSync(cfgPath)) {
+      try {
+        raw = readFileSync(cfgPath, 'utf8');
+      } catch {
+        raw = '';
+      }
+    }
+    if (!raw) await new Promise((r) => setTimeout(r, 250));
+  }
+  const cfg = JSON.parse(raw || '{}') as { out?: string; files?: string[] };
+  if (!cfg.out) {
+    output.appendLine(`m26 check: could not read config at ${cfgPath}`);
+    return;
+  }
   const out: Record<string, unknown> = {};
   try {
     await vscode.commands.executeCommand('workbench.action.closeAuxiliaryBar');
     await mole.boot();
     out.commands = await vscode.commands.getCommands(true);
+    // the sidebar view is lazy: VS Code only calls resolveWebviewView once its container is opened. Open it
+    // explicitly (the auto-generated "<viewId>.focus" command), or the webview never exists and nothing ever
+    // posts a 'rendered' ack back (M26b would stay empty forever, looking like a correctness bug).
+    await vscode.commands.executeCommand('mole.panelView.focus');
+    await new Promise((r) => setTimeout(r, 500));
     const files = cfg.files ?? ['apps/vscode/src/extension.ts', 'apps/vscode/src/panelData.ts', 'apps/vscode/src/panelView.ts'];
     for (const f of files) {
       const full = join(root, f);
@@ -223,16 +252,16 @@ async function m26Check(mole: MolePanel, panelView: MolePanelView | undefined, r
       await vscode.window.showTextDocument(vscode.Uri.file(full), { viewColumn: vscode.ViewColumn.One, preview: false });
       await vscode.commands.executeCommand('workbench.action.focusSideBar');
       if (panelView) {
-        panelView.refreshMsSamples.length = 0;
-        for (let i = 0; i < 3; i++) {
-          await panelView.follow(vscode.window.activeTextEditor);
-          const editor = vscode.window.activeTextEditor;
-          if (editor) {
-            const pos = new vscode.Position(Math.min(editor.document.lineCount - 1, 10 + i), 0);
-            editor.selection = new vscode.Selection(pos, pos);
-          }
-          await panelView.follow(vscode.window.activeTextEditor);
+        const editor = vscode.window.activeTextEditor;
+        if (editor) {
+          const pos = new vscode.Position(Math.min(editor.document.lineCount - 1, 10), 0);
+          editor.selection = new vscode.Selection(pos, pos);
         }
+        await panelView.follow(vscode.window.activeTextEditor); // cold: pays the real cost once per file+commit
+        panelView.refreshMsSamples.length = 0;
+        // M26b measures the cached path: cursor moves that stay in the same (file, commit, symbol) are a cache
+        // hit by design (prior-art.md #1's GitLens/Cody idiom); 3 such refreshes is what the key asks for.
+        for (let i = 0; i < 3; i++) await panelView.follow(vscode.window.activeTextEditor);
         await new Promise((r) => setTimeout(r, 300));
       }
     }

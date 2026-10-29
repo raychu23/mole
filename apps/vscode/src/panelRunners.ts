@@ -7,7 +7,9 @@
 // the existing MoleClient (the daemon is already running for the map panel); everything else is a quick
 // child_process call to the same CLI note/memory/since already use.
 import { execFile } from 'node:child_process';
+import { resolve } from 'node:path';
 import type { MoleClient } from '@mole/daemon';
+import { selectTests } from '@mole/verify';
 import type { Runners } from './panelData.js';
 
 export interface CliHandle {
@@ -16,7 +18,7 @@ export interface CliHandle {
   nodePath: string;
 }
 
-function run(h: CliHandle, args: string[], timeoutMs = 8000): Promise<unknown> {
+function run(h: CliHandle, args: string[], timeoutMs = 15000): Promise<unknown> {
   return new Promise((resolve, reject) => {
     execFile(
       h.nodePath,
@@ -27,7 +29,8 @@ function run(h: CliHandle, args: string[], timeoutMs = 8000): Promise<unknown> {
         // report a real, still-JSON result (fail != crash): only reject when stdout truly has nothing to parse.
         const text = stdout?.trim();
         if (!text) {
-          reject(new Error(err ? err.message : stderr?.trim().split('\n')[0] || `mole ${args[0]} produced no output`));
+          const stderrMsg = stderr?.trim().split('\n').filter(Boolean).pop();
+          reject(new Error(stderrMsg || (err ? err.message.split('\n')[0] : `mole ${args[0]} produced no output`)));
           return;
         }
         try {
@@ -86,11 +89,12 @@ export function makeRunners(h: CliHandle, client: () => MoleClient | undefined):
       return run(h, ['rules']);
     },
     async testsAtLine(file, line) {
-      const r = await checkOnce(h, ['--run-tests']);
-      const selection = (r.selection ?? r) as { hunks?: Array<{ file: string; tests?: unknown[] }> };
-      const hunks = Array.isArray(selection.hunks) ? selection.hunks : [];
-      const atFile = hunks.filter((hu) => hu.file === file);
-      return atFile.flatMap((hu) => hu.tests ?? []);
+      // selectTests (static call-graph analysis only, no test execution) is fast enough for every refresh;
+      // vitest only runs when the user clicks the view's "Run" button (panelView.runTests, --run-tests below).
+      void file;
+      void line;
+      const sel = await selectTests(resolve(h.root), { worktree: true });
+      return sel.tests;
     },
     async claims(runId) {
       let id = runId;

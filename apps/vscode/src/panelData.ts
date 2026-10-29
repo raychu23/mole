@@ -74,7 +74,7 @@ function toMessage(e: unknown): string {
 /** Errors that mean "there is nothing to read here" rather than "this broke": distinguishes failure case a
  *  (no .mole / no git -> a one-line instruction, not a reported bug) from failure case b (a real fault,
  *  which must still surface as 'error' so it's visibly different from "nothing here"). */
-const UNAVAILABLE_PATTERN = /not a git repository|no \.mole|enoent|not (a |an )?mole repo|not initiali[sz]ed|run `?mole (reindex|init)/i;
+const UNAVAILABLE_PATTERN = /not a git repository|no \.mole|enoent|not (a |an )?mole repo|not initiali[sz]ed|run `?mole (reindex|init|flows record)|nothing recorded in/i;
 
 async function section<T>(id: SectionId, run: () => Promise<T> | T, isEmpty: (v: T) => boolean): Promise<Section<T>> {
   try {

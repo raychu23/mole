@@ -118,11 +118,33 @@ textarea{width:100%;min-height:40px}
     }
   }
 
+  /** The view's "Run" button: actually executes vitest (slow, on demand only — never during a passive
+   *  refresh). The passive "tests that guard it" section uses Runners.testsAtLine (static selection, fast). */
   private async runTests(): Promise<void> {
     if (!this.lastTarget) return;
     try {
-      const data = await this.runners.testsAtLine(this.lastTarget.file, this.lastTarget.line);
-      void this.view?.webview.postMessage({ type: 'runResult', summary: `${Array.isArray(data) ? data.length : 0} test(s) selected` });
+      const summary = await new Promise<string>((resolvePromise, reject) => {
+        execFile(
+          this.cli.nodePath,
+          [this.cli.cliPath, 'check', '--worktree', '--run-tests', '--json', '--root', this.root],
+          { env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, timeout: 120_000, maxBuffer: 1 << 24 },
+          (err, stdout) => {
+            const text = stdout?.trim();
+            if (!text) {
+              reject(err ?? new Error('mole check --run-tests produced no output'));
+              return;
+            }
+            try {
+              const r = JSON.parse(text) as { run?: { passed?: number; failed?: number; notRun?: unknown[] } };
+              const run = r.run;
+              resolvePromise(run ? `${run.passed ?? 0} passed, ${run.failed ?? 0} failed${run.notRun?.length ? `, ${run.notRun.length} not run` : ''}` : 'no test reaches this change');
+            } catch {
+              resolvePromise('ran (could not parse the result)');
+            }
+          },
+        );
+      });
+      void this.view?.webview.postMessage({ type: 'runResult', summary });
     } catch (e) {
       void this.view?.webview.postMessage({ type: 'runResult', summary: `failed: ${(e as Error).message}` });
     }
@@ -150,6 +172,8 @@ textarea{width:100%;min-height:40px}
     await this.refreshNow();
   }
 
+  private diagCommit?: string;
+
   private async refreshNow(): Promise<void> {
     if (!this.lastTarget) return;
     const target = this.lastTarget;
@@ -165,7 +189,12 @@ textarea{width:100%;min-height:40px}
       if (this.cache.size > 300) this.cache.clear();
     }
     this.lastModel = model;
-    void this.updateDiagnostics();
+    // the rules scan is per-commit, not per cursor position: skip it on a cache hit within the same commit so
+    // a warm cursor move / same-file refresh never pays for a fresh dependency-cruiser pass (M26b).
+    if (this.diagCommit !== commit) {
+      this.diagCommit = commit;
+      void this.updateDiagnostics();
+    }
     const seq = ++this.seq;
     this.pendingTriggerAt.set(seq, triggeredAt);
     await this.post(model, seq);
@@ -178,6 +207,7 @@ textarea{width:100%;min-height:40px}
       this.waiters.set(seq, () => resolve());
       setTimeout(() => {
         this.waiters.delete(seq);
+        this.pendingTriggerAt.delete(seq); // a late ack after this must not land in a later measurement window
         resolve();
       }, 2000);
     });

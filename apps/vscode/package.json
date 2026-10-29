@@ -178,7 +178,8 @@
     "@mole/history": "*",
     "@mole/layout": "*",
     "@mole/memory": "*",
-    "@mole/questions": "*"
+    "@mole/questions": "*",
+    "@mole/verify": "*"
   },
   "categories": [
     "Visualization",
