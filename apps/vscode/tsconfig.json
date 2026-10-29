@@ -36,6 +36,9 @@
     },
     {
       "path": "../../packages/decisions"
+    },
+    {
+      "path": "../../packages/verify"
     }
   ]
 }

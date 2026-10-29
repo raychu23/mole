@@ -50,11 +50,12 @@ New chat startup: open this repository folder, then follow `AGENTS.md` → `cont
 
 This is the actual Mole repository, linked to `https://github.com/raychu23/mole.git`.
 
-Start with [Mole context](</Users/a1/Desktop/CS Code/Project/Mole/context/0 start.md>) or its [readable page](</Users/a1/Desktop/CS Code/Project/Mole/context/doc.html>). The [source coverage index](</Users/a1/Desktop/CS Code/Project/Mole/context/4 log/0 coverage.md>) connects this conversation, older Mole/product-research chats and shared research. The context folder is a local link to the private, versioned workspace copy, not a second archive. The [first scenario task](</Users/a1/Desktop/CS Code/Project/Mole/current data/tasks/first scenario/0 start.md>) remains open. Shared development practices, tools, skills and evals are in [SDLC](</Users/a1/Desktop/CS Code/Project/sdlc/0-start.md>).
+Start with [Mole context](</Users/a1/Desktop/CS Code/Project/Mole/context/0 start.md>) or its [readable page](</Users/a1/Desktop/CS Code/Project/Mole/context/doc.html>). The [source coverage index](</Users/a1/Desktop/CS Code/Project/Mole/context/4 log/0 coverage.md>) connects this conversation, older Mole/product-research chats and shared research. The context folder now lives directly in Mole; the former `../Context/mole` path links here for compatibility. The [first scenario task](</Users/a1/Desktop/CS Code/Project/Mole/current data/tasks/first scenario/0 start.md>) remains open. Shared development practices, tools, skills and evals are in [SDLC](</Users/a1/Desktop/CS Code/Project/sdlc/0-start.md>).
 
-- `current data`: project brief/task/source-index routes; accepted state has one canonical home in `../Context/mole`.
+- `context`: canonical private project packet, history and source index; ignored by this repository's Git.
+- `current data`: project brief/task/source-index routes into `context/`.
 - `training data`: historical source route. Reference material, not trained model weights.
 - `generated data`: project run evidence; no application/eval results yet.
 - `AGENTS.md`: task scope and startup instructions. `CLAUDE.md` points to the same contract.
 
-These local context routes are ignored by Git and depend on this workspace. A remote clone does not receive the private chat archive or sibling SDLC folder. Before another machine/host works here, explicitly supply a reviewed, portable current packet. Automatic cross-host synchronization is not implemented.
+These local context routes are ignored by Mole Git and depend on this workspace. Old context revisions remain in the parent CS Code Git history, but the moved private directory is not currently versioned; a private versioning route is still needed. A remote clone does not receive the private chat archive or sibling SDLC folder. Before another machine/host works here, explicitly supply a reviewed, portable current packet. Automatic cross-host synchronization is not implemented.
