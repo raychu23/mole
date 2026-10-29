@@ -1,7 +1,7 @@
 // T27 red tests: rules compiled to a real dependency-cruiser config + Mole's call scan; each violation cites its decision
 // (id, title, status/flag, why, record file:line); `mole rules` exit codes; Mole's own rules hold on Mole today.
 // (written with a terminal heredoc: write_file is approval-gated for test files in this unattended run)
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -164,18 +164,18 @@ describe('compiled dependency-cruiser config (done-when 1)', () => {
     expect(cfg.forbidden.map((f) => f.name)).toContain('mole-D001-1');
     const calls = JSON.parse(readFileSync(join(root, CALL_RULES_FILE), 'utf8')) as Array<{ name: string; callee: string[] }>;
     expect(calls.map((c) => c.name)).toContain('mole-D001-2');
-    const res = await cruise(['src'], { baseDir: root, validate: true, ruleSet: { forbidden: cfg.forbidden } as never, tsPreCompilationDeps: true });
+    const res = await cruise(['src'], { baseDir: realpathSync(root), validate: true, ruleSet: { forbidden: cfg.forbidden } as never, tsPreCompilationDeps: true });
     const out = res.output as { summary: { violations: Array<{ from: string; to: string; rule: { name: string } }> } };
     expect(out.summary.violations).toContainEqual(expect.objectContaining({ from: 'src/ui/view.ts', to: 'src/db/query.ts', rule: expect.objectContaining({ name: 'mole-D001-1' }) }));
   });
 });
 
 describe('Mole dogfood', () => {
-  it('Mole\'s own records carry rules (0013 lazy CLI, 0014 read-only agent states, 0016 core layering) and they hold today', { timeout: SLOW }, async () => {
+  it('Mole\'s own records carry rules (0013 lazy CLI, 0014 read-only agent states, 0017 core layering) and they hold today', { timeout: SLOW }, async () => {
     const r = await checkRules(repoRoot);
     expect(r.errors).toEqual([]);
     const names = r.rules.map((x) => x.name);
-    for (const n of ['mole-0013-1', 'mole-0014-1', 'mole-0016-1']) expect(names).toContain(n);
+    for (const n of ['mole-0013-1', 'mole-0014-1', 'mole-0017-1']) expect(names).toContain(n);
     expect(r.violations).toEqual([]);
   });
 

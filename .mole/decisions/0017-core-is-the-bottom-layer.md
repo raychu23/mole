@@ -1,11 +1,11 @@
 ---
-id: '0016'
+id: '0017'
 title: packages/core is the bottom layer and imports no other Mole package
 status: proposed
 door: two-way
-scope:
-  - packages/core/src/
-source: T27 builder (mole-builder-4, 2026-10-29), from packages/core/package.json having no @mole dependency; waits for Raymond's approval
+source: >-
+  T27 builder (mole-builder-4, 2026-10-29), from packages/core/package.json having no @mole dependency;
+  waits for Raymond's approval. No scope: the rule's from: (packages/core/src/) is what it covers
 rules:
   - forbid: import
     from: packages/core/src/

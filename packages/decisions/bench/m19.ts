@@ -50,7 +50,8 @@ const arg = (name: string): string | undefined => {
 /** git archive <sha> of the source folders into dest (local object store only: no fetch, no network). */
 function exportTree(gitDir: string, sha: string, dest: string): void {
   mkdirSync(dest, { recursive: true });
-  const tar = execFileSync('git', ['-C', gitDir, 'archive', '--format=tar', sha, '--', ':(glob)packages/*/src/**', ':(glob)apps/*/src/**'], {
+  // apps/ only when the tree has one: tasks/T27-decisions-as-rules/4 log/key-ruling-1.md #2
+  const tar = execFileSync('git', ['-C', gitDir, 'archive', '--format=tar', sha, '--', ':(glob)packages/*/src/**', ...(execFileSync('git', ['-C', gitDir, 'ls-tree', '-d', '--name-only', sha, 'apps'], { encoding: 'utf8' }).trim() ? [':(glob)apps/*/src/**'] : [])], {
     maxBuffer: 1 << 30,
   });
   execFileSync('tar', ['-x', '-C', dest], { input: tar });

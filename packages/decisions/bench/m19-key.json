@@ -60,7 +60,7 @@
       "file": "packages/core/src/neighborhood.ts",
       "after": 2,
       "text": "import { loadGraph } from '@mole/decisions';",
-      "expect": { "decision": "0016", "file": "packages/core/src/neighborhood.ts", "line": 3, "ruleAt": ".mole/decisions/0016-core-is-the-bottom-layer.md:10" },
+      "expect": { "decision": "0017", "file": "packages/core/src/neighborhood.ts", "line": 3, "ruleAt": ".mole/decisions/0017-core-is-the-bottom-layer.md:10" },
       "why": "core importing a package above it (a proposed record: still enforced, cited as grey/proposed)"
     },
     {
