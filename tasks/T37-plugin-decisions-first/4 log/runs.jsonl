@@ -1,0 +1,1 @@
+{"time":"2026-10-29T20:56:13.252Z","commit":"85af7aba9565e1b7284db3bd32671a91b89014fa","cmd":"node plugins/claude-code/test/m31.mjs","exit":1,"metrics":{"M31a_recall":"0/10","M31a_chars_target":1500,"M31a_p95_ms":185,"M31b_hit_rate":"5/10"}}
