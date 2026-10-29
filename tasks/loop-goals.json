@@ -314,7 +314,7 @@
   {
    "id": "B4",
    "what": "excalidraw clone used by the trial and impact runs (read-only)",
-   "path": "~/.hermes/cache/scratch/impact/excalidraw"
+   "path": "~/.hermes/cache/mole-bench/excalidraw"
   },
   {
    "id": "B5",
@@ -329,7 +329,7 @@
   {
    "id": "B7",
    "what": "renames in git history: Mole repo + Excalidraw clone",
-   "path": "~/.hermes/cache/scratch/impact/excalidraw"
+   "path": "~/.hermes/cache/mole-bench/excalidraw"
   },
   {
    "id": "B8",
