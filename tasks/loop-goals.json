@@ -59,6 +59,17 @@
     "M6",
     "M7"
    ]
+  },
+  {
+   "id": "E6",
+   "goal": "the resume is the plan (Raymond 10-29): every claim in the target entry (context/product-plan/Resume + interview.md) is made true by a task here and measured by a metric; the page counts how many are true today",
+   "measured_by": [
+    "M9",
+    "M10",
+    "M11",
+    "M12",
+    "M13"
+   ]
   }
  ],
  "metrics": [
@@ -110,6 +121,41 @@
    "how": "key written before the code by a separate subagent: commands/tests tried before each compaction in the 7 Hermes + 4 Claude Code sessions that compacted",
    "target": "recall 100%, wrong items <= 5%",
    "task": "T18"
+  },
+  {
+   "id": "M9",
+   "name": "rename re-anchoring (M8 skipped: the trial already has an M8)",
+   "how": "renames in Mole + Excalidraw history (git log -M + TS symbol diff), key written before the code",
+   "target": ">= 95% re-anchored to the right symbol, 0 wrong",
+   "task": "T19"
+  },
+  {
+   "id": "M10",
+   "name": "LangGraph round-trip fidelity",
+   "how": "export each B5 sample run with LangGraph.js's SQLite checkpointer, read back with getStateHistory",
+   "target": "100% same steps, order and values; fork from a mid-run checkpoint works",
+   "task": "T20"
+  },
+  {
+   "id": "M11",
+   "name": "parallel-agent collision recall / false alarms",
+   "how": "key over the two Mole builder chats (10-28/29) + 6 planted overlap pairs, written before the code",
+   "target": "recall >= 90%, false alarms <= 10%",
+   "task": "T21"
+  },
+  {
+   "id": "M12",
+   "name": "regressions with vs without Mole (agent A/B)",
+   "how": "Inspect + Docker: Claude Code on tasks that tempt the planted regressions, with vs without Mole's hooks; n and stopping rule written before the run",
+   "target": "fewer reintroduced regressions with Mole, 95% interval reported; the full paid run waits for Raymond's go",
+   "task": "T17"
+  },
+  {
+   "id": "M13",
+   "name": "observability coverage",
+   "how": "every mole check stage emits an OpenTelemetry span (GenAI names where they apply); MLflow runs = runs.jsonl lines; CI fails when a frozen key changes",
+   "target": "100% stage coverage, counts equal, CI red on a key edit and green otherwise",
+   "task": "T16"
   }
  ],
  "benchmarks": [
@@ -142,6 +188,16 @@
    "id": "B6",
    "what": "Mole repo git history T1-T15 (agent-made commits) for attribution",
    "path": "tasks/HANDOFF.md"
+  },
+  {
+   "id": "B7",
+   "what": "renames in git history: Mole repo + Excalidraw clone",
+   "path": "~/.hermes/cache/scratch/impact/excalidraw"
+  },
+  {
+   "id": "B8",
+   "what": "parallel agent sessions: the Mole builder chats local-fc6c6dc0… and local-39d6ac07… (10-28/29, Hermes state.db, read-only)",
+   "path": "~/.hermes/state.db"
   }
  ],
  "graph": [
@@ -183,6 +239,38 @@
    "task": "T18-agent-states",
    "needs": [],
    "why": "parallel with T13-T15: reads agent sessions + git; uses T11 (integrated) to flag stale context; T15 later shows it"
+  },
+  {
+   "task": "T16-traces-runs-ci",
+   "needs": [],
+   "why": "OpenTelemetry spans + MLflow viewer over runs.jsonl + GitHub Actions gate (D26 → yes via the resume plan)"
+  },
+  {
+   "task": "T19-rename-proof-anchors",
+   "needs": [],
+   "why": "anchors survive renames (T13 found renamed = deleted)"
+  },
+  {
+   "task": "T20-langgraph-checkpoint-export",
+   "needs": [
+    "T18-agent-states"
+   ],
+   "why": "agent runs as real LangGraph checkpoints"
+  },
+  {
+   "task": "T21-parallel-agent-collisions",
+   "needs": [
+    "T18-agent-states",
+    "T15-surface-hover-and-agent-hooks"
+   ],
+   "why": "warn parallel agents through MCP + hooks"
+  },
+  {
+   "task": "T17-agent-eval-inspect",
+   "needs": [
+    "T15-surface-hover-and-agent-hooks"
+   ],
+   "why": "A/B: Claude Code with vs without Mole's hooks; harness now, paid run on Raymond's go"
   }
  ],
  "checkpoints": [
@@ -215,6 +303,11 @@
    "id": "C6",
    "when": "after T18",
    "pass": "M6 and M7 at target, reviewed, integrated; mole tried answers the 3C1 line 289 case on a real compacted session"
+  },
+  {
+   "id": "C7",
+   "when": "after T16, T19, T20, T21 (+ T17 harness)",
+   "pass": "Resume + interview.html shows every target claim either true (with its number) or still open with its task; loop-report.md updated"
   }
  ],
  "never": [
@@ -223,20 +316,6 @@
   "no new wiki generator (D13)",
   "prototype/ is rejected",
   "don't publish, push, or use Raymond's accounts"
- ],
- "proposed_next": [
-  {
-   "task": "T16-traces-runs-ci",
-   "after": "C2",
-   "state": "proposed, waits for Raymond's yes on D26",
-   "why": "OpenTelemetry traces + MLflow viewer over runs.jsonl + GitHub Actions gate (Agentic workflow + integrations.md §11)"
-  },
-  {
-   "task": "T17-agent-eval-inspect",
-   "after": "T15",
-   "state": "proposed, waits for D26 + API spend go",
-   "why": "Inspect + Docker end-to-end: does an agent with Mole's hooks repeat the planted regression less often"
-  }
  ],
  "asked_10_28_2210": "USER: \"huh what the fuck. werent we supposed to include as part of the observe and verify aspects of the project include stuff like langraph all that agent states as a way to mange context verisoning all that.\""
 }
