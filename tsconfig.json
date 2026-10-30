@@ -32,6 +32,9 @@
       "path": "packages/verify"
     },
     {
+      "path": "packages/intake"
+    },
+    {
       "path": "packages/daemon"
     },
     {
