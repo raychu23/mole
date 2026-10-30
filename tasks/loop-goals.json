@@ -307,6 +307,20 @@
    "how": "3 fixture repos (one per format) with >= 30 labeled (session, function) links; planted later edits",
    "target": "link recall >= 95%, wrong 0; stale-intent flags 100%, 0 false on whitespace/comment edits; 0 model calls",
    "task": "T39"
+  },
+  {
+   "id": "M23",
+   "name": "1:1 loop + read-back (pilot)",
+   "how": "2-week pilot, Raymond + one friend's team (D7), hypotheses fixed before",
+   "target": "share of questions answered by a record before the 1:1 rises week over week; repeated questions per week fall; read-backs confirmed per folder (reference: I-PASS cut medical errors 23%, NEJM 2014; teach-back, AHRQ)",
+   "task": "T31"
+  },
+  {
+   "id": "M34",
+   "name": "design review + meeting notes → pinned decision drafts + deterministic delta diagram",
+   "how": "10 note fixtures (Mole's own design discussions, 3C1, 2 public design-review threads); diagram rendered twice; labeled drift key",
+   "target": "drafts link right >= 90%, invented decisions 0; byte-identical diagram twice, delta colors 100% vs key; drift split >= 90%, 0 real drifts auto-synced",
+   "task": "T40"
   }
  ],
  "benchmarks": [
@@ -520,6 +534,22 @@
     "T11-l2-memory-notes"
    ],
    "why": "unite existing agent memory (Entire, git-ai, Agent Trace) instead of rebuilding capture; PROPOSED until Raymond's go (D45)"
+  },
+  {
+   "task": "T31-one-on-one-loop-readback",
+   "needs": [
+    "T29-decision-graph-core",
+    "T23-decision-traces-intake"
+   ],
+   "why": "the 1:1 loop + read-back (teach-back) = mentorship; needs people (pilot D7)"
+  },
+  {
+   "task": "T40-design-review-and-meeting-capture",
+   "needs": [
+    "T29-decision-graph-core",
+    "T30-annotated-file-tree"
+   ],
+   "why": "design reviews + meetings → pinned decisions + delta diagram (USER 10-29 23:10); PROPOSED until D46"
   }
  ],
  "checkpoints": [
@@ -594,5 +624,6 @@
  "asked_10_29_0501": "now uy sure the agnets stuff fully updated with all this?if not update and if so can you continue with exisintg agents or new agents if needed to finish work also i want another agent dedicated to again further understaning trying out diff tools ineither to be integrated from agentic workflow or similar to som parts of my ideas. get them loaded evaluated, learn info from them etc. heres a part from that agent doing the trials if it helps add mroe info to how to test some tools out: waht were the metrics exactly how did you get them in first palce what is it measuring core do those tools themsleves advwerrtise those epsecialy in recent blogs lets say. and then whats the ucrrent result can you like use tables or something. also what do the results indicate exactly both themselves and larger implciations for usefulness of tools or ideas for my project or stuff to integrate within also ill leaving comupter several hours so just keep running until all tasks done got it loops same metrics vverify make sure stuff changed eval all that loop keep going in seuequence or try options got it",
  "asked_10_29_1530": "wait what i told you build full system based on establisseh dopen soruce repos or big company systs or startups. also uh what. why termianl stuff., i mean ok but why arent that stuff in the panel in vscode. also plugins are ours right how are they inque exactly whats the pt it's not clear you're aligngin all apsects of project with our united vision of grunding in the decision based senior dev human centered thing.\n\nall things including other agent plugins interactions (for instance reading or knowing which agents cover which files, to see like blast radius or weaknesses in codebase not covered). well full server i guess dependds but what baout the diff graphs relations other advanced infra for ml ops or other technical interview desired skils stuffs. look at for instance these pics and go into their details too the vid and repos more understand thats similar to my sort of gronded vision that all tools need to be powering for complete end user experience for junior devs and highly integrate which my advantage again not needing ot have sep page or whatever mess up user workflow.\nalso tjhe reamining stuff that dont work make it work.",
  "asked_10_29_2208": "USER 22:08: 'at least something like the temporal graph shows an ability to adapt use properly newest technologies' + 'i really also want postgres server on current mole' → T38 + M32",
- "asked_10_29_2250": "USER 22:50: 'map oiut the logs from chats or like unite w ecisitng memory systems' + 'needs to be veryc learly a qunieu thing that I can actually seell' → T39 proposed + M33"
+ "asked_10_29_2250": "USER 22:50: 'map oiut the logs from chats or like unite w ecisitng memory systems' + 'needs to be veryc learly a qunieu thing that I can actually seell' → T39 proposed + M33",
+ "asked_10_29_2310": "USER ~23:10: 'design discussions and technical reviews … connecting to meetings … visual diagram … guidance and mentorship … make sure this is unique' → research systems/design-reviews/, T40 + M34, M23 for T31"
 }
