@@ -40,3 +40,13 @@ review-1 fixes      2026-10-30
                        package in `tsc -b`'s project graph (every other packages/* package does the same); kept, noted here
                        since it's not literally inside packages/bench/** or tasks/T41-**, per the reviewer's flag
 ```
+
+```notes
+review-2 fixes      2026-10-30
+    P1 recurs          root cause: `git add` after rewriting src/*.ts to stubs was skipped before the first attempted red
+                       commit, so the INDEX still held the earlier real-implementation blobs (git status showed "AM", not "A" —
+                       the tell) and `git commit` committed the stale (real) staged content, not the working-tree stub. Fixed by
+                       explicitly `git add`-ing the stub files and verifying `git show :path | grep "not implemented"` BEFORE
+                       committing, and `git show HEAD:path` AFTER, each time. Confirmed red commit dcd57bf has 0 real logic
+                       (h3-baselines.ts is 12 lines, index.ts is 49 lines, both throwing); confirmed impl commit 51d06b5 changes
+                       them from M (modified), not A (newly added), proving the stub really preceded the real code in history.

@@ -1,5 +1,5 @@
 ```notes
-T41 scoreboard      M35 head-to-head vs recognizable tools      written 2026-10-30T02:37:24.064Z
+T41 scoreboard      M35 head-to-head vs recognizable tools      written 2026-10-30T02:48:27.967Z
     rule                a loss or a tie is reported with the same prominence as a win (R7); every row names a real Amazon JD line it supports
 ```
 
