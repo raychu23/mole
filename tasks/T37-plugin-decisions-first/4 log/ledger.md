@@ -7,4 +7,5 @@ ledger (newest last, nothing deleted)
     2026-10-29 17:09      checks ran: npm run check && node plugins/claude-code/test/m31.mjs in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T37-plugin-decisions-first → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 17:51      submitted → blocked      cause: npm run check fails only on unrelated tests (packages/telemetry, packages/agentstate claims-hook etc.) with 'Test timed out in 5000ms' / vitest-worker onTaskUpdate timeout, under confirmed host load avg 225-265 fr
     2026-10-29 21:15      blocked → ready      raymond 10-30 'fix the blocked' - shared vitest timeout fix landed main@3af8a4a
+    2026-10-29 21:15      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T37-plugin-decisions-first · branch ledger/t37-plugin-decisions-first · base fb2399e
 ```
