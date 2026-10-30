@@ -1,0 +1,590 @@
+{
+  "metric": "M32",
+  "written": "2026-10-29T22:40:00-05:00",
+  "author": "mole-builder-11 (T38 red commit), before any implementation exists",
+  "method": "Hand-read from context/product-plan/systems/decisions.jsonl's own prose fields (status, date, replaced/replaced_by, decided, amended, answered/answer), NOT from running the temporal loader or any parser the code under test uses. A record's status before its first named event is inferred OPEN (every REPLACED/DECIDED/amended record in this file started as an open proposal; no record skips that phase) -- labelled INFERENCE in 2 insights.md. Same-day event times are taken from a time-of-day substring in the record's own text when present, else a fixed placeholder time (noon for replaced/decided, 15:00 for amended, 10:00 for answered) -- also INFERENCE where the source gives only a date.",
+  "scoring": "as-of accuracy = (questions where the as-of query returns exactly `expected`) / all questions. latest-only baseline = (questions where the record's CURRENT status equals `expected`) / all questions, computed straight from `baselineLatestOnly` here (what a static wiki/ADR file -- one value per id, always current -- would answer no matter what date is asked).",
+  "targets": {
+    "asOfAccuracyPct": 100,
+    "modelCalls": 0
+  },
+  "source": "/Users/a1/Desktop/CS Code/Project/Mole/context/product-plan/systems/decisions.jsonl",
+  "questions": [
+    {
+      "qid": "Q1",
+      "decisionId": "D6",
+      "asOf": "2026-10-26T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "REPLACED(D20)",
+      "sourceLine": 6,
+      "note": "1h before transition 0 (OPEN)"
+    },
+    {
+      "qid": "Q2",
+      "decisionId": "D6",
+      "asOf": "2026-10-27T00:00:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "REPLACED(D20)",
+      "sourceLine": 6,
+      "note": "at transition 0 (OPEN)"
+    },
+    {
+      "qid": "Q3",
+      "decisionId": "D6",
+      "asOf": "2026-10-28T11:00:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "REPLACED(D20)",
+      "sourceLine": 6,
+      "note": "1h before transition 1 (REPLACED(D20))"
+    },
+    {
+      "qid": "Q4",
+      "decisionId": "D6",
+      "asOf": "2026-10-28T12:00:00",
+      "expected": "REPLACED(D20)",
+      "baselineLatestOnly": "REPLACED(D20)",
+      "sourceLine": 6,
+      "note": "at transition 1 (REPLACED(D20))"
+    },
+    {
+      "qid": "Q5",
+      "decisionId": "D6",
+      "asOf": "2026-10-30T12:00",
+      "expected": "REPLACED(D20)",
+      "baselineLatestOnly": "REPLACED(D20)",
+      "sourceLine": 6,
+      "note": "as of now (both agree)"
+    },
+    {
+      "qid": "Q6",
+      "decisionId": "D20",
+      "asOf": "2026-10-27T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "REPLACED(D22)",
+      "sourceLine": 23,
+      "note": "1h before transition 0 (OPEN)"
+    },
+    {
+      "qid": "Q7",
+      "decisionId": "D20",
+      "asOf": "2026-10-28T00:00:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "REPLACED(D22)",
+      "sourceLine": 23,
+      "note": "at transition 0 (OPEN)"
+    },
+    {
+      "qid": "Q8",
+      "decisionId": "D20",
+      "asOf": "2026-10-28T11:00:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "REPLACED(D22)",
+      "sourceLine": 23,
+      "note": "1h before transition 1 (REPLACED(D22))"
+    },
+    {
+      "qid": "Q9",
+      "decisionId": "D20",
+      "asOf": "2026-10-28T12:00:00",
+      "expected": "REPLACED(D22)",
+      "baselineLatestOnly": "REPLACED(D22)",
+      "sourceLine": 23,
+      "note": "at transition 1 (REPLACED(D22))"
+    },
+    {
+      "qid": "Q10",
+      "decisionId": "D20",
+      "asOf": "2026-10-30T12:00",
+      "expected": "REPLACED(D22)",
+      "baselineLatestOnly": "REPLACED(D22)",
+      "sourceLine": 23,
+      "note": "as of now (both agree)"
+    },
+    {
+      "qid": "Q11",
+      "decisionId": "D22",
+      "asOf": "2026-10-27T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "REPLACED(D24)",
+      "sourceLine": 25,
+      "note": "1h before transition 0 (OPEN)"
+    },
+    {
+      "qid": "Q12",
+      "decisionId": "D22",
+      "asOf": "2026-10-28T00:00:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "REPLACED(D24)",
+      "sourceLine": 25,
+      "note": "at transition 0 (OPEN)"
+    },
+    {
+      "qid": "Q13",
+      "decisionId": "D22",
+      "asOf": "2026-10-28T11:00:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "REPLACED(D24)",
+      "sourceLine": 25,
+      "note": "1h before transition 1 (REPLACED(D24))"
+    },
+    {
+      "qid": "Q14",
+      "decisionId": "D22",
+      "asOf": "2026-10-28T12:00:00",
+      "expected": "REPLACED(D24)",
+      "baselineLatestOnly": "REPLACED(D24)",
+      "sourceLine": 25,
+      "note": "at transition 1 (REPLACED(D24))"
+    },
+    {
+      "qid": "Q15",
+      "decisionId": "D22",
+      "asOf": "2026-10-30T12:00",
+      "expected": "REPLACED(D24)",
+      "baselineLatestOnly": "REPLACED(D24)",
+      "sourceLine": 25,
+      "note": "as of now (both agree)"
+    },
+    {
+      "qid": "Q16",
+      "decisionId": "D24",
+      "asOf": "2026-10-27T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "OPEN+AMENDED",
+      "sourceLine": 27,
+      "note": "1h before transition 0 (OPEN)"
+    },
+    {
+      "qid": "Q17",
+      "decisionId": "D24",
+      "asOf": "2026-10-28T00:00:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN+AMENDED",
+      "sourceLine": 27,
+      "note": "at transition 0 (OPEN)"
+    },
+    {
+      "qid": "Q18",
+      "decisionId": "D24",
+      "asOf": "2026-10-28T14:00:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN+AMENDED",
+      "sourceLine": 27,
+      "note": "1h before transition 1 (OPEN+AMENDED)"
+    },
+    {
+      "qid": "Q19",
+      "decisionId": "D24",
+      "asOf": "2026-10-28T15:00:00",
+      "expected": "OPEN+AMENDED",
+      "baselineLatestOnly": "OPEN+AMENDED",
+      "sourceLine": 27,
+      "note": "at transition 1 (OPEN+AMENDED)"
+    },
+    {
+      "qid": "Q20",
+      "decisionId": "D24",
+      "asOf": "2026-10-30T12:00",
+      "expected": "OPEN+AMENDED",
+      "baselineLatestOnly": "OPEN+AMENDED",
+      "sourceLine": 27,
+      "note": "as of now (both agree)"
+    },
+    {
+      "qid": "Q21",
+      "decisionId": "D26",
+      "asOf": "2026-10-28T20:25:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "DECIDED",
+      "sourceLine": 29,
+      "note": "1h before transition 0 (OPEN)"
+    },
+    {
+      "qid": "Q22",
+      "decisionId": "D26",
+      "asOf": "2026-10-28T21:25:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "DECIDED",
+      "sourceLine": 29,
+      "note": "at transition 0 (OPEN)"
+    },
+    {
+      "qid": "Q23",
+      "decisionId": "D26",
+      "asOf": "2026-10-29T11:00:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "DECIDED",
+      "sourceLine": 29,
+      "note": "1h before transition 1 (DECIDED)"
+    },
+    {
+      "qid": "Q24",
+      "decisionId": "D26",
+      "asOf": "2026-10-29T12:00:00",
+      "expected": "DECIDED",
+      "baselineLatestOnly": "DECIDED",
+      "sourceLine": 29,
+      "note": "at transition 1 (DECIDED)"
+    },
+    {
+      "qid": "Q25",
+      "decisionId": "D26",
+      "asOf": "2026-10-30T12:00",
+      "expected": "DECIDED",
+      "baselineLatestOnly": "DECIDED",
+      "sourceLine": 29,
+      "note": "as of now (both agree)"
+    },
+    {
+      "qid": "Q26",
+      "decisionId": "D34",
+      "asOf": "2026-10-29T09:04:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "USER+AMENDED",
+      "sourceLine": 37,
+      "note": "1h before transition 0 (USER)"
+    },
+    {
+      "qid": "Q27",
+      "decisionId": "D34",
+      "asOf": "2026-10-29T10:04:00",
+      "expected": "USER",
+      "baselineLatestOnly": "USER+AMENDED",
+      "sourceLine": 37,
+      "note": "at transition 0 (USER)"
+    },
+    {
+      "qid": "Q28",
+      "decisionId": "D34",
+      "asOf": "2026-10-29T14:30:00",
+      "expected": "USER",
+      "baselineLatestOnly": "USER+AMENDED",
+      "sourceLine": 37,
+      "note": "1h before transition 1 (USER+AMENDED)"
+    },
+    {
+      "qid": "Q29",
+      "decisionId": "D34",
+      "asOf": "2026-10-29T15:30:00",
+      "expected": "USER+AMENDED",
+      "baselineLatestOnly": "USER+AMENDED",
+      "sourceLine": 37,
+      "note": "at transition 1 (USER+AMENDED)"
+    },
+    {
+      "qid": "Q30",
+      "decisionId": "D34",
+      "asOf": "2026-10-30T12:00",
+      "expected": "USER+AMENDED",
+      "baselineLatestOnly": "USER+AMENDED",
+      "sourceLine": 37,
+      "note": "as of now (both agree)"
+    },
+    {
+      "qid": "Q31",
+      "decisionId": "D1",
+      "asOf": "2026-10-26T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 1,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q32",
+      "decisionId": "D1",
+      "asOf": "2026-10-30T12:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 1,
+      "note": "as of now (both agree, no history to miss)"
+    },
+    {
+      "qid": "Q33",
+      "decisionId": "E1",
+      "asOf": "2026-10-26T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 9,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q34",
+      "decisionId": "E1",
+      "asOf": "2026-10-30T12:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 9,
+      "note": "as of now (both agree, no history to miss)"
+    },
+    {
+      "qid": "Q35",
+      "decisionId": "D2",
+      "asOf": "2026-10-26T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "USER",
+      "sourceLine": 2,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q36",
+      "decisionId": "D2",
+      "asOf": "2026-10-30T12:00",
+      "expected": "USER",
+      "baselineLatestOnly": "USER",
+      "sourceLine": 2,
+      "note": "as of now (both agree, no history to miss)"
+    },
+    {
+      "qid": "Q37",
+      "decisionId": "E2",
+      "asOf": "2026-10-26T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 10,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q38",
+      "decisionId": "E2",
+      "asOf": "2026-10-30T12:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 10,
+      "note": "as of now (both agree, no history to miss)"
+    },
+    {
+      "qid": "Q39",
+      "decisionId": "D3",
+      "asOf": "2026-10-26T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 3,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q40",
+      "decisionId": "D3",
+      "asOf": "2026-10-30T12:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 3,
+      "note": "as of now (both agree, no history to miss)"
+    },
+    {
+      "qid": "Q41",
+      "decisionId": "E3",
+      "asOf": "2026-10-26T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 11,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q42",
+      "decisionId": "E3",
+      "asOf": "2026-10-30T12:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 11,
+      "note": "as of now (both agree, no history to miss)"
+    },
+    {
+      "qid": "Q43",
+      "decisionId": "D4",
+      "asOf": "2026-10-26T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 4,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q44",
+      "decisionId": "D4",
+      "asOf": "2026-10-30T12:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 4,
+      "note": "as of now (both agree, no history to miss)"
+    },
+    {
+      "qid": "Q45",
+      "decisionId": "D5",
+      "asOf": "2026-10-26T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 5,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q46",
+      "decisionId": "D5",
+      "asOf": "2026-10-30T12:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 5,
+      "note": "as of now (both agree, no history to miss)"
+    },
+    {
+      "qid": "Q47",
+      "decisionId": "D7",
+      "asOf": "2026-10-26T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 7,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q48",
+      "decisionId": "D7",
+      "asOf": "2026-10-30T12:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 7,
+      "note": "as of now (both agree, no history to miss)"
+    },
+    {
+      "qid": "Q49",
+      "decisionId": "D8",
+      "asOf": "2026-10-27T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 8,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q50",
+      "decisionId": "D8",
+      "asOf": "2026-10-30T12:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 8,
+      "note": "as of now (both agree, no history to miss)"
+    },
+    {
+      "qid": "Q51",
+      "decisionId": "D9",
+      "asOf": "2026-10-27T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 12,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q52",
+      "decisionId": "D9",
+      "asOf": "2026-10-30T12:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 12,
+      "note": "as of now (both agree, no history to miss)"
+    },
+    {
+      "qid": "Q53",
+      "decisionId": "D10",
+      "asOf": "2026-10-27T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 13,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q54",
+      "decisionId": "D10",
+      "asOf": "2026-10-30T12:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 13,
+      "note": "as of now (both agree, no history to miss)"
+    },
+    {
+      "qid": "Q55",
+      "decisionId": "D11",
+      "asOf": "2026-10-27T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "USER",
+      "sourceLine": 14,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q56",
+      "decisionId": "D11",
+      "asOf": "2026-10-30T12:00",
+      "expected": "USER",
+      "baselineLatestOnly": "USER",
+      "sourceLine": 14,
+      "note": "as of now (both agree, no history to miss)"
+    },
+    {
+      "qid": "Q57",
+      "decisionId": "D12",
+      "asOf": "2026-10-27T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 15,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q58",
+      "decisionId": "D12",
+      "asOf": "2026-10-30T12:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 15,
+      "note": "as of now (both agree, no history to miss)"
+    },
+    {
+      "qid": "Q59",
+      "decisionId": "D13",
+      "asOf": "2026-10-27T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 16,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q60",
+      "decisionId": "D13",
+      "asOf": "2026-10-30T12:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 16,
+      "note": "as of now (both agree, no history to miss)"
+    },
+    {
+      "qid": "Q61",
+      "decisionId": "D14",
+      "asOf": "2026-10-27T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 17,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q62",
+      "decisionId": "D14",
+      "asOf": "2026-10-30T12:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 17,
+      "note": "as of now (both agree, no history to miss)"
+    },
+    {
+      "qid": "Q63",
+      "decisionId": "D15",
+      "asOf": "2026-10-27T23:00:00",
+      "expected": "not yet proposed",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 18,
+      "note": "before it was ever raised"
+    },
+    {
+      "qid": "Q64",
+      "decisionId": "D15",
+      "asOf": "2026-10-30T12:00",
+      "expected": "OPEN",
+      "baselineLatestOnly": "OPEN",
+      "sourceLine": 18,
+      "note": "as of now (both agree, no history to miss)"
+    }
+  ]
+}

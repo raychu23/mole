@@ -1,0 +1,75 @@
+{
+  "written": "2026-10-29T10:40:00-05:00",
+  "how": "Hand-labeled by the T30 builder (mole-builder-6) from the backstage ADR texts (docs/architecture-decisions in backstage e8c4d056e3c, same clone and commit as m22-key.json) BEFORE any m22b code or score existed (R1/R2). Each question's answer was checked against the actual source files in ~/.hermes/cache/scratch/mole-builder-4/backstage/plugins/notifications: none of the 9 ADRs used here are mentioned, named or restated in a code comment, docstring, file name or folder name anywhere in that sparse checkout (grep for 'ADR'/'adr0' in plugins/notifications/src returns 0 hits; every source file's only comment is the Apache license header) -- unlike Mole's own .mole/decisions, whose reasoning IS restated in packages/daemon/src/server.ts, packages/daemon/src/cli.ts and packages/layout/src/layout.ts comments (see 4 log/prior-art.md). Correct = the answer or its source cites the expected ADR id, OR the answer contains >= 2 of the key phrases (case-insensitive substring), same scoring rule as m22-key.json (mentionsAdr / gradeAnswer, unchanged, R2).",
+  "clone": {
+    "path": "~/.hermes/cache/scratch/mole-builder-4/backstage",
+    "commit": "e8c4d056e3c850a467e34eba810a3ed00d62cfe2",
+    "sparse": ["docs/architecture-decisions", "plugins/notifications"]
+  },
+  "design": "Both arms get the SAME folders on disk, including the full docs/architecture-decisions folder (16 ADRs, only 9 of them actually govern anything under plugins/notifications) -- neither arm is blocked from the records as in M22. The WITH arm additionally gets the annotated tree's badges + intent cards for plugins/notifications and its subfolders (pre-filtered to the governing ADRs only). The question under test is narrower than M22's: not 'can you find the record at all' but 'does the tree save the search through many records across several folders' -- which is T30's actual value claim. Questions span 7 folders (src/api, src/components, src/hooks, src/utils, dev, the notifications package root, and plugins/ itself) so a single intent card does not answer all of them.",
+  "questions": [
+    {
+      "id": "q1",
+      "folder": "plugins/notifications/src/api",
+      "expect": "adr014",
+      "phrases": ["superseded", "native fetch", "typeof fetch"],
+      "text": "plugins/notifications/src/api/NotificationsClient.ts injects a `fetchApi` in its constructor and imports no HTTP library at all (no `fetch`, no `node-fetch`, no `cross-fetch`). One ADR in docs/architecture-decisions is specifically titled around node-fetch for exactly this kind of code. Is that ADR currently in force for this file? If not, which ADR replaced it, and what does that ADR say frontend plugins like this one should use instead?"
+    },
+    {
+      "id": "q2",
+      "folder": "plugins/notifications/src/api",
+      "expect": "adr007",
+      "phrases": ["msw", "network request", "mock"],
+      "text": "plugins/notifications/src/api/NotificationsClient.test.ts mocks the backend with `setupServer()` and `http.get(...)` handlers rather than stubbing `fetchApi` or `fetch` directly. Which ADR requires this specific mocking approach for ALL tests in the repository, not just this plugin, and what two things does it say that approach avoids (compared to each test mocking network requests its own way)?"
+    },
+    {
+      "id": "q3",
+      "folder": "plugins/notifications/src/components",
+      "expect": "adr006",
+      "phrases": ["implicit", "generic", "base template"],
+      "text": "Every component under plugins/notifications/src/components (for example RelativeTime) is typed as a plain function taking a props object, never as `React.FC<Props>` or `React.SFC`. Name the two technical problems with `React.FC` that the governing ADR cites, and one concrete fact the ADR gives about why `React.FC` fell out of favor upstream."
+    },
+    {
+      "id": "q4",
+      "folder": "plugins/notifications/src/components",
+      "expect": "adr010",
+      "phrases": ["moment", "sunset", "immutable"],
+      "text": "plugins/notifications/src/components/RelativeTime/RelativeTime.tsx formats timestamps with luxon's `DateTime`, never Moment.js or a hand-written helper on `Date`. The ADR that mandates luxon names a specific alternative library it replaces and gives two separate reasons that library is being retired. Name that alternative library and both reasons."
+    },
+    {
+      "id": "q5",
+      "folder": "plugins/notifications/src/hooks",
+      "expect": "adr004",
+      "phrases": ["traceable", "index files", "boundaries"],
+      "text": "plugins/notifications/src/hooks has its own index.ts that only re-exports from files directly inside src/hooks, and nothing outside src/hooks imports a hooks file by a deep path. Which ADR requires every exported symbol to be traceable through index files all the way to the package's root src/index.ts, and what question about the codebase was this rule specifically meant to make easy to answer?"
+    },
+    {
+      "id": "q6",
+      "folder": "plugins/notifications/src/utils",
+      "expect": "adr004",
+      "phrases": ["index file", "not exported", "boundaries"],
+      "text": "Neither plugins/notifications/src/utils/notificationLinks.ts nor plainText.ts is re-exported by any index.ts in this plugin: there is no src/utils/index.ts, and src/index.ts never mentions either file. Applying the same module-export-structure rule you used for the previous question (not a different one), are these two files part of the plugin's public API, and why does the rule say so even though nothing marks them private?"
+    },
+    {
+      "id": "q7",
+      "folder": "plugins/notifications",
+      "expect": "adr011",
+      "phrases": ["x-react", "shared widgets", "third-party"],
+      "text": "plugins/notifications ships as a single package: there is no plugins/notifications-backend, notifications-react, or notifications-common alongside it in this plugin's family (even though the ADR describing plugin package structure defines those suffixes). What rule does that ADR give for when a `-react` package specifically becomes justified, and what would have to be true of this plugin's code before it needed one?"
+    },
+    {
+      "id": "q8",
+      "folder": "plugins/",
+      "expect": "adr003",
+      "phrases": ["react.lazy", "default export", "workaround"],
+      "text": "There is no `export default` anywhere in plugins/notifications/src; every export is named. The governing ADR allows exactly one case where a default export is 'absolutely necessary'. Name that one exception and the workaround pattern the ADR gives for teams who want to avoid even that exception."
+    },
+    {
+      "id": "q9",
+      "folder": "plugins/notifications/dev",
+      "expect": "adr015",
+      "phrases": ["frontend-*", "core-*", "will not"],
+      "text": "plugins/notifications/dev/index.tsx wires up NotificationsPage directly rather than through any `loader:`/`component:` option object. A later ADR defines exactly that `loader`/`component` option pattern for providing JSX elements and components. Which ADR number is it, and what does its own 'Consequences' section say about whether the team will retrofit that pattern onto code written in the dev app's (pre-existing) style?"
+    }
+  ]
+}

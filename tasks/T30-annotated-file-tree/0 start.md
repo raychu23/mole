@@ -1,22 +1,22 @@
 ---
-state: ready
-owner: mole-builder-4
+state: integrated
+owner: mole-builder-7
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t30-annotated-file-tree
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T30-annotated-file-tree
-base: 7893a2d
-reviewer:
-updated: 2026-10-29 15:39
-status: ledger ready
-next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
-claimed: 2026-10-29 10:10
+base: 4b3104e
+reviewer: mole-builder-7-reviewer
+updated: 2026-10-29 18:15
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
+claimed: 2026-10-29 17:21
 ---
 ```notes
 T30-annotated-file-tree      ledger task (rules.md §3 code features)      project tasks
     goal                    The big picture on the file tree (3C1 line 675): a VS Code FileDecorationProvider colors files and folders by decision flag with a short badge (decisions in force) propagated to parents, plus an intent card on hover per folder (purpose, end state, tenets it traces to, decisions + exceptions with evidence state, who to ask from approvers + read-backs, your own read state); replaces T26's separate meaning map (D31)
     done-when               1) decorations + intent cards on Mole and on a public repo with decision records (backstage/backstage or alphagov/govuk-aws), 2) M22b, harder (Raymond 10-29 'sure t30 harder questions'; the first proxy tied 15/15 vs 15/15 at the ceiling): prior-art.md first (how program-comprehension studies and code question-answering benchmarks choose questions and score them); >= 8 'why' questions about unfamiliar folders whose answers sit only in decision records or intent cards (not derivable from names, paths, code or comments), key labelled before any score; both arms get the same repo with its records, the with arm also gets the tree's badges + cards; fresh subagents, >= 3 runs per arm; report correct answers, tool calls and time per arm; target: more correct with the tree, or the same correctness in <= half the tool calls; the 3+ junior study kit stays for Raymond (D7), 3) decorations p95 <= 50 ms per folder from cached flags, 4) failure case: a folder with no records shows nothing (no empty cards, no invented purpose), 5) npm run check passes
-    status                  2026-10-29 ready      USER 10-29 15:30 'tjhe reamining stuff that dont work make it work': integrate the built decorations (p95 0.004 ms and t
-    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+    status                  2026-10-29 integrated      merge 5457a5e47a7fa1c7f2834c50c8326ab017fcb1ee · combined checks exit 0 · note: npm run check on main after merge -> see
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    code
     boundary                packages/decisions/src/tree/** (pure: folder → flag, badge, intent card) + bench m22*, apps/vscode/src (FileDecorationProvider + folder hover card only), tasks/T30-annotated-file-tree/**
