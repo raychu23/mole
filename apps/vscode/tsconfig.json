@@ -42,6 +42,9 @@
     },
     {
       "path": "../../packages/verify"
+    },
+    {
+      "path": "../../packages/reviews"
     }
   ]
 }

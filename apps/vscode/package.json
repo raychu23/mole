@@ -181,6 +181,7 @@
     "@mole/memory": "*",
     "@mole/oneonone": "*",
     "@mole/questions": "*",
+    "@mole/reviews": "*",
     "@mole/verify": "*"
   },
   "categories": [

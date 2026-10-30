@@ -7,14 +7,14 @@
 // the existing MoleClient (the daemon is already running for the map panel); everything else is a quick
 // child_process call to the same CLI note/memory/since already use.
 import { execFile } from 'node:child_process';
-import { resolve } from 'node:path';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import type { MoleClient } from '@mole/daemon';
+import { buildTreeGraph, draftsFromNotes, renderSvg } from '@mole/reviews';
 import { selectTests } from '@mole/verify';
 // T31: @mole/oneonone has no runtime-import deps like dependency-cruiser (unlike @mole/decisions/rules,
 // see the esbuild note above), so it's safe to import straight into the extension host, same as @mole/verify.
 import { buildMatcher, prep, loadReadBack, defaultReadBackPath, type OneOnOneRecord, type Question } from '@mole/oneonone';
-import { readdirSync, readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
 import type { Runners } from './panelData.js';
 
 export interface CliHandle {
@@ -146,6 +146,28 @@ export function makeRunners(h: CliHandle, client: () => MoleClient | undefined):
       const groups = prep(matcher, questions);
       const readback = loadReadBack(defaultReadBackPath(root));
       return { groups, readback };
+    },
+    /** T40: design review / meeting note drafts (Granola model, D38 -- never invented) + a deterministic
+     *  delta diagram of the working tree over the file tree (PR Lens pattern), both from @mole/reviews. */
+    async reviewNotes() {
+      const root = resolve(h.root);
+      const notesDir = `${root}/.mole/local/meetings`;
+      let files: string[] = [];
+      try {
+        files = readdirSync(notesDir).filter((f) => f.endsWith('.md')).sort();
+      } catch {
+        files = [];
+      }
+      const drafts = files.flatMap((f) => {
+        const text = readFileSync(`${notesDir}/${f}`, 'utf8');
+        return draftsFromNotes(root, text).map((d) => ({ ...d, source: f }));
+      });
+      const changedFiles = await new Promise<string[]>((resolveFiles) => {
+        execFile('git', ['-C', root, 'diff', '--name-only', 'HEAD'], { timeout: 5000 }, (err, stdout) => resolveFiles(err ? [] : stdout.split('\n').map((s) => s.trim()).filter(Boolean)));
+      });
+      const graph = buildTreeGraph(root, changedFiles);
+      const diagramSvg = graph.nodes.length ? renderSvg(graph, { changed: '#2b7de9', unchanged: '#8a8a8a' }) : undefined;
+      return { drafts, diagramSvg, meetingFiles: files };
     },
   };
 }

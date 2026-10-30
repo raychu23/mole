@@ -1,0 +1,18 @@
+{
+  "_frozen": true,
+  "_dated": "2026-10-30T01:10:00Z",
+  "_rule": "R2: never edit after the first (red-tests) commit. A wrong expectation is a blocker for tasks/T40-design-review-and-meeting-capture/4 log/key-changes.md, not a silent fix.",
+  "_note": "expectedAnchor is resolved against this worktree's repo root (the Mole monorepo itself). null means: the flagged note names no resolvable symbol, so a correct implementation must produce an UNANCHORED draft, never a fabricated anchor.",
+  "cases": [
+    { "fixture": "01-pr-check.md", "expectedAnchor": "packages/decisions/src/check/pr-check.ts#prCheck" },
+    { "fixture": "02-panel-model.md", "expectedAnchor": "apps/vscode/src/panelData.ts#buildPanelModel" },
+    { "fixture": "03-flags.md", "expectedAnchor": "packages/decisions/src/flags.ts#computeFlags" },
+    { "fixture": "04-graph.md", "expectedAnchor": "packages/decisions/src/graph.ts#loadGraph" },
+    { "fixture": "05-diff.md", "expectedAnchor": "packages/decisions/src/check/diff.ts#parseGitDiff" },
+    { "fixture": "06-codeowners.md", "expectedAnchor": "packages/decisions/src/check/codeowners.ts#codeownersAt" },
+    { "fixture": "07-runners.md", "expectedAnchor": "apps/vscode/src/panelRunners.ts#makeRunners" },
+    { "fixture": "08-select-tests.md", "expectedAnchor": "packages/verify/src/index.ts#selectTests" },
+    { "fixture": "09-vague.md", "expectedAnchor": null },
+    { "fixture": "10-unknown-symbol.md", "expectedAnchor": null }
+  ]
+}

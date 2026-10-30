@@ -6,7 +6,7 @@ branch: ledger/t39-import-agent-session-logs
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T39-import-agent-session-logs
 base: 23b81c1
 reviewer:
-updated: 2026-10-29 22:40
+updated: 2026-10-29 23:10
 status: ledger running
 next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
 claimed: 2026-10-29 22:40
@@ -15,7 +15,7 @@ claimed: 2026-10-29 22:40
 T39-import-agent-session-logs      ledger task (rules.md §3 code features)      project tasks
     goal                    Unite existing agent-session memory into Mole's code-anchored store instead of rebuilding capture (USER 10-29 22:50: 'map oiut the logs from chats or like unite w ecisitng memory systems'): read Entire Checkpoints (entire/checkpoints/v1 branch or refs/entire/checkpoints, commit trailer → transcript, prompts, files touched, attribution), git-ai Authorship Logs (Git Notes refs/notes/ai: line → agent, model, prompt) and Agent Trace records (agent-trace.dev v0.1.0: file ranges + content_hash → conversation), map each session's intent onto the functions it touched (T11 anchors), and re-check that intent like any note: flag it when a later edit changes the function. No capture of our own where one of these exists; Mole's own T18 reader stays the fallback for Claude Code/Hermes logs
     done-when               1) M33 key written before code: 3 fixture repos (one per format, generated with the real tools' documented formats or their published examples) with >= 30 labeled (session, function) links → recall >= 95%, wrong links 0; 2) after planted later edits, stale-intent flags 100% recall, 0 false on whitespace/comment-only edits; 3) the VS Code hover shows the intent with its source tool; 4) 0 model calls; 5) npm run check green
-    status                  2026-10-29 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T39-import-agent-session-logs · branch ledger/t39-import-agent
+    status                  2026-10-29 running      changes requested: fresh-review-a21-r1: P0 done-when #3 (VS Code hover shows intent) was met only by the one-panel agent
     next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
     pinned
     mode                    code
