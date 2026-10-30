@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import * as vscode from 'vscode';
 import { MoleClient } from '@mole/daemon';
 import type { MemoryEntry, SinceResult } from '@mole/memory';
-import { HOVER_COMMANDS, Touched, type CheckJson, type HoverNote } from './hover.js';
+import { HOVER_COMMANDS, Touched, type CheckJson, type HoverAgentIntent, type HoverNote } from './hover.js';
 import { debounce, toRepoPath } from './paths.js';
 import { documentSymbolTails, type DocSymbol } from './seen.js';
 
@@ -47,6 +47,7 @@ export class Surface {
         return JSON.parse(await this.cli(['check', '--worktree', '--json'])) as CheckJson;
       },
       notes: (file) => this.notes(file),
+      agentIntent: (file) => this.agentIntent(file),
       log: (m) => o.log(`hover: ${m}`),
     });
   }
@@ -80,6 +81,17 @@ export class Surface {
       const span = spans.find((s) => s.tail === tail && Math.abs(s.startLine + 1 - start) <= 2);
       return { file: e.file, symbol, path: file, status: e.status, changed: e.changed, text: e.text, startLine: start, endLine: span ? span.endLine + 1 : start };
     });
+  }
+
+  /** T39: what Entire/git-ai/Agent Trace recorded about `file`, re-checked like a note. */
+  private async agentIntent(file: string): Promise<HoverAgentIntent[]> {
+    let result: { statuses: Array<{ status: string; intent: { file: string; tail: string; startLine: number; endLine: number; source: string; sessionId: string; model?: string; prompt?: string } }> };
+    try {
+      result = JSON.parse(await this.cli(['agent-intent', file, '--json']));
+    } catch {
+      return []; // no Entire/git-ai/Agent Trace source here: nothing to show, not an error
+    }
+    return result.statuses.map((s) => ({ file, tail: s.intent.tail, startLine: s.intent.startLine, endLine: s.intent.endLine, source: s.intent.source, sessionId: s.intent.sessionId, status: s.status, model: s.intent.model, prompt: s.intent.prompt }));
   }
 
   /** Reload the check and redraw. Never throws. */
