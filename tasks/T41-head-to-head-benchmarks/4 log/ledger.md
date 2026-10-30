@@ -13,4 +13,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 21:48      checks ran: npm run check && node packages/bench/dist/h2h.js --check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T41-head-to-head-benchmarks → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 21:54      submitted → verified      reviewer review-round-3 · findings: No P0/P1 · checks exit 0
     2026-10-29 21:54      checks ran: npm run check && node packages/bench/dist/h2h.js --check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T41-head-to-head-benchmarks → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 22:08      verified → integrated      merge 9527293444c909c15d903eeb18e2a5644035af06 · combined checks exit 0 · note: npm run check on main -> 477 passed | 14 skipped (491), 0 failed, node packages/bench/dist/h2h.js --check -> exit 0, 7 rows
+    2026-10-29 22:08      combined checks ran: npm run check && node packages/bench/dist/h2h.js --check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
