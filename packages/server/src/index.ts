@@ -11,6 +11,8 @@ import { createPool, runMigrations } from './db.js';
 import { createQueue } from './queue.js';
 import { createWebhookHandler } from './webhook.js';
 import { initTelemetry } from './telemetry.js';
+import { rebuildIndexFromGit } from './rebuild.js';
+import { computeCheckRun } from './checkrun.js';
 
 export interface ServerHandle {
   close(): Promise<void>;
@@ -32,6 +34,29 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env) {
   await runMigrations(pool);
   const boss = await createQueue(dbUrl);
   const handler = createWebhookHandler({ secret, pool, boss, orgRepoDirs, telemetry });
+
+  // Wire the jobs enqueued by the webhook handler to real workers: without this, a running
+  // server ack'd every push (202 queued) but nothing ever drained rebuild-index /
+  // compute-check-run, so the index + outbox/check-run rows the whole product depends on
+  // never got written outside of bench/m25.ts's own copy of this same registration (found
+  // during final-build wiring verification, 2026-10-30). batchSize: 1 on rebuild-index
+  // matches bench/m25.ts's own reasoning: pg-boss resolves/fails a whole batch as one unit.
+  await boss.work('rebuild-index', { batchSize: 1 }, async (jobs) => {
+    for (const job of jobs) {
+      const { orgId, ref } = job.data as { orgId: string; ref: string };
+      const repoDir = orgRepoDirs[orgId];
+      if (!repoDir) throw new Error(`no repo dir configured for org ${orgId}`);
+      await rebuildIndexFromGit(pool, orgId, repoDir, ref, telemetry);
+    }
+  });
+  await boss.work('compute-check-run', { batchSize: 10 }, async (jobs) => {
+    for (const job of jobs) {
+      const { orgId, ref } = job.data as { orgId: string; ref: string };
+      const repoDir = orgRepoDirs[orgId];
+      if (!repoDir) throw new Error(`no repo dir configured for org ${orgId}`);
+      await computeCheckRun(pool, orgId, repoDir, ref, telemetry);
+    }
+  });
 
   const app = Fastify({ logger: true });
 
