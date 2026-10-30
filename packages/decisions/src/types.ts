@@ -2,7 +2,7 @@
 
 export type Flag = 'red' | 'yellow' | 'green' | 'grey';
 export type NodeKind = 'tenet' | 'decision' | 'intent' | 'incident';
-export type RecordFormat = 'mole' | 'tenets' | 'nygard' | 'backstage';
+export type RecordFormat = 'mole' | 'tenets' | 'nygard' | 'backstage' | 'speckit';
 export type EdgeType =
   | 'traces_to'
   | 'supersedes'

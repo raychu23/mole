@@ -1,8 +1,9 @@
 // Loaders: .mole/tenets.md, .mole/decisions/*.md, .mole/intent/**/*.md, .mole/incidents/*.md (YAML front matter, MADR-style)
 // and plain ADR folders (Nygard / adr-tools `## Status` sections, backstage `:::note Superseded` blocks). Every field keeps its file:line.
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { basename, isAbsolute, join, relative, sep } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { isMap, isScalar, isSeq, LineCounter, parseDocument, type Node as YNode } from 'yaml';
+import { loadSpecKit } from './import/speckit.js';
 import type { Anchor, DecisionGraph, EdgeType, EvidenceRef, GraphEdge, GraphNode, LoadOptions, Problem } from './types.js';
 
 export const MOLE_DIR = '.mole';
@@ -298,14 +299,17 @@ function loadAdrDir(b: Builder, dirArg: string): void {
     b.problems.push({ file: posix(relative(b.root, dir)) || dirArg, line: 1, message: 'ADR folder not found' });
     return;
   }
-  const files = mdFiles(dir, false).filter((p) => !SKIP.test(basename(p)));
+  // a KEP folder's record file IS named README.md (kubernetes/enhancements convention) with a sibling kep.yaml --
+  // SKIP exists to drop a folder's generic index/readme, which doesn't apply when a kep.yaml marks it as the record
+  const files = mdFiles(dir, false).filter((p) => !SKIP.test(basename(p)) || existsSync(join(dir, 'kep.yaml')));
   // ids first, so status links resolve to ids
   const idOf = new Map<string, string>(); // file name -> id
   const byPrefix = new Map<string, string>(); // adr013 -> id (links to a renamed file still resolve)
   for (const abs of files) {
     const name = basename(abs);
+    const hasKep = existsSync(join(dirname(abs), 'kep.yaml'));
     const pref = idOfName(name);
-    let id = pref ?? name.replace(/\.md$/, '');
+    let id = hasKep ? basename(dirname(abs)) : (pref ?? name.replace(/\.md$/, ''));
     if (b.has(id) || [...idOf.values()].includes(id)) id = posix(relative(b.root, abs));
     idOf.set(name, id);
     if (pref && !byPrefix.has(pref)) byPrefix.set(pref, id);
@@ -355,6 +359,14 @@ function loadAdrDir(b: Builder, dirArg: string): void {
     };
     // Nygard / adr-tools: ## Status section (first non-empty line = status; relation lines anywhere in it)
     const sIdx = lines.findIndex((l, i) => i >= start && /^#{2,3}\s+status\b/i.test(l));
+    // Nygard / adr-tools: "Date: YYYY-MM-DD" line between the title and the ## Status heading
+    for (let i = titleLine; i < (sIdx >= 0 ? sIdx : lines.length) && i < titleLine + 10; i++) {
+      const dm = /^Date:\s*(\S+)/i.exec((lines[i] ?? '').trim());
+      if (dm) {
+        fields.date = i + 1;
+        break;
+      }
+    }
     if (sIdx >= 0) {
       fields.status = sIdx + 1;
       for (let i = sIdx + 1; i < lines.length; i++) {
@@ -391,6 +403,55 @@ function loadAdrDir(b: Builder, dirArg: string): void {
       statusLine = titleLine;
       fields.status = titleLine;
     }
+    // MADR 3/4 + KEP: status (and date/deciders/supersedes|replaces) written in YAML front matter, no "## Status" body section.
+    // KEP itself keeps these in a sibling kep.yaml next to the record's README.md (kubernetes/enhancements convention) instead
+    // of inline front matter; read that file too, and let it override the markdown's own fields when both are present.
+    const kepYamlAbs = join(abs, '..', 'kep.yaml');
+    let kepFields: Map<string, string> | undefined;
+    if (existsSync(kepYamlAbs) && statSync(kepYamlAbs).isFile()) {
+      try {
+        const doc = parseDocument(readFileSync(kepYamlAbs, 'utf8'));
+        if (doc.errors.length === 0 && isMap(doc.contents)) {
+          kepFields = new Map<string, string>();
+          for (const pair of doc.contents.items) {
+            const k = String((pair.key as YNode | null)?.toJSON?.() ?? pair.key);
+            const v = pair.value as YNode | null;
+            if (v && (isScalar(v) || isSeq(v))) kepFields.set(k, String(v.toJSON?.() ?? ''));
+          }
+        } else if (doc.errors.length > 0) {
+          b.problems.push({ file: posix(relative(b.root, kepYamlAbs)), line: 1, message: `YAML: ${doc.errors[0]!.message.split('\n')[0]}` });
+        }
+      } catch (e) {
+        b.problems.push({ file: posix(relative(b.root, kepYamlAbs)), line: 1, message: `kep.yaml: ${e instanceof Error ? e.message : String(e)}` });
+      }
+    }
+    const fmStatus = kepFields?.get('status') ?? (status === undefined && fm ? str(fm.fields.get('status')) : undefined);
+    if (fmStatus !== undefined && status === undefined) {
+      status = normStatus(fmStatus);
+      statusText = fmStatus;
+      const line = fm && !kepFields ? (fm.fields.get('status')?.line ?? titleLine) : titleLine;
+      statusLine = line;
+      fields.status = line;
+    }
+    const fmDate = kepFields?.get('creation-date') ?? (fm ? str(fm.fields.get('date')) : undefined);
+    if (fmDate !== undefined) fields.date = fm?.fields.get('date')?.line ?? titleLine;
+    const fmDeciders = fm ? (str(fm.fields.get('deciders')) ?? fm.fields.get('deciders')?.items?.map((i) => i.value).join(', ')) : undefined;
+    if (fmDeciders !== undefined) fields.deciders = fm?.fields.get('deciders')?.line ?? titleLine;
+    const fmSupersedesKeys = kepFields ? ['replaces'] : ['supersedes', 'superseded_by', 'replaces', 'replaced_by'];
+    for (const key of fmSupersedesKeys) {
+      const reverse = key.endsWith('_by');
+      const raw = kepFields?.get(key);
+      const items: string[] = raw !== undefined ? raw.split(/\n|,/).map((s) => s.trim()).filter(Boolean) : (fm?.fields.get(key)?.items ?? []).map((i) => i.value).filter(Boolean);
+      for (const target of items) {
+        // a KEP `replaces` entry is a path like "/keps/sig-ccc/3456-replaced-kep"; an inline front-matter value is usually a file name or id
+        const base = basename(target.replace(/\/$/, ''));
+        const other = resolveLink(`${base}.md`) ?? idOfName(base) ?? base;
+        if (other) {
+          fields[key] = titleLine;
+          b.edge({ from: reverse ? other : id, to: reverse ? id : other, type: 'supersedes', file, line: titleLine });
+        }
+      }
+    }
     if (status === undefined) {
       // backstage records carry no status: a published record is accepted; a bare Nygard file without a Status is unknown
       status = fm ? 'accepted' : 'unknown';
@@ -409,6 +470,7 @@ export function loadGraph(root: string, opts: LoadOptions = {}): DecisionGraph {
   loadIntent(b);
   loadIncidents(b);
   for (const d of opts.adrDirs ?? []) if (d) loadAdrDir(b, d);
+  loadSpecKit(b); // T36: .specify/memory/constitution.md + specs/*/research.md, zero config (register importers: one call)
   // review 1 P2-1 / P2-2: an unknown status or a reference to an unknown id is reported at file:line, never dropped silently
   for (const n of b.nodes)
     if (n.kind === 'decision' && n.format === 'mole' && n.status === 'unknown')
