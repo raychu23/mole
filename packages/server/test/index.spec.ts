@@ -9,6 +9,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { rmSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { buildApp } from '../src/index.js';
 import { buildFixtureRepo } from '../bench/fixtures.js';
 import { closePool, type Pool } from '../src/db.js';
@@ -89,4 +90,13 @@ describe('server index.ts is wired to real workers (final-build verification)', 
     },
     40000
   );
+
+  it('isMain uses pathToFileURL so a checkout path with a space still matches (regression for the silent-no-op bug)', () => {
+    const argv1 = '/Users/a1/Desktop/CS Code/Project/Mole/packages/server/dist/src/index.js';
+    const url = pathToFileURL(argv1).href;
+    expect(url).toContain('%20');
+    // the bug: a naive `file://${argv1}` template does NOT percent-encode the space, so it
+    // would never equal import.meta.url for a module loaded from this exact path.
+    expect(`file://${argv1}`).not.toBe(url);
+  });
 });

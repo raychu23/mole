@@ -6,6 +6,7 @@
 //
 // Library consumers (bench/, test/) should keep importing individual modules directly
 // (./webhook.js, ./db.js, ...), as they already do — or import everything from ./lib.js.
+import { pathToFileURL } from 'node:url';
 import Fastify from 'fastify';
 import { createPool, runMigrations } from './db.js';
 import { createQueue } from './queue.js';
@@ -94,7 +95,12 @@ export async function startServer(env: NodeJS.ProcessEnv = process.env): Promise
 
 // Only auto-start when run directly (`node dist/src/index.js`, the Dockerfile CMD target),
 // never on import (bench/test files never import this module, but keep the guard honest).
-const isMain = process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
+// Comparing raw import.meta.url to a bare `file://${argv[1]}` string breaks whenever the
+// checkout path contains characters import.meta.url percent-encodes (e.g. a space) — found
+// during final-build wiring verification, 2026-10-30: the server silently did nothing under
+// `node dist/src/index.js` in this very checkout. pathToFileURL() produces the same encoding
+// import.meta.url uses, so the comparison is correct regardless of the path's characters.
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMain) {
   startServer().catch((err) => {
     console.error('[mole-server] failed to start:', err);
