@@ -363,3 +363,16 @@ artifact into this worktree (cross-worktree environment gap, not a T25 regressio
 h2h.test.ts failed without it, passed 9/9 once copied). Worktree node_modules deleted, `git worktree remove`'d.
 Evidence: tasks/T25-hand-back-verify-gate/2 insights.md 'round 5' + 4 log/runs.jsonl last 2 lines + 4 log/
 ledger.md.
+2026-10-30 01:02 a20/mole-builder-15: T40-design-review-and-meeting-capture proposed→ready→running, worktree Project/Mole-worktrees/T40-design-review-and-meeting-capture, branch ledger/t40-design-review-and-meeting-capture
+2026-10-30 (mole-builder-16/a21) T39-import-agent-session-logs: claimed (ready -> running, --git-worktree),
+red commit 693d282 (bench/m33-key.json frozen: 30 labeled session/function links across Entire Checkpoints,
+git-ai Authorship Logs, Agent Trace v0.1.0, 6 stale-edit + 3 whitespace-edit cases; test confirmed red by
+temporarily removing src/importers/ before commit), implementation commit 09c272a (src/importers/{entire,
+gitai,agenttrace,unify,external}.ts). M33 MET: link recall 100.0% (30/30) wrong 0 misses 0, stale-flag recall
+100.0% (6/6), false-on-whitespace 0/3, model calls 0. npm run check 66 files/507 tests green, 7/14 skipped
+(copied gitignored generated data/m0-engine-report.json from main, same cross-worktree gap T25 hit 10-30).
+Connected: mole_agent_intent MCP tool, `mole agent-intent` CLI, VS Code one-panel 'agents' section (one
+function, 3 callers). Known real gaps logged in 2 insights.md (Entire git-refs backend not walked, Agent
+Trace sidecar path is inference, real-repo readers untested against a real Entire/git-ai/Agent Trace repo).
+Submitted for fresh review. tasks/T39-import-agent-session-logs/4 log/runs.jsonl, prior-art.md addendum.
+2026-10-30 01:45 a20/mole-builder-15: T40-design-review-and-meeting-capture running→submitted→verified→integrated (merge 562e84c). M34 all 3 parts at target on round 1: drafts link right 100.0% (n=10, target>=90%) invented 0; diagram delta match 100.0% byte-identical twice true; drift split 100.0% (n=10, target>=90%) real->trivial misses 0; model calls 0. Connected: apps/vscode 'Review / meeting notes' panel section + inline delta diagram, T32 pr-check surfaces drafts on its existing check-run. npm run check green (70/77 files, 507/521 tests, 14 skipped).
