@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 23:05      checks ran: npm run check && node packages/oneonone/dist/bench/m23-code.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T31-one-on-one-loop-readback → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 23:10      submitted → verified      reviewer a20-self-review · findings: Self-review per task instructions (no separate fresh-subagent spawn available in this run): checked diff against owner/boundary/checks/non-goals/proof/stop. P0: none. P1: boundary's '
     2026-10-29 23:10      checks ran: npm run check && node packages/oneonone/dist/bench/m23-code.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T31-one-on-one-loop-readback → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 23:23      verified → integrated      merge 3af36cd · combined checks exit 0 · note: npm run check on main -> 522 passed, 14 skipped, 0 failed, node packages/oneonone/dist/bench/m23-code.js -> exit 0, precision 46.4% recall 41.9% (target 0.45/0.40 MET)
+    2026-10-29 23:23      combined checks ran: npm run check && node packages/oneonone/dist/bench/m23-code.js in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
