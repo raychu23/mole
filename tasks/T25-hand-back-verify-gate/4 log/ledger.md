@@ -17,4 +17,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 22:21      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T25-hand-back-verify-gate · branch ledger/t25-hand-back-verify-gate · base 930d173
     2026-10-29 22:22      running → submitted      report: Round 5 (raymond 10-30 'fix the blocked'): no code change. Root-caused H05/H09 (false-verified: pass every test that existed at hand-back, the later fix itself adds the missing assertion -- no later-fix oracle ex
     2026-10-29 22:22      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T25-hand-back-verify-gate → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 22:24      submitted → verified      reviewer fresh-review-a19-r1 · findings: Independent fresh-subagent review (delegate_task, contract + decide() code + m17-key.json only, never saw this round's implementation transcript) confirmed: decide() logic matches
+    2026-10-29 22:24      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T25-hand-back-verify-gate → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
