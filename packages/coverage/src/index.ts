@@ -206,6 +206,72 @@ const commitsIn = (root: string, args: string[]): Array<{ sha: string; t: number
     .filter(Boolean)
     .map((l) => ({ sha: l.slice(0, 40), t: Number(l.slice(41)) * 1000 }));
 
+/** How long a gap between one root session's end and the next root session's start (same harness, same cwd) can be
+ * and still plausibly be "the same builder, restarted" rather than a different person/agent starting fresh work in
+ * the same place. 15 minutes: long enough to cover a crash + relaunch, short enough that it practically never spans
+ * two genuinely different concurrent agents happening to share a cwd (those overlap in time, they don't queue up
+ * back-to-back with a short gap -- see buildResumedFamilies' header for why overlap itself cannot be the signal). */
+const RESUME_GAP_MS = 15 * 60 * 1000;
+
+interface RootWindow {
+  id: string;
+  harness: Harness;
+  cwd: string | null;
+  start: number;
+  end: number | null;
+}
+/** Crash/compaction recovery (HANDOFF.md's own documented restart path) starts a brand-new ROOT Hermes session --
+ * not a child of the one that crashed (`sessions.parent_session_id` stays null) -- so the existing parent-chain
+ * roll-up below never links it back to the original builder session, and every edit the resumed session makes is
+ * invisible to that builder's coverage (this was M27a's dominant recall gap: see insights.md point 4).
+ *
+ * `cwd` alone can't disambiguate (several independent sessions legitimately share one cwd, e.g. every Mole-repo
+ * agent uses the same checkout), and naive time-OVERLAP matching is actively wrong here: two independent builders
+ * running concurrently in the same cwd for hours overlap for their entire lifetime, so overlap-based union-find
+ * would merge unrelated builders into one family and wreck precision (verified empirically on this repo's own
+ * Hermes state.db: the four 10-29 builder sessions all share one cwd and their multi-hour windows overlap each
+ * other almost completely). The signal that actually isolates "resumed", not "concurrent", is SEQUENCING: one root
+ * session's end immediately followed (within RESUME_GAP_MS, no closer competing candidate) by another root
+ * session's start, same harness + cwd. Genuinely concurrent sessions don't queue up like that; a crash-and-relaunch
+ * does. Each root session chains to at most one next session (the nearest one within the gap), keeping families a
+ * simple ordered chain rather than a free-for-all merge. */
+function buildResumedFamilies(raws: RawRun[]): Map<string, string> {
+  const roots: RootWindow[] = [];
+  for (const raw of raws) {
+    if (raw.summary.parent) continue; // only root sessions can be "resumed"; subagents already roll up via parentOf
+    const start = Date.parse(raw.summary.start);
+    if (Number.isNaN(start)) continue;
+    const end = raw.summary.end ? Date.parse(raw.summary.end) : null;
+    roots.push({ id: raw.summary.id, harness: raw.summary.harness, cwd: raw.summary.cwd, start, end: end !== null && Number.isNaN(end) ? null : end });
+  }
+  const uf = new Map<string, string>();
+  const find = (x: string): string => {
+    let r = x;
+    while (uf.get(r) !== undefined && uf.get(r) !== r) r = uf.get(r)!;
+    uf.set(x, r);
+    return r;
+  };
+  const union = (a: string, b: string): void => {
+    const ra = find(a);
+    const rb = find(b);
+    if (ra !== rb) uf.set(ra, rb);
+  };
+  for (const r of roots) if (!uf.has(r.id)) uf.set(r.id, r.id);
+  for (const a of roots) {
+    if (a.end === null) continue; // a session with no recorded end hasn't been "resumed" (nothing to resume from yet)
+    let best: RootWindow | null = null;
+    for (const b of roots) {
+      if (b.id === a.id || b.harness !== a.harness || b.cwd !== a.cwd) continue;
+      const gap = b.start - a.end;
+      if (gap >= 0 && gap <= RESUME_GAP_MS && (!best || b.start < best.start)) best = b;
+    }
+    if (best) union(a.id, best.id);
+  }
+  const out = new Map<string, string>();
+  for (const r of roots) out.set(r.id, find(r.id));
+  return out;
+}
+
 function scanAgents(root: string, opts: Sources): { byFile: Map<string, Map<string, AgentMark>>; skipped: Skipped[] } {
   const skipped: Skipped[] = [];
   const merged = { ...defaultSources(), ...opts };
@@ -220,6 +286,16 @@ function scanAgents(root: string, opts: Sources): { byFile: Map<string, Map<stri
     harnessById.set(raw.summary.id, raw.summary.harness);
     if (raw.summary.parent) parentOf.set(raw.summary.id, raw.summary.parent);
   }
+  // resumed-session families (see buildResumedFamilies' header): map each root session to the other root ids
+  // chained to it (crash/compaction restarts), so an edit made in a resumed session also rolls up to the session
+  // it resumed (and vice versa), independent of (in addition to) the parent-chain roll-up above.
+  const resumedFamily = buildResumedFamilies(raws);
+  const familyMembers = new Map<string, string[]>();
+  for (const [id, canon] of resumedFamily) {
+    const list = familyMembers.get(canon) ?? [];
+    list.push(id);
+    familyMembers.set(canon, list);
+  }
   function withAncestors(id: string): string[] {
     const out = [id];
     let cur = parentOf.get(id);
@@ -228,6 +304,9 @@ function scanAgents(root: string, opts: Sources): { byFile: Map<string, Map<stri
       out.push(cur);
       cur = parentOf.get(cur);
     }
+    const rootId = out[out.length - 1]!; // the topmost ancestor with no parent -- a root session, resumed-family's unit
+    const canon = resumedFamily.get(rootId);
+    if (canon) for (const peer of familyMembers.get(canon) ?? []) if (!out.includes(peer)) out.push(peer);
     return out;
   }
   const byFile = new Map<string, Map<string, AgentMark>>();
