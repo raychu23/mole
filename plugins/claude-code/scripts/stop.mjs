@@ -10,7 +10,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { clip, collisionsStopText, emit, findMole, git, loadSession, moleJson, readInput, repoRoot, sessionCollisions } from './lib.mjs';
+import { clip, collisionsStopText, decisionsDiffText, emit, findMole, git, loadSession, moleJson, readInput, repoRoot, ruleViolationsText, sessionCollisions } from './lib.mjs';
 
 const range = (h) => (h.oldLines > 1 ? `${h.oldStart}-${h.oldStart + h.oldLines - 1}` : `${h.oldStart}`);
 const one = (s, n = 240) => {
@@ -90,6 +90,25 @@ function checkResult(root, mole, input) {
   return { r, label };
 }
 
+// T37: files this session's diff touched, independent of whether `mole check` found a past fix or a question (checkResult
+// below returns undefined then, but decisions-touched / rule-violation reporting must not depend on that).
+function diffFiles(root, input) {
+  const head = git(root, ['rev-parse', '--verify', '-q', 'HEAD'])?.trim() ?? '';
+  const sess = loadSession(input.session_id);
+  const base = sess && sess.root === root && sess.head && sess.head !== head && git(root, ['cat-file', '-e', `${sess.head}^{commit}`]) !== undefined ? sess.head : undefined;
+  if (base) {
+    const out = git(root, ['diff', '--name-only', base]) ?? '';
+    return out.split('\n').map((s) => s.trim()).filter(Boolean);
+  }
+  const files = new Set();
+  for (const line of (git(root, ['status', '--porcelain', '--untracked-files=all']) ?? '').split('\n')) {
+    if (line.length < 4) continue;
+    const p = line.slice(3);
+    for (const part of p.split(' -> ')) files.add(part.replace(/^"|"$/g, ''));
+  }
+  return [...files];
+}
+
 function main() {
   const input = readInput();
   const root = repoRoot(input.cwd || process.cwd());
@@ -97,10 +116,14 @@ function main() {
   const mole = findMole(root);
   if (!mole) return;
   const check = checkResult(root, mole, input);
+  const files = diffFiles(root, input);
+  // T37: decisions this session's diff touched (with their current flag) + T27 rule violations it introduced
+  const decisions = decisionsDiffText(mole, root, files);
+  const violations = ruleViolationsText(mole, root, files);
   // T21: what this session edited that another parallel run relies on
   const coll = collisionsStopText(sessionCollisions(mole, root, input, 35_000), input.session_id);
   const claims = claimLines(mole, root, input.session_id); // T24: unsupported / contradicted claims in the last answer
-  const parts = [check ? format(check.r, check.label) : '', coll, claims.join('\n')].filter(Boolean);
+  const parts = [check ? format(check.r, check.label) : '', decisions, violations, coll, claims.join('\n')].filter(Boolean);
   if (!parts.length) return;
   const msg = { systemMessage: clip(parts.join('\n\n')) };
   if (check && process.env.MOLE_STOP_CONTINUE === '1' && input.stop_hook_active !== true && check.r.questions?.length) {

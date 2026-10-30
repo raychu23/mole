@@ -7,7 +7,7 @@
 // Nothing to say (no git, no notes, no Mole CLI) = no output, exit 0.
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { clip, collisionsStartText, emit, findMole, git, moleJson, readInput, repoRoot, saveSession, sessionCollisions } from './lib.mjs';
+import { clip, collisionsStartText, decisionsBlock, emit, findMole, git, governingDecisions, moleJson, readInput, repoRoot, saveSession, sessionCollisions, weakSpotsLine } from './lib.mjs';
 
 const RECENT_COMMITS = 3;
 
@@ -41,6 +41,15 @@ function notesText(root, mole) {
   return `Mole notes on the files in play (${hits.length} of ${list.length} notes in .mole/notes; files in play = uncommitted + last ${RECENT_COMMITS} commits). These are the team's own notes on these symbols:\n${lines.join('\n')}`;
 }
 
+function decisionsText(root, mole) {
+  const inPlay = filesInPlay(root);
+  const list = governingDecisions(mole, root, inPlay);
+  if (!list.length) return '';
+  const block = decisionsBlock(list);
+  const weak = weakSpotsLine(mole, root, inPlay);
+  return weak ? `${block}\n\n${weak}` : block;
+}
+
 function main() {
   const input = readInput();
   const root = repoRoot(input.cwd || process.cwd());
@@ -49,7 +58,8 @@ function main() {
   const mole = findMole(root);
   if (!mole) return;
   // T21: other parallel runs whose work meets this session's (a resumed or compacted session has steps already)
-  const parts = [notesText(root, mole), collisionsStartText(sessionCollisions(mole, root, input, 20_000), input.session_id)].filter(Boolean);
+  // T37: the decisions (+ T35 weak spots) governing the files in play -- the plugin's own reason to exist (D31)
+  const parts = [notesText(root, mole), decisionsText(root, mole), collisionsStartText(sessionCollisions(mole, root, input, 20_000), input.session_id)].filter(Boolean);
   if (!parts.length) return;
   emit({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: clip(parts.join('\n\n')) } });
 }
