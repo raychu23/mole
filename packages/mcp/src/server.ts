@@ -4,6 +4,7 @@ import { formatNeighborhood } from '@mole/core';
 import { ensureDaemon, MoleClient, type EnsureOptions } from '@mole/daemon';
 import { claims, defaultSources, tried } from '@mole/agentstate';
 import { registerCollisionsTool } from './collisions-tool.js';
+import { registerOneOnOneTool } from './oneonone-tool.js'; // T31: 1:1 prep + read-back, grouped by folder, never by person
 import { executeTool, GEN_AI } from '@mole/telemetry';
 import type { Change } from '@mole/history';
 import { resolve } from 'node:path';
@@ -75,6 +76,7 @@ export function createServer(opts: MoleMcpOptions): McpServer {
     },
   );
   registerCollisionsTool(server, opts); // T21: parallel-agent collisions
+  registerOneOnOneTool(server, opts); // T31: mole_oneonone (prep | readback)
   server.registerTool(
     'mole_check',
     {

@@ -57,6 +57,12 @@
     },
     {
       "path": "packages/bench"
+    },
+    {
+      "path": "packages/oneonone"
+    },
+    {
+      "path": "packages/reviews"
     }
   ]
 }

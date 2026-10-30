@@ -19,4 +19,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 22:22      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T25-hand-back-verify-gate → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 22:24      submitted → verified      reviewer fresh-review-a19-r1 · findings: Independent fresh-subagent review (delegate_task, contract + decide() code + m17-key.json only, never saw this round's implementation transcript) confirmed: decide() logic matches
     2026-10-29 22:24      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T25-hand-back-verify-gate → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 22:29      verified → integrated      merge db2d900 · combined checks exit 0 · note: npm run check on merge db2d900 -> exit 0, 68 files / 516 tests green (7 skipped). M17 bench (reported, not gated per R7/D39): agree 17/20 (85%, target 90%), planted verified
+    2026-10-29 22:29      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
