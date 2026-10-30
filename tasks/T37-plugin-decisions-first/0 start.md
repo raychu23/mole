@@ -1,22 +1,22 @@
 ---
-state: blocked
+state: ready
 owner: mole-builder-8
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t37-plugin-decisions-first
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T37-plugin-decisions-first
 base: 85af7ab
 reviewer:
-updated: 2026-10-29 17:51
-status: ledger blocked
-next: decision owner unblocks → ledger move <task> ready --note …
+updated: 2026-10-29 21:15
+status: ledger ready
+next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
 claimed: 2026-10-29 15:46
 ---
 ```notes
 T37-plugin-decisions-first      ledger task (rules.md §3 code features)      project tasks
     goal                    Make the agent plugin serve the decisions, not just notes (USER 10-29 15:30 'plugins are ours right how are they inque exactly whats the pt … aligngin all apsects … decision based senior dev human centered'). Agent-memory plugins (claude-mem, ai-memory, Copilot Memory) carry what the agent did for the next agent; Mole's plugin carries the PEOPLE's decisions to the agent and the agent's effect on them back to the person. SessionStart: the decisions + tenets governing the files in play (from the prompt, the branch diff and open files), each as a rule to follow with its flag and owner, plus weak spots from T35 when present. PreToolUse on Edit/Write: when the edit touches lines a decision governs, add that decision once (no block). Stop: decisions the session's diff touched with their new flags, decision-rule violations (T27), then the existing past fixes, questions, claims and collisions. Same content from the MCP server (mole_check / mole_decisions with a files argument) so Codex, Cursor and Hermes get it too.
     done-when               1) M31a: 10 replayed sessions from this repo (the 10-29 builder chats' first prompts + their diffs) where the agent edited decision-governed files → SessionStart lists the governing decisions 10/10, within 1,500 characters, p95 <= 2 s; 2) M31b: 5 planted rule violations in replayed diffs → Stop reports 5/5 with the decision id, silent on 5 clean diffs; 3) PreToolUse adds a decision at most once per session per decision, never blocks; 4) a hook never fails a session: errors → exit 0, nothing printed; 5) claude plugin validate passes; npm run check passes
-    status                  2026-10-29 blocked      cause: npm run check fails only on unrelated tests (packages/telemetry, packages/agentstate claims-hook etc.) with 'Test
-    next                    decision owner unblocks → ledger move <task> ready --note …
+    status                  2026-10-29 ready      raymond 10-30 'fix the blocked' - shared vitest timeout fix landed main@3af8a4a
+    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
     pinned
     mode                    code
     boundary                plugins/claude-code/** (hooks.json, scripts, test), packages/mcp/src (files argument on mole_check / mole_decisions only), packages/decisions/src read-only, tasks/T37-plugin-decisions-first/**
