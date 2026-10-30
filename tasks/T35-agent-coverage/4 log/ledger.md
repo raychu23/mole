@@ -10,4 +10,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 23:13      checks ran: npm run check && node packages/coverage/dist/bench/m27.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T35-agent-coverage → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 23:18      submitted → verified      reviewer fresh-review-subagent-a18-r3 · findings: No findings. M27a honest miss (precision 0.842/recall 0.882 vs 0.95/0.95 target), 2 root-cause rounds logged, 1 R2-ruling-approved key fix applied, exit-gate change match
     2026-10-29 23:18      checks ran: npm run check && node packages/coverage/dist/bench/m27.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T35-agent-coverage → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 23:26      verified → integrated      merge 691a2ecdf397e44e8f2de85f6e69095d0b507c62 · combined checks exit 0 · note: npm run check on main (525/539, 75/82 files) + node packages/coverage/dist/bench/m27.js → M27a precision 0.842 recall 0.882 (honest miss, lo
+    2026-10-29 23:26      combined checks ran: npm run check && node packages/coverage/dist/bench/m27.js in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
