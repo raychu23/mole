@@ -17,6 +17,11 @@ export default defineConfig({
       '**/bench/corpora/**',
       '**/bench/**/corpora/**',
       'evals/inspect/**',
+      // context/reference is a symlink into shared research material (cloned external
+      // repos kept for prior-art lookups, e.g. context/reference/shared sdlc/.compat/atlas).
+      // It ships its own *.test.js files (bun:test, differing suite shapes) that are not
+      // Mole tests and were never meant to run from this workspace root.
+      'context/reference/**',
     ],
   },
 });
