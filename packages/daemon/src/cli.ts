@@ -114,6 +114,7 @@ async function main(): Promise<number> {
   if (cmd === 'pr-check') return (await import('@mole/decisions')).prCheckCli(pos, flags, root);
   if (cmd === 'flows') return (await import('@mole/flows')).flowsCli(pos, flags, root); // runtime call flows recorded from tests (T28), no daemon needed
   if (cmd === 'rules') return (await import('@mole/decisions')).rulesCli(pos, flags, root);
+  if (['interrogate', 'check-records'].includes(cmd)) return (await import('@mole/intake')).intakeCli(pos, flags, root); // T23: agents interrogate, people write
   const stateDir = str(flags['state-dir']);
   const common = { root, stateDir, ...defaultSources(root, str(flags.tsconfig), str(flags['src-dir'])) };
 

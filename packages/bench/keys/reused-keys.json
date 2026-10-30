@@ -1,0 +1,66 @@
+{
+  "written": "2026-10-30T00:00:00-0500",
+  "note": "R1/R2: these paths + hashes are frozen before H2H's first implementation commit. They point at keys/run logs already produced and reviewed by earlier integrated tasks (T1, T11, T19, T21, T22, T24, T38). h2h.ts refuses to run if a hash no longer matches at read time (R2 guard), except the two runs.jsonl append-only logs where only the frozen prefix length is checked. generated data/m0-engine-report.json is gitignored (T1 regenerates it); copied here read-only from the main checkout.",
+  "sources": {
+    "H1_engine_report": {
+      "path": "generated data/m0-engine-report.json",
+      "sha256": "b9a3939806852cae286d79174790885d5402cf230cc081e963b666c94f2b2fc4",
+      "bytes": 68440
+    },
+    "H2_m14_key": {
+      "path": "packages/verify/bench/keys/m14-key.json",
+      "sha256": "aa433d0f2db6e32b4acf7d5f9e1923b7a76639a4439820ae86ba630e9dc144b1",
+      "bytes": 24137
+    },
+    "H3_m1_key": {
+      "path": "packages/memory/bench/m1-key.json",
+      "sha256": "56a80888de4862f50592915c5197bc1a59dcddc59d3dc19dc2965c462834a857",
+      "bytes": 396654
+    },
+    "H4_m9_key": {
+      "path": "packages/memory/bench/m9-key.json",
+      "sha256": "12a40588f0b9403a1604efe803ec97068e3bfe97a746c84f7531b452dd37bec9",
+      "bytes": 116328
+    },
+    "H5_m11_key": {
+      "path": "packages/agentstate/bench/m11-key.json",
+      "sha256": "621f40d7e832fae48cdab4d9dc9e23b4fce76cba2df746a6b983255b00d7ac04",
+      "bytes": 22717
+    },
+    "H6_m16_runs": {
+      "path": "tasks/T24-agent-claim-check/4 log/runs.jsonl",
+      "sha256": "05377629faa09e1f6ef1dd77b3d53fc4ff3e9d81d3225cb7d0acffab8078f35a",
+      "bytes": 5628
+    },
+    "H2_m14_runs": {
+      "path": "tasks/T22-hand-back-test-selection/4 log/runs.jsonl",
+      "sha256": "13a1565febc6841e7c54b3cd1ded22249b88ac12d1ae7e5c965d49fb45739aae",
+      "bytes": 2178
+    },
+    "H4_m9_runs": {
+      "path": "tasks/T19-rename-proof-anchors/4 log/runs.jsonl",
+      "sha256": "8845e221c9e0f85f1724e00312751a00ab814e5b59f73e965d65e0bf9f322bc1",
+      "bytes": 10558
+    },
+    "H5_m11_runs": {
+      "path": "tasks/T21-parallel-agent-collisions/4 log/runs.jsonl",
+      "sha256": "53b4dca6fed440303b55384d2d69024996270546fec9d1486e950006e39917cf",
+      "bytes": 3345
+    },
+    "H3_m1_runs": {
+      "path": "tasks/T11-l2-memory-notes/4 log/runs.jsonl",
+      "sha256": "15b02bbd86b63718850409cb79400cbea11d846badfece318e77eaddb46c2168",
+      "bytes": 1581
+    },
+    "M32_bonus_key": {
+      "path": "packages/temporal/bench/m32-key.json",
+      "sha256": "79d0b9a4a1281f82de2e7efcac5476f3a68c242e2f753e47dcfb4016dd53615b",
+      "bytes": 16663
+    },
+    "M32_bonus_runs": {
+      "path": "tasks/T38-bitemporal-decision-graph/4 log/runs.jsonl",
+      "sha256": "730fa171b590fbacef8dd279c8e0e84585d403553e82b72eff2356ee7f5bf0be",
+      "bytes": 2501
+    }
+  }
+}

@@ -1,22 +1,22 @@
 ---
-state: submitted
+state: integrated
 owner: mole-builder-8
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t23-decision-traces-intake
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T23-decision-traces-intake
 base: 9c42843
-reviewer:
-updated: 2026-10-29 21:31
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+reviewer: fresh-review-subagent-a18-r1
+updated: 2026-10-29 22:19
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-10-29 21:26
 ---
 ```notes
 T23-decision-traces-intake      ledger task (rules.md §3 code features)      project tasks
     goal                    Agents interrogate, people write (nuanced.dev, Ayman Nadeem 10-28: AI-generated specs get approved passively; Raymond 10-29: 'similar to my sort of gronded vision'; D38). When a PR, agent session or thread changes code governed by decisions, or a person writes a new record, Mole gathers the evidence (diff hunks, linked PR or issue, transcript excerpts with ids, past fixes, tests) and asks the author up to 3 pointed questions + assumption checks on the person's own text (no alternatives considered, scope not anchored to code, contradicts tenet X, cites code that has changed since). Shown in the VS Code view (T34) and the PR check (T32). Mole never writes the why: a model, if enabled, may only phrase questions over facts code found (R6); the default path is deterministic. Replaces the earlier 'model extracts and drafts records' plan
     done-when               1) M30a: key from Mole's own .mole/decisions + their commits, plus 10 seeded flawed records (labelled before code): assumption checks catch >= 9/10 seeded flaws with <= 1 false flag on the 10 real records, 2) M30b: every evidence item links to a real commit, file:line or transcript id (precision 100%, checked by script), 3) a test asserts no generated text ever lands in a record's why/context/consequences fields, 4) questions: useless share <= 10% judged by a fresh reviewer against the key's written rule (like M4), 5) failure case: nothing governs the change → silent, 6) npm run check passes
-    status                  2026-10-29 submitted      report: Unblocked after root-cause fix (shared vitest timeout, main@3af8a4a) + stale .mole/local/verify-fixtures cleanup
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    status                  2026-10-29 integrated      merge 5cdb101ece40b9616e47683f24cc744494fe0dd2 · combined checks exit 0 · note: npm run check on main (487/501, 64/71 fi
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    code
     boundary                packages/intake/** (new), packages/questions/src + packages/decisions/src + packages/history/src read-only, packages/daemon/src/cli.ts (one import + one call), packages/mcp/src (new mole_interrogate tool only), tasks/T23-decision-traces-intake/**
