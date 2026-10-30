@@ -15,4 +15,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 22:21      running → blocked      cause: Round 5 real-number miss accepted per R7/D39 (same shape as T19/D33): agree 17/20 (85% vs 90% target), p95 mole 20.5-20.6s (vs <=20s), 0/6 planted verified (safety met). Root-caused H05/H09 (no later-fix oracle po
     2026-10-29 22:21      blocked → ready      Per R7/D39 (T19/D33 fallback shape): accepting the real NOT MET M17 number (agree 17/20=85%, p95 mole 20.5-20.6s, 0/6 planted verified met, safety-critical target held). Fresh-subagent review (contract + decide() code + 
     2026-10-29 22:21      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T25-hand-back-verify-gate · branch ledger/t25-hand-back-verify-gate · base 930d173
+    2026-10-29 22:22      running → submitted      report: Round 5 (raymond 10-30 'fix the blocked'): no code change. Root-caused H05/H09 (false-verified: pass every test that existed at hand-back, the later fix itself adds the missing assertion -- no later-fix oracle ex
+    2026-10-29 22:22      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T25-hand-back-verify-gate → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
