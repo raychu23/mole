@@ -12,4 +12,5 @@ ledger (newest last, nothing deleted)
     2026-10-29 18:08      running → blocked      cause: clean-load re-verify (round4, same code as round3 commit d1b7298, merged main -> 93707ed, no code changes this round per instructions): 2 back-to-back runs under genuinely low host load (1min avg 12-76, well below
     2026-10-29 21:13      blocked → ready      raymond 10-30 'fix the blocked'
     2026-10-29 21:13      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T25-hand-back-verify-gate · branch ledger/t25-hand-back-verify-gate · base 93707ed
+    2026-10-29 22:21      running → blocked      cause: Round 5 real-number miss accepted per R7/D39 (same shape as T19/D33): agree 17/20 (85% vs 90% target), p95 mole 20.5-20.6s (vs <=20s), 0/6 planted verified (safety met). Root-caused H05/H09 (no later-fix oracle po
 ```
