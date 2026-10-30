@@ -1,0 +1,52 @@
+{
+  "written": "2026-10-30T01:10:00-05:00",
+  "task": "T39-import-agent-session-logs",
+  "metric": "M33 link recall >= 95% wrong 0; stale-intent flags 100% recall, 0 false on whitespace/comment-only edits; 0 model calls",
+  "method_note": "Line numbers + hashes below came from a direct symbolsOfText(path, generatorOutput) call (T11's own already-tested parser), a different method than the anchoring/overlap logic in src/importers/unify.ts under test here. bench/m33.ts regenerates the same deterministic 4-line-per-function source in a temp dir at run time (writeFixtureSource); any drift between that template and these numbers fails the bench loudly instead of silently passing.",
+  "repos": {
+    "entire": {
+      "dir": "packages/agentstate/bench/fixtures/t39/entire-repo",
+      "file": "sample.ts",
+      "functions": [
+        { "tail": "e0", "start": 1, "end": 3 }, { "tail": "e1", "start": 5, "end": 7 },
+        { "tail": "e2", "start": 9, "end": 11 }, { "tail": "e3", "start": 13, "end": 15 },
+        { "tail": "e4", "start": 17, "end": 19 }, { "tail": "e5", "start": 21, "end": 23 },
+        { "tail": "e6", "start": 25, "end": 27 }, { "tail": "e7", "start": 29, "end": 31 },
+        { "tail": "e8", "start": 33, "end": 35 }, { "tail": "e9", "start": 37, "end": 39 }
+      ],
+      "staleEdits": ["e2", "e7"],
+      "whitespaceEdits": ["e5"]
+    },
+    "git-ai": {
+      "dir": "packages/agentstate/bench/fixtures/t39/gitai-repo",
+      "file": "sample.ts",
+      "functions": [
+        { "tail": "g0", "start": 1, "end": 3 }, { "tail": "g1", "start": 5, "end": 7 },
+        { "tail": "g2", "start": 9, "end": 11 }, { "tail": "g3", "start": 13, "end": 15 },
+        { "tail": "g4", "start": 17, "end": 19 }, { "tail": "g5", "start": 21, "end": 23 },
+        { "tail": "g6", "start": 25, "end": 27 }, { "tail": "g7", "start": 29, "end": 31 },
+        { "tail": "g8", "start": 33, "end": 35 }, { "tail": "g9", "start": 37, "end": 39 }
+      ],
+      "staleEdits": ["g2", "g7"],
+      "whitespaceEdits": ["g5"]
+    },
+    "agent-trace": {
+      "dir": "packages/agentstate/bench/fixtures/t39/agenttrace-repo",
+      "file": "sample.ts",
+      "functions": [
+        { "tail": "a0", "start": 1, "end": 3 }, { "tail": "a1", "start": 5, "end": 7 },
+        { "tail": "a2", "start": 9, "end": 11 }, { "tail": "a3", "start": 13, "end": 15 },
+        { "tail": "a4", "start": 17, "end": 19 }, { "tail": "a5", "start": 21, "end": 23 },
+        { "tail": "a6", "start": 25, "end": 27 }, { "tail": "a7", "start": 29, "end": 31 },
+        { "tail": "a8", "start": 33, "end": 35 }, { "tail": "a9", "start": 37, "end": 39 }
+      ],
+      "staleEdits": ["a2", "a7"],
+      "whitespaceEdits": ["a5"]
+    }
+  },
+  "scoring": {
+    "links": "one labeled (session, function) link per listed function per repo (30 total, session id = '<repo>-s<index>'); recall = anchored-to-right-function / 30, wrong = anchored-to-wrong-function count (target recall >= 95%, wrong 0)",
+    "stale": "after staleEdits change a function's body (changes normalizedHash), recheckIntents must flag it stale for every one of the 6 staleEdits (recall 100%); after whitespaceEdits add only blank lines/a comment (normalizedHash unchanged by construction), recheckIntents must NOT flag the 3 whitespaceEdits (0 false stale)",
+    "model_calls": "0 anywhere in parse/anchor/recheck (grep for any LLM client import in src/importers/*)"
+  }
+}
