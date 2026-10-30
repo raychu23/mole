@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { buildHover, HOVER_COMMANDS, Touched, touchedRanges, type CheckJson, type HoverNote } from '../src/hover.js';
+import { buildHover, HOVER_COMMANDS, Touched, touchedRanges, type CheckJson, type HoverAgentIntent, type HoverNote } from '../src/hover.js';
 
 const SHA = '9e19c51865114310db5e40c6114123e1b32a6995';
 const FILE = 'packages/daemon/src/server.ts';
@@ -106,6 +106,29 @@ describe('buildHover (done-when 1)', () => {
     expect(out).not.toMatch(/\]\(command:workbench/);
     expect(out).not.toMatch(/\]\(https:\/\/evil/);
     expect(out).not.toContain('<img');
+  });
+});
+
+describe('buildHover: T39 agent intent', () => {
+  const intent: HoverAgentIntent = { file: FILE, tail: 'startWatching', startLine: 210, endLine: 212, source: 'git-ai', sessionId: 'sess-1', status: 'stale', model: 'claude-sonnet-5', prompt: 'add idle watcher' };
+
+  it('shows a source tool and session when an agent intent overlaps the touched line, flagged stale', () => {
+    const md = buildHover(check, [note], FILE, 210, [intent]) ?? '';
+    expect(md).toContain('agent intent');
+    expect(md).toContain('git-ai');
+    expect(md).toContain('sess-1');
+    expect(md).toMatch(/stale/);
+  });
+
+  it('nothing added when no agent intent overlaps the touched line', () => {
+    const outside: HoverAgentIntent = { ...intent, startLine: 500, endLine: 502 };
+    const md = buildHover(check, [note], FILE, 210, [outside]) ?? '';
+    expect(md).not.toContain('agent intent');
+  });
+
+  it('defaults to no agent-intent block when none is passed (back-compat call signature)', () => {
+    const md = buildHover(check, [note], FILE, 210) ?? '';
+    expect(md).not.toContain('agent intent');
   });
 });
 

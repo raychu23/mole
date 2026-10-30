@@ -52,6 +52,8 @@ export function anchorIntents(root: string, raw: RawIntent[]): AnchorResult {
       file: r.file,
       qualifiedName: sym.qualifiedName,
       tail: sym.tail,
+      startLine: r.startLine,
+      endLine: r.endLine,
       agent: r.agent,
       model: r.model,
       prompt: r.prompt,

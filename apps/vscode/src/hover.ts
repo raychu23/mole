@@ -18,6 +18,20 @@ export interface HoverNote {
   endLine?: number;
 }
 
+/** A T39 agent-session intent (`mole agent-intent file#Symbol --json`) placed on the current file: what an
+ * external agent-session tool (Entire, git-ai, Agent Trace) recorded, re-checked like a note. */
+export interface HoverAgentIntent {
+  file: string;
+  tail: string;
+  startLine: number;
+  endLine: number;
+  source: string; // 'entire' | 'git-ai' | 'agent-trace'
+  sessionId: string;
+  status: string; // 'fresh' | 'stale'
+  model?: string;
+  prompt?: string;
+}
+
 /** A hunk's NEW-side lines (1-based, inclusive) that get a gutter mark and a hover. */
 export interface TouchedRange {
   file: string;
@@ -45,6 +59,10 @@ const overlaps = (a: [number, number], b: [number, number]): boolean => a[0] <= 
 
 function notesOn(notes: HoverNote[], file: string, range: [number, number]): HoverNote[] {
   return notes.filter((n) => n.path === file && overlaps([n.startLine, n.endLine ?? n.startLine], range));
+}
+
+function agentIntentsOn(intents: HoverAgentIntent[], file: string, range: [number, number]): HoverAgentIntent[] {
+  return intents.filter((a) => a.file === file && overlaps([a.startLine, a.endLine], range));
 }
 
 /** The change's questions that are about this hunk: they cite one of its past fixes, one of its notes, or its base lines. */
@@ -122,14 +140,21 @@ function noteBlock(n: HoverNote): string {
   return `- ${stale ? `⚠ **${md(n.status === 'moved' ? 'moved, body changed' : n.status)}**` : md(n.status)} · ${md(tail)}: ${md(clip(n.text.split('\n')[0] ?? '', 200))}`;
 }
 
+function agentIntentBlock(a: HoverAgentIntent): string {
+  const stale = a.status === 'stale';
+  const who = [a.model, a.prompt ? `"${clip(a.prompt, 80)}"` : undefined].filter(Boolean).join(' · ');
+  return `- ${stale ? '⚠ **stale**' : 'fresh'} · ${md(a.source)} session ${md(a.sessionId)}${who ? `: ${md(who)}` : ''}`;
+}
+
 /** Hover markdown for `file:line` (1-based), or undefined when no marked hunk covers the line. */
-export function buildHover(check: CheckJson | undefined, notes: HoverNote[], file: string, line: number): string | undefined {
+export function buildHover(check: CheckJson | undefined, notes: HoverNote[], file: string, line: number, agentIntents: HoverAgentIntent[] = []): string | undefined {
   const hits = touchedRanges(check, notes, file).filter((r) => r.startLine <= line && line <= r.endLine);
   if (!check || hits.length === 0) return undefined;
   const parts: string[] = ['**Mole** · this change edits lines with history'];
   const seenSha = new Set<string>();
   const qs: Question[] = [];
   const ns: HoverNote[] = [];
+  const ai: HoverAgentIntent[] = [];
   for (const r of hits) {
     for (const f of r.hunk.pastFixes) {
       if (seenSha.has(f.sha)) continue;
@@ -139,9 +164,11 @@ export function buildHover(check: CheckJson | undefined, notes: HoverNote[], fil
     const hn = notesOn(notes, file, [r.startLine, r.endLine]);
     for (const n of hn) if (!ns.includes(n)) ns.push(n);
     for (const q of questionsOn(check, r.hunk, hn)) if (!qs.includes(q)) qs.push(q);
+    for (const a of agentIntentsOn(agentIntents, file, [r.startLine, r.endLine])) if (!ai.includes(a)) ai.push(a);
   }
   if (qs.length) parts.push(['**questions**', ...qs.slice(0, 3).map((q, i) => `${i + 1}. ${md(clip(q.text, 400))}`)].join('\n'));
   if (ns.length) parts.push(['**your notes**', ...ns.map(noteBlock)].join('\n'));
+  if (ai.length) parts.push(['**agent intent** (Entire / git-ai / Agent Trace, T39)', ...ai.map(agentIntentBlock)].join('\n'));
   return parts.join('\n\n');
 }
 
@@ -150,6 +177,7 @@ export interface TouchedDeps {
   daemonUp(): Promise<boolean>;
   check(): Promise<CheckJson>;
   notes(file: string): Promise<HoverNote[]>;
+  agentIntent?(file: string): Promise<HoverAgentIntent[]>; // T39, optional: absent sources mean no block, never an error
   log?(m: string): void;
 }
 
@@ -160,6 +188,7 @@ export interface TouchedDeps {
 export class Touched {
   private check?: CheckJson;
   private notes = new Map<string, HoverNote[]>();
+  private agentIntents = new Map<string, HoverAgentIntent[]>();
 
   constructor(private readonly deps: TouchedDeps) {}
 
@@ -171,7 +200,7 @@ export class Touched {
     }
   }
 
-  /** Reload the check (and the notes of the files it touches). Returns whether data is loaded. */
+  /** Reload the check (and the notes + agent intent of the files it touches). Returns whether data is loaded. */
   async refresh(): Promise<boolean> {
     if (!(await this.up())) {
       this.clear();
@@ -180,15 +209,24 @@ export class Touched {
     try {
       const check = await this.deps.check();
       const notes = new Map<string, HoverNote[]>();
+      const agentIntents = new Map<string, HoverAgentIntent[]>();
       for (const file of new Set(check.hunks.map((h) => h.file))) {
         try {
           notes.set(file, await this.deps.notes(file));
         } catch (e) {
           this.deps.log?.(`notes for ${file}: ${(e as Error).message}`);
         }
+        if (this.deps.agentIntent) {
+          try {
+            agentIntents.set(file, await this.deps.agentIntent(file));
+          } catch (e) {
+            this.deps.log?.(`agent intent for ${file}: ${(e as Error).message}`);
+          }
+        }
       }
       this.check = check;
       this.notes = notes;
+      this.agentIntents = agentIntents;
       return true;
     } catch (e) {
       this.deps.log?.(`mole check failed: ${(e as Error).message}`);
@@ -200,6 +238,7 @@ export class Touched {
   clear(): void {
     this.check = undefined;
     this.notes = new Map();
+    this.agentIntents = new Map();
   }
 
   /** Files the loaded check touches. */
@@ -214,7 +253,7 @@ export class Touched {
   async hover(file: string, line: number): Promise<string | undefined> {
     if (!(await this.up())) return undefined;
     try {
-      return buildHover(this.check, this.notes.get(file) ?? [], file, line);
+      return buildHover(this.check, this.notes.get(file) ?? [], file, line, this.agentIntents.get(file) ?? []);
     } catch (e) {
       this.deps.log?.(`hover: ${(e as Error).message}`);
       return undefined;
