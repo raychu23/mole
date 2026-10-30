@@ -8,4 +8,5 @@ ledger (newest last, nothing deleted)
     2026-10-29 21:32      submitted → running      changes requested: review-1 P1: R1 violated (stub-free src shipped in the red commit), P2: root tsconfig.json edited outside the stated boundary. Fixing: split into a genuinely red commit + separate implementation commit
     2026-10-29 21:33      running → submitted      report: Review-1 fix: red commit now contains only harness+keys+stub-src(throws)+failing tests (7/9 red), real implementation is a separate commit, boundary note for root tsconfig.json added to 2 insights.md · checks exi
     2026-10-29 21:33      checks ran: npm run check && node packages/bench/dist/h2h.js --check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T41-head-to-head-benchmarks → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 21:46      submitted → running      changes requested: review-2 P1: red commit bb1589d was NOT actually red (stale git index carried real impl forward past an unstaged write). Root-caused + fixed with explicit git add + grep verification before/after each 
 ```
