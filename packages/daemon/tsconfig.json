@@ -36,6 +36,9 @@
       "path": "../verify"
     },
     {
+      "path": "../coverage"
+    },
+    {
       "path": "../intake"
     }
   ]
