@@ -9,4 +9,7 @@ ledger (newest last, nothing deleted)
     2026-10-29 16:52      running → blocked      cause: round 3 (speed, Raymond 'make it work' 10-29 15:30): warm-worker + module-scope SourceFile/oldProgram cache implemented in packages/verify/src/gate/{index,typedelta}.ts (prior-art.md: tsc oldProgram reuse, warm La
     2026-10-29 17:31      blocked → ready      reclaim under lower host load (uptime ~50-92 vs round3's 190-208) to get trustworthy M17 numbers
     2026-10-29 17:32      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T25-hand-back-verify-gate · branch ledger/t25-hand-back-verify-gate · base d1b7298
+    2026-10-29 18:08      running → blocked      cause: clean-load re-verify (round4, same code as round3 commit d1b7298, merged main -> 93707ed, no code changes this round per instructions): 2 back-to-back runs under genuinely low host load (1min avg 12-76, well below
+    2026-10-29 21:13      blocked → ready      raymond 10-30 'fix the blocked'
+    2026-10-29 21:13      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T25-hand-back-verify-gate · branch ledger/t25-hand-back-verify-gate · base 93707ed
 ```

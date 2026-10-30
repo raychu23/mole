@@ -4,12 +4,12 @@ owner: mole-builder-10
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t36-spec-kit-and-adr-import
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T36-spec-kit-and-adr-import
-base: c0ba5b5
+base: ce958e9
 reviewer:
-updated: 2026-10-29 17:32
+updated: 2026-10-29 21:26
 status: ledger running
 next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
-claimed: 2026-10-29 17:32
+claimed: 2026-10-29 21:26
 ---
 ```notes
 T36-spec-kit-and-adr-import      ledger task (rules.md §3 code features)      project tasks

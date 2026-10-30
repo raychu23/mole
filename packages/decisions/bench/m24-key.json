@@ -1,0 +1,558 @@
+{
+  "metric": "M24",
+  "written": "2026-10-29T07:01:17-05:00",
+  "task": "T32-team-pr-check",
+  "targets": {
+    "precision": 0.9,
+    "recall": 0.8,
+    "owners_exact": "all",
+    "silent_exact": "all",
+    "p95_seconds": 60
+  },
+  "labeling_rule": "A record governs a PR when its ADR's decision constrains what the PR's changed lines may contain or how they are written (the decided choice, the component it chose, or the structure it mandates), judged by reading each hunk against the ADR text. Codebase-wide conventions (named exports, export structure, React.FC, MSW, Luxon, plugin package structure) count wherever the changed lines contain the construct (any added/changed `export` in a package src/ file counts for bs-adr003 + bs-adr004). Superseded/deprecated records never govern. Labels were written from the diffs and the ADR texts, never from the overlay anchors or Mole's output.",
+  "selection": "govuk-infrastructure: of the 60 newest first-parent merges (head 879ee65c), the 9 whose paths fall under an ADR subject named in the ADR texts (cluster-*, github, tfc-*) + 6 other recent ones of different kinds; backstage: 8 merges from the subject paths of the ADR texts (catalog-model kinds/entity/schema, frontend-plugin-api blueprints, the ADR log; <=10 files each, fetched with --depth 2) + 7 recent merges of different kinds from the newest 30 (head e8c4d056). Overlay records (bench/m24/<repo>/.mole) were written from the ADR texts BEFORE the PR lists were read.",
+  "owners_rule": "bench/m24_owners.py (GitHub's documented CODEOWNERS rules, CODEOWNERS read at the merge base, union over changed paths)",
+  "repos": {
+    "govuk-infrastructure": {
+      "url": "https://github.com/alphagov/govuk-infrastructure",
+      "clone": "~/.hermes/cache/scratch/t32/govuk-infrastructure",
+      "clone_cmd": "git clone --no-checkout --depth 400 --single-branch <url>",
+      "records": "packages/decisions/bench/m24/govuk-infrastructure",
+      "adr_dir": "docs/architecture/decisions",
+      "pinned_head": "879ee65c4417045dcb5b6589c07b70560f5cb161"
+    },
+    "backstage": {
+      "url": "https://github.com/backstage/backstage",
+      "clone": "~/.hermes/cache/scratch/t32/backstage",
+      "clone_cmd": "git clone --no-checkout --depth 200 --single-branch <url>; git fetch --depth 2 origin <the 8 older merge shas>",
+      "records": "packages/decisions/bench/m24/backstage",
+      "adr_dir": "docs/architecture-decisions",
+      "pinned_head": "e8c4d056e3c850a467e34eba810a3ed00d62cfe2"
+    }
+  },
+  "prs": [
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4945,
+      "title": "Merge pull request #4945 from alphagov/revoke_exec_and_task_access_in_prod",
+      "base": "ac038ef21129804620f7c8764c2fa1efbac4fa76",
+      "head": "dcf5e4b3dd0038f7adfb2420661acbd9b7726500",
+      "governs": [
+        "gi-0015"
+      ],
+      "convention": [],
+      "owners": [
+        "@alphagov/gov-uk-platform-engineering"
+      ],
+      "silent": false,
+      "why": "cluster-access developer/licensing role permissions + per-env switches: the least-privilege role set ADR 15 decides; the argo.tf RBAC lines are Argo CD policy values, not constrained by ADR 6 (Helm)"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4972,
+      "title": "Merge pull request #4972 from alphagov/bump-ebs-csi-driver-2.66.1",
+      "base": "f5829549f6601bbc5674af17f11caed4127fdb2f",
+      "head": "ac038ef21129804620f7c8764c2fa1efbac4fa76",
+      "governs": [
+        "gi-0006"
+      ],
+      "convention": [],
+      "owners": [
+        "@alphagov/gov-uk-platform-engineering"
+      ],
+      "silent": false,
+      "why": "bumps a helm_release chart version: how a cluster service package is installed (ADR 6)"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4905,
+      "title": "Merge pull request #4905 from alphagov/renovate/tfe-0.x",
+      "base": "fe6e12ee9852c1cfd4b27f131b5616eb7eafa26f",
+      "head": "f5829549f6601bbc5674af17f11caed4127fdb2f",
+      "governs": [
+        "gi-0003",
+        "gi-0014"
+      ],
+      "convention": [],
+      "owners": [
+        "@alphagov/gov-uk-platform-engineering",
+        "@alphagov/govuk-data-engineering"
+      ],
+      "silent": false,
+      "why": "tfe (Terraform Cloud) provider pins in tfc-bootstrap/tfc-configuration (ADR 14 replaces TFC) and in the cluster-services root's required providers (ADR 3 decides which providers each root has); cluster-access / other roots: no ADR"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4932,
+      "title": "Merge pull request #4932 from alphagov/renovate/aws-6.x",
+      "base": "301758b92f1994f68ce5261fb90c1bfb4cd63714",
+      "head": "5c2ba3e654cee533a209b4b3a0f6156b68f3d163",
+      "governs": [
+        "gi-0003"
+      ],
+      "convention": [],
+      "owners": [
+        "@alphagov/gov-uk-platform-engineering"
+      ],
+      "silent": false,
+      "why": "aws provider pin in the cluster-services root, which ADR 3 restricts; other roots: no ADR"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4971,
+      "title": "Merge pull request #4971 from alphagov/renovate/terraform-version",
+      "base": "e11da9e3ae1455ee12ab4101494ec6b6a9e61983",
+      "head": "eb3ff8094ecc84734b777867ac3e1fb15f300b3f",
+      "governs": [
+        "gi-0014"
+      ],
+      "convention": [],
+      "owners": [
+        "@alphagov/gov-uk-platform-engineering"
+      ],
+      "silent": false,
+      "why": "Terraform version of the TFC workspaces (tfc-configuration), the setup ADR 14 replaces"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4966,
+      "title": "Merge pull request #4966 from alphagov/remove-canary-ci-step",
+      "base": "6afad222f7d82677f79effccb7c7cff84ee23817",
+      "head": "191b85d7cea5e12d92a27c560101d36bbb0d6a5c",
+      "governs": [
+        "gi-0017"
+      ],
+      "convention": [],
+      "owners": [
+        "@alphagov/gov-uk-platform-engineering"
+      ],
+      "silent": false,
+      "why": "repository config in the GitHub deployment's repos.yml / ruleset: ADR 17 says configure repos explicitly in code/config here"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4913,
+      "title": "Merge pull request #4913 from alphagov/renovate/terraform-version",
+      "base": "3df5c3ec5f13a44135e0f89d394f42526be684aa",
+      "head": "ca9d66cb1a9729a89f344428a0a5cc481929931b",
+      "governs": [
+        "gi-0014"
+      ],
+      "convention": [],
+      "owners": [
+        "@alphagov/gov-uk-platform-engineering"
+      ],
+      "silent": false,
+      "why": "same as #4971"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4948,
+      "title": "Merge pull request #4948 from alphagov/add-sso-roles-to-eks-access",
+      "base": "b4104cecfa43930f80ef58532ac053f6e60f3677",
+      "head": "3df5c3ec5f13a44135e0f89d394f42526be684aa",
+      "governs": [
+        "gi-0015"
+      ],
+      "convention": [],
+      "owners": [
+        "@alphagov/gov-uk-platform-engineering"
+      ],
+      "silent": false,
+      "why": "adds SSO roles to EKS access incl. the readonly module: ADR 15"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4941,
+      "title": "Merge pull request #4941 from alphagov/remove-ci-test-from-synthetic-repo",
+      "base": "c5dded8f8e6400ea736c174b53acc3961e0c5f9e",
+      "head": "4558c4e3c76bf92efb9302f1097882f6d6e76c8a",
+      "governs": [
+        "gi-0017"
+      ],
+      "convention": [],
+      "owners": [
+        "@alphagov/gov-uk-platform-engineering"
+      ],
+      "silent": false,
+      "why": "repos.yml status checks: ADR 17"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4991,
+      "title": "Merge pull request #4991 from alphagov/cr-123-mk2-set-replication-on-integration-for-content-data",
+      "base": "2df213adc82779ea06815e8032b4d6212ec38830",
+      "head": "879ee65c4417045dcb5b6589c07b70560f5cb161",
+      "governs": [],
+      "convention": [],
+      "owners": [],
+      "silent": true,
+      "why": "RDS parameters in integration tfvars: no ADR"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4979,
+      "title": "Merge pull request #4979 from alphagov/remove-search-analytics-from-sentry",
+      "base": "1157a348f4b22ac5ee58331c379bd85d7d6f948f",
+      "head": "1f971df4ff857126a992fb5599f83a8ab0b1a30a",
+      "governs": [],
+      "convention": [],
+      "owners": [
+        "@alphagov/gov-uk-platform-engineering"
+      ],
+      "silent": true,
+      "why": "Sentry project list: no ADR"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4977,
+      "title": "Merge pull request #4977 from alphagov/brotli",
+      "base": "66d06072628d53d2c1969aadda9e18ec8a6e63a5",
+      "head": "f319dd20531ed1cd522480b44a28650996c935b9",
+      "governs": [],
+      "convention": [],
+      "owners": [
+        "@alphagov/gov-uk-platform-engineering"
+      ],
+      "silent": true,
+      "why": "WAF rules in publishing infrastructure: no ADR"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4901,
+      "title": "Merge pull request #4901 from alphagov/renovate/github-codeql-action-4.x",
+      "base": "eb3ff8094ecc84734b777867ac3e1fb15f300b3f",
+      "head": "301758b92f1994f68ce5261fb90c1bfb4cd63714",
+      "governs": [],
+      "convention": [],
+      "owners": [
+        "@alphagov/gov-uk-platform-engineering"
+      ],
+      "silent": true,
+      "why": "codeql action pins in workflows: no ADR (ADR 18/19 are about Concourse deploy pipelines, not these checks)"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4953,
+      "title": "Merge pull request #4953 from alphagov/enforce-CODEOWNER-for-production-tfvars",
+      "base": "e9bee1a1cf646b3e0acd048878438b2397f975a5",
+      "head": "db7a2ff9dac8e6d7451592fb0f43ef4549fd9246",
+      "governs": [],
+      "convention": [],
+      "owners": [
+        "@alphagov/gov-uk-platform-engineering"
+      ],
+      "silent": true,
+      "why": "CODEOWNERS line: no ADR"
+    },
+    {
+      "repo": "govuk-infrastructure",
+      "pr": 4943,
+      "title": "Merge pull request #4943 from alphagov/update-readme",
+      "base": "41b53b3da62e949cdbd7b5ba1597d9dbcfc0f60d",
+      "head": "30c61ba239b864f34f0f14dabc14f44a7c883250",
+      "governs": [],
+      "convention": [],
+      "owners": [],
+      "silent": true,
+      "why": "README whitespace: no ADR"
+    },
+    {
+      "repo": "backstage",
+      "pr": 34892,
+      "title": "Merge pull request #34892 from nickwtan/nickt/airesource-marketplace-spec-type",
+      "base": "224a70b8866c3f5e939079acc6f46b5137ef7991",
+      "head": "4435ff8eefc51082a8f02249ee6770f5dd120bca",
+      "governs": [
+        "bs-adr002",
+        "bs-adr003",
+        "bs-adr004",
+        "bs-adr005",
+        "bs-adr009"
+      ],
+      "convention": [
+        "bs-adr003",
+        "bs-adr004"
+      ],
+      "owners": [
+        "@backstage/catalog-maintainers"
+      ],
+      "silent": false,
+      "why": "new AiResource marketplace spec type: kind (ADR 5), descriptor schema + example YAML (ADR 2), entity refs in the example (ADR 9), new named exports in alpha.ts (ADR 3, 4)"
+    },
+    {
+      "repo": "backstage",
+      "pr": 35205,
+      "title": "Merge pull request #35205 from backstage/freben/fix-catalog-model-relation-pairs",
+      "base": "82c032b839e3d02885431a5ccf3a32620565d427",
+      "head": "1747897bfa697c3d9510815c79ca8aaae8ec72ec",
+      "governs": [
+        "bs-adr005"
+      ],
+      "convention": [],
+      "owners": [
+        "@backstage/catalog-maintainers",
+        "@backstage/maintainers"
+      ],
+      "silent": false,
+      "why": "relation kind pairs of the AiResource kind and the catalog model compiler: core entities and their relations (ADR 5)"
+    },
+    {
+      "repo": "backstage",
+      "pr": 33441,
+      "title": "Merge pull request #33441 from backstage/rugvip/remove-plugin-header-action-define-params",
+      "base": "78457904ee1eceec147f106aaefb1b7764044db8",
+      "head": "d39c2dcce355cb8b362cf4c31b87be2243ca4d19",
+      "governs": [
+        "bs-adr015"
+      ],
+      "convention": [],
+      "owners": [
+        "@backstage/framework-maintainers",
+        "@backstage/maintainers"
+      ],
+      "silent": false,
+      "why": "PluginHeaderActionBlueprint params become `loader: () => Promise<JSX.Element>`: element/component option naming (ADR 15)"
+    },
+    {
+      "repo": "backstage",
+      "pr": 33175,
+      "title": "Merge pull request #33175 from backstage/rugvip/rename-page-tab-to-page-layout-tab",
+      "base": "85076dfb2c9c992a5c40a8f7fa7b7ca4470629f9",
+      "head": "07a26a907e49bcb0a4847ef5a0033e545173c45d",
+      "governs": [
+        "bs-adr003",
+        "bs-adr004"
+      ],
+      "convention": [
+        "bs-adr003",
+        "bs-adr004"
+      ],
+      "owners": [
+        "@backstage/framework-maintainers"
+      ],
+      "silent": false,
+      "why": "renames an exported type and its index.ts re-export (ADR 3 named exports, ADR 4 export structure); the PageBlueprint lines only use the renamed type"
+    },
+    {
+      "repo": "backstage",
+      "pr": 33142,
+      "title": "Merge pull request #33142 from backstage/rugvip/deprecate-nav-item-blueprint",
+      "base": "1408dfc6ca4aeabc22ce09c218c91a4e678b3037",
+      "head": "f41cd2478e6cb25e71ca53b4a32394fb2d19b213",
+      "governs": [],
+      "convention": [],
+      "owners": [
+        "@backstage/framework-maintainers"
+      ],
+      "silent": true,
+      "why": "a @deprecated doc comment on NavItemBlueprint: no ADR constrains it"
+    },
+    {
+      "repo": "backstage",
+      "pr": 33139,
+      "title": "Merge pull request #33139 from backstage/rugvip/move-analytics-blueprint-to-app-react",
+      "base": "9b8d43069ddfad55479eb7465c28ff32e08057a9",
+      "head": "9989e9f98dffcbe8d3401528db23f6d0e7d3e181",
+      "governs": [
+        "bs-adr003",
+        "bs-adr004",
+        "bs-adr011"
+      ],
+      "convention": [
+        "bs-adr003",
+        "bs-adr004",
+        "bs-adr011"
+      ],
+      "owners": [
+        "@backstage/framework-maintainers",
+        "@backstage/maintainers"
+      ],
+      "silent": false,
+      "why": "moves a blueprint into plugins/app-react (ADR 11 package structure) with new named exports + blueprints/index.ts re-export (ADR 3, 4)"
+    },
+    {
+      "repo": "backstage",
+      "pr": 32593,
+      "title": "Merge pull request #32593 from chanchalkhatri19/docs/update-react-docs-links",
+      "base": "3ccea26849423e8f372dec6060417f08f3e401fc",
+      "head": "765177a14a818026bb3382ca283b220295d90a14",
+      "governs": [
+        "bs-adr001"
+      ],
+      "convention": [],
+      "owners": [
+        "@backstage/documentation-maintainers",
+        "@backstage/maintainers"
+      ],
+      "silent": false,
+      "why": "edits an ADR file in the ADR log (ADR 1)"
+    },
+    {
+      "repo": "backstage",
+      "pr": 32618,
+      "title": "Merge pull request #32618 from backstage/rugvip/extension-snapshot-testing",
+      "base": "a5e536d8993dd7bb7d98f9a1822439031d5225f4",
+      "head": "a4d90b220098a7ec8060a87ae457315422dd471d",
+      "governs": [
+        "bs-adr003",
+        "bs-adr004"
+      ],
+      "convention": [
+        "bs-adr003",
+        "bs-adr004"
+      ],
+      "owners": [
+        "@backstage/documentation-maintainers",
+        "@backstage/framework-maintainers",
+        "@backstage/maintainers"
+      ],
+      "silent": false,
+      "why": "new exported interface/function + app/index.ts re-export in frontend-test-utils (ADR 3, 4); PageBlueprint.test.tsx only tests, no option naming"
+    },
+    {
+      "repo": "backstage",
+      "pr": 36333,
+      "title": "Merge pull request #36333 from dyatko/fix/frontend-test-utils-app-errors",
+      "base": "e5ae5c7cd999c2d586ae12183077d5a3ce1a5116",
+      "head": "e8c4d056e3c850a467e34eba810a3ed00d62cfe2",
+      "governs": [
+        "bs-adr003",
+        "bs-adr004"
+      ],
+      "convention": [
+        "bs-adr003",
+        "bs-adr004"
+      ],
+      "owners": [
+        "@backstage/framework-maintainers"
+      ],
+      "silent": false,
+      "why": "new exported throwOnAppErrors in frontend-test-utils (ADR 3, 4)"
+    },
+    {
+      "repo": "backstage",
+      "pr": 36254,
+      "title": "Merge pull request #36254 from acierto/docs/scaffolder-api-tags",
+      "base": "8921828a7286a6e2f6907d35a2d9d2e222198960",
+      "head": "e5ae5c7cd999c2d586ae12183077d5a3ce1a5116",
+      "governs": [],
+      "convention": [],
+      "owners": [
+        "@backstage/maintainers"
+      ],
+      "silent": true,
+      "why": "OpenAPI tags + generated router: no ADR"
+    },
+    {
+      "repo": "backstage",
+      "pr": 36216,
+      "title": "Merge pull request #36216 from bhargavikvmpl-2001/techdocs-toc-alignment",
+      "base": "70265641c96de5ad05b781ce062318d5df4eef32",
+      "head": "2f9abb647aca5260ee55de68fd5164cba4db9fcf",
+      "governs": [
+        "bs-adr003",
+        "bs-adr004"
+      ],
+      "convention": [
+        "bs-adr003",
+        "bs-adr004"
+      ],
+      "owners": [
+        "@backstage/techdocs-maintainers"
+      ],
+      "silent": false,
+      "why": "new `export const getSecondarySidebarRightOffset` (ADR 3, 4)"
+    },
+    {
+      "repo": "backstage",
+      "pr": 36475,
+      "title": "Merge pull request #36475 from backstage/freben/techdocs-azure-gcs-release-streams",
+      "base": "59b2b74a476a0f2fb68d73ac7942057a9455a966",
+      "head": "10d6bed37e606f5e32954f1940f87ca8acf282f0",
+      "governs": [],
+      "convention": [],
+      "owners": [
+        "@backstage/maintainers"
+      ],
+      "silent": true,
+      "why": "stream cleanup in techdocs-node publishers: no ADR"
+    },
+    {
+      "repo": "backstage",
+      "pr": 36472,
+      "title": "Merge pull request #36472 from ebarault/fix/scaffolder-completed-task-controls",
+      "base": "3fe82f62ad384de2b9b2383db8599294d2eb454f",
+      "head": "59b2b74a476a0f2fb68d73ac7942057a9455a966",
+      "governs": [],
+      "convention": [],
+      "owners": [
+        "@backstage/maintainers",
+        "@backstage/scaffolder-maintainers"
+      ],
+      "silent": true,
+      "why": "button bar visibility in OngoingTask: no ADR"
+    },
+    {
+      "repo": "backstage",
+      "pr": 36489,
+      "title": "Merge pull request #36489 from backstage/rugvip/fix-docs-ci",
+      "base": "156c4c8e3e912ffb431479d5ca4d0fc6fe711467",
+      "head": "36403a4d3c99f93b681687bd04a50abee38ff054",
+      "governs": [],
+      "convention": [],
+      "owners": [
+        "@backstage/operations-maintainers"
+      ],
+      "silent": true,
+      "why": "runner pins in two workflows: no ADR"
+    },
+    {
+      "repo": "backstage",
+      "pr": 36501,
+      "title": "Merge pull request #36501 from backstage/dependabot/npm_and_yarn/qs-6.16.1",
+      "base": "276ae388739eaed574ec93feb5d546fe9bddd711",
+      "head": "9f8dce43dd27acd019f79d9829e315daf182ba45",
+      "governs": [],
+      "convention": [],
+      "owners": [
+        "@backstage-service",
+        "@backstage/maintainers"
+      ],
+      "silent": true,
+      "why": "yarn.lock bump: no ADR"
+    }
+  ],
+  "dogfood": {
+    "about": "Mole's own builder tasks as the team: each task's merge into main (T11-T21) + T29 (this branch's base); records = the worktree's .mole; reported share of tasks whose diff surfaces >= 1 governing Mole decision (a measured number, no target)",
+    "merges": {
+      "T11": "c45a8c8f3c120e1c942c9c836f768bd7bbd8eff3",
+      "T12": "7b47c51c1db11e396a9ed7d155f77006d48af163",
+      "T13": "094e8770934fef20172c0992ba8f3c9a867d6b98",
+      "T14": "4e0e9de89a6a55996d5b254949b3aac57a7672a1",
+      "T18": "3a3fce76acc3b5570dea971e80bb32b987edd6b3",
+      "T20": "b2e2851ab43ce05c8d262024bbe3da46f7a8f4e6",
+      "T16": "6463b51a7536ae5e8963c54fb9690da943433100",
+      "T15": "79520b5d3eb13511d4d1c6e579cccd35484b6638",
+      "T21": "2e92a98188224d3c0b24ac278e5028702a0d5d66",
+      "T17": "bfd34fa99c6e570277f9ec7f45dcfcec83e82cf5"
+    },
+    "branches": {
+      "T29": {
+        "base": "491dd7e",
+        "head": "fb240ab"
+      }
+    }
+  },
+  "failure_case": {
+    "about": "scripted temp repo: record r-old scoped to lib/old.ts, r-keep scoped to src/a.ts#foo; the PR renames lib/old.ts -> lib/new.ts with an edit and does not touch foo",
+    "expect": {
+      "governs": [],
+      "unanchored": [
+        "r-old"
+      ],
+      "flag": "grey",
+      "silent": false
+    }
+  }
+}

@@ -11,4 +11,8 @@ ledger (newest last, nothing deleted)
     2026-10-29 15:46      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T32-team-pr-check · branch ledger/t32-team-pr-check · base dbfdc52
     2026-10-29 17:27      running → submitted      report: Options round 3 (options 4/5/6): export-declaration AST detector, comment/test-path noise filter, Terraform bare-block title gate (file-scoped). Frozen key/overlay untouched. M24 bar now PASSES. · checks exit 0 ·
     2026-10-29 17:27      checks ran: npm run check && node packages/decisions/dist/bench/m24.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T32-team-pr-check → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 18:26      submitted → verified      reviewer fresh-review-a14-r1 · findings: 0 P0. 1 P1 found and fixed by me this round (disclosed, 1 commit 77b31a1): .github/actions/mole-check/action.yml built with 'npx tsc -b packages/daemon', which fails on a genuine 
+    2026-10-29 18:26      checks ran: npm run check && node packages/decisions/dist/bench/m24.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T32-team-pr-check → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 18:33      verified → integrated      merge cc3f521 · combined checks exit 0 · note: npm run check on main (merge cc3f521) = exit 0, 58 files / 455 tests green. node packages/decisions/dist/bench/m24.js on main = M24 PASS: precision 0.93, recall 0.93, owners
+    2026-10-29 18:33      combined checks ran: npm run check && node packages/decisions/dist/bench/m24.js in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
