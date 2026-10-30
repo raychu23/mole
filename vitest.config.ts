@@ -1,3 +1,4 @@
+import os from 'node:os';
 import { defineConfig } from 'vitest/config';
 
 // Root-level vitest config (none existed before). Needed because `npm run check`
@@ -11,6 +12,26 @@ import { defineConfig } from 'vitest/config';
 // touch any package's own `src`/`test` directories or skip any real test.
 export default defineConfig({
   test: {
+    // Shared-machine load mitigation (Raymond 10-30 "fix the blocked"): several builder
+    // tasks (T23/T36/T37) met their own metric gates but got blocked by `npm run check`
+    // failing on UNRELATED tests ("Test timed out in 5000ms", vitest-worker onTaskUpdate
+    // timeout) under heavy host load from concurrent parallel builders, not from any real
+    // test bug. Vitest's own docs: testTimeout defaults to 5_000ms, hookTimeout to 10_000ms
+    // (https://vitest.dev/config/testtimeout, https://vitest.dev/config/hooktimeout) — both
+    // are wall-clock budgets, not acceptance criteria, so raising them under contention is
+    // sound per metric-gated-build-loop skill R2 ("a test's wall-clock budget is not an
+    // acceptance criterion unless the contract names a speed"). Default pool is `forks`
+    // (https://vitest.dev/config/pool, https://vitest.dev/config/poolOptions); capping
+    // maxForks to half the CPU count reduces contention between concurrently-scheduled
+    // worker processes competing for the same cores (https://v3.vitest.dev/guide/cli —
+    // poolOptions.forks.maxForks).
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
+    poolOptions: {
+      forks: {
+        maxForks: Math.max(1, Math.floor(os.cpus().length / 2)),
+      },
+    },
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
