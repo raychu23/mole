@@ -1,0 +1,122 @@
+[
+ {
+  "id": "rec-start",
+  "file": "context/0 start.md",
+  "folder": "context",
+  "excerpt": "```notes mole visual codebase guidance + grounded, changing project knowledge updated 2026-10-30 00:45 \u00b7 FULL BUILD WRAP-UP (a15) done: fresh npm run check 468/482 pass (62/69 files) on main \u00b7 vsix 0.3.0 installed (raychu23.mole-code-map@0.3.0) \u00b7 claude plugin validated, MCP smoke-tested over stdio (7 tools) \u00b7 T33 team server + T38 bitemporal graph + T32 PR check (0.93/0.93, cleared its bar) all integrated on main \u00b7 T25 gate blocked (85% agree vs 90%, 20.5s vs 20s) \u00b7 T35 coverage blocked (recall 0.427, agentstate boundary needs your OK) \u00b7 T36/T23/T37 metrics all MET but stuck at a shared-machine check-gate flake, needs a quiet retry \u00b7 full report: product-plan/systems/full-build/report.md \u00b7 product-plan/0 Try Mole.txt rewritten to the real current state \u00b7 RESUME v6 23:30 (D44 + D47 USER): sellable = knowledge on the code, kept true by the code; human side = design reviews + meetings \u2192 de"
+ },
+ {
+  "id": "rec-offering",
+  "file": "context/product-plan/Product offering.html",
+  "folder": "context/product-plan",
+  "excerpt": "Product offering offer unique + value today + tools the product metrics levels + build sources \u2190 start here: all planning pages + every open decision Mole product offering: who uses it, what they use now, what Mole adds, how we measure it, how we build it ASSISTANT plan built on your notes, your Claude chat and the earlier pages \u00b7 INFERENCE unless a source is cited \u00b7 nothing changes in the plan until you tick a decision \u00b7 checked 2026-10-27 \u00b7 data systems/offering/offering.json \u00b7 beside Iteration 3.html + Edge cases idea.html What you'll actually experience your ask: 'so again explain briefly what are the acutal product offerings user experiences they will have' when you\u2026 you see status role (PROPOSED) open any file if you've been here before, what changed since you last looked comes first, highlighted on the picture (your 10-28 example) \u00b7 then the picture: half your screen, beside your "
+ },
+ {
+  "id": "rec-sequence",
+  "file": "context/product-plan/Sequence.html",
+  "folder": "context/product-plan",
+  "excerpt": "Sequence: customer \u2192 problem \u2192 options today \u2192 Mole \u2192 proof Status: PROPOSED offerings for Raymond's review; built on USER decisions (context/1 takeaways \u00a78, \u00a711) and plan v3 (systems/plan.json) 1 Customer and their workflow C1 \u00b7 junior / new contributor gets a ticket in an unfamiliar repo reads README (often stale or missing diagrams) greps, jumps to definition, opens file after file asks an AI chat 'explain this' or pastes into Claude asks a senior when stuck makes the change, hopes nothing else breaks PR review sends it back for design reasons they couldn't see Issues they hit: I1 no picture of where the current file sits or what it touches \u00b7 I2 diagrams and docs are missing, scattered or stale \u00b7 I3 AI explanations are ungrounded, regenerated each time, and forget \u00b7 I4 fear of breaking unseen callers (impact unknown) \u00b7 I5 time lost searching and interrupting seniors C2 \u00b7 developer dri"
+ },
+ {
+  "id": "rec-handoff",
+  "file": "tasks/HANDOFF.md",
+  "folder": "tasks",
+  "excerpt": "# Start building Mole in a new chat ## Full build (2026-10-29 15:45): 4 builders on Sonnet, watched, then a wrap-up Raymond, 10-29 15:30 (verbatim: `context/product-plan/systems/full-build/ask 2026-10-29 1530.txt`): build the full system on established open-source / big-company / startup designs; everything in the VS Code panel, not the terminal; the plugin aligned with the decisions vision; which agents cover which files (blast radius, weak spots); graph relations + MLOps infra; make the blocked tasks work. D34 amended, D39 USER, D38 OPEN (T23 built the interrogate way, valid under either answer). | agent | owner | queue | |---|---|---| | a11 | mole-builder-7 | T34 one panel \u2192 T30 file tree (D39) \u2192 package + install | | a12 | mole-builder-8 | T35 agent coverage \u2192 T37 plugin serves the decisions \u2192 T23 interrogate | | a13 | mole-builder-9 | T33 team server | | a14 | mole-builder-10 | T25 "
+ },
+ {
+  "id": "rec-agentops",
+  "file": "context/product-plan/Agent-ops idea.html",
+  "folder": "context/product-plan",
+  "excerpt": "Agent-ops for junior devs: does it change Mole? Status: PROPOSED evaluation for Raymond; changes no accepted decision; existing pages untouched Your idea: fundamentals of MLOps as a tool for junior devs doing their projects, so they fully use and benefit from agentic development \u00b7 Instinct/OpenClaw-style: easy, no overthinking setup \u00b7 agent mgmt, memory, context, efficiency, tokens \u00b7 built automatically for any project or repo \u00b7 VS Code extension or another tool Read as: a 4th customer, C4: a junior building their OWN agent app (LangGraph, CrewAI, OpenAI Agents SDK, Mastra\u2026), who can't stand up the observability, cost control and memory stacks big companies run 1 Short answer Meaningful: yes, the pain is real and documented \u2014 runaway loops and surprise bills ($32-$600 on HN, crewAI #6414 'thousands of dollars'), and 'I had no idea why it failed at step 4'. As its own product (the chat's "
+ },
+ {
+  "id": "rec-iteration3",
+  "file": "context/product-plan/Iteration 3.html",
+  "folder": "context/product-plan",
+  "excerpt": "Iteration 3 talk what's new sources coverage \u2190 start here: all planning pages + every open decision Your latest Mole ideas, organized as a talk Copy of 1 Notes/3project/3C1 - mole.txt pinned 2026-10-29 10:26 \u00b7 534 text lines in your file, 531 kept as typed (line 339 minus its repeated last sentence) \u00b7 removed: 1 repeated link, 2 empty bullets, 1 repeated sentence \u00b7 headings + [brackets] = agent, everything else = your words \u00b7 same text as Iteration 3 notes.txt beside this page The story in plain words (agent read) agents now write code faster than anyone can read it, so the scarce thing is no longer doing, it is knowing what is going on: half your ai time already goes there teams feel it most: the shared picture gets rebuilt in 1-1s and meetings (anthropic: +20% meeting time in a year) because docs are searchable but nobody holds 1 current picture the usual fixes fail: chat explanations "
+ },
+ {
+  "id": "rec-whattobuild",
+  "file": "context/product-plan/What to build.html",
+  "folder": "context/product-plan",
+  "excerpt": "What to build your issues \u2192 Mole states + prototype the plan slice 1, exactly interviews: strong? how it maps sources \u2190 start here: all planning pages + every open decision Your issues \u2192 how Mole builds them in you said: i dont think you understrood waht i just said to you. i gave all that about like ui or whatever as a way to show how my persona understadning of individuall software developer issues help make me stand out and build good product. so pls go reference my descriotions of issues and stuff to see how that can be buiilt into product My restatement: the 'what's new since I last looked' example wasn't a feature request. It showed how you think. Tools hand people a big system ('they might do version control syst bunch of stuff'); you notice the one thing a developer actually cares about in that moment and make that clear. Applied to every problem in your notes, that eye is what m"
+ },
+ {
+  "id": "rec-starttofinish",
+  "file": "context/product-plan/1 Mole start to finish.md",
+  "folder": "context/product-plan",
+  "excerpt": "# 1 Mole, start to finish Version 4, 10-28 late night: back to your focus (understand, observe, verify; personal memory; team understanding). Change is the input, and PR review is used, not built (\"Your focus\", just below the short version). Version 3 checked your Claude chat idea by idea (section 0) and built the parts that held up into the plan: **Throughline, 10-29:** since this page was written, the center moved to the decisions behind the code, on the file tree (your D31, `2 Decision graph.md`). Understand, observe and verify stay the goal, as below. 'Comprehension debt' is background here, not the pitch (D40). The one-page path through everything is `0 Mole throughline.txt`. - who the user is and the exact moment Mole helps (section 2); - how Google, Amazon and Uber handle design review, and what Mole copies from them (section 6); - the hole-poker (L3, section 7); - the design mode"
+ },
+ {
+  "id": "rec-verticalai",
+  "file": "context/product-plan/Vertical AI chat, checked.html",
+  "folder": "context/product-plan",
+  "excerpt": "\u2190 start here: all planning pages + every open decision \u00b7 Mole, start to finish \u00b7 source: Vertical AI chat, checked.md + systems/vertical-ai/ The vertical-AI chat, checked Your ask, 10-29 06:15: \"does this info add anything useful to you or no. also cirtically understand and expand or further build on it with deep proper research and exiintng core understanieding\". The paste is saved at systems/vertical-ai/pasted chat 2026-10-29 0615.txt . Every line I quote from it is checked against that file. The short version Mostly no. About two-thirds of it restates what Mole already decided: a graph built from the code, decisions attached to that code, deterministic checks before any model, a model that only reads measured results, and agent state kept as LangGraph-style checkpoints. Six claims are wrong or invented (section 2). The SpaceX \"100,000 nozzle designs\" line has no source. \"Instructor\" d"
+ },
+ {
+  "id": "rec-secondopin",
+  "file": "context/product-plan/Second opinions.html",
+  "folder": "context/product-plan",
+  "excerpt": "Second opinions answer claims checked your issues vs its reading its survivors integrate, don't rebuild talk to devs sources \u2190 start here: all planning pages + every open decision Second opinions, checked 10-28 \u00b7 the other agent's two answers (your paste, 11:19) checked line by line against your 3C1 notes, your accepted calls and 35 sources fetched today \u00b7 its points are ASSISTANT proposals; mine are INFERENCE unless a source is cited \u00b7 data systems/offering/opinions.json \u00b7 the first paste (03:16) was checked on Product offering.html \u2192 unique + value tab \u2192 'Second opinion, checked' (9 agree \u00b7 2 partly \u00b7 2 disagree) In short Your call (10-28) changes how to read this page: other tools doing it is fine (they're feature sources, integrations and proof the direction is right) unless they're universal systems like git; ideas are judged by whether they solve your 3C1 problems clearly. So 'alre"
+ },
+ {
+  "id": "rec-workflow",
+  "file": "context/product-plan/3 Agentic workflow + integrations.md",
+  "folder": "context/product-plan",
+  "excerpt": "# 3 Agentic workflow + integrations What this page answers, from your message on 10-28 (full text in `1 takeaways.md`): 1. \"what about the stuff thats supposed to live in the agent harness itself as opposed to the ide what are they\" 2. \"list out all these integratinos and how they come in take up diff parts of a full agentic development workflow for a real working software developer\" 3. \"imagine opporutnites I could make for building again my full big tech like system desing system or integratins into harness claude code plugins\" 4. \"list out tools exisitng the ones that are plugged in or have good ideas i should try, and then maybe soin up a new chat in thsi project to load those tools and test out their utility\" Everything here was checked on 10-28, against the vendors' own docs and against your Mac (A0). The tables come from `systems/workflow/workflow.json`; the raw research is in `sy"
+ },
+ {
+  "id": "rec-resume",
+  "file": "context/product-plan/4 Resume + interview.md",
+  "folder": "context/product-plan",
+  "excerpt": "# 4 Resume + interview: the resume is the plan Version 6, 10-29 23:30: bullet 1 now also carries design reviews, meetings and the file-tree diagram, and an optional 4th bullet covers mentorship (your 23:10 ask, D47; research on `Design reviews + mentorship.md`). Version 5, 10-29 ~23:00. Your ask (22:50, full text `systems/resume/ask 2026-10-29 2250.txt`): \"did you actually read the twitter article link \u2026 my unique stuff being anchored to the code and all the niches associated\" \u00b7 \"observe agents in work relevant info we care about \u2026 give the user [ability] to steer agents \u2026 map oiut the logs from chats or like unite w ecisitng memory systems\" \u00b7 \"it needs to be veryc learly a qunieu thing that I can actually seell as aproduct not some worsre version of already exist stuff\". Earlier: 22:08 (temporal graph, Postgres), 20:55 (the team's why, Amazon), 01:00 (the resume is the plan). Old versio"
+ },
+ {
+  "id": "rec-fullsystem",
+  "file": "context/product-plan/Mole full system.md",
+  "folder": "context/product-plan",
+  "excerpt": "# Mole, the full system Your ask, 10-29: \"i wanted to go far beyond that into proper systems or dev support tools\", \"full enterprise-grade both that ui user feats and some backend tools and opportunites for more\", \"are we doing the compiler-in-the-loop stuff\", \"i need to knwo exactly full system the end user like a junior dev or senior dev is situated in\", for \"not comeplet beginers but junior devs for underst intutively, observe, verify\", and \"ideally they should liev inide or close that big pci understanding\". Last turn I only checked the pasted chat. This page covers the whole system. The research is in `systems/full-system/research/`, plus the earlier research folders it reuses. ## The short version - **Mole in one line:** the big picture of your codebase that stays true while agents change it. It shows what each part is for, what broke there before, what *you* have understood, and w"
+ },
+ {
+  "id": "rec-teammode",
+  "file": "context/product-plan/Team mode.html",
+  "folder": "context/product-plan",
+  "excerpt": "\u2190 start here: all planning pages + every open decision \u00b7 Decision graph \u00b7 Mole, the full system \u00b7 source: Team mode.md + systems/team/ Mole for a team: a GitHub repo, a few junior devs, then a whole company You asked: \"also how abt the team integratn part doign this knowledge agents stuff w a github and few diff membs of junior devs working in proj lets say or even bigger\", then \"there has to be exisitng syst that does that right\", and \"wat it take us to build that as plan taking inspo from larger companie systems, learning about useful ideas for nitevrviews or proper system design or desirable tools\". This page answers all four: what exists, how big companies do it, what building it takes in 3 phases, and the system design in the form interviews ask for. It builds on 2 Decision graph.md (D31): the decisions behind the code, shown on the file tree. A team adds people to that picture. The"
+ },
+ {
+  "id": "rec-compared",
+  "file": "context/product-plan/Mole compared.html",
+  "folder": "context/product-plan",
+  "excerpt": "\u2190 start here: all planning pages + every open decision \u00b7 2 Decision graph \u00b7 Team mode \u00b7 Tool trials \u00b7 source: Mole compared.md + systems/compare/ Mole compared: who else keeps the \"why\", what people say about them, and what Mole takes Your ask (10-29): \"systematic comparisons of our system \u2026 with existing offerings out there i know are great products or people trust \u2026 i like the way they describe problem analyze other gofferings, coming from other tool, and their unique contributions \u2026 fully undesrtand them from human testimony and. blogs \u2026 only include if necessary helpful\". This page follows ai-memory's own comparison pages (S1, S2): the problem against what you already have, how it works, the camps, coming from another tool, what the field independently agrees on, what Mole borrows, and where Mole is behind. 37 offerings were read closely in 4 camps, and 29 more were dropped because t"
+ },
+ {
+  "id": "rec-throughline",
+  "file": "context/product-plan/0 Mole throughline.txt",
+  "folder": "context/product-plan",
+  "excerpt": "core mole throughline: the base ideas in order, for a meeting w swes your own words in '' w their 3C1 line {N} goal understand \u00b7 observe \u00b7 verify, for junior devs working w agents \u2192 goal where a layer inside the tools you already use, not a new harness \u2192 harness vs ide approach the decisions behind the code, on the file tree, checked by code \u00b7 the code graph is the frame, decisions are the content \u2192 codegraphs + my new approach how zero-LLM core, built as loops w frozen metrics, most of it measured \u2192 how im doing it parts each surface (view, tree, plugin, coverage, server) is a window on the decisions \u2192 every part meeting 7 questions to get fresh takes \u2192 questions for swes new 10-29 + every part serves the decisions (full build 15:50) throughline your 6 headings, in order goal: underst + observe + verify one line 'personal memory of codebase in human-terms not code' {636} prob 'perpetual"
+ },
+ {
+  "id": "rec-docsdrift",
+  "file": "context/product-plan/systems/docs-drift/0 notes.md",
+  "folder": "context/product-plan/systems/docs-drift",
+  "excerpt": "```notes docs drift + upkeep infra 2026-10-29 10:20 \u00b7 asked by Raymond (2 X screenshots, verbatim: \"does this info help at all especialy stuff about the docs drifting and careful infrasturcutre to maintain it propelry to human standards. also read the articles if you can find.\") read (saved in research/) Rosen, \"AI-Powered Wikis Revisited\" (X article, 10-29, via api.fxtwitter.com) \u00b7 Foster/Mintlify, \"Self-updating external docs is an infinite market\" (10-25) \u00b7 Mintlify Autopilot (10-28) \u00b7 Karpathy LLM Wiki gist \u00b7 Google OKF v0.2 trust signals \u00b7 Slite self-maintaining KB guide \u00b7 Swimm Auto-sync thread kartik: \"the risk is those docs drifting from their sources without anyone noticing. stamping each doc with the source version it came from at least lets the agent tell when it's reading stale notes\" \u00b7 Rosen: \"you need the right infrastructure to keep them reliably up to date\" short answer y"
+ },
+ {
+  "id": "rec-mywords",
+  "file": "context/product-plan/4 log/my words.md",
+  "folder": "context/product-plan/4 log",
+  "excerpt": "# mole product plan \u00b7 my words > **core** 63 msgs \u00b7 3 belief \u00b7 2 note \u00b7 15 pref / fix \u00b7 26 ask \u00b7 7 decision \u00b7 10 check \u00b7 2026-10-15 \u2192 2026-10-29 \u00b7 most important top \u00b7 click \u25b8 for the full msg \u00b7 pasted chunks = pointer only > source: `null` + hermes `20261015_064949_38dbe5` \u00b7 every msg raymond typed, verbatim, no agent text | cat | # | when | key | full msg | |---|---|---|---|---| | belief | 3 | 10-15 12:27 | **real USP: distribution/display, 2 ways of looking at a codebase** | <details><summary>\u25b8</summary>nonono. i think we have sizabl unique selling pt opportunity<br>first distribution/mode of display<br>I dont think they&#x27;re doing things right in codebase<br>centric 2 way of looking at a codebase pros &amp; cons<br>ideally<br>agents divide codebase so that no parts left behind so within agents: code + diags<br>reality<br>codebase create agents so that no parts code left behind gen"
+ },
+ {
+  "id": "rec-trymole",
+  "file": "context/product-plan/0 Try Mole.txt",
+  "folder": "context/product-plan",
+  "excerpt": "core try mole yourself: what's built, where it runs, how to test each piece \u00b7 checked 10-29 23:50 (a15 wrap-up, fresh) state 29 tasks in the build loop: 22 integrated, 5 blocked (T25 T35 T36 T23 T37), 1 proposed (T39) \u00b7 fresh npm run check: 468/482 pass (62/69 files), exit 0 headline everything lives in the VS Code view now (your 15:30 correction) \u00b7 nothing terminal-only left that has a real surface built 1 vs code view cmd+shift+p \u2192 'Mole: Open Map', or the Mole icon in the activity bar \u00b7 one panel, 14 features, all non-terminal (M26: 14/14, refresh p95 1-46ms) decisions the panel + hover show which decisions/tenets govern the file you're in, flagged red/yellow/green, why, file:line \u00b7 this is the center (D31) map + impact panel beside the code, follows the open file \u00b7 'Mole: Toggle Impact' shows what a change could reach, 3 calls away hover hover a function you changed \u2192 your notes + th"
+ },
+ {
+  "id": "rec-agentsboard",
+  "file": "context/agents/0 board.md",
+  "folder": "context/agents",
+  "excerpt": "# 5 Agents: Mole's worker agents Rebuilt 2026-10-29 22:41 by `context/agents/build_agents.py` from `registry.json`, the Hermes chat store and the ledger. Each agent has one main file next to this one; its sections 1-7 are rebuilt every run, and the agent writes its own notes under 'Handoff notes'. **Now:** 19 finished \u00b7 3 working \u00b7 1 not launched **The run now:** - 10-29 from 05:08, while you're away (your 05:01 'just keep running until all tasks done'): a4 a5 a6 a7 run in parallel, each in its own Hermes chat (sidebar, under Mole) - a no-model watchdog checks every 15 min (~/.hermes/scripts/mole-overnight-watch.py): rebuilds this board, resumes a builder that stopped with open tasks (max 2\u00d7), warns on a chat quiet 45 min - when all have finished (or 8 h passed) it starts a8, the wrap-up: report at context/product-plan/systems/overnight/report.md - not tonight: T17's paid A/B, T23 (model"
+ }
+]
