@@ -321,6 +321,13 @@
    "how": "10 note fixtures (Mole's own design discussions, 3C1, 2 public design-review threads); diagram rendered twice; labeled drift key",
    "target": "drafts link right >= 90%, invented decisions 0; byte-identical diagram twice, delta colors 100% vs key; drift split >= 90%, 0 real drifts auto-synced",
    "task": "T40"
+  },
+  {
+   "id": "M35",
+   "name": "head-to-head vs recognizable tools (6 claims)",
+   "how": "H1 call graph vs scip-typescript/tree-sitter/dependency-cruiser · H2 test selection vs vitest related/run-all · H3 stale knowledge vs Swimm/Copilot-Memory algorithms/path-touched · H4 renames vs git -M · H5 collisions vs git merge-tree/same-file · H6 done-claims vs tests-only/trust; keys frozen before runs",
+   "target": "all 6 run with real or doc-cited baselines; scoreboard rows each name an Amazon JD line; losses reported",
+   "task": "T41"
   }
  ],
  "benchmarks": [
@@ -550,6 +557,17 @@
     "T30-annotated-file-tree"
    ],
    "why": "design reviews + meetings → pinned decisions + delta diagram (USER 10-29 23:10); PROPOSED until D46"
+  },
+  {
+   "task": "T41-head-to-head-benchmarks",
+   "needs": [
+    "T11-l2-memory-notes",
+    "T19-rename-proof-anchors",
+    "T21-parallel-agent-collisions",
+    "T22-hand-back-test-selection",
+    "T24-agent-claim-check"
+   ],
+   "why": "prove each claim as a % vs the best recognizable tool (USER 10-29 23:55)"
   }
  ],
  "checkpoints": [
@@ -625,5 +643,6 @@
  "asked_10_29_1530": "wait what i told you build full system based on establisseh dopen soruce repos or big company systs or startups. also uh what. why termianl stuff., i mean ok but why arent that stuff in the panel in vscode. also plugins are ours right how are they inque exactly whats the pt it's not clear you're aligngin all apsects of project with our united vision of grunding in the decision based senior dev human centered thing.\n\nall things including other agent plugins interactions (for instance reading or knowing which agents cover which files, to see like blast radius or weaknesses in codebase not covered). well full server i guess dependds but what baout the diff graphs relations other advanced infra for ml ops or other technical interview desired skils stuffs. look at for instance these pics and go into their details too the vid and repos more understand thats similar to my sort of gronded vision that all tools need to be powering for complete end user experience for junior devs and highly integrate which my advantage again not needing ot have sep page or whatever mess up user workflow.\nalso tjhe reamining stuff that dont work make it work.",
  "asked_10_29_2208": "USER 22:08: 'at least something like the temporal graph shows an ability to adapt use properly newest technologies' + 'i really also want postgres server on current mole' → T38 + M32",
  "asked_10_29_2250": "USER 22:50: 'map oiut the logs from chats or like unite w ecisitng memory systems' + 'needs to be veryc learly a qunieu thing that I can actually seell' → T39 proposed + M33",
- "asked_10_29_2310": "USER ~23:10: 'design discussions and technical reviews … connecting to meetings … visual diagram … guidance and mentorship … make sure this is unique' → research systems/design-reviews/, T40 + M34, M23 for T31"
+ "asked_10_29_2310": "USER ~23:10: 'design discussions and technical reviews … connecting to meetings … visual diagram … guidance and mentorship … make sure this is unique' → research systems/design-reviews/, T40 + M34, M23 for T31",
+ "asked_10_29_2355": "USER 23:55: 'percentage metrics agains tbest tools … more frecognizable … based on the job dsecriptoins amazion' → T41 + M35"
 }
