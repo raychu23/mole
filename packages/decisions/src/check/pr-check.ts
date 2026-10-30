@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { computeFlags } from '../flags.js';
 import { loadGraph, MOLE_DIR } from '../graph.js';
+import { reviewDraftsSummary } from '@mole/reviews';
 import type { Flag, GraphNode, Problem } from '../types.js';
 import { codeownersAt, parseCodeowners } from './codeowners.js';
 import { parseGitDiff, type ChangedFile, type Hunk } from './diff.js';
@@ -362,7 +363,7 @@ async function prCheckIn(opts: PrCheckOptions, cleanups: Array<() => void>): Pro
     }
   }
 
-  const checkRun = buildCheckRun({ head, governed, unanchored, owners: allOwners, ownersByFile, codeownersFile: co?.path ?? null, pastFixes, questions, recordsChanged, problems, silent, changed });
+  const checkRun = buildCheckRun({ head, governed, unanchored, owners: allOwners, ownersByFile, codeownersFile: co?.path ?? null, pastFixes, questions, recordsChanged, problems, silent, changed, reviewDrafts: silent ? [] : await reviewDraftsSummary(root).catch(() => []) });
   return { base, head, mergeBase, files, governed, unanchored, owners: allOwners, ownersByFile, codeownersFile: co?.path ?? null, pastFixes, questions, recordsChanged, problems, silent, checkRun, ms: Math.round(performance.now() - t0) };
 }
 
@@ -379,6 +380,9 @@ function buildCheckRun(r: {
   problems: Problem[];
   silent: boolean;
   changed: ChangedFile[];
+  /** T40: design review / meeting note drafts awaiting a person's approval (Granola model, D38), surfaced on
+   *  this SAME check-run (one rewritten-in-place payload per push) instead of a second PR comment. */
+  reviewDrafts: string[];
 }): CheckRunPayload {
   if (r.silent) return { name: CHECK_NAME, head_sha: r.head, status: 'completed', conclusion: 'neutral', output: { title: 'mole: nothing governed these lines', summary: 'nothing governed', annotations: [] } };
   const annotations: CheckAnnotation[] = [];
@@ -427,6 +431,10 @@ function buildCheckRun(r: {
   if (r.questions.length) {
     s.push(`### Questions for the author (${r.questions.length})`);
     for (const q of r.questions) s.push(`${q.rank}. ${q.text}`);
+  }
+  if (r.reviewDrafts.length) {
+    s.push(`### Draft decisions from recent reviews/meetings (${r.reviewDrafts.length})`, '_drafted from sparse notes (Granola model); a person must approve each one before it becomes a record (D38)_');
+    for (const d of r.reviewDrafts.slice(0, 10)) s.push(`- ${d}`);
   }
   const parts = [`${r.governed.length} decision${r.governed.length === 1 ? '' : 's'} govern these lines`];
   if (r.unanchored.length) parts.push(`${r.unanchored.length} unanchored`);

@@ -35,6 +35,7 @@ const ORDER: Array<[string, string]> = [
   ['tests', 'Tests that guard it'],
   ['agents', 'Agents'],
   ['blastRadius', 'Blast radius'],
+  ['reviewNotes', 'Review / meeting notes'],
 ];
 
 function countOf(id: string, data: unknown): number {
@@ -51,6 +52,10 @@ function countOf(id: string, data: unknown): number {
   if (id === 'blastRadius') {
     const b = data as { map?: { nodes?: unknown[] }; flows?: { tests?: unknown[] } };
     return (b.map?.nodes?.length ?? 0) + (b.flows?.tests?.length ?? 0);
+  }
+  if (id === 'reviewNotes') {
+    const r = data as { drafts?: unknown[] };
+    return r.drafts?.length ?? 0;
   }
   return 0;
 }
@@ -71,6 +76,11 @@ function render(model: Model): void {
     if (id === 'notes') parts.push('<div class="addnote"><textarea data-note placeholder="add a note on this function"></textarea><button data-add-note>Add note</button></div>');
     if (id === 'questions') parts.push('<div class="explain"><textarea data-explain placeholder="explain it back (saved privately to .mole/local)"></textarea><button data-save-explain>Save</button></div>');
     if (id === 'tests') parts.push('<button data-run-tests>Run</button><span data-run-result></span>');
+    // T40: the delta diagram rendered inline -- a deterministic SVG from @mole/reviews, no model, no script.
+    if (id === 'reviewNotes' && s.status === 'ok') {
+      const r = s.data as { diagramSvg?: string } | undefined;
+      if (r?.diagramSvg) parts.push(`<div class="diagram">${r.diagramSvg}</div>`);
+    }
     parts.push('</section>');
   }
   app.innerHTML = parts.join('\n');
