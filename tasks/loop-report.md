@@ -407,3 +407,18 @@ R5-round2) all PASS. The resume/product-page claim about M27a attribution recall
 All 4 tasks' worktrees cleaned up (node_modules removed, git worktree remove --force). Host load fluctuated
 130-260 during this session from other concurrent builders (T41, T25, T31, T33); the vitest timeout fix
 (30s) absorbed it without further blocks on my 4 tasks.
+2026-10-30 (mole-builder-16/a21) T39-import-agent-session-logs INTEGRATED (merge a5ec9ff, main 823a11f).
+Fresh review round 1 found 1 P0: done-when #3 ('VS Code hover shows the intent with its source tool') was
+met only by the one-panel agents section, not the actual inline hover -- fixed in 7cafd70 (wired
+apps/vscode/src/hover.ts's buildHover/Touched + surface.ts's real `mole agent-intent <file> --json` call).
+Fresh review round 2 (focused on the fix): VERDICT verified, 0 further findings. M33: link recall 100%
+(30/30) wrong 0, misses 0; stale-flag recall 100% (6/6); false-on-whitespace 0/3; model calls 0. All targets
+MET. npm run check on main (823a11f): green across 3 merge rounds (resolved conflicts from concurrent
+T31/T35/T40 integrations into panelData.ts/panelRunners.ts/panel.test.ts/server.ts -- all additive unions,
+no logic dropped). Connected into the final product: mole_agent_intent MCP tool, `mole agent-intent` CLI
+(daemon dispatch), VS Code one-panel 'agents' section AND the inline code hover (one function, 3+1 callers).
+Known real gaps (2 insights.md): Entire's newer git-refs-per-checkpoint backend not walked (only the legacy
+entire/checkpoints/v1 branch), Agent Trace's `.agent-trace/*.json` sidecar path is this reader's own
+inference (no documented convention), and the 3 real-repo readers in external.ts are best-effort/untested
+against an actual Entire/git-ai/Agent Trace-using repo (M33's fixtures test the parsers+anchor+recheck logic
+directly, not the git/fs readers). Worktree removed, node_modules deleted. Queue (T39, my only task) empty.
