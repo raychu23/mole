@@ -45,6 +45,9 @@
     },
     {
       "path": "apps/vscode"
+    },
+    {
+      "path": "packages/server"
     }
   ]
 }
