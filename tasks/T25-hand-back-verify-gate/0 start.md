@@ -4,12 +4,12 @@ owner: mole-builder-10
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t25-hand-back-verify-gate
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T25-hand-back-verify-gate
-base: d312d66
+base: 93707ed
 reviewer:
-updated: 2026-10-29 15:45
+updated: 2026-10-29 21:13
 status: ledger running
 next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
-claimed: 2026-10-29 15:45
+claimed: 2026-10-29 21:13
 ---
 ```notes
 T25-hand-back-verify-gate      ledger task (rules.md §3 code features)      project tasks

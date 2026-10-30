@@ -10,6 +10,7 @@ const common = { bundle: true, sourcemap: true, logLevel: 'info', target: 'node2
 const importMeta = { define: { 'import.meta.url': '__importMetaUrl' }, banner: { js: "const __importMetaUrl = require('node:url').pathToFileURL(__filename).href;" } };
 await build({ ...common, ...importMeta, entryPoints: ['src/extension.ts'], outfile: 'dist/extension.cjs', platform: 'node', format: 'cjs', external: ['vscode'] });
 await build({ ...common, entryPoints: ['webview/main.ts'], outfile: 'dist/webview.js', platform: 'browser', format: 'iife', target: 'es2022' });
+await build({ ...common, entryPoints: ['webview/panel.ts'], outfile: 'dist/panel.js', platform: 'browser', format: 'iife', target: 'es2022' });
 
 // the daemon and its worker thread run as plain Node (the editor's own Node with ELECTRON_RUN_AS_NODE). server.ts / client.ts use
 // import.meta.url to find sibling files, which does not exist in CommonJS: point it at the bundle file.

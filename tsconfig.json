@@ -41,7 +41,13 @@
       "path": "packages/layout"
     },
     {
+      "path": "packages/temporal"
+    },
+    {
       "path": "apps/vscode"
+    },
+    {
+      "path": "packages/server"
     }
   ]
 }
