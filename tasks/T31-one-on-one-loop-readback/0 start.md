@@ -1,22 +1,22 @@
 ---
-state: running
+state: submitted
 owner: mole-builder-15
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t31-one-on-one-loop-readback
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T31-one-on-one-loop-readback
 base: 6c5f406
 reviewer:
-updated: 2026-10-29 22:42
-status: ledger running
-next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+updated: 2026-10-29 23:05
+status: ledger submitted
+next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
 claimed: 2026-10-29 22:42
 ---
 ```notes
 T31-one-on-one-loop-readback      ledger task (rules.md §3 code features)      project tasks
     goal                    The 1:1 loop + read-back (3C1 lines 268, 301, 319): questions you hit (hover 'ask', agent sessions) are logged privately under .mole/local/questions; before a 1:1 Mole lists them grouped by folder with any record that already answers them; after the 1:1 the answer becomes a proposal both people OK (T23 drafts it with structured output); read-back = you explain a decision in your words and its approver confirms with one click (a model may only hint), stored as evidence of understanding, private unless shared
     done-when               1) mole oneonone prep|capture and the read-back flow in the panel; 2) M23 pilot, 2 weeks, you + one friend's team (D7), hypotheses fixed before: share of questions answered by a record before the 1:1, repeated questions per week, read-backs confirmed per folder; reference point: I-PASS structured handoffs cut medical errors 23% (NEJM 2014), not a software benchmark; 3) nothing about a person leaves their machine unless they share it; 4) failure case: a question no record answers stays open and goes to the 1:1 list, never auto-answered; 5) npm run check passes
-    status                  2026-10-29 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T31-one-on-one-loop-readback · branch ledger/t31-one-on-one-lo
-    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+    status                  2026-10-29 submitted      report: packages/oneonone (new): deterministic idf-weighted matcher, folder-grouped prep, per-folder read-back store. Co
+    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
     pinned
     mode                    code
     boundary                packages/oneonone/** (new package) only, plus exactly one import + one call added into apps/vscode (shared panel/view file) and exactly one import + one call added into packages/mcp (tool list); do not touch more of those files; never restructure apps/vscode, packages/mcp, plugins/claude-code or shared config beyond that one call each
