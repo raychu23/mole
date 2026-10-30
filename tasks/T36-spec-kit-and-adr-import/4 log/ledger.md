@@ -9,4 +9,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 17:48      running → blocked      cause: Reclaimed 2026-10-29 22:40 per raymond's instruction (load believed lower). Merged main cleanly (18 commits, 0 boundary overlap, 0 conflicts). M29 bench unchanged on merged code: 100%/100%/100%. 3 full npm run che
     2026-10-29 21:26      blocked → ready      raymond 10-30 'fix the blocked' - shared vitest timeout fix landed main@3af8a4a
     2026-10-29 21:26      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T36-spec-kit-and-adr-import · branch ledger/t36-spec-kit-and-adr-import · base ce958e9
+    2026-10-29 21:36      running → submitted      report: Unblocked after root-cause fix (shared vitest timeout, main@3af8a4a) + stale .mole/local/verify-fixtures cleanup. Merged main cleanly (83f758b), no conflicts, npm install needed (T33's server deps - pg/fastify/ex
+    2026-10-29 21:36      checks ran: npm run check && node packages/decisions/dist/bench/m29.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T36-spec-kit-and-adr-import → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
