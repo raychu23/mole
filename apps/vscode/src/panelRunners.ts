@@ -111,5 +111,8 @@ export function makeRunners(h: CliHandle, client: () => MoleClient | undefined):
     async tried(target) {
       return run(h, ['tried', target]);
     },
+    async agentIntent(target) {
+      return run(h, ['agent-intent', target]);
+    },
   };
 }

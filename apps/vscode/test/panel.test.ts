@@ -24,6 +24,7 @@ const okRunners = (): Runners => ({
   claims: async () => ({ claims: [] }) as never,
   collisions: async () => ({ pairs: [] }) as never,
   tried: async () => ({ tried: [] }) as never,
+  agentIntent: async () => ({ statuses: [] }) as never,
 });
 
 describe('buildPanelModel (M26a: 8 sections cover 14 CLI read features)', () => {
@@ -62,6 +63,7 @@ describe('buildPanelModel (M26a: 8 sections cover 14 CLI read features)', () => 
       claims: async () => ({ claims: [] }) as never,
       collisions: async () => ({ pairs: [] }) as never,
       tried: async () => ({ tried: [] }) as never,
+      agentIntent: async () => ({ statuses: [] }) as never,
     };
     let model: PanelModel | undefined;
     let threw = false;

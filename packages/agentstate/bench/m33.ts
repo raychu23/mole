@@ -51,10 +51,10 @@ function buildEntireRaw(repo: KeyRepo): RawIntent[] {
 }
 
 function buildGitAiRaw(repo: KeyRepo): RawIntent[] {
-  const tableLines = repo.functions.map((f, i) => `${repo.file}   gitai-s${i} ${f.start}-${f.end}`);
+  const tableLines = repo.functions.map((f, i) => `${repo.file}   git-ai-s${i} ${f.start}-${f.end}`);
   const prompts: Record<string, unknown> = {};
   repo.functions.forEach((f, i) => {
-    prompts[`gitai-s${i}`] = { agent: 'claude-code', model: 'claude-sonnet-5', author: 'raymond', messages_url: `https://store.local/cas/${f.tail}` };
+    prompts[`git-ai-s${i}`] = { agent: 'claude-code', model: 'claude-sonnet-5', author: 'raymond', messages_url: `https://store.local/cas/${f.tail}` };
   });
   const meta = { schema_version: 'authorship/3.0.0', git_ai_version: '0.1.4', base_commit_sha: 'deadbeef', prompts };
   const note = `${tableLines.join('\n')}\n---\n${JSON.stringify(meta)}`;
@@ -63,7 +63,7 @@ function buildGitAiRaw(repo: KeyRepo): RawIntent[] {
 
 function buildAgentTraceRaw(repo: KeyRepo): RawIntent[] {
   const conversations = repo.functions.map((f, i) => ({
-    url: `https://api.example.com/v1/conversations/${f.tail}`,
+    url: `agent-trace-s${i}`,
     contributor: { type: 'ai' as const, model_id: 'anthropic/claude-sonnet-5' },
     ranges: [{ start_line: f.start, end_line: f.end }],
   }));

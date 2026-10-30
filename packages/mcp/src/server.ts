@@ -2,7 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { formatNeighborhood } from '@mole/core';
 import { ensureDaemon, MoleClient, type EnsureOptions } from '@mole/daemon';
-import { claims, defaultSources, tried } from '@mole/agentstate';
+import { agentIntentsFor, claims, defaultSources, tried } from '@mole/agentstate';
 import { registerCollisionsTool } from './collisions-tool.js';
 import { executeTool, GEN_AI } from '@mole/telemetry';
 import type { Change } from '@mole/history';
@@ -75,6 +75,25 @@ export function createServer(opts: MoleMcpOptions): McpServer {
     },
   );
   registerCollisionsTool(server, opts); // T21: parallel-agent collisions
+  // T39: external agent-session memory (Entire Checkpoints, git-ai Authorship Logs, Agent Trace v0.1.0) mapped
+  // onto the function it touched, re-checked against the function's current body like a T11 note.
+  server.registerTool(
+    'mole_agent_intent',
+    {
+      title: 'Mole agent intent',
+      description:
+        'What an external agent-session tool (Entire Checkpoints, git-ai, or Agent Trace) recorded about why a function was written, anchored to that function and re-checked: ' +
+        "fresh if the function's body is unchanged since, stale if it changed or the function is gone. Target = repo-relative file or file#Symbol. Consumes existing records; Mole captures nothing of its own here.",
+      inputSchema: { target: z.string().describe('repo-relative file, or file#Symbol') },
+    },
+    async ({ target }) => {
+      try {
+        return { content: [{ type: 'text' as const, text: JSON.stringify(agentIntentsFor(opts.root, target), null, 2) }] };
+      } catch (e) {
+        return { content: [{ type: 'text' as const, text: `mole_agent_intent: ${(e as Error).message}` }], isError: true };
+      }
+    },
+  );
   server.registerTool(
     'mole_check',
     {

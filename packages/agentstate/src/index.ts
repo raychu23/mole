@@ -34,6 +34,7 @@ import type {
 
 export * from './types.js';
 export * from './claims/index.js';
+export * from './importers/index.js';
 export { defaultSources } from './sources.js';
 export { agentCli } from './cli.js';
 export * from './collisions.js';

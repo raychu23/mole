@@ -44,6 +44,7 @@ export interface Runners {
   claims(run?: string): Promise<unknown>;
   collisions(): Promise<unknown>;
   tried(target: string): Promise<unknown>;
+  agentIntent(target: string): Promise<unknown>; // T39: Entire/git-ai/Agent Trace intent, re-checked like a note
 }
 
 export interface BuildTarget {
@@ -61,7 +62,7 @@ const CAPTIONS: Record<SectionId, string> = {
   since: 'Since you last looked: what changed in the decisions and code you already read, so stale understanding never passes for current (@mole/memory SinceResult, T13).',
   questions: 'Questions: up to 3 aimed at the understanding a change to this code assumes, from the decisions and fixes above (@mole/questions, T14).',
   tests: 'Tests that guard it: the record proving a decision still holds, with a button to re-check it now (@mole/verify testsAtLine/testMap, T22).',
-  agents: 'Agents: who touched this code and its governing decisions, what they already tried, and whether two agents collided here (@mole/agentstate, T18/T21/T24).',
+  agents: 'Agents: who touched this code and its governing decisions, what they already tried, whether two agents collided here, and the intent recorded by Entire/git-ai/Agent Trace, re-checked like a note (@mole/agentstate, T18/T21/T24/T39).',
   blastRadius: 'Blast radius: the decisions, tests and runtime callers this change would reach (daemon map/impact + @mole/flows, T28).',
 };
 
@@ -101,9 +102,9 @@ export async function buildPanelModel(target: BuildTarget, r: Runners): Promise<
     section('questions', () => r.questions(), (v: any) => emptyArr(v?.questions)),
     section('tests', () => r.testsAtLine(target.file, target.line), emptyArr),
     section('agents', async () => {
-      const [claims, collisions, tried] = await Promise.all([r.claims(), r.collisions(), r.tried(at)]);
-      return { claims, collisions, tried };
-    }, (v: any) => emptyArr(v?.claims?.claims) && emptyArr(v?.collisions?.pairs) && emptyArr(v?.tried?.tried)),
+      const [claims, collisions, tried, agentIntent] = await Promise.all([r.claims(), r.collisions(), r.tried(at), r.agentIntent(at)]);
+      return { claims, collisions, tried, agentIntent };
+    }, (v: any) => emptyArr(v?.claims?.claims) && emptyArr(v?.collisions?.pairs) && emptyArr(v?.tried?.tried) && emptyArr(v?.agentIntent?.statuses)),
     section('blastRadius', async () => {
       const [map, impact, flows] = await Promise.all([r.map(at), r.impact(at), r.flows(at)]);
       return { map, impact, flows };

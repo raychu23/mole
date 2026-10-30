@@ -2,6 +2,7 @@
 // --json prints the library result unchanged; without it a short human view. Missing sources are listed, exit 0.
 import { agents, collisions, formatCollisions, getRun, listRuns, tried } from './index.js';
 import { exportLangGraph } from './langgraph.js';
+import { agentIntentsFor } from './importers/external.js';
 import { defaultSources } from './sources.js';
 import type { RunGraph, Skipped, Step, TriedItem } from './types.js';
 
@@ -131,6 +132,15 @@ export async function agentCli(cmd: string, pos: string[], flags: Record<string,
         ...(r.edits.length ? r.edits.map((e) => `${when(e.time)}  ${e.harness.padEnd(11)} ${e.run}  ${e.via === 'commit' ? `commit ${e.commit}` : e.tool ?? ''}  step ${e.step}`) : [`mole: no agent run edited ${target}`]),
         ...skippedLines(r.skipped),
       ].join('\n'),
+    );
+    return 0;
+  }
+  if (cmd === 'agent-intent') {
+    const r = agentIntentsFor(root, target);
+    print(r, () =>
+      r.statuses.length === 0
+        ? `mole: no Entire/git-ai/Agent Trace intent on ${target}`
+        : r.statuses.map((s) => `${s.status.padEnd(5)} ${s.intent.source.padEnd(11)} ${s.intent.qualifiedName}  session ${s.intent.sessionId}${s.intent.model ? `  ${s.intent.model}` : ''}${s.intent.prompt ? `  "${short(s.intent.prompt, 60)}"` : ''}`).join('\n'),
     );
     return 0;
   }
