@@ -13,4 +13,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 18:48      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T33-team-server · branch ledger/t33-team-server · base 7708b5f
     2026-10-29 19:13      running → submitted      report: Root-cause fix for the review round 2 BLOCKING finding (data-loss bug), commit 75074e9 in worktree, merged with main (T38 bitemporal-decision-graph integrated, packages/temporal untouched). (1) rebuild.ts: listMo
     2026-10-29 19:13      checks ran: npm run check && node packages/server/dist/bench/m25.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T33-team-server → exit 0 (})
+    2026-10-29 19:20      submitted → verified      reviewer fresh-review-t33-r3 · findings: No P0/P1 found. rebuild.ts: listMoleFilesAtRef now throws GitReadError on any git failure, called before pool.connect() and before the index-wiping queries run inside rebuildIndex
+    2026-10-29 19:20      checks ran: npm run check && node packages/server/dist/bench/m25.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T33-team-server → exit 0 (})
 ```
