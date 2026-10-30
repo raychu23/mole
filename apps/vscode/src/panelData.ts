@@ -3,9 +3,9 @@
 // from its own runner call, wrapped independently (failure case b: one bad source degrades only its own
 // section). Every caption says what the section is for the center of everything (D31): the decisions
 // behind the code (tenets -> decisions -> exceptions -> code, tests, incidents, people).
-export type SectionId = 'decisions' | 'pastFixes' | 'notes' | 'since' | 'questions' | 'tests' | 'agents' | 'blastRadius';
+export type SectionId = 'decisions' | 'pastFixes' | 'notes' | 'since' | 'questions' | 'tests' | 'agents' | 'blastRadius' | 'reviewNotes';
 
-export const SECTION_IDS: readonly SectionId[] = ['decisions', 'pastFixes', 'notes', 'since', 'questions', 'tests', 'agents', 'blastRadius'];
+export const SECTION_IDS: readonly SectionId[] = ['decisions', 'pastFixes', 'notes', 'since', 'questions', 'tests', 'agents', 'blastRadius', 'reviewNotes'];
 
 export type SectionStatus = 'ok' | 'empty' | 'unavailable' | 'error';
 
@@ -45,6 +45,8 @@ export interface Runners {
   collisions(): Promise<unknown>;
   tried(target: string): Promise<unknown>;
   agentIntent(target: string): Promise<unknown>; // T39: Entire/git-ai/Agent Trace intent, re-checked like a note
+  /** T40: design review / meeting note drafts + the file-tree delta diagram (@mole/reviews) */
+  reviewNotes(): Promise<unknown>;
 }
 
 export interface BuildTarget {
@@ -64,6 +66,7 @@ const CAPTIONS: Record<SectionId, string> = {
   tests: 'Tests that guard it: the record proving a decision still holds, with a button to re-check it now (@mole/verify testsAtLine/testMap, T22).',
   agents: 'Agents: who touched this code and its governing decisions, what they already tried, whether two agents collided here, and the intent recorded by Entire/git-ai/Agent Trace, re-checked like a note (@mole/agentstate, T18/T21/T24/T39).',
   blastRadius: 'Blast radius: the decisions, tests and runtime callers this change would reach (daemon map/impact + @mole/flows, T28).',
+  reviewNotes: 'Review / meeting notes: sparse notes from a design review expand only around what you flagged into decision drafts pinned to real code, with a delta diagram of what changed (@mole/reviews, T40).',
 };
 
 /** One line a developer can act on; never the raw error text, which may contain a stack trace or secrets. */
@@ -94,7 +97,7 @@ const emptyArr = (v: unknown): boolean => Array.isArray(v) && v.length === 0;
 export async function buildPanelModel(target: BuildTarget, r: Runners): Promise<PanelModel> {
   const at = target.symbol ? `${target.file}#${target.symbol}` : target.file;
 
-  const [decisions, pastFixes, notes, since, questions, tests, agents, blastRadius] = await Promise.all([
+  const [decisions, pastFixes, notes, since, questions, tests, agents, blastRadius, reviewNotes] = await Promise.all([
     section('decisions', () => r.decisions(), (v: any) => emptyArr(v?.decisions)),
     section('pastFixes', () => r.check(), (v: any) => emptyArr(v?.hunks) || (v?.hunks ?? []).every((h: any) => emptyArr(h.pastFixes))),
     section('notes', () => r.noteList(target.file), emptyArr),
@@ -109,11 +112,12 @@ export async function buildPanelModel(target: BuildTarget, r: Runners): Promise<
       const [map, impact, flows] = await Promise.all([r.map(at), r.impact(at), r.flows(at)]);
       return { map, impact, flows };
     }, (v: any) => (v?.map as any)?.state === 'error' && (v?.impact as any)?.state === 'error'),
+    section('reviewNotes', () => r.reviewNotes(), (v: any) => emptyArr(v?.drafts) && !v?.diagramSvg),
   ]);
 
   // a section whose runner reported a clean "not applicable here" (e.g. not a git repo) reads as one
   // friendly line, same shape as a thrown error, so the view never special-cases it
-  for (const s of [decisions, pastFixes, notes, since, questions, tests, agents, blastRadius] as Section<any>[]) {
+  for (const s of [decisions, pastFixes, notes, since, questions, tests, agents, blastRadius, reviewNotes] as Section<any>[]) {
     if (s.status === 'ok' && (s.data as any)?.state === 'error') {
       s.status = 'unavailable';
       s.message = toMessage((s.data as any).message ?? 'not available here');
@@ -126,6 +130,6 @@ export async function buildPanelModel(target: BuildTarget, r: Runners): Promise<
     symbol: target.symbol,
     generatedAt: Date.now(),
     cacheHit: false,
-    sections: { decisions, pastFixes, notes, since, questions, tests, agents, blastRadius },
+    sections: { decisions, pastFixes, notes, since, questions, tests, agents, blastRadius, reviewNotes },
   };
 }

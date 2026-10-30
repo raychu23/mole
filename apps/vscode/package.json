@@ -180,6 +180,7 @@
     "@mole/layout": "*",
     "@mole/memory": "*",
     "@mole/questions": "*",
+    "@mole/reviews": "*",
     "@mole/verify": "*"
   },
   "categories": [

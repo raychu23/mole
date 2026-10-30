@@ -7,8 +7,10 @@
 // the existing MoleClient (the daemon is already running for the map panel); everything else is a quick
 // child_process call to the same CLI note/memory/since already use.
 import { execFile } from 'node:child_process';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { MoleClient } from '@mole/daemon';
+import { buildTreeGraph, draftsFromNotes, renderSvg } from '@mole/reviews';
 import { selectTests } from '@mole/verify';
 import type { Runners } from './panelData.js';
 
@@ -113,6 +115,28 @@ export function makeRunners(h: CliHandle, client: () => MoleClient | undefined):
     },
     async agentIntent(target) {
       return run(h, ['agent-intent', target]);
+    },
+    /** T40: design review / meeting note drafts (Granola model, D38 -- never invented) + a deterministic
+     *  delta diagram of the working tree over the file tree (PR Lens pattern), both from @mole/reviews. */
+    async reviewNotes() {
+      const root = resolve(h.root);
+      const notesDir = `${root}/.mole/local/meetings`;
+      let files: string[] = [];
+      try {
+        files = readdirSync(notesDir).filter((f) => f.endsWith('.md')).sort();
+      } catch {
+        files = [];
+      }
+      const drafts = files.flatMap((f) => {
+        const text = readFileSync(`${notesDir}/${f}`, 'utf8');
+        return draftsFromNotes(root, text).map((d) => ({ ...d, source: f }));
+      });
+      const changedFiles = await new Promise<string[]>((resolveFiles) => {
+        execFile('git', ['-C', root, 'diff', '--name-only', 'HEAD'], { timeout: 5000 }, (err, stdout) => resolveFiles(err ? [] : stdout.split('\n').map((s) => s.trim()).filter(Boolean)));
+      });
+      const graph = buildTreeGraph(root, changedFiles);
+      const diagramSvg = graph.nodes.length ? renderSvg(graph, { changed: '#2b7de9', unchanged: '#8a8a8a' }) : undefined;
+      return { drafts, diagramSvg, meetingFiles: files };
     },
   };
 }
