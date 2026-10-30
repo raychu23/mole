@@ -101,3 +101,25 @@ number, now with the fix attempted, verified inert on this dataset, and the real
 and handed to a human/reviewer ruling rather than guessed at further. M27b, M27c and the failure/privacy
 cases remain met (see `4 log/runs.jsonl`); `npm run check` is green (499 passed, 14 skipped, 0 failed).
 
+
+## Round 2 (a18, after R2 key-ruling-1.md APPROVED --first-parent fix)
+Applied the APPROVED minimal fix to build-key.mjs (added --first-parent to the git log call, per
+key-ruling-1.md's evidence that merge commits on these serial integration branches pulled in other
+concurrently-running builders' commits). Regenerated the frozen key (544 owner,file pairs, down from
+the inflated original), rebuilt, reran M27a:
+- Before: precision 0.998, recall 0.427 (tp 569, fp 1, fn 764)
+- After:  precision 0.842, recall 0.882 (tp 480, fp 90, fn 64) -- recall improved massively (+0.455),
+  but precision dropped below target (was near-perfect because the old inflated key credited almost
+  every file to someone). mole-builder-3 in particular: precision 0.231 (tp 12, fp 40) -- this builder
+  did very little direct-commit work itself (recall was 0.143 pre-fix), so its real first-parent file
+  set is tiny, and the attribution code's subagent/resumed-session rollup (round 1's fix) is crediting
+  it with files that, under the now-tighter key, belong to someone else or nobody in-window.
+- Per-builder (after): mole-builder-3 p=0.231 r=1.0; mole-builder-4 and others not fully broken out
+  here, see runs.jsonl for the full per-builder JSON.
+- Both M27a targets (precision AND recall >= 0.95) are still a MISS, closer on recall, now missing on
+  precision instead. Stopping here (round 2 of this session, several prior rounds already spent by the
+  original builder): further work would need either a 3rd fix (tighten the resumed-session cwd+time-
+  window matching from round 1 so it stops crediting builder-3 with others' files) or accepting that
+  attribution-by-session-metadata has an inherent precision/recall tradeoff this repo's overnight-
+  parallel-builder setup makes hard to fully resolve. Logged honestly per R7, key not loosened further
+  (the --first-parent change was itself R2-ruling-approved, not a unilateral key edit).

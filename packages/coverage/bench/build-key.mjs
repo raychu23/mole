@@ -33,7 +33,11 @@ for (const [owner, { session, branches }] of Object.entries(BUILDERS)) {
   const files = new Set();
   const commits = [];
   for (const branch of branches) {
-    const log = git(['log', branch, '--no-merges', '--format=%H %ct']);
+    // --first-parent per R2 ruling (4 log/key-ruling-1.md, APPROVED): these are serial integration
+    // branches whose merge commits otherwise pull in OTHER concurrently-running builders' commits
+    // that later landed on the same branch (confirmed: one shared commit sat on 11 ledger branches).
+    // --first-parent keeps only this branch's own commit line, not merged-in history from elsewhere.
+    const log = git(['log', branch, '--first-parent', '--no-merges', '--format=%H %ct']);
     for (const line of log.split('\n').filter(Boolean)) {
       const [sha, ctStr] = line.split(' ');
       const t = Number(ctStr) * 1000;
