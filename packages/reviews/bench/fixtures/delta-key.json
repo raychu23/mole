@@ -1,0 +1,25 @@
+{
+  "_frozen": true,
+  "_dated": "2026-10-30T01:10:00Z",
+  "_rule": "R2: never edit after the first (red-tests) commit.",
+  "changedFiles": ["packages/alpha/src/a.ts", "apps/widget/src/d.ts"],
+  "colors": { "changed": "#2b7de9", "unchanged": "#8a8a8a" },
+  "expectedDelta": {
+    "": "changed",
+    "packages": "changed",
+    "packages/alpha": "changed",
+    "packages/alpha/src": "changed",
+    "packages/alpha/src/a.ts": "changed",
+    "packages/alpha/src/b.ts": "unchanged",
+    "packages/alpha/README.md": "unchanged",
+    "packages/beta": "unchanged",
+    "packages/beta/src": "unchanged",
+    "packages/beta/src/c.ts": "unchanged",
+    "apps": "changed",
+    "apps/widget": "changed",
+    "apps/widget/src": "changed",
+    "apps/widget/src/d.ts": "changed",
+    "apps/widget/src/e.ts": "unchanged",
+    "root.md": "unchanged"
+  }
+}

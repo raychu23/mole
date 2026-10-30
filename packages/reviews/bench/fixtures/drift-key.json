@@ -1,0 +1,17 @@
+{
+  "_frozen": true,
+  "_dated": "2026-10-30T01:10:00Z",
+  "_rule": "R2: never edit after the first (red-tests) commit.",
+  "cases": [
+    { "dir": "case-01", "tail": "ping", "expected": "trivial" },
+    { "dir": "case-02", "tail": "sum", "expected": "trivial" },
+    { "dir": "case-03", "tail": "greet", "expected": "trivial" },
+    { "dir": "case-04", "tail": "label", "expected": "trivial" },
+    { "dir": "case-05", "tail": "pick", "expected": "trivial" },
+    { "dir": "case-06", "tail": "oldName", "expected": "real" },
+    { "dir": "case-07", "tail": "helper", "expected": "real" },
+    { "dir": "case-08", "tail": "build", "expected": "real" },
+    { "dir": "case-09", "tail": "pack", "expected": "real" },
+    { "dir": "case-10", "tail": "Widget.render", "expected": "real" }
+  ]
+}
