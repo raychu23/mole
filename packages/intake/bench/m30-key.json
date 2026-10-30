@@ -1,0 +1,36 @@
+{
+  "metric": "M30",
+  "written": "2026-10-29T20:45:00Z",
+  "author": "mole-builder-8 (T23 red commit), before the implementation exists",
+  "method": "Expected assumption-check findings written by hand from reading each seeded record's own text (bench/seeded/*.md, written by hand in this same commit from the real decisions' shape) and each real record under .mole/decisions directly (cat'd and read, not by running packages/intake). 'caught' = the record gets at least one Finding of the listed check kind(s); a seeded record is 'missed' only if checkAllRecords produces 0 findings for it. A real record is a 'false flag' if checkAllRecords produces 1 or more findings for it (none expected).",
+  "scoring": {
+    "seeded_recall": "seeded records caught / 10, target >= 9",
+    "real_false_flags": "real records with >= 1 finding / 10, target <= 1",
+    "evidence_precision": "every Finding's evidence items resolve to a real git commit (git cat-file -e) or an existing file:line at HEAD / 100%"
+  },
+  "targets": { "seededRecallMin": 9, "realFalseFlagsMax": 1, "evidencePrecisionPct": 100 },
+  "seeded": {
+    "s1": { "expect": ["scope_not_anchored"], "why": "scope packages/daemon/src/old-watcher.ts does not exist in this repo" },
+    "s2": { "expect": ["scope_not_anchored"], "why": "scope symbol ts-engine.ts#OldIndexer was never a real export" },
+    "s3": { "expect": ["no_alternatives"], "why": "'instead of' with no Considered Options section or alternative_to edge" },
+    "s4": { "expect": ["contradicts_tenet"], "why": "'must never stop' directly negates tenet-2 ('stops on its own')" },
+    "s5": { "expect": ["stale_citation"], "why": "confirmed at 9224561 (T2); cli.ts#main changed substantially since (129 insertions by commit 1716ca6's ancestry, T9-T13 subcommands added)" },
+    "s6": { "expect": ["no_alternatives"], "why": "'chosen over' with no Considered Options section" },
+    "s7": { "expect": ["contradicts_tenet"], "why": "'commits the seen log to the shared repo' directly negates tenet-4 ('stays local')" },
+    "s8": { "expect": ["scope_not_anchored"], "why": "scope packages/old-layout/ was never a real package" },
+    "s9": { "expect": ["stale_citation"], "why": "confirmed at da6279b (T11's first notes.ts); addNote changed substantially in the T11 review-fixes commit (f86c708)" },
+    "s10": { "expect": ["no_alternatives", "scope_not_anchored"], "why": "'rather than' with no Considered Options, AND scope packages/indexer/src/memory-cache.ts was never created" }
+  },
+  "real": {
+    "0007": { "expect": [], "why": "no contrast phrase, no tenet-contradiction trigger, scope packages/daemon/src/{cli.ts,server.ts#Daemon.startIdleWatch} both exist and unchanged since this record's own last commit" },
+    "0008": { "expect": [], "why": "'does not tick' is not 'never stop(s)'; scope server.ts#Daemon.onWorker exists" },
+    "0009": { "expect": [], "why": "'An exception to 0007' names the relation via the overrides edge, not a bare contrast phrase; scope server.ts#Daemon.startWatching exists" },
+    "0010": { "expect": [], "why": "names scip/tree-sitter/CodeGraph without 'instead of'/'rather than'/'chosen over' etc.; scope ts-engine.ts#TsIndexer + db.ts exist" },
+    "0011": { "expect": [], "why": "no contrast phrase; scope memory/src/notes.ts exists, record's own confirmed is unset (falls back to its own last commit, so no apparent drift)" },
+    "0012": { "expect": [], "why": "'is written to .mole/local/seen.jsonl ... never leaves the machine' does not match the tenet-4 commit/share triggers; scope seen.ts#appendSeen/#readSeen exist" },
+    "0013": { "expect": [], "why": "no contrast phrase; scope cli.ts#main exists, no confirmed field set so no stale comparison is made against an old sha" },
+    "0014": { "expect": [], "why": "'Mole never writes into them' does not match the tenet-4 'writes to the transcripts' trigger (object is 'them', not 'the transcripts'); scope agentstate sources.ts/langgraph.ts#runGraph exist" },
+    "0015": { "expect": [], "why": "has its own 'Alternative considered: ELK ...' line, so no_alternatives does not fire even though an alternative is discussed; scope layout.ts#layoutNeighborhood exists" },
+    "0017": { "expect": [], "why": "no scope field at all (none to anchor or cite), no contrast phrase, traces_to is empty so no tenet to contradict" }
+  }
+}

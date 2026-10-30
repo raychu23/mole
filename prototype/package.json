@@ -1,0 +1,15 @@
+{
+  "name": "mole-prototype",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Clickable Mole prototype: real TS code graph + simulated agent/PR layers, shown in each host setting",
+  "scripts": {
+    "index": "node indexer/index.mjs --root \"$HOME/.hermes/hermes-agent/ui-tui\" --name ui-tui",
+    "check": "node test/check.mjs",
+    "smoke": "node test/smoke.mjs",
+    "mole": "node cli/mole.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

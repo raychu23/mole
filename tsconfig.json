@@ -32,6 +32,9 @@
       "path": "packages/verify"
     },
     {
+      "path": "packages/intake"
+    },
+    {
       "path": "packages/daemon"
     },
     {
@@ -44,7 +47,16 @@
       "path": "packages/layout"
     },
     {
+      "path": "packages/temporal"
+    },
+    {
       "path": "apps/vscode"
+    },
+    {
+      "path": "packages/server"
+    },
+    {
+      "path": "packages/bench"
     }
   ]
 }

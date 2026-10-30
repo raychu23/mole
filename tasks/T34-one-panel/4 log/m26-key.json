@@ -1,0 +1,34 @@
+{
+  "_comment": "T34 one-panel benchmark key (R1). Dated before any implementation commit. Lists the 14 CLI read features the sidebar view must surface, and the failure-case expectations. m26.mjs and apps/vscode/test/panel.test.ts are scored against this key; per R2 this file is not edited by the implementer after this commit.",
+  "dated": "2026-10-29T00:00:00Z",
+  "features": [
+    { "id": "map", "section": "blast-radius", "cli": "mole map" },
+    { "id": "impact", "section": "blast-radius", "cli": "mole impact" },
+    { "id": "note-add", "section": "notes", "cli": "mole note add" },
+    { "id": "memory", "section": "notes", "cli": "mole memory" },
+    { "id": "since", "section": "since", "cli": "mole since" },
+    { "id": "past-fixes", "section": "past-fixes", "cli": "mole check (PastFix)" },
+    { "id": "questions", "section": "questions", "cli": "mole check (questions)" },
+    { "id": "decisions", "section": "decisions", "cli": "mole decisions" },
+    { "id": "rules", "section": "problems-panel-diagnostics", "cli": "mole rules" },
+    { "id": "run-tests", "section": "tests", "cli": "mole check --run-tests / testsAtLine" },
+    { "id": "claims", "section": "agents", "cli": "mole claims" },
+    { "id": "flows", "section": "blast-radius", "cli": "mole flows" },
+    { "id": "collisions", "section": "agents", "cli": "mole collisions" },
+    { "id": "tried", "section": "agents", "cli": "mole tried" }
+  ],
+  "m26a_target": { "features_covered": 14, "of": 14 },
+  "m26b_target": { "metric": "refresh p95 on cursor move / editor switch, 3 runs", "max_ms": 300 },
+  "failure_cases": [
+    {
+      "id": "no-mole-no-git",
+      "setup": "a workspace with a TypeScript file but no .mole directory and no .git repository",
+      "expect": "every one of the 8 view sections renders exactly one line telling the user what to do (e.g. 'run `mole reindex` to start' / 'not a git repository'); zero exceptions printed to the Mole output channel"
+    },
+    {
+      "id": "one-failing-source",
+      "setup": "one data source (e.g. @mole/decisions) throws for the current file",
+      "expect": "only that source's section shows an error/unavailable line; the other 7 sections still render their real data"
+    }
+  ]
+}

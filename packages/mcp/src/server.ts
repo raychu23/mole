@@ -92,6 +92,7 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         worktree: z.boolean().optional().describe('check the uncommitted working-tree change vs HEAD'),
         fixRule: z.string().optional().describe('regex for which commits count as fixes (default: fix/revert/regression/review fixes, or .mole/config.json)'),
         notesRoot: z.string().optional().describe('read .mole/notes from this directory instead of the root'),
+        files: z.array(z.string()).optional().describe('T37: only report hunks on these repo-relative files (e.g. the files Edit/Write just touched); others are dropped from the result'),
       },
     },
     async (args) => {
@@ -100,6 +101,14 @@ export function createServer(opts: MoleMcpOptions): McpServer {
       const root = resolve(opts.root, args.root ?? '.');
       try {
         const json = await checkJson(root, args);
+        // T37: files-scoped view, so a hook can ask "what does mole_check say about just the file I'm about to touch"
+        if (args.files?.length) {
+          const want = new Set(args.files);
+          const hunks = Array.isArray(json.result.hunks) ? (json.result.hunks as Array<{ file: string }>).filter((h) => want.has(h.file)) : json.result.hunks;
+          const keptFiles = new Set((Array.isArray(hunks) ? hunks : []).map((h) => h.file));
+          const questions = Array.isArray(json.result.questions) ? (json.result.questions as Array<{ source?: { file?: string } }>).filter((q) => !q.source?.file || keptFiles.has(q.source.file)) : json.result.questions;
+          json.result = { ...json.result, hunks, questions };
+        }
         return { content: [{ type: 'text' as const, text: JSON.stringify(json.result, null, 2) }, ...json.notices.map((n) => ({ type: 'text' as const, text: `mole: ${n}` }))] };
       } catch (e) {
         return { content: [{ type: 'text' as const, text: `mole_check: ${(e as Error).message}` }], isError: true };
@@ -120,13 +129,25 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         root: z.string().optional().describe('repository root (default: the server root, MOLE_ROOT or cwd)'),
         adrDir: z.array(z.string()).optional().describe('plain ADR folders to include, relative to root (e.g. docs/architecture-decisions)'),
         testReport: z.string().optional().describe('a vitest JSON report: evidence tests that fail there turn their decisions yellow'),
+        files: z.array(z.string()).optional().describe('T37: only decisions whose scope: covers one of these repo-relative files or symbols in them (file exact match, path#Symbol by its file, folder/ by prefix) -- this is what the Claude Code / Codex / Cursor plugins call for "the decisions governing the files in play"'),
       },
     },
     async (args) => {
       const root = resolve(opts.root, args.root ?? '.');
       try {
-        const { decisions } = await import('@mole/decisions');
+        const { decisions, loadGraph } = await import('@mole/decisions');
         const json = decisions(root, { adrDirs: args.adrDir ?? [], testReport: args.testReport ? resolve(root, args.testReport) : undefined });
+        if (args.files?.length) {
+          const want = new Set(args.files);
+          const scopeMatches = (scopeFile: string, changed: string) => scopeFile === changed || (scopeFile.endsWith('/') && (changed === scopeFile.slice(0, -1) || changed.startsWith(scopeFile)));
+          const graph = loadGraph(root, { adrDirs: args.adrDir ?? [] });
+          const governedIds = new Set(
+            graph.nodes
+              .filter((n) => n.scope.some((a) => [...want].some((f) => scopeMatches(a.target.split('#')[0]!, f))))
+              .map((n) => n.id),
+          );
+          json.decisions = json.decisions.filter((d) => governedIds.has(d.id));
+        }
         return { content: [{ type: 'text' as const, text: JSON.stringify(json, null, 2) }] };
       } catch (e) {
         return { content: [{ type: 'text' as const, text: `mole_decisions: ${(e as Error).message}` }], isError: true };
@@ -167,6 +188,76 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         return { content: [{ type: 'text' as const, text: JSON.stringify({ ...scan, files }, null, 2) }] };
       } catch (e) {
         return { content: [{ type: 'text' as const, text: `mole_coverage: ${(e as Error).message}` }], isError: true };
+      }
+    },
+  );
+  // T23: agents interrogate, people write (D38). Up to 3 pointed questions + which decision(s) govern the change,
+  // built only from facts Mole already found (diff hunks, past fixes, governing decisions); silent when nothing
+  // governs the change. Mole never drafts a decision record's own why/context/consequences text (R6).
+  server.registerTool(
+    'mole_interrogate',
+    {
+      title: 'Mole interrogate',
+      description:
+        'For a code change, which decisions (.mole/decisions) govern the files it touches, and up to 3 pointed questions ' +
+        'built from evidence Mole already found (diff hunks, past fixes + guarding tests, the governing decision) — never ' +
+        'a question invented about something code did not find. Silent (governed: false, 0 questions) when nothing governs ' +
+        'the change. Files + git only, no model calls by default (R6).',
+      inputSchema: {
+        root: z.string().optional().describe('repository root (default: the server root, MOLE_ROOT or cwd)'),
+        sha: z.string().optional().describe('a commit sha to interrogate'),
+        diff: z.string().optional().describe('a diff file to interrogate (with base)'),
+        base: z.string().optional().describe('base sha for diff'),
+        worktree: z.boolean().optional().describe('interrogate the uncommitted working tree'),
+      },
+    },
+    async (args) => {
+      const modes = [args.sha !== undefined, args.diff !== undefined, args.worktree === true].filter(Boolean).length;
+      if (modes !== 1) return { content: [{ type: 'text' as const, text: 'mole_interrogate: give exactly one of sha, diff (+ base) or worktree: true' }], isError: true };
+      const root = resolve(opts.root, args.root ?? '.');
+      try {
+        const { interrogate } = await import('@mole/intake');
+        const change = args.sha ? { sha: args.sha } : args.diff ? { diffFile: args.diff, base: args.base } : { worktree: true as const };
+        const result = await interrogate(root, change);
+        return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
+      } catch (e) {
+        return { content: [{ type: 'text' as const, text: `mole_interrogate: ${(e as Error).message}` }], isError: true };
+      }
+    },
+  );
+  // T38: as-of answers from the bitemporal decision graph in Postgres (what held on a given date),
+  // beside what a latest-only store would answer. Same engine @mole/temporal uses for its M32 bench.
+  server.registerTool(
+    'mole_decisions_asof',
+    {
+      title: 'Mole decisions as-of',
+      description:
+        "What a decision's status held on a given date (application/valid time), from the bitemporal store in Postgres " +
+        '(EXCLUDE USING gist enforces 0 overlapping validity rows; history is append-only). Needs MOLE_TEMPORAL_PG ' +
+        '(a Postgres connection string) in the environment; returns an error, not a guess, if it is unset or unreachable. ' +
+        '0 model calls.',
+      inputSchema: {
+        decisionId: z.string().describe("a decision id, e.g. 'D24'"),
+        attr: z.string().optional().describe("the fact attribute (default 'status')"),
+        asOf: z.string().describe('an ISO timestamp: what held at that instant'),
+      },
+    },
+    async (args) => {
+      const connectionString = process.env.MOLE_TEMPORAL_PG;
+      if (!connectionString) {
+        return { content: [{ type: 'text' as const, text: 'mole_decisions_asof: set MOLE_TEMPORAL_PG (a Postgres connection string) to use this tool' }], isError: true };
+      }
+      try {
+        const { openPool, asOf } = await import('@mole/temporal');
+        const pool = openPool(connectionString);
+        try {
+          const value = await asOf(pool, args.decisionId, args.attr ?? 'status', args.asOf);
+          return { content: [{ type: 'text' as const, text: value ?? 'not yet proposed' }] };
+        } finally {
+          await pool.end();
+        }
+      } catch (e) {
+        return { content: [{ type: 'text' as const, text: `mole_decisions_asof: ${(e as Error).message}` }], isError: true };
       }
     },
   );

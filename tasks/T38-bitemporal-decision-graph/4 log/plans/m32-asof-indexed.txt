@@ -1,0 +1,12 @@
+Limit  (cost=8.31..8.32 rows=1 width=13) (actual time=0.053..0.053 rows=1 loops=1)
+  Buffers: shared hit=4
+  ->  Sort  (cost=8.31..8.32 rows=1 width=13) (actual time=0.052..0.052 rows=1 loops=1)
+        Sort Key: id DESC
+        Sort Method: quicksort  Memory: 25kB
+        Buffers: shared hit=4
+        ->  Index Scan using fact_versions_valid_gist on fact_versions  (cost=0.28..8.30 rows=1 width=13) (actual time=0.051..0.052 rows=1 loops=1)
+              Index Cond: ((fact_id = 'synthetic-0'::text) AND (valid @> '2020-05-31 19:00:00-05'::timestamp with time zone))
+              Filter: (attr = 'status'::text)
+              Buffers: shared hit=4
+Planning Time: 0.028 ms
+Execution Time: 0.057 ms

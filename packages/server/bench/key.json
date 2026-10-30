@@ -1,0 +1,31 @@
+{
+  "_comment": "T33 M25 frozen key (R1/R2). Do not edit after the red-tests commit; changes go through tasks/T33-team-server/4 log/key-changes.md.",
+  "generated": "2026-10-29",
+  "owner": "mole-builder-9",
+  "seed": 1337,
+  "numDeliveries": 1000,
+  "duplicateRate": 0.10,
+  "distinctCommits": 40,
+  "orgs": [
+    { "id": "org-a", "name": "Org A", "repo": "repo-a" },
+    { "id": "org-b", "name": "Org B", "repo": "repo-b" }
+  ],
+  "permissionLeak": {
+    "_desc": "org-b user queries org-a's repo via API and MCP; must see 0 rows and 0 tool results",
+    "viewerOrg": "org-b",
+    "targetOrg": "org-a",
+    "expectLeakedRecords": 0
+  },
+  "notifications": {
+    "_desc": "every push and check-run event must produce exactly one delivered outbox notification per org event, never lost, duplicates collapse to the same effect",
+    "expectLostNotifications": 0,
+    "expectDuplicateEffects": 0
+  },
+  "latency": {
+    "ackP95Ms": 1000,
+    "checkRunComputeMsMax": 60000
+  },
+  "codeownersOrgB": [
+    "* @org-b-default-owner"
+  ]
+}

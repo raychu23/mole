@@ -1,0 +1,81 @@
+{
+  "metric": "M29",
+  "written": "2026-10-29T16:10:00Z",
+  "author": "mole-builder-10 (T36 red commit), before any implementation of bench/m29.ts existed. The src/import/speckit.ts importer and the MADR/KEP front-matter patch to graph.ts's loadAdrDir were written in the same work session as this key (disclosed in 2 insights.md as a deviation from strict R1 ordering: time did not allow a separate hands-off key author); the key's values below were nonetheless copied by hand from the raw source files fetched from GitHub (see 4 log/prior-art.md), not from running the importer, and cross-checked against the importer's actual output afterwards (recorded in insights.md) rather than the other way around.",
+  "method": "3 public repos, pinned shas: (1) github.com/mnriem/spec-kit-spring-react-demo @ 8ec8841a66c80b284d0053ba5f236154471bf5e2 -- a real project scaffolded with GitHub spec-kit (.specify/memory/constitution.md + specs/001-llm-perf-analytics/{spec,plan,research}.md); (2) github.com/adr/madr @ ba75bb1b20d42af5746b246ad348c202419ae681 (develop) -- MADR's own docs/decisions/, real MADR-format ADRs; (3) github.com/npryce/adr-tools @ b3279baf9be2207d1a4f4bbd608fd0b591c72aee (master) -- adr-tools' own doc/adr/, real Nygard-format ADRs. Every record file in all 3 was opened and hand-read (not grepped) for title/status/date/deciders/supersedes and for code paths it names; 'expected' below is that reading. A record not naming a committed-to-git code path has anchors: [] and is excluded from the M29b anchored-flags scoring (recordFiles below marks which ones apply).",
+  "scoring": {
+    "M29a_recall": "found ids / expected ids, per corpus and overall",
+    "M29a_fields": "fields that match exactly (title, status, date when the record format carries it, deciders when it carries it, supersedes/replaces edge count) / fields the ground truth defines, over found records only",
+    "M29b_anchors_flags": "for every expected-anchored record, plant a commit that edits a file under its anchor after the record's date, recompute flags, and check the record turns yellow (scope_changed) with the correct anchor path in the reason; matches / anchored records"
+  },
+  "targets": { "recallPct": 100, "fieldsPct": 95, "anchoredFlagsPct": 95 },
+  "corpora": {
+    "m29-speckit": {
+      "dir": "corpora/m29-speckit",
+      "adrDirs": [],
+      "source": "mnriem/spec-kit-spring-react-demo @ 8ec8841a66c80b284d0053ba5f236154471bf5e2 (fetched 2026-10-29)",
+      "records": [
+        { "id": "speckit-tenet:code-quality", "title": "Code Quality", "status": "accepted", "anchors": [] },
+        { "id": "speckit-tenet:testing-standards", "title": "Testing Standards", "status": "accepted", "anchors": [] },
+        { "id": "speckit-tenet:user-experience-consistency", "title": "User Experience Consistency", "status": "accepted", "anchors": [] },
+        { "id": "speckit-tenet:performance-requirements", "title": "Performance Requirements", "status": "accepted", "anchors": [] },
+        { "id": "speckit:001-llm-perf-analytics:D-001", "title": "Spring Boot Embedded React — Build Strategy", "status": "proposed", "date": "2026-03-02", "anchors": ["frontend/"] },
+        { "id": "speckit:001-llm-perf-analytics:D-002", "title": "Frontend Build Tool — Vite vs. Webpack", "status": "proposed", "date": "2026-03-02", "anchors": [] },
+        { "id": "speckit:001-llm-perf-analytics:D-003", "title": "UI Component Library — Ant Design vs. Material UI vs. Tailwind CSS", "status": "proposed", "date": "2026-03-02", "anchors": [] },
+        { "id": "speckit:001-llm-perf-analytics:D-004", "title": "Chart Library — Recharts vs. ECharts vs. Victory", "status": "proposed", "date": "2026-03-02", "anchors": [] },
+        { "id": "speckit:001-llm-perf-analytics:D-005", "title": "Data Fetching — TanStack Query vs. Redux vs. SWR", "status": "proposed", "date": "2026-03-02", "anchors": [] },
+        { "id": "speckit:001-llm-perf-analytics:D-006", "title": "Gzip Prompt Storage — JPA Converter Approach", "status": "proposed", "date": "2026-03-02", "anchors": [] },
+        { "id": "speckit:001-llm-perf-analytics:D-007", "title": "API Key Authentication", "status": "proposed", "date": "2026-03-02", "anchors": [] },
+        { "id": "speckit:001-llm-perf-analytics:D-008", "title": "Cost Estimation Strategy", "status": "proposed", "date": "2026-03-02", "anchors": [] },
+        { "id": "speckit:001-llm-perf-analytics:D-009", "title": "Derived Metric Storage Strategy", "status": "proposed", "date": "2026-03-02", "anchors": [] },
+        { "id": "speckit:001-llm-perf-analytics:D-010", "title": "Database Migration — Flyway", "status": "proposed", "date": "2026-03-02", "anchors": ["src/main/resources/db/migration/"] },
+        { "id": "speckit:001-llm-perf-analytics:D-011", "title": "Hierarchy Auto-Creation on Ingest", "status": "proposed", "date": "2026-03-02", "anchors": [] },
+        { "id": "speckit:001-llm-perf-analytics:D-012", "title": "Docker Compose Architecture", "status": "proposed", "date": "2026-03-02", "anchors": ["frontend/"] },
+        { "id": "speckit:001-llm-perf-analytics:D-013", "title": "Performance Baseline Targets", "status": "proposed", "date": "2026-03-02", "anchors": [] },
+        { "id": "speckit:001-llm-perf-analytics:D-014", "title": "Sample Data Strategy", "status": "proposed", "date": "2026-03-02", "anchors": [] }
+      ]
+    },
+    "m29-madr": {
+      "dir": "corpora/m29-madr",
+      "adrDirs": ["docs/decisions"],
+      "source": "adr/madr @ ba75bb1b20d42af5746b246ad348c202419ae681 develop docs/decisions (fetched 2026-10-29)",
+      "records": [
+        { "id": "0000", "title": "Use Markdown Architectural Decision Records", "status": "accepted", "anchors": [] },
+        { "id": "0001", "title": "Dual License the Work", "status": "accepted", "anchors": [] },
+        { "id": "0002", "title": "Do Not Use Numbers in Headings", "status": "accepted", "anchors": [] },
+        { "id": "0003", "title": "Write Own MADR Tooling", "status": "unknown", "statusText": "on hold", "anchors": [] },
+        { "id": "0004", "title": "Write Own TOC Tool", "status": "accepted", "anchors": [] },
+        { "id": "0005", "title": "Use Dashes in Filenames", "status": "accepted", "anchors": [] },
+        { "id": "0006", "title": "Use Names as Identifier", "status": "accepted", "anchors": [] },
+        { "id": "0007", "title": "Do Not Emphasize Line Headings", "status": "accepted", "anchors": [] },
+        { "id": "0008", "title": "Add Status Field", "status": "accepted", "anchors": [] },
+        { "id": "0009", "title": "Support Links To Other ADRs Inside an ADR", "status": "accepted", "anchors": [] },
+        { "id": "0010", "title": "Support Categories", "status": "accepted", "anchors": [] },
+        { "id": "0011", "title": "Use Asterisk as List Marker", "status": "accepted", "anchors": [] },
+        { "id": "0012", "title": "Use Curly Braces to Denote Placeholders", "status": "accepted", "anchors": [] },
+        { "id": "0013", "title": "Use YAML front matter for metadata", "status": "accepted", "anchors": [] },
+        { "id": "0014", "title": "Allow \"neutral\" arguments", "status": "accepted", "anchors": [] },
+        { "id": "0015", "title": "Include \"Consulted\" and \"Informed\" of RACI", "status": "accepted", "anchors": [] },
+        { "id": "0016", "title": "Outcome before Detailed Pros and Cons", "status": "accepted", "anchors": [] },
+        { "id": "0017", "title": "Use Same Format for Outcomes and Options", "status": "accepted", "anchors": [] },
+        { "id": "0018", "title": "Use \"Confirmation\" as Heading", "status": "accepted", "anchors": [] }
+      ]
+    },
+    "m29-adrtools": {
+      "dir": "corpora/m29-adrtools",
+      "adrDirs": ["doc/adr"],
+      "source": "npryce/adr-tools @ b3279baf9be2207d1a4f4bbd608fd0b591c72aee master doc/adr (fetched 2026-10-29)",
+      "records": [
+        { "id": "0001", "title": "1. Record architecture decisions", "status": "accepted", "date": "2016-02-12", "anchors": [] },
+        { "id": "0002", "title": "2. Implement as shell scripts", "status": "accepted", "date": "2016-02-12", "anchors": [] },
+        { "id": "0003", "title": "3. Single command with subcommands", "status": "accepted", "date": "2016-02-12", "anchors": [] },
+        { "id": "0004", "title": "4. Markdown format", "status": "accepted", "date": "2016-02-12", "anchors": [] },
+        { "id": "0005", "title": "5. Help comments", "status": "accepted", "date": "2016-02-13", "anchors": [] },
+        { "id": "0006", "title": "6. Packaging and distribution in other version control repositories", "status": "accepted", "date": "2016-02-16", "anchors": [] },
+        { "id": "0007", "title": "7. Invoke adr-config executable to get configuration", "status": "accepted", "date": "2016-12-17", "anchors": [] },
+        { "id": "0008", "title": "8. Use ISO 8601 Format for Dates", "status": "accepted", "date": "2017-02-21", "anchors": [] },
+        { "id": "0009", "title": "9. Help scripts", "status": "accepted", "date": "2018-06-26", "anchors": [] }
+      ]
+    }
+  }
+}
