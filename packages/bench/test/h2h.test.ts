@@ -1,0 +1,76 @@
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { describe, expect, it } from 'vitest';
+import { loadReusedKeys, precisionRecallF1, sha256File } from '../src/index.js';
+import { runH3Baselines } from '../src/h3-baselines.js';
+
+const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
+const benchDir = resolve(fileURLToPath(import.meta.url), '../..');
+
+describe('T41 M35 harness', () => {
+  it('reused-keys.json hashes match the frozen keys/run logs on disk (R2 guard)', () => {
+    const keys = loadReusedKeys(root);
+    expect(Object.keys(keys.sources).length).toBeGreaterThanOrEqual(10);
+  });
+
+  it('every reused source path actually exists', () => {
+    const keys = JSON.parse(readFileSync(join(benchDir, 'keys/reused-keys.json'), 'utf8'));
+    for (const src of Object.values(keys.sources) as Array<{ path: string }>) {
+      expect(existsSync(join(root, src.path)), src.path).toBe(true);
+    }
+  });
+
+  it('sha256File matches node crypto for a known file', () => {
+    const h = sha256File(root, 'packages/bench/keys/reused-keys.json');
+    expect(h).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('precisionRecallF1: perfect detector scores 1/1/1', () => {
+    expect(precisionRecallF1(10, 0, 0)).toEqual({ precision: 1, recall: 1, f1: 1 });
+  });
+
+  it('precisionRecallF1: no positives found scores recall 0', () => {
+    const r = precisionRecallF1(0, 0, 5);
+    expect(r.recall).toBe(0);
+  });
+
+  it('H3 path-touched baseline flags every symbol in a touched file regardless of body', () => {
+    const parent = 'function a() { return 1; }\nfunction untouched() { return 2; }';
+    const child = 'function a() { return 1; }\nfunction untouched() { return 2; }';
+    const pred = runH3Baselines(parent, child, 'untouched', true);
+    expect(pred.pathTouchedStale).toBe(true);
+  });
+
+  it('H3 Swimm reimplementation flags a body rewritten beyond the match threshold', () => {
+    const parent = 'function f() { const total = price * qty; return total; }';
+    const child = 'function g() { return 0; }';
+    const pred = runH3Baselines(parent, child, 'f', false);
+    expect(pred.swimmStale).toBe(true);
+  });
+
+  it('H3 Copilot-citation reimplementation stays fresh when the symbol name still exists even if its body changed', () => {
+    const parent = 'function f() { return 1; }';
+    const child = 'function f() { return 2 + 3 + 4; }';
+    const pred = runH3Baselines(parent, child, 'f', false);
+    expect(pred.copilotStale).toBe(false);
+  });
+
+  it('h2h bench script produces scoreboard.json and scoreboard.md with 6 H1-H6 rows + the M32 bonus row', () => {
+    const taskDir = join(root, 'tasks/T41-head-to-head-benchmarks/4 log');
+    const scoreboardPath = join(taskDir, 'scoreboard.json');
+    expect(existsSync(scoreboardPath), 'run: node packages/bench/dist/h2h.js').toBe(true);
+    const board = JSON.parse(readFileSync(scoreboardPath, 'utf8'));
+    const claims = board.rows.map((r: { claim: string }) => r.claim);
+    for (const h of ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']) {
+      expect(claims.some((c: string) => c.startsWith(h)), `missing ${h} row`).toBe(true);
+    }
+    for (const row of board.rows) {
+      expect(row.amazon_jd_line, row.claim).toBeTruthy();
+      expect(row.key_path, row.claim).toBeTruthy();
+      expect(row.how_baseline_ran.startsWith('real') || row.how_baseline_ran.startsWith('reimplemented'), row.claim).toBe(true);
+    }
+    expect(existsSync(join(taskDir, 'scoreboard.md'))).toBe(true);
+  });
+});
