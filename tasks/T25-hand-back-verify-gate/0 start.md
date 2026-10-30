@@ -1,22 +1,22 @@
 ---
-state: verified
+state: integrated
 owner: mole-builder-10
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t25-hand-back-verify-gate
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T25-hand-back-verify-gate
 base: 930d173
 reviewer: fresh-review-a19-r1
-updated: 2026-10-29 22:24
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+updated: 2026-10-29 22:29
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-10-29 22:21
 ---
 ```notes
 T25-hand-back-verify-gate      ledger task (rules.md §3 code features)      project tasks
     goal                    One verification gate at the agent hand-back (Claude Code Stop hook, mole check --gate): the type-error delta from the TypeScript compiler (new errors vs the base commit), the related + guarding tests (T22), claims vs transcript (T24), collisions (T21), past fixes and stale notes (T11/T12) → one verdict (verified / unverified / failed) with each reason clickable, sent to the agent and shown in the panel; the in-edit loop stays with Claude Code's LSP plugins and Aider-style lint/test, Mole doesn't duplicate it
     done-when               1) mole check --gate prints the verdict + reasons as JSON and text; the Stop hook returns it to the agent; 2) M17 bench: 20 recorded hand-backs (Mole builder history replay + 6 planted bad ones), truth = a later fix commit, failing CI or a planted defect, labeled before the code → verdict agrees >= 90%, 0 'verified' on a planted defect; 3) gate p95 <= 20 s on Mole and Excalidraw; 4) failure case: tsc or the test runner missing → 'unverified: <reason>', never 'verified'; 5) npm run check passes
-    status                  2026-10-29 verified      reviewer fresh-review-a19-r1 · findings: Independent fresh-subagent review (delegate_task, contract + decide() code + m1
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-10-29 integrated      merge db2d900 · combined checks exit 0 · note: npm run check on merge db2d900 -> exit 0, 68 files / 516 tests green (7 s
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    code
     boundary                packages/verify/src/gate/** + packages/verify/bench/m17*, packages/daemon/src/cli.ts (register the subcommand with one import + one call only), packages/mcp/src (new mole_gate tool only), plugins/claude-code/** (Stop hook), tasks/T25-hand-back-verify-gate/**
