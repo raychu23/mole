@@ -11,4 +11,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 21:26      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T36-spec-kit-and-adr-import · branch ledger/t36-spec-kit-and-adr-import · base ce958e9
     2026-10-29 21:36      running → submitted      report: Unblocked after root-cause fix (shared vitest timeout, main@3af8a4a) + stale .mole/local/verify-fixtures cleanup. Merged main cleanly (83f758b), no conflicts, npm install needed (T33's server deps - pg/fastify/ex
     2026-10-29 21:36      checks ran: npm run check && node packages/decisions/dist/bench/m29.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T36-spec-kit-and-adr-import → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 22:20      submitted → verified      reviewer fresh-review-subagent-a18-r1 · findings: No P0. P1 (logged, not blocking): the bench key + red tests landed in the same commit as the importer rather than a strictly separate earlier red commit, reviewer indepen
+    2026-10-29 22:20      checks ran: npm run check && node packages/decisions/dist/bench/m29.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T36-spec-kit-and-adr-import → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
