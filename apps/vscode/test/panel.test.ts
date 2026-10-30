@@ -24,6 +24,7 @@ const okRunners = (): Runners => ({
   claims: async () => ({ claims: [] }) as never,
   collisions: async () => ({ pairs: [] }) as never,
   tried: async () => ({ tried: [] }) as never,
+  reviewNotes: async () => ({ drafts: [], diagramSvg: undefined }) as never,
 });
 
 describe('buildPanelModel (M26a: 8 sections cover 14 CLI read features)', () => {
