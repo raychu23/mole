@@ -10,6 +10,11 @@ import { execFile } from 'node:child_process';
 import { resolve } from 'node:path';
 import type { MoleClient } from '@mole/daemon';
 import { selectTests } from '@mole/verify';
+// T31: @mole/oneonone has no runtime-import deps like dependency-cruiser (unlike @mole/decisions/rules,
+// see the esbuild note above), so it's safe to import straight into the extension host, same as @mole/verify.
+import { buildMatcher, prep, loadReadBack, defaultReadBackPath, type OneOnOneRecord, type Question } from '@mole/oneonone';
+import { readdirSync, readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 import type { Runners } from './panelData.js';
 
 export interface CliHandle {
@@ -110,6 +115,37 @@ export function makeRunners(h: CliHandle, client: () => MoleClient | undefined):
     },
     async tried(target) {
       return run(h, ['tried', target]);
+    },
+    async oneonone() {
+      const root = h.root;
+      const decisionsDir = join(root, '.mole', 'decisions');
+      const records: OneOnOneRecord[] = existsSync(decisionsDir)
+        ? readdirSync(decisionsDir)
+            .filter((n) => n.endsWith('.md'))
+            .sort()
+            .map((n) => {
+              let excerpt = '';
+              try {
+                excerpt = readFileSync(join(decisionsDir, n), 'utf8').slice(0, 900);
+              } catch {
+                excerpt = '';
+              }
+              return { id: n.replace(/\.md$/, ''), file: `.mole/decisions/${n}`, folder: '.mole/decisions', excerpt };
+            })
+        : [];
+      const questionsPath = join(root, '.mole', 'local', 'oneonone', 'questions.json');
+      let questions: Question[] = [];
+      if (existsSync(questionsPath)) {
+        try {
+          questions = JSON.parse(readFileSync(questionsPath, 'utf8')) as Question[];
+        } catch {
+          questions = [];
+        }
+      }
+      const matcher = buildMatcher(records);
+      const groups = prep(matcher, questions);
+      const readback = loadReadBack(defaultReadBackPath(root));
+      return { groups, readback };
     },
   };
 }

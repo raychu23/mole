@@ -179,6 +179,7 @@
     "@mole/history": "*",
     "@mole/layout": "*",
     "@mole/memory": "*",
+    "@mole/oneonone": "*",
     "@mole/questions": "*",
     "@mole/verify": "*"
   },
