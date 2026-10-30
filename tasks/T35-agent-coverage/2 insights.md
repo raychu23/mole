@@ -63,3 +63,41 @@ feature works, has 0 false weak-spot reasons and very high attribution precision
 mis-attributes a file to the wrong session), and the recall gap has a diagnosed, logged cause and a concrete next
 step above -- consistent with HANDOFF's "a miss is not a stop" guidance. A fresh reviewer should re-judge whether
 0.427 recall is acceptable to integrate as-is or should send T35 back for the resumed-session fix.
+
+## 2026-10-29 (T35 resumed, 2nd session): resumed-session fix implemented, M27a recall still a miss -- real cause found
+
+Implemented the next step above: `buildResumedFamilies()` in `packages/coverage/src/index.ts` (commit 3a59709)
+chains root Hermes sessions (no `parent_session_id`) that share harness + cwd and whose windows are
+**sequential** (one's end followed within 15 minutes by another's start, nearest candidate only) -- not
+merely overlapping, since this repo's own `~/.hermes/state.db` shows the four 10-29 builder sessions already
+share one cwd and overlap each other's multi-hour windows almost entirely; overlap-based matching would have
+merged all four into one family and wrecked precision. Full reasoning and the SQL evidence are in
+`4 log/key-changes.md`.
+
+**Result: unchanged** -- precision 0.9982, recall 0.4269, identical to before (round 1 of this session,
+commit 3a59709, logged in `4 log/runs.jsonl`). Confirmed by direct query that zero root sessions for any of
+mole-builder-3/4/5/6 chain within the gap threshold (checked up to 2 hours); the fix is real and general but
+had nothing to attribute in this specific dataset.
+
+Traced the actual composition of the remaining false negatives (not inferred -- queried directly): for
+mole-builder-3 and mole-builder-5, ~97% of files the bench key says they should own but the scan doesn't
+attribute to them are files that the scan correctly attributes instead to a **different, known builder's own
+session** (e.g. 167 of mole-builder-3's false negatives are files mole-builder-4's own session edited; 149
+more are one of mole-builder-4's subagents). This is not an attribution bug (precision stays 0.998-1.0 per
+builder) -- it is `bench/build-key.mjs` counting every file touched by any commit reachable via
+`git log <ledger-branch> --no-merges` within a builder's time window, and ledger branches are serial
+integration branches whose `git log` includes every other concurrently-running builder's commits that
+happened to land in the same overnight window. Fixing this needs a key change (filtering to commits unique
+to the branch, or to the owning session's own commit-linking match) -- a frozen-key change per R2, logged for
+a ruling in `4 log/key-changes.md`, not made here.
+
+Stopping here rather than spending the remaining round budget: the mechanism this round targeted is
+confirmed absent from the data (not "maybe needs a bigger threshold" -- checked to 2 hours, still nothing),
+and the real cause is a key-method property, not something `packages/coverage`'s attribution logic can fix
+without manufacturing false positives (explicitly forbidden by R7 / the task's own instructions). Per R7 this
+is a miss, logged honestly: **M27a final: precision 0.9982, recall 0.4269** (mole-builder-3 14.3%,
+mole-builder-4 65.3%, mole-builder-5 32.4%, mole-builder-6 94.2%) -- unchanged from the prior session's
+number, now with the fix attempted, verified inert on this dataset, and the real blocking cause identified
+and handed to a human/reviewer ruling rather than guessed at further. M27b, M27c and the failure/privacy
+cases remain met (see `4 log/runs.jsonl`); `npm run check` is green (499 passed, 14 skipped, 0 failed).
+
