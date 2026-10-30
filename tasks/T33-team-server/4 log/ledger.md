@@ -15,4 +15,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 19:13      checks ran: npm run check && node packages/server/dist/bench/m25.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T33-team-server → exit 0 (})
     2026-10-29 19:20      submitted → verified      reviewer fresh-review-t33-r3 · findings: No P0/P1 found. rebuild.ts: listMoleFilesAtRef now throws GitReadError on any git failure, called before pool.connect() and before the index-wiping queries run inside rebuildIndex
     2026-10-29 19:20      checks ran: npm run check && node packages/server/dist/bench/m25.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T33-team-server → exit 0 (})
+    2026-10-29 19:26      verified → integrated      merge 7020b5e (merge T33-team-server into main) + c975baf (root vitest exclude fix for context/reference) · combined checks exit 0 · note: npm run check on main -> 69/69 test files, 482/482 tests pass, node packages/serv
+    2026-10-29 19:26      combined checks ran: npm run check && node packages/server/dist/bench/m25.js in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (})
 ```
