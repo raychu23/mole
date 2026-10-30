@@ -1,10 +1,18 @@
 {
-  "description": "Mole: notes for the files in play at session start; mole check on the session's diff when Claude stops",
+  "description": "Mole: notes + decisions for the files in play at session start; a decision added once when you edit its lines; mole check on the session's diff when Claude stops",
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
           { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/session-start.mjs\"", "timeout": 30 }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/pre-tool-use.mjs\"", "timeout": 15 }
         ]
       }
     ],

@@ -10,4 +10,8 @@ ledger (newest last, nothing deleted)
     2026-10-29 21:15      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T37-plugin-decisions-first · branch ledger/t37-plugin-decisions-first · base fb2399e
     2026-10-29 21:26      running → submitted      report: Unblocked after root-cause fix (shared vitest timeout, main@3af8a4a) + removed stale gitignored .mole/local/verify-fixtures leftovers from a prior run separately contaminating root test discovery. Merged main cle
     2026-10-29 21:26      checks ran: npm run check && node plugins/claude-code/test/m31.mjs in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T37-plugin-decisions-first → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 21:54      submitted → verified      reviewer fresh-review-subagent-a18-r1 · findings: No P0. P1: mole_decisions/mole_check 'files' MCP arg has no direct unit test (hand-probed, works) - follow-up, not blocking. P2: weakSpotsLine() placeholder text until T3
+    2026-10-29 21:54      checks ran: npm run check && node plugins/claude-code/test/m31.mjs in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T37-plugin-decisions-first → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 22:05      verified → integrated      merge 9a2173f · combined checks exit 0 · note: npm run check on main (468/482, 62/69 files) + node plugins/claude-code/test/m31.mjs → M31a 10/10 p95 534ms, M31b 10/10 → exit 0
+    2026-10-29 22:05      combined checks ran: npm run check && node plugins/claude-code/test/m31.mjs in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```

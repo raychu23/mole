@@ -51,6 +51,9 @@
     },
     {
       "path": "packages/server"
+    },
+    {
+      "path": "packages/bench"
     }
   ]
 }
