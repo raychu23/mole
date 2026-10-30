@@ -7,11 +7,14 @@
 // the existing MoleClient (the daemon is already running for the map panel); everything else is a quick
 // child_process call to the same CLI note/memory/since already use.
 import { execFile } from 'node:child_process';
-import { readdirSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import type { MoleClient } from '@mole/daemon';
 import { buildTreeGraph, draftsFromNotes, renderSvg } from '@mole/reviews';
 import { selectTests } from '@mole/verify';
+// T31: @mole/oneonone has no runtime-import deps like dependency-cruiser (unlike @mole/decisions/rules,
+// see the esbuild note above), so it's safe to import straight into the extension host, same as @mole/verify.
+import { buildMatcher, prep, loadReadBack, defaultReadBackPath, type OneOnOneRecord, type Question } from '@mole/oneonone';
 import type { Runners } from './panelData.js';
 
 export interface CliHandle {
@@ -115,6 +118,37 @@ export function makeRunners(h: CliHandle, client: () => MoleClient | undefined):
     },
     async agentIntent(target) {
       return run(h, ['agent-intent', target]);
+    },
+    async oneonone() {
+      const root = h.root;
+      const decisionsDir = join(root, '.mole', 'decisions');
+      const records: OneOnOneRecord[] = existsSync(decisionsDir)
+        ? readdirSync(decisionsDir)
+            .filter((n) => n.endsWith('.md'))
+            .sort()
+            .map((n) => {
+              let excerpt = '';
+              try {
+                excerpt = readFileSync(join(decisionsDir, n), 'utf8').slice(0, 900);
+              } catch {
+                excerpt = '';
+              }
+              return { id: n.replace(/\.md$/, ''), file: `.mole/decisions/${n}`, folder: '.mole/decisions', excerpt };
+            })
+        : [];
+      const questionsPath = join(root, '.mole', 'local', 'oneonone', 'questions.json');
+      let questions: Question[] = [];
+      if (existsSync(questionsPath)) {
+        try {
+          questions = JSON.parse(readFileSync(questionsPath, 'utf8')) as Question[];
+        } catch {
+          questions = [];
+        }
+      }
+      const matcher = buildMatcher(records);
+      const groups = prep(matcher, questions);
+      const readback = loadReadBack(defaultReadBackPath(root));
+      return { groups, readback };
     },
     /** T40: design review / meeting note drafts (Granola model, D38 -- never invented) + a deterministic
      *  delta diagram of the working tree over the file tree (PR Lens pattern), both from @mole/reviews. */

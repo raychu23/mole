@@ -21,6 +21,7 @@
     "@mole/telemetry": "*",
     "@mole/decisions": "*",
     "@mole/verify": "*",
+    "@mole/coverage": "*",
     "@mole/intake": "*"
   }
 }

@@ -4,6 +4,7 @@ import { formatNeighborhood } from '@mole/core';
 import { ensureDaemon, MoleClient, type EnsureOptions } from '@mole/daemon';
 import { agentIntentsFor, claims, defaultSources, tried } from '@mole/agentstate';
 import { registerCollisionsTool } from './collisions-tool.js';
+import { registerOneOnOneTool } from './oneonone-tool.js'; // T31: 1:1 prep + read-back, grouped by folder, never by person
 import { executeTool, GEN_AI } from '@mole/telemetry';
 import type { Change } from '@mole/history';
 import { resolve } from 'node:path';
@@ -94,6 +95,7 @@ export function createServer(opts: MoleMcpOptions): McpServer {
       }
     },
   );
+  registerOneOnOneTool(server, opts); // T31: mole_oneonone (prep | readback)
   server.registerTool(
     'mole_check',
     {
@@ -173,6 +175,43 @@ export function createServer(opts: MoleMcpOptions): McpServer {
       }
     },
   );
+  // T35 (M27): which agents cover which code, and where nobody does -- blast radius / weak spots, in the one panel
+  // where the agent or developer already works (D31). Same JSON as `mole coverage --json`.
+  server.registerTool(
+    'mole_coverage',
+    {
+      title: 'Mole agent coverage',
+      description:
+        'Which agent sessions (Hermes, Claude Code, Codex) read or edited a file, when a human last looked (T13), what tests guard it and what decision ' +
+        'governs it (T29), with a weak-spot reason computed from that data: agent-edited with no human read since, and no guarding test or a red/yellow ' +
+        "decision. Read-only: local session logs + git + .mole/ records, never message text, nothing leaves the machine. Use to see a session's blast radius " +
+        'or which files in the repo nobody has reviewed after an agent changed them.',
+      inputSchema: {
+        root: z.string().optional().describe('repository root (default: the server root, MOLE_ROOT or cwd)'),
+        file: z.string().optional().describe('one file, repo-relative or absolute; omit for the whole repo scan'),
+        session: z.string().optional().describe('filter to files touched by this session id (or its prefix)'),
+        weak: z.boolean().optional().describe('only files flagged as a weak spot'),
+      },
+    },
+    async (args) => {
+      const root = resolve(opts.root, args.root ?? '.');
+      try {
+        const { coverage, scanCoverage } = await import('@mole/coverage');
+        if (args.file) {
+          const r = await coverage(root, args.file);
+          return { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }] };
+        }
+        const scan = scanCoverage(root);
+        if (scan.notice) return { content: [{ type: 'text' as const, text: scan.notice }] };
+        let files = scan.files;
+        if (args.session) files = files.filter((f) => f.agents.some((a) => a.session.startsWith(args.session!)));
+        if (args.weak) files = files.filter((f) => f.weak.is);
+        return { content: [{ type: 'text' as const, text: JSON.stringify({ ...scan, files }, null, 2) }] };
+      } catch (e) {
+        return { content: [{ type: 'text' as const, text: `mole_coverage: ${(e as Error).message}` }], isError: true };
+      }
+    },
+  );
   // T23: agents interrogate, people write (D38). Up to 3 pointed questions + which decision(s) govern the change,
   // built only from facts Mole already found (diff hunks, past fixes, governing decisions); silent when nothing
   // governs the change. Mole never drafts a decision record's own why/context/consequences text (R6).
@@ -245,6 +284,7 @@ export function createServer(opts: MoleMcpOptions): McpServer {
   );
   return server;
 }
+
 
 export interface CheckArgs {
   sha?: string;

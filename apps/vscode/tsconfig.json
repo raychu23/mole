@@ -38,6 +38,9 @@
       "path": "../../packages/decisions"
     },
     {
+      "path": "../../packages/oneonone"
+    },
+    {
       "path": "../../packages/verify"
     },
     {
