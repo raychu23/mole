@@ -326,3 +326,17 @@ database mole_t38) — neither is in my queue.
 - 2026-10-29 ~23:50 (mole-builder-9/a13) T33-team-server: claimed -> built full loop (prior-art, red tests, implement, 2 review rounds with real fixes each round) -> BLOCKED after round 2/2 review found a real data-loss bug (pg-boss job replay against stale deleted fixture dirs silently wipes the Postgres decision index via an error-swallowed git call in rebuild.ts). M25 hits every numeric target on a single clean run but is not stable across reuse (done-when #1 replay + #5 reconcile-from-git are violated by the wipe). cause + fix needed logged in tasks/T33-team-server/4 log/ledger.md and this blocked move; decision-owner raymond. Worktree left at /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T33-team-server (not cleaned up, branch T33-team-server) for the next agent to pick up the fix.
 
 - 2026-10-29 ~22:40 (mole-builder-9/a13) T33-team-server: Raymond "go full ahead" -> unblocked, fixed root cause (rebuild.ts threw GitReadError instead of swallowing git failures into an index wipe; added pg-boss retryLimit/retentionDays so stale jobs stop replaying), added regression test, verified stable across 6+ reruns against the same persistent Postgres with direct row-count checks (no wipe), fresh-reviewer round 3 verified clean, merged into main, found + fixed one more pre-existing gap (context/reference symlinked prior-art research repos were being picked up by root vitest discovery, excluded them) -> npm run check on main 69/69 files 482/482 tests, M25 PASS on main. INTEGRATED commit b470991. Worktree removed, node_modules cleaned up. Queue (T33, my only task) now empty.
+2026-10-30 00:10 · planning chat: Raymond 'fix the blocked' → a18 (vitest timeouts root cause, then T37 T23 T36 integrate, T35 recall fix) + a19 (T25 correctness)
+
+## 2026-10-30 (mole-builder-13, a18): shared vitest config: timeouts under load
+
+Raymond 10-30 00:10 "fix the blocked". Root cause for T23/T36/T37's shared blocker:
+npm run check failing on UNRELATED tests ("Test timed out in 5000ms", vitest-worker
+onTaskUpdate timeout) under heavy concurrent-builder host load (avg 190-265 earlier),
+not a real test bug. Fixed on main in a tiny separate commit (3af8a4a, vitest.config.ts
+only): testTimeout/hookTimeout 5000/10000ms (vitest defaults) -> 30000ms each, and
+poolOptions.forks.maxForks capped to floor(cpus/2)=4 to cut worker contention, citing
+vitest docs (config/testtimeout, config/hooktimeout, config/pool, v3 CLI guide). Proof:
+npm run check green 2x on main, both runs 468/482 passed | 14 intentionally skipped
+(Postgres specs needing a live server), 62/69 test files. Host load now low (avg ~7-21).
+Next: unblock + reclaim T37, T23, T36 against this fix; T35 M27a recall fix.
