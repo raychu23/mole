@@ -10,4 +10,6 @@ ledger (newest last, nothing deleted)
     2026-10-29 23:13      checks ran: npm run check && node packages/agentstate/dist/bench/m33.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T39-import-agent-session-logs → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-10-29 23:16      submitted → verified      reviewer fresh-review-a21-r2 · findings: P0 (hover vs panel-only) confirmed fixed in 7cafd70, M33 unaffected (recall 100% 30/30 wrong 0, stale 100% 6/6, false 0/3, model calls 0), key byte-identical to red commit 693d282
     2026-10-29 23:16      checks ran: npm run check && node packages/agentstate/dist/bench/m33.js in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T39-import-agent-session-logs → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-10-29 23:28      verified → integrated      merge 823a11f · combined checks exit 0 · note: npm run check on main (823a11f) -> green, node packages/agentstate/dist/bench/m33.js -> MET (recall 100% 30/30 wrong 0, stale recall 100% 6/6, false-on-whitespace 0/3, model
+    2026-10-29 23:28      combined checks ran: npm run check && node packages/agentstate/dist/bench/m33.js in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
