@@ -1,21 +1,21 @@
 ---
-state: proposed
-owner:
+state: ready
+owner: mole-builder-15
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch:
 worktree:
 base:
 reviewer:
-updated: 2026-10-29 19:54
-status: ledger proposed
-next: fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+updated: 2026-10-29 22:41
+status: ledger ready
+next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
 ---
 ```notes
 T40-design-review-and-meeting-capture      ledger task (rules.md §3 code features)      project tasks
     goal                    Carry design discussions, technical reviews and meetings into the code (USER 10-29 23:10: 'design discussions and technical reviews … connecting to meetings, also the visual diagram aspect. human based'): (a) capture = Granola's model: a person jots sparse notes during the review/meeting (panel or .mole/local/meetings/*.md); Mole only expands around what they flagged into decision DRAFTS pinned to the functions/folders named (T29 format, people approve like a PR, D38); (b) review view = PR Lens's pattern: a deterministic (no model) diagram rendered from a schema-checked JSON graph of decisions over the file tree, with the change's delta colored and untouched parts greyed, rewritten in place on each push (one PR comment, hidden id); (c) drift policy = Swimm's: trivial drift auto-synced silently, real drift escalated as a review task. Not built: transcription, meeting bots, ticket creation (crowded: Rovo, Read.ai, Fellow)
     done-when               1) M34 key before code: 10 recorded review/meeting note fixtures (from Mole's own design discussions in context/product-plan, his 3C1 notes and 2 public design-review threads, e.g. KEP or Backstage ADR PRs) → drafts link to the right functions/folders >= 90%, invented decisions 0; 2) diagram: same input → byte-identical SVG twice; delta colors match a hand-labeled key 100%; 3) trivial-vs-real drift split agrees with a labeled key >= 90%, 0 real drifts auto-synced; 4) panel + PR comment show it; 5) npm run check green
-    status                  2026-10-29 proposed
-    next                    fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+    status                  2026-10-29 ready      owner mole-builder-15
+    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
     pinned
     mode                    code
     boundary                packages/reviews/** (new), apps/vscode webview: one import + one call, tasks/T40-design-review-and-meeting-capture/**
