@@ -50,6 +50,9 @@
       "path": "packages/temporal"
     },
     {
+      "path": "packages/reasoning"
+    },
+    {
       "path": "apps/vscode"
     },
     {
