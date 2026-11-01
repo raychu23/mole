@@ -38,6 +38,9 @@ export default defineConfig({
       '**/bench/corpora/**',
       '**/bench/**/corpora/**',
       'evals/inspect/**',
+      // .mole/local is gitignored per-machine scratch (verification-skill fixtures that are broken on purpose);
+      // it must never run as part of the suite (T42 found `npm run check` red from .mole/local/verify-fixtures).
+      '.mole/local/**',
       // context/reference is a symlink into shared research material (cloned external
       // repos kept for prior-art lookups, e.g. context/reference/shared sdlc/.compat/atlas).
       // It ships its own *.test.js files (bun:test, differing suite shapes) that are not
