@@ -1,21 +1,22 @@
 ---
-state: ready
+state: running
 owner: t43-builder
-repo:
-branch:
-worktree:
-base:
+repo: /Users/a1/Desktop/CS Code/Project/Mole
+branch: ledger/t43-full-rationale-records
+worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T43-full-rationale-records
+base: 9eb8fad
 reviewer:
 updated: 2026-11-01 17:51
-status: ledger ready
-next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+status: ledger running
+next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+claimed: 2026-11-01 17:51
 ---
 ```notes
 T43-full-rationale-records      ledger task (rules.md §3 code features)      project tasks
     goal                    Agent-facing decision output (MCP tools, hook text, .mole/decisions records, T36 ADR import) carries the full Decision + Rationale/Context + Consequences text, not only the 240-char summaryOf() list summary. Evidence: M-B v2 full-rationale records 18/22 correct vs 1/22 (prelim-11-01/mb-why/v2/results.md); v1 thin records 0.083.
     done-when               1 failing tests first: an imported ADR with a 1,500-char rationale reaches the MCP get/why tool and hook output intact (sections named) · 2 summaryOf stays for list/compact views only · 3 output size bounded by a documented budget with section-aware truncation (never mid-Decision) · 4 re-run M-B dev B arm with records produced by the PRODUCT importer (not hand-made v2) → CORRECT within 1 of v2 hand-made 9/12 · 5 npm run check passes
-    status                  2026-11-01 ready      owner t43-builder
-    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+    status                  2026-11-01 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T43-full-rationale-records · branch ledger/t43-full-rationale-
+    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
     pinned
     mode                    one worker
     boundary                packages/decisions/** packages/mcp/** packages/daemon/** (hook text) + their tests; read-only elsewhere
