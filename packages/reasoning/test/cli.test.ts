@@ -49,3 +49,16 @@ describe('reasoning CLI (JSON stdin -> JSON stdout)', () => {
     expect(stderr).toMatch(/invalid JSON/);
   });
 });
+
+describe('reasoning CLI input validation (T42 review P2)', () => {
+  it('rejects an argument without an id', () => {
+    const { status, stderr } = runCli(JSON.stringify({ framework: { args: [{}], attacks: [] } }));
+    expect(status).not.toBe(0);
+    expect(stderr).toMatch(/non-empty string id/);
+  });
+  it('rejects a non-string audience', () => {
+    const { status, stderr } = runCli(JSON.stringify({ framework: { args: [{ id: 'a' }], attacks: [] }, audience: [1, 2] }));
+    expect(status).not.toBe(0);
+    expect(stderr).toMatch(/audience must be an array/);
+  });
+});

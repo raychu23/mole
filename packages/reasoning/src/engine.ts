@@ -10,11 +10,16 @@ export interface Graph {
   attackersOf: Map<ArgId, Set<ArgId>>;
 }
 
-export function validateFramework(framework: Framework): void {
+export function validateFramework(framework: Framework, audience?: unknown): void {
   const seen = new Set<ArgId>();
   for (const a of framework.args) {
+    if (!a || typeof a.id !== 'string' || a.id.length === 0) throw new Error(`argument needs a non-empty string id: ${JSON.stringify(a)}`);
+    if (a.value !== undefined && typeof a.value !== 'string') throw new Error(`argument value must be a string: ${a.id}`);
     if (seen.has(a.id)) throw new Error(`duplicate argument id: ${a.id}`);
     seen.add(a.id);
+  }
+  if (audience !== undefined && (!Array.isArray(audience) || audience.some((v) => typeof v !== 'string'))) {
+    throw new Error('audience must be an array of value names (strings)');
   }
   for (const [from, to] of framework.attacks) {
     if (!seen.has(from)) throw new Error(`attack references unknown argument: ${from}`);
@@ -47,7 +52,7 @@ export function attackSucceeds(
 }
 
 export function buildGraph(framework: Framework, audience?: Audience): Graph {
-  validateFramework(framework);
+  validateFramework(framework, audience);
   const ids = framework.args.map((a) => a.id);
   const valueOf = new Map<ArgId, string | undefined>(framework.args.map((a: ArgumentSpec) => [a.id, a.value]));
   const defeatsOf = new Map<ArgId, Set<ArgId>>(ids.map((id) => [id, new Set<ArgId>()]));
