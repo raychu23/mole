@@ -21,8 +21,8 @@ T43-full-rationale-records      ledger task (rules.md §3 code features)      pr
     boundary                packages/decisions/** packages/mcp/** packages/daemon/** (hook text) + their tests; read-only elsewhere
     checks                  npm run check
     non-goals               no change to reasoning engine, temporal store, server
-    proof
-    stop
+    proof                   runs.jsonl last line with the M-B dev B-arm count + npm run check output + the red-tests commit dated before the first implementation commit
+    stop                    same check failure 3 rounds in a row · needs Raymond's accounts, paid API spend, people or a product decision (log it in 4 log, move on)
     came from               Mole chat 11-01 M-B v2 result; USER 'make sure core code of project still even better'
     links                   4 log/ledger.md (every transition + its evidence)
     harness                 hermes
