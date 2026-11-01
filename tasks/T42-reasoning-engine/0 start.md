@@ -1,22 +1,22 @@
 ---
-state: verified
+state: integrated
 owner: reasoning-builder
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t42-reasoning-engine
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T42-reasoning-engine
 base: 7e6ecf8
 reviewer: reviewer-T42-r1 (fresh subagent deleg_f25d6b24 task 0)
-updated: 2026-11-01 17:20
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+updated: 2026-11-01 17:23
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-11-01 16:19
 ---
 ```notes
 T42-reasoning-engine      ledger task (rules.md §3 code features)      project tasks
     goal                    Build Mole's reasoning engine (human-graph W4/W6 core): new package packages/reasoning in TypeScript computing grounded semantics over an argument framework (args + attacks), a value/audience filter (Bench-Capon VAF: an attack succeeds unless the attacked argument's value is preferred by the audience), labels in/out/undecided with an explanation path (which in-argument defeats it), and incremental re-evaluation on edits that matches full recomputation; plus a CLI (JSON stdin -> JSON stdout) so evals can call it.
     done-when               1) vitest suite: Nixon diamond (grounded empty), chains, even/odd cycles, self-attack, audience cases from Bench-Capon examples, explanation paths; 2) oracle gate: same fixtures through an independent reference (Carneades-4 dung solver via go if installable, else TweetyProject SimpleGroundedReasoner via java, else a documented second independent implementation) agree 100%; 3) randomized property test: incremental == full recompute on >=500 random edit sequences; 4) p95 evaluation time on 10k-argument random graphs reported; 5) npm run check passes on main
-    status                  2026-11-01 verified      reviewer reviewer-T42-r1 (fresh subagent deleg_f25d6b24 task 0) · findings: P2 CLI accepted args without id / non-string
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-11-01 integrated      merge 855d112 · combined checks exit 0 · note: npm run check on main 855d112+341c15d → 80 files passed, 557 tests, exit
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    code
     boundary                packages/reasoning/**, tsconfig.json reference, tasks/T42*/**
