@@ -11,6 +11,7 @@ import type { LlmClient } from '../compile/types.js';
 import { prCheck } from '../check/pr-check.js';
 import type { GovernedRecord } from '../check/types.js';
 import { routeDecisions } from '../route/route.js';
+import { argumentChainView } from './argument-view.js';
 import type { CascadeFlag, CascadeResult, CascadeVerdict, RoutedDecision, SemanticRouteOptions } from './types.js';
 
 /** T49: a decision's content/export-convention/rule hit decides outright (the pattern IS the signal); a decision
@@ -153,7 +154,7 @@ export async function cascadeCheck(opts: CascadeOptions): Promise<CascadeResult>
 
   const verdicts: CascadeVerdict[] = [];
   const times = new Map<string, number>();
-  const escalations: Array<{ g: GovernedRecord; paths: string[]; text: string }> = [];
+  const escalations: Array<{ g: GovernedRecord; paths: string[]; text: string; argumentLabels?: Record<string, 'in' | 'out' | 'undecided'> }> = [];
   for (const g of governedAll) {
     const t1 = performance.now();
     if (isCrisp(g)) {
@@ -166,24 +167,31 @@ export async function cascadeCheck(opts: CascadeOptions): Promise<CascadeResult>
       verdicts.push({ decision: g.id, title: g.title, tier: 'zero-llm', flag: 'violates', reason: 'scope anchor touched; no LLM tier configured for this call, reporting the raw governed hit', ms: Math.round(performance.now() - t1) });
       continue;
     }
-    const text = opts.decisionText?.(g.id);
-    if (!text) {
+    const rawText = opts.decisionText?.(g.id);
+    if (!rawText) {
       verdicts.push({ decision: g.id, title: g.title, tier: 'zero-llm', flag: 'violates', reason: 'scope anchor touched; no decision text available to escalate to the LLM tier', ms: Math.round(performance.now() - t1) });
       continue;
     }
+    // T54: the judge prompt is built from the decision's OWN derived argument chain (deriveAdrArgumentFramework)
+    // evaluated with packages/reasoning's grounded semantics, not the raw text alone -- a Considered Options
+    // entry the record's own stated reasons never defeat is surfaced as a standing, unresolved objection
+    // instead of silently reading as settled prose. A record with no Considered Options/Decision Outcome
+    // structure degrades to its plain text unchanged (argument-view.ts's own fallback).
+    const view = argumentChainView(g.id, rawText);
+    const argumentLabels = Object.keys(view.labels).length > 1 ? view.labels : undefined; // >1: something was actually derived beyond the bare claim
     times.set(g.id, t1);
-    escalations.push({ g, paths, text });
+    escalations.push({ g, paths, text: view.text, argumentLabels });
   }
 
   if (escalations.length === 1) {
     // single escalation: same one-call shape as before (kept separate from the batch path so the prompt/response
     // contract for the common case stays simple and unchanged)
-    const { g, paths, text } = escalations[0]!;
+    const { g, paths, text, argumentLabels } = escalations[0]!;
     const t1 = times.get(g.id)!;
     const diff = clipDiff(gitDiffFor(opts.root, pr.mergeBase, pr.head, paths), CHARS_PER_DECISION_BUDGET);
     const { text: resp, usage } = await opts.llm!.complete(ESCALATE_PROMPT(text, diff));
     const flag = parseVerdict(resp) ?? 'violates'; // an unparsable LLM response is reported as a flag, never silently dropped
-    verdicts.push({ decision: g.id, title: g.title, tier: 'llm', flag, reason: resp.replace(/^VERDICT:\s*\S+\s*/i, '').trim() || resp, usage, ms: Math.round(performance.now() - t1) });
+    verdicts.push({ decision: g.id, title: g.title, tier: 'llm', flag, reason: resp.replace(/^VERDICT:\s*\S+\s*/i, '').trim() || resp, usage, argumentLabels, ms: Math.round(performance.now() - t1) });
   } else if (escalations.length > 1) {
     // T49 batched escalation (FrugalGPT/PR-Agent): ONE call for every escalating decision on this check, instead
     // of one call per decision -- the fix for the M2 v2 cost regression (cascade > llm-reviewer per-check cost
@@ -196,12 +204,12 @@ export async function cascadeCheck(opts: CascadeOptions): Promise<CascadeResult>
     // usage is reported for the WHOLE batched call once, on its first decision; the rest cost $0 marginal (this is
     // the actual saving: one call's tokens instead of N calls' tokens) -- the bench sums per-case cost over
     // verdicts, so attributing once (not once-per-decision) is what makes the arithmetic match the real spend.
-    escalations.forEach(({ g }, i) => {
+    escalations.forEach(({ g, argumentLabels }, i) => {
       const t1 = times.get(g.id)!;
       const found = parsed.get(g.id);
       const flag = found?.flag ?? 'violates'; // a decision whose block the model dropped is reported as a flag, never silently dropped
       const reason = found?.reason ?? `(batched call did not return a parseable block for ${g.id}) ${resp.slice(0, 200)}`;
-      verdicts.push({ decision: g.id, title: g.title, tier: 'llm', flag, reason, usage: i === 0 ? usage : undefined, ms: Math.round(performance.now() - t1) });
+      verdicts.push({ decision: g.id, title: g.title, tier: 'llm', flag, reason, usage: i === 0 ? usage : undefined, argumentLabels, ms: Math.round(performance.now() - t1) });
     });
   }
 

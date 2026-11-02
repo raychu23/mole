@@ -20,3 +20,6 @@ export type { ArgumentFramework } from './argdown/framework.js';
 export { parseArgdown } from './argdown/parser.js';
 export type { ArgdownItem, ArgdownItemKind, ArgdownRelation, ArgdownRelationType, ParsedArgdown } from './argdown/parser.js';
 export { loadArgdown } from './argdown/loader.js';
+// T54: derive a Dung framework from an ADR's own MADR/Nygard sections (no hand-authored Argdown file)
+export { deriveAdrArgumentFramework } from './argdown/derive-adr.js';
+export type { AdrArgument, AdrArgumentFramework, AdrArgumentRole } from './argdown/derive-adr.js';
