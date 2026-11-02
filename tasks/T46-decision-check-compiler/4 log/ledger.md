@@ -5,4 +5,6 @@ ledger (newest last, nothing deleted)
     2026-11-01 19:52      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T46-decision-check-compiler · branch ledger/t46-decision-check-compiler · base 888db14
     2026-11-01 20:16      running → submitted      report: packages/decisions/src/compile/ + cascade/ (draft/approve/reject, zero-LLM tier + 1-call LLM escalation), packages/mcp/src/compile-cascade-tool.ts, packages/decisions/test/compile.test.ts + cascade.test.ts, packa
     2026-11-01 20:16      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T46-decision-check-compiler → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-11-01 21:09      submitted → verified      reviewer reviewer-T46-r1 (fresh subagent deleg_6c0532f4 task 2) · findings: P2 ReDoS guard reused from options.ts (nested-quantifier only), P2 prompt injection in LLM tier = same exposure as LLM-reviewer baseline, dev $0
+    2026-11-01 21:09      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T46-decision-check-compiler → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
