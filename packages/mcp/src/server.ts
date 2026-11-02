@@ -4,6 +4,7 @@ import { formatNeighborhood } from '@mole/core';
 import { ensureDaemon, MoleClient, type EnsureOptions } from '@mole/daemon';
 import { agentIntentsFor, claims, defaultSources, tried } from '@mole/agentstate';
 import { registerCollisionsTool } from './collisions-tool.js';
+import { registerCompileAndCascadeTools } from './compile-cascade-tool.js'; // T46: compile-at-capture approve/reject + cascade check
 import { registerOneOnOneTool } from './oneonone-tool.js'; // T31: 1:1 prep + read-back, grouped by folder, never by person
 import { executeTool, GEN_AI } from '@mole/telemetry';
 import type { Change } from '@mole/history';
@@ -96,6 +97,7 @@ export function createServer(opts: MoleMcpOptions): McpServer {
     },
   );
   registerOneOnOneTool(server, opts); // T31: mole_oneonone (prep | readback)
+  registerCompileAndCascadeTools(server, opts); // T46: mole_compile_draft, mole_compile_review, mole_cascade_check
   server.registerTool(
     'mole_check',
     {

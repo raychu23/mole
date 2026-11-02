@@ -1,0 +1,75 @@
+[
+  {
+    "decision": "bs-adr009",
+    "recordFile": ".mole/decisions/bs-adr009.md",
+    "draftedAt": "2026-11-02T02:08:16.431Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"scope\": [\n    \"packages/catalog-model/src/index.ts\",\n    \"packages/plugin-catalog-react/src/routes.ts\"\n  ],\n  \"match\": [\n    {\n      \"pattern\": \"/:kind\\\\/:namespace\\\\/:name/\",\n      \"in\": \"packages/**/*.{ts,tsx}\",\n      \"why\": \"the URL containing the reference shall take the following form: :namespace/:kind/:name\"\n    },\n    {\n      \"pattern\": \"\\\\$\\\\{\\\\s*stringifyEntityRef\\\\(\",\n      \"in\": \"packages/**/*.{ts,tsx}\",\n      \"why\": \"we do not encourage the string form of entity references to be used as a single URL segment\"\n    }\n  ],\n  \"guardTests\": [\n    \"packages/catalog-model/src/entity/ref.test.ts\"\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 2601,
+      "outputTokens": 2197,
+      "costUsd": 0.0260289
+    },
+    "scope": [
+      "packages/catalog-model/src/index.ts",
+      "packages/plugin-catalog-react/src/routes.ts"
+    ],
+    "match": [
+      {
+        "pattern": "/:kind\\/:namespace\\/:name/",
+        "in": "packages/**/*.{ts,tsx}",
+        "why": "the URL containing the reference shall take the following form: :namespace/:kind/:name"
+      },
+      {
+        "pattern": "\\$\\{\\s*stringifyEntityRef\\(",
+        "in": "packages/**/*.{ts,tsx}",
+        "why": "we do not encourage the string form of entity references to be used as a single URL segment"
+      }
+    ],
+    "rules": [],
+    "guardTests": [
+      "packages/catalog-model/src/entity/ref.test.ts"
+    ],
+    "version": 1,
+    "approvedBy": "t46-builder (ledger task T46, read ADR text only, no case data)",
+    "approvedAt": "2026-11-02T02:08:16.434Z"
+  },
+  {
+    "decision": "bs-adr009",
+    "recordFile": ".mole/decisions/bs-adr009.md",
+    "draftedAt": "2026-11-02T02:09:45.800Z",
+    "status": "approved",
+    "scope": [
+      "packages/catalog-model/src/entity/index.ts"
+    ],
+    "match": [],
+    "rules": [],
+    "guardTests": [],
+    "raw": "(person correction, not a model draft: the ADR's own entity barrel file, guessed slightly wrong by the v1 draft)",
+    "usage": {},
+    "version": 2,
+    "approvedBy": "t46-builder (person correction to v1 scope guess)",
+    "approvedAt": "2026-11-02T02:09:45.802Z"
+  },
+  {
+    "decision": "bs-adr009",
+    "recordFile": ".mole/decisions/bs-adr009.md",
+    "draftedAt": "2026-11-02T02:10:57.031Z",
+    "status": "approved",
+    "scope": [],
+    "match": [
+      {
+        "pattern": "^\\s*export\\s+(const|let|function|class|interface|type)\\s",
+        "in": "packages/catalog-model/src/entity/index.ts",
+        "why": "a barrel file exists only to re-export; a brand-new top-level export from it changes the entity shape/reference surface this decision governs"
+      }
+    ],
+    "rules": [],
+    "guardTests": [],
+    "raw": "(person correction: crisp content anchor for the shared barrel file, see comment above)",
+    "usage": {},
+    "version": 3,
+    "approvedBy": "t46-builder (person correction: crisp barrel-file export anchor)",
+    "approvedAt": "2026-11-02T02:10:57.033Z"
+  }
+]

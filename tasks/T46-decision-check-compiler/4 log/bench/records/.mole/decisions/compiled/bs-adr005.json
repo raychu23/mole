@@ -1,0 +1,49 @@
+[
+  {
+    "decision": "bs-adr005",
+    "recordFile": ".mole/decisions/bs-adr005.md",
+    "draftedAt": "2026-11-02T02:11:58.923Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"scope\": [\"packages/catalog-model/src/index.ts\"],\n  \"match\": [\n    {\n      \"pattern\": \"kind:\\\\s*['\\\"]component['\\\"]\",\n      \"in\": \"packages/catalog-model/src/kinds/**\",\n      \"why\": \"kind: Component\"\n    },\n    {\n      \"pattern\": \"kind:\\\\s*['\\\"]api['\\\"]\",\n      \"in\": \"packages/catalog-model/src/kinds/**\",\n      \"why\": \"kind: API\"\n    },\n    {\n      \"pattern\": \"kind:\\\\s*['\\\"]Api['\\\"]\",\n      \"in\": \"packages/catalog-model/src/kinds/**\",\n      \"why\": \"kind: API\"\n    },\n    {\n      \"pattern\": \"kind:\\\\s*['\\\"]resource['\\\"]\",\n      \"in\": \"packages/catalog-model/src/kinds/**\",\n      \"why\": \"kind: Resource\"\n    },\n    {\n      \"pattern\": \"kind:\\\\s*['\\\"]Resources['\\\"]\",\n      \"in\": \"packages/catalog-model/src/kinds/**\",\n      \"why\": \"kind: Resource\"\n    }\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 3054,
+      "outputTokens": 2410,
+      "costUsd": 0.0292914
+    },
+    "scope": [
+      "packages/catalog-model/src/index.ts"
+    ],
+    "match": [
+      {
+        "pattern": "kind:\\s*['\"]component['\"]",
+        "in": "packages/catalog-model/src/kinds/**",
+        "why": "kind: Component"
+      },
+      {
+        "pattern": "kind:\\s*['\"]api['\"]",
+        "in": "packages/catalog-model/src/kinds/**",
+        "why": "kind: API"
+      },
+      {
+        "pattern": "kind:\\s*['\"]Api['\"]",
+        "in": "packages/catalog-model/src/kinds/**",
+        "why": "kind: API"
+      },
+      {
+        "pattern": "kind:\\s*['\"]resource['\"]",
+        "in": "packages/catalog-model/src/kinds/**",
+        "why": "kind: Resource"
+      },
+      {
+        "pattern": "kind:\\s*['\"]Resources['\"]",
+        "in": "packages/catalog-model/src/kinds/**",
+        "why": "kind: Resource"
+      }
+    ],
+    "rules": [],
+    "guardTests": [],
+    "version": 1,
+    "approvedBy": "t46-builder (ledger task T46, read ADR text only, no case data)",
+    "approvedAt": "2026-11-02T02:11:58.928Z"
+  }
+]
