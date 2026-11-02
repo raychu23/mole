@@ -44,6 +44,52 @@ describe('sectionsOf: MADR / Nygard section extraction', () => {
     const s = sectionsOf(text);
     expect(s.decision).toBe('Real decision text.');
   });
+
+  it('keeps an unmatched sibling section (Backstage adr001-style Discussion/Risks next to a matched Decision heading) instead of silently dropping it (P0 regression)', () => {
+    const text = [
+      '## Decision',
+      '',
+      'A decision was made to store ADRs in a log in the project repository.',
+      '',
+      '## Discussion',
+      '',
+      'There is a need to store big decisions made in a log as a reference point for the team.',
+      '',
+      '## Risks',
+      '',
+      'People stop adding ADRs to the log and context gets lost.',
+      '',
+    ].join('\n');
+    const s = sectionsOf(text);
+    expect(s.decision).toContain('A decision was made to store ADRs');
+    expect(s.context).toMatch(/^Discussion: There is a need/);
+    expect(s.context).toContain('Risks: People stop adding ADRs');
+    // document order: Discussion before Risks
+    expect(s.context!.indexOf('Discussion:')).toBeLessThan(s.context!.indexOf('Risks:'));
+  });
+
+  it('a record with no heading matching a recognized bucket at all (Backstage adr009-style Background + Entity References headings, none MADR/Nygard) falls back to the whole body, nothing dropped', () => {
+    const text = [
+      '## Background',
+      '',
+      'Guidance was not provided as to how to reference entities in the catalog.',
+      '',
+      '## Entity References in YAML files',
+      '',
+      'The textual format is `[<kind>:][<namespace>/]<name>`.',
+      '',
+      '## Entity References in URLs',
+      '',
+      'The URL form is `:namespace/:kind/:name`.',
+      '',
+    ].join('\n');
+    const s = sectionsOf(text);
+    // whole-body fallback: every section's content survives, just as undifferentiated Decision text
+    expect(s.decision).toContain('Guidance was not provided');
+    expect(s.decision).toContain('[<kind>:][<namespace>/]<name>');
+    expect(s.decision).toContain(':namespace/:kind/:name');
+    expect(s.context).toBeUndefined();
+  });
 });
 
 describe('formatSections: a documented budget, section-aware, never mid-Decision', () => {
