@@ -127,8 +127,9 @@ export function deriveAdrArgumentFramework(decisionId: string, adrText: string):
     // an explicitly defended decision was incorrectly labelled undefended.
     if (reasons.length === 0) {
       // ", because …" · ". Because …" (next sentence) · ", since …" · ", to …" (purpose clause, python-tuf 0004)
-      const prose = /^\s*[,.]?\s*(?:because|since|to)\b([\s\S]*)/i.exec(reasonSource)?.[1]?.trim();
-      const paragraph = prose?.split(/\r?\n\s*\r?\n/, 1)[0]?.replace(/\s+/g, ' ').trim();
+      const after = /^\s*[,.]?\s*(?:because|since|to)\b([\s\S]*)/i.exec(reasonSource)?.[1];
+      // split BEFORE trimming: a bare "because" + blank line must not adopt the next paragraph (review 11-02)
+      const paragraph = after?.split(/\r?\n\s*\r?\n/, 1)[0]?.replace(/\s+/g, ' ').trim();
       if (paragraph) reasons.push(paragraph);
     }
     let n = 0;

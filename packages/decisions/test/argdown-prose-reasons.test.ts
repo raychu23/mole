@@ -71,4 +71,16 @@ describe('ADR prose reasons remain evidence for the chosen option', () => {
     expect(derived.arguments.filter((a) => a.role === 'reason').map((a) => a.text))
       .toEqual(['maintained dependencies are required.']);
   });
+
+  // review finding (first-slice review 11-02): a bare "because" followed by a blank line must not promote
+  // the NEXT, unrelated paragraph to a reason.
+  it('does not take the paragraph after a blank line as the reason for a bare because', () => {
+    const text = [
+      '## Considered Options', '- Modern Python', '- Legacy Python',
+      '## Decision Outcome', 'Chosen option: "Modern Python", because', '',
+      'This is a separate implementation comment, not a reason.',
+    ].join('\n');
+    const derived = deriveAdrArgumentFramework('python-version', text);
+    expect(derived.arguments.filter((a) => a.role === 'reason')).toHaveLength(0);
+  });
 });
