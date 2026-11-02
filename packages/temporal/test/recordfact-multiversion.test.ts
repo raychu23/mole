@@ -176,7 +176,7 @@ describe('recordFact: retroactive change spanning multiple live versions (SQL:20
 describe('recordFact default system time comes from the database clock (parent fix after review-3 property script)', () => {
   it('30 back-to-back default-clock writes inside an open-ended version never close a row before it opened', async () => {
     const id = `D-clock-${randomUUID()}`;
-    const base = { orgId: org, factId: id, kind: 'decision' as const, attr: 'status', value: 'V0', validFrom: '2026-01-01T00:00:00Z' };
+    const base = { orgId: org, factId: id, kind: 'decision' as const, attr: 'status', value: 'V0', validFrom: '2026-01-01T00:00:00Z', validTo: null };
     await withOrgTx(pool, org, (client) => insertFact(client, base));
     for (let i = 1; i <= 30; i++) {
       const day = String(1 + (i % 27)).padStart(2, '0');
