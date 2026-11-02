@@ -1,11 +1,11 @@
 ---
 state: proposed
-owner:
-repo:
-branch:
-worktree:
-base:
-reviewer:
+owner: t45-builder
+repo: Project/Mole
+branch: t45-wire-prcheck-into-server-checkrun
+worktree: Project/Mole-worktrees/T45-wire-prcheck-into-server-checkrun
+base: main
+reviewer: unassigned
 updated: 2026-11-01 18:01
 status: ledger proposed
 next: fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
