@@ -10,4 +10,6 @@ ledger (newest last, nothing deleted)
     2026-11-01 21:18      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T45-wire-prcheck-into-server-checkrun → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-11-01 23:25      submitted → verified      reviewer reviewer-T45-r2 (deleg_969e97b1 task 0), r1 FAIL deleg_6c0532f4 task 1 · findings: r1 P1 base from ref^ only -> payload.before + is-ancestor fallback, r1 P2 silent catch -> console.error, r2 no findings, first v
     2026-11-01 23:25      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T45-wire-prcheck-into-server-checkrun → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-11-01 23:29      verified → integrated      merge e1a5f5b · combined checks exit 0 · note: npm run check on main e1a5f5b exit 0
+    2026-11-01 23:29      combined checks ran: npm run check in Project/Mole → exit 0 (at new Promise (<anonymous>))
 ```
