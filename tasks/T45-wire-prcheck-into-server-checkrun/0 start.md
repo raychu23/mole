@@ -1,21 +1,21 @@
 ---
-state: proposed
+state: ready
 owner: t45-builder
 repo: Project/Mole
 branch: t45-wire-prcheck-into-server-checkrun
 worktree: Project/Mole-worktrees/T45-wire-prcheck-into-server-checkrun
 base: main
 reviewer: unassigned
-updated: 2026-11-01 18:01
-status: ledger proposed
-next: fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+updated: 2026-11-01 19:51
+status: ledger ready
+next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
 ---
 ```notes
 T45-wire-prcheck-into-server-checkrun      ledger task (rules.md §3 code features)      project Mole
     goal                    packages/server/src/checkrun.ts's live per-push check-run hardcodes conclusion:'success' (line 46) and never calls prCheck's governed/content-anchor result; wire prCheck (packages/decisions) into the server's live conclusion so a real content-anchor match (T32) actually surfaces instead of being discarded before the check run is written.
     done-when               1 checkrun.ts calls prCheck (or its governed/content-anchor computation) instead of (or alongside) getGoverningDecisions' file-count-only check · 2 conclusion is 'neutral' when nothing governs, and a real signal (not hardcoded 'success') when a content-anchor match fires, consistent with Mole's own 'flags, not gates' rule (a warning-shaped annotation, not a hard failure) · 3 existing checkrun tests updated + new test: a content-anchor match on a real diff changes the computed result, not just file counts · 4 npm run check green
-    status                  2026-11-01 proposed
-    next                    fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+    status                  2026-11-01 ready      owner t45-builder
+    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
     pinned
     mode                    one worker
     boundary                packages/server/src/checkrun.ts + its tests
