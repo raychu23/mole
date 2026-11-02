@@ -56,11 +56,42 @@ function baseOf(repoDir: string, ref: string): string {
   }
 }
 
+/** All-zero sha40: GitHub's push event sends this for `before` when the push created a new
+ * branch (push event docs: "the SHA of the most recent commit... before refs/heads/<branch>
+ * was created, unless this is a new branch... in which case before is a 40-character string of
+ * zeros."). Never a usable base. */
+const ALL_ZERO_SHA = /^0+$/;
+
+/** True when `commit` is an ancestor of `ref` in repoDir (git merge-base --is-ancestor): the
+ * same check reviewdog/Danger make before trusting a CI-supplied base sha, because a force push
+ * can rewrite history so the old `before` no longer exists on `ref`'s line of history at all. */
+function isAncestor(repoDir: string, commit: string, ref: string): boolean {
+  try {
+    execFileSync('git', ['merge-base', '--is-ancestor', commit, ref], { cwd: repoDir, stdio: ['ignore', 'ignore', 'ignore'] });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** T45 P1: prCheck's base for a push range. GitHub's push event payload carries `before` (the
+ * ref's tip immediately before this push) — the correct base for a multi-commit push, matching
+ * how GitHub's own compare view and tools like reviewdog/Danger pick a PR/push base: use the
+ * caller-supplied base commit, not just HEAD^, so every commit in the push is covered by the
+ * diff instead of only the last one. `baseOf`'s ref^/empty-tree fallback is used only when
+ * `before` cannot be trusted as a base: absent, all-zero (brand-new branch, nothing to diff
+ * against), or not an ancestor of `ref` (a force push rewrote history out from under it). */
+function resolveBase(repoDir: string, ref: string, before: string | undefined): string {
+  if (before && !ALL_ZERO_SHA.test(before) && isAncestor(repoDir, before, ref)) return before;
+  return baseOf(repoDir, ref);
+}
+
 export async function computeCheckRun(
   pool: Pool,
   orgId: string,
   repoDir: string,
   ref: string,
+  before: string | undefined,
   telemetry: { withSpan: <T>(name: string, attrs: Record<string, unknown>, fn: () => Promise<T>) => Promise<T> } | undefined
 ): Promise<CheckRunResult> {
   const run = async () => {
@@ -83,10 +114,26 @@ export async function computeCheckRun(
     let title = `${governed} file(s) governed by a decision, ${ungoverned} not`;
     let annotations: CheckAnnotation[] = [];
     try {
-      const pr = await prCheck({ root: repoDir, base: baseOf(repoDir, ref), head: ref, history: false });
+      const pr = await prCheck({ root: repoDir, base: resolveBase(repoDir, ref, before), head: ref, history: false });
       title = pr.checkRun.output.title;
       annotations = pr.checkRun.output.annotations;
-    } catch {
+    } catch (e) {
+      // T45 P2: this used to swallow every prCheck error silently (a parse failure, an
+      // unresolvable ref, a records-root bug) with no trace at all — the check run would
+      // quietly degrade to the file-count-only title and nobody could tell why. Log it the
+      // same way the rest of this server's job side already does on a non-fatal failure
+      // (index.ts's startup failure, queue.ts's pg-boss 'error' handler, bench/m25.ts's
+      // rebuild-index failure) -- console.error is this server's own "logger", there is no
+      // separate logging dependency -- then keep the fallback: a push notification must never
+      // be lost (M25 "0 lost notifications") over a prCheck bug. (OTel's recordException on
+      // the active span was tried first and rejected: this provider never registers an
+      // AsyncHooksContextManager, so the active span is already gone by the time an `await`
+      // inside the try block resumes -- trace.getActiveSpan() is reliably undefined here.)
+      console.error('[checkrun] prCheck failed, falling back to file-count-only title', {
+        orgId,
+        ref,
+        error: e instanceof Error ? e.message : String(e),
+      });
       // keep the file-count-only title and empty annotations computed above
     }
 

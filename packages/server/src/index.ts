@@ -52,10 +52,10 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env) {
   });
   await boss.work('compute-check-run', { batchSize: 10 }, async (jobs) => {
     for (const job of jobs) {
-      const { orgId, ref } = job.data as { orgId: string; ref: string };
+      const { orgId, ref, before } = job.data as { orgId: string; ref: string; before?: string };
       const repoDir = orgRepoDirs[orgId];
       if (!repoDir) throw new Error(`no repo dir configured for org ${orgId}`);
-      await computeCheckRun(pool, orgId, repoDir, ref, telemetry);
+      await computeCheckRun(pool, orgId, repoDir, ref, before, telemetry);
     }
   });
 

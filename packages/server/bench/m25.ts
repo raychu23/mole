@@ -95,10 +95,10 @@ async function main() {
   });
   await boss.work('compute-check-run', { batchSize: 10 }, async (jobs) => {
     for (const job of jobs) {
-      const { orgId, ref } = job.data as any;
+      const { orgId, ref, before } = job.data as any;
       const org = orgs.find((o) => o.id === orgId)!;
       const t0 = performance.now();
-      const result = await computeCheckRun(pool, orgId, org.repoDir, ref, telemetry);
+      const result = await computeCheckRun(pool, orgId, org.repoDir, ref, before, telemetry);
       const ms = performance.now() - t0;
       checkRunTimes.push(ms);
       await fakeGithub.postCheckRun(orgId, ref, result);

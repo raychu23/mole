@@ -64,6 +64,11 @@ export function createWebhookHandler(opts: WebhookHandlerOptions) {
       }
       const orgId = orgLogin;
       const commitSha: string | undefined = payload?.after;
+      // T45 P1: GitHub push events carry `before` (the ref's tip immediately before this push)
+      // — the correct prCheck base for a multi-commit push. Thread it through to the
+      // compute-check-run job instead of discarding it here; checkrun.ts validates it
+      // (present, not all-zero, an ancestor of `ref`) before trusting it as a base.
+      const commitBefore: string | undefined = payload?.before;
 
       const client = await opts.pool.connect();
       let isNew = false;
@@ -82,7 +87,7 @@ export function createWebhookHandler(opts: WebhookHandlerOptions) {
 
       if (isNew && commitSha) {
         await opts.boss.send('rebuild-index', { orgId, ref: commitSha });
-        await opts.boss.send('compute-check-run', { orgId, ref: commitSha });
+        await opts.boss.send('compute-check-run', { orgId, ref: commitSha, before: commitBefore });
         return { status: 202, body: { status: 'queued' } };
       }
       return { status: 202, body: { status: isNew ? 'queued' : 'duplicate' } };
