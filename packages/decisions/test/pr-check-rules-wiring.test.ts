@@ -62,6 +62,13 @@ beforeAll(() => {
   base = git(root, 'rev-parse', 'HEAD');
   heads.violating = pr('add-forbidden-import', () => write('src/ui/view.ts', "import { q } from '../db/query.js';\n// nothing imported yet\nexport const v = q;\n"));
   heads.unrelated = pr('unrelated-edit', () => write('src/ui/other.ts', 'export const o = 2;\n'));
+  // T49 review FAIL: a PR must not silence its own rule by deleting the record or stripping its rules: key
+  const forbidden = "import { q } from '../db/query.js';\n// nothing imported yet\nexport const v = q;\n";
+  heads.deletesRecord = pr('delete-record-and-violate', () => { rmSync(join(root, '.mole/decisions/D-rule.md')); write('src/ui/view.ts', forbidden); });
+  heads.stripsRules = pr('strip-rules-and-violate', () => {
+    write('.mole/decisions/D-rule.md', RULE_RECORD.replace(/rules:[\s\S]*?why: [^\n]*\n/, ''));
+    write('src/ui/view.ts', forbidden);
+  });
 });
 afterAll(() => {
   if (root) rmSync(root, { recursive: true, force: true });
@@ -73,6 +80,16 @@ describe('prCheck wires rules/check.ts (import:/call: rule items) into governed'
     const g = r.governed.find((x) => x.id === 'D-rule');
     expect(g).toBeDefined();
     expect(g!.hits.some((h) => h.anchor.startsWith('rule:') && h.path === 'src/ui/view.ts')).toBe(true);
+  });
+
+  it('a PR that deletes the rule record in the same diff is still checked against the merge-base record', async () => {
+    const r = await prCheck({ root, base, head: heads.deletesRecord! });
+    expect(r.governed.find((x) => x.id === 'D-rule')?.hits.some((h) => h.anchor.startsWith('rule:'))).toBe(true);
+  });
+
+  it('a PR that strips the rules: key in the same diff is still checked against the merge-base record', async () => {
+    const r = await prCheck({ root, base, head: heads.stripsRules! });
+    expect(r.governed.find((x) => x.id === 'D-rule')?.hits.some((h) => h.anchor.startsWith('rule:'))).toBe(true);
   });
 
   it('an edit that never touches the import line (unrelated file) reports silent for D-rule', async () => {
