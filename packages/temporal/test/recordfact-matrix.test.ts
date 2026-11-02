@@ -57,6 +57,14 @@ async function withAdmin<T>(fn: (c: Client) => Promise<T>): Promise<T> {
 let pool: ReturnType<typeof openPool>;
 const org = 'org-matrix';
 
+/** System-time reads in tests come from the DB clock, like recordFact's own default: a Node clock that lags
+ *  Postgres made knownAt(recordedBefore) look before the row existed (flaky under load, T47/T50 merge check). */
+async function dbNow(): Promise<string> {
+  return withOrgTx(pool, org, async (c) =>
+    ((await c.query(`SELECT to_char(clock_timestamp() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS t`)).rows[0] as { t: string }).t,
+  );
+}
+
 beforeAll(async () => {
   await withAdmin(async (c) => {
     await c.query(sql.dropDb(dbName));
@@ -98,7 +106,7 @@ describe('recordFact 2x2: world change vs correction (valid-time direction decid
     expect(await withOrgTx(pool, org, (client) => asOf(client, id, 'status', '2026-04-01T00:00:00Z'))).toBe('DECIDED');
 
     // knownAt now, for the pre-change window: still OPEN -- nothing was corrected, just split.
-    const nowIso = new Date().toISOString();
+    const nowIso = await dbNow();
     expect(await withOrgTx(pool, org, (client) => knownAt(client, id, 'status', '2026-02-01T00:00:00Z', nowIso))).toBe('OPEN');
 
     const flags = await withOrgTx(pool, org, (client) => listContradictionFlags(client, { factId: id }));
@@ -139,7 +147,7 @@ describe('recordFact 2x2: world change vs correction (valid-time direction decid
       value: 'OPEN', validFrom: '2026-01-01T00:00:00Z', validTo: null,
     };
     await withOrgTx(pool, org, (client) => insertFact(client, f));
-    const recordedBefore = new Date().toISOString();
+    const recordedBefore = await dbNow();
     // Logical clock step instead of a real sleep: recordFact's test-only `now` hook lets this
     // test assert a strict system-time ordering without waiting on the wall clock.
     const correctionNow = new Date(Date.parse(recordedBefore) + 25).toISOString();
@@ -163,7 +171,7 @@ describe('recordFact 2x2: world change vs correction (valid-time direction decid
       value: 'OPEN', validFrom: '2026-03-01T00:00:00Z', validTo: null,
     };
     await withOrgTx(pool, org, (client) => insertFact(client, openFromMarch));
-    const recordedBefore = new Date().toISOString();
+    const recordedBefore = await dbNow();
     // Logical clock step instead of a real sleep (see the [late correction] test above).
     const correctionNow = new Date(Date.parse(recordedBefore) + 25).toISOString();
 

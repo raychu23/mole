@@ -35,6 +35,14 @@ async function withAdmin<T>(fn: (c: Client) => Promise<T>): Promise<T> {
 let pool: ReturnType<typeof openPool>;
 const org = 'org-multiversion';
 
+/** System-time reads in tests come from the DB clock, like recordFact's own default: a Node clock that lags
+ *  Postgres made knownAt(recordedBefore) look before the row existed (flaky under load, T47/T50 merge check). */
+async function dbNow(): Promise<string> {
+  return withOrgTx(pool, org, async (c) =>
+    ((await c.query(`SELECT to_char(clock_timestamp() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS t`)).rows[0] as { t: string }).t,
+  );
+}
+
 beforeAll(async () => {
   await withAdmin(async (c) => {
     await c.query(`DROP DATABASE IF EXISTS ${dbName}`);
@@ -69,7 +77,7 @@ describe('recordFact: retroactive change spanning multiple live versions (SQL:20
     // Forward world change: now OPEN [Jan1,Mar1) and DECIDED [Mar1,inf) are both live.
     await withOrgTx(pool, org, (client) => recordFact(client, { ...base, value: 'DECIDED', validFrom: '2026-03-01T00:00:00Z' }));
     expect(await liveRows(id)).toHaveLength(2);
-    const recordedBeforeCorrection = new Date().toISOString();
+    const recordedBeforeCorrection = await dbNow();
     // Logical clock step instead of a real sleep: recordFact's test-only `now` hook lets this
     // test assert knownAt-before vs knownAt-after without waiting on the wall clock.
     const correctionNow = new Date(Date.parse(recordedBeforeCorrection) + 25).toISOString();

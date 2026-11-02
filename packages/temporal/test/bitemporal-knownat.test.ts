@@ -30,6 +30,14 @@ async function withAdmin<T>(fn: (c: Client) => Promise<T>): Promise<T> {
 let pool: ReturnType<typeof openPool>;
 const org = 'org-bitemp';
 
+/** System-time reads in tests come from the DB clock, like recordFact's own default: a Node clock that lags
+ *  Postgres made knownAt(recordedBefore) look before the row existed (flaky under load, T47/T50 merge check). */
+async function dbNow(): Promise<string> {
+  return withOrgTx(pool, org, async (c) =>
+    ((await c.query(`SELECT to_char(clock_timestamp() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS t`)).rows[0] as { t: string }).t,
+  );
+}
+
 beforeAll(async () => {
   await withAdmin(async (c) => {
     await c.query(sql.dropDb(dbName));
@@ -60,7 +68,7 @@ describe('knownAt (recorded/system time) vs asOf (valid/application time) -- 2x2
     };
     // Day 1: we record (system time) that the decision was OPEN starting Jan 1 (application time).
     await withOrgTx(pool, org, (client) => insertFact(client, f));
-    const recordedDay1 = new Date().toISOString();
+    const recordedDay1 = await dbNow();
 
     // Day 5: new information arrives -- the decision was actually DECIDED the whole time (a late
     // correction of a *past* belief, not a new event). recordFact must invalidate the old row
@@ -68,7 +76,7 @@ describe('knownAt (recorded/system time) vs asOf (valid/application time) -- 2x2
     await withOrgTx(pool, org, (client) =>
       recordFact(client, { ...f, value: 'DECIDED' }),
     );
-    const recordedDay5 = new Date().toISOString();
+    const recordedDay5 = await dbNow();
 
     // asOf(valid): what we currently believe held on Jan 1 -- the corrected value.
     const currentBelief = await withOrgTx(pool, org, (client) => asOf(client, id, 'status', '2026-01-02T00:00:00Z'));
