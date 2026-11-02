@@ -1,22 +1,22 @@
 ---
-state: verified
+state: integrated
 owner: t46-builder
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t46-decision-check-compiler
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T46-decision-check-compiler
 base: 888db14
 reviewer: reviewer-T46-r1 (fresh subagent deleg_6c0532f4 task 2)
-updated: 2026-11-01 21:09
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+updated: 2026-11-01 21:14
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-11-01 19:52
 ---
 ```notes
 T46-decision-check-compiler      ledger task (rules.md §3 code features)      project tasks
     goal                    Make Mole's zero-LLM conflict check catch what an LLM reviewer catches at a fraction of the cost: (1) compile-at-capture: when a decision is recorded/imported, a model drafts machine checks for it (content anchors, scope globs, dependency-cruiser forbidden rules, Semgrep patterns, guard-test links) that a person approves; stored with the decision · (2) cascade at check time: zero-LLM rules run on every change; only changes that touch a governed scope but match no rule decisively escalate to one LLM call with that single decision (FrugalGPT-style cascade). Evidence: T44 m2-conflict/results.md Mole recall 0.50 (8/15 Backstage ADRs have no anchors) vs LLM reviewer 1.00 at $0.0048/5.3 s.
     done-when               1 prior-art note (ADR-violation detection arXiv 2602.07609, LLM-generated Semgrep/ArchUnit rules, FrugalGPT cascades arXiv 2305.05176, dependency-cruiser) in tasks/T46*/4 log/prior-art.md · 2 failing tests first · 3 compiled checks stored + versioned with the decision, approve/reject flow in CLI + MCP · 4 cascade API returns verdict + which tier decided + tokens used · 5 on T44 dev cases: recall >= LLM reviewer's minus 1 case, false alarms <= LLM's, mean cost/check <= 25% of LLM reviewer (held-out untouched) · 6 npm run check green
-    status                  2026-11-01 verified      reviewer reviewer-T46-r1 (fresh subagent deleg_6c0532f4 task 2) · findings: P2 ReDoS guard reused from options.ts (neste
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-11-01 integrated      merge 4349e3c · combined checks exit 0 · note: npm run check on main 4349e3c → 82 files passed, 570 tests, exit 0
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    one worker
     boundary                packages/decisions/** packages/verify/** packages/mcp/** + tests
