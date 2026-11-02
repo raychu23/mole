@@ -10,7 +10,8 @@ import { resolve } from 'node:path';
 import type { LlmClient } from '../compile/types.js';
 import { prCheck } from '../check/pr-check.js';
 import type { GovernedRecord } from '../check/types.js';
-import type { CascadeFlag, CascadeResult, CascadeVerdict, RoutedDecision } from './types.js';
+import { routeDecisions } from '../route/route.js';
+import type { CascadeFlag, CascadeResult, CascadeVerdict, RoutedDecision, SemanticRouteOptions } from './types.js';
 
 /** T49: a decision's content/export-convention/rule hit decides outright (the pattern IS the signal); a decision
  *  governed ONLY by a scope anchor has nothing crisp and must escalate. `rule:` (rules/check.ts import:/call:
@@ -29,6 +30,12 @@ export interface CascadeOptions {
   /** the governing decision's own text, by id, for the ONE escalation call. Required to actually escalate; a
    *  decision with no text available is reported as zero-LLM 'violates' with that reason (never silently dropped). */
   decisionText?: (id: string) => string | undefined;
+  /** T53: semantic routing (BM25 stage1 + optional listwise LLM stage2) over decisions prCheck's scope/content/
+   *  export-convention/rule anchors found NOTHING for -- additive, never removes or overrides an anchor hit.
+   *  A decision added this way has no crisp anchor (lexical overlap is never itself the violation signal), so it
+   *  escalates to the LLM tier same as a scope-anchor-only hit, over the change's WHOLE diff (a semantic hit is
+   *  change-level, not line-anchored). Omit to keep T49's scope/content-anchor-only routing unchanged. */
+  semanticRoute?: SemanticRouteOptions;
 }
 
 const ESCALATE_PROMPT = (decisionText: string, diff: string): string =>
@@ -113,15 +120,41 @@ export async function cascadeCheck(opts: CascadeOptions): Promise<CascadeResult>
   const recordsRoot = opts.recordsRoot ?? opts.root;
   const pr = await prCheck({ root: opts.root, base: opts.base, head: opts.head, recordsRoot, adrDirs: opts.adrDirs });
 
+  // T53: semantic routing over decisions scope/content/export/rule anchors found NOTHING for -- the T49-diagnosed
+  // recall ceiling (routing accuracy 0.36: a decision with no authored anchor never even became a candidate).
+  // Additive: a decision pr.governed already found is never re-added or re-scored here.
+  const alreadyGoverned = new Set(pr.governed.map((g) => g.id));
+  const semanticAdds: GovernedRecord[] = [];
+  let semanticRouteUsage: CascadeResult['semanticRouteUsage'];
+  if (opts.semanticRoute) {
+    const candidates = opts.semanticRoute.decisions.filter((d) => !alreadyGoverned.has(d.id));
+    const changeText = [...pr.files, gitDiffFor(opts.root, pr.mergeBase, pr.head, pr.files)].join('\n');
+    const routed = await routeDecisions({
+      changeText,
+      decisions: candidates,
+      topK: opts.semanticRoute.topK,
+      minScore: opts.semanticRoute.minScore,
+      confidenceRatio: opts.semanticRoute.confidenceRatio,
+      llm: opts.semanticRoute.llm,
+    });
+    semanticRouteUsage = routed.usage;
+    for (const c of routed.routed) {
+      // change-level hit (not line-anchored): every changed file is "the governed scope" for this decision's
+      // own escalation diff, same shape the scope-anchor path already uses for a folder anchor over many files.
+      semanticAdds.push({ id: c.id, title: c.title, status: 'accepted', flag: 'yellow', file: '', line: 0, hits: pr.files.map((path) => ({ anchor: 'semantic', path, side: 'new' as const, ranges: [[1, 1]] as [number, number][] })) });
+    }
+  }
+  const governedAll: GovernedRecord[] = [...pr.governed, ...semanticAdds];
+
   // T49 routing: which decisions govern this change and how, decided with zero LLM calls -- independent of
   // whatever verdict the tiers below reach. This is the number the M2 bench's "Mole-routed check" arm reports
   // routing accuracy against (did the right decision get found at all), separate from verdict correctness.
-  const routing: RoutedDecision[] = pr.governed.map((g) => ({ decision: g.id, title: g.title, hitKinds: [...new Set(g.hits.map((h) => (h.anchor.includes(':') ? h.anchor.split(':')[0]! : h.anchor)))] }));
+  const routing: RoutedDecision[] = governedAll.map((g) => ({ decision: g.id, title: g.title, hitKinds: [...new Set(g.hits.map((h) => (h.anchor.includes(':') ? h.anchor.split(':')[0]! : h.anchor)))] }));
 
   const verdicts: CascadeVerdict[] = [];
   const times = new Map<string, number>();
   const escalations: Array<{ g: GovernedRecord; paths: string[]; text: string }> = [];
-  for (const g of pr.governed) {
+  for (const g of governedAll) {
     const t1 = performance.now();
     if (isCrisp(g)) {
       verdicts.push({ decision: g.id, title: g.title, tier: 'zero-llm', flag: 'violates', reason: `content anchor matched (${g.hits.map((h) => h.anchor).join(', ')})`, ms: Math.round(performance.now() - t1) });
@@ -172,7 +205,7 @@ export async function cascadeCheck(opts: CascadeOptions): Promise<CascadeResult>
     });
   }
 
-  return { base: pr.base, head: pr.head, verdicts, files: pr.files, routing, ms: Math.round(performance.now() - t0) };
+  return { base: pr.base, head: pr.head, verdicts, files: pr.files, routing, semanticRouteUsage, ms: Math.round(performance.now() - t0) };
 }
 
 /** Reads a decision's own full text from its record file, for `CascadeOptions.decisionText`. `adrFile`, when given,

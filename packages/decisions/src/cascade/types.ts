@@ -1,6 +1,8 @@
 // Cascade at check time (T46): zero-LLM tier (T27/T32's prCheck content anchors + scope anchors) decides first;
 // escalate to exactly ONE LLM call, with only the governing decision's own text, when a decision's scope is touched
 // but no crisp rule decided (FrugalGPT, arXiv:2305.05176 -- stop as early in the cascade as a tier can decide).
+import type { LlmClient } from '../compile/types.js';
+
 export type CascadeTier = 'zero-llm' | 'llm';
 export type CascadeFlag = 'violates' | 'compliant';
 
@@ -24,8 +26,22 @@ export interface CascadeVerdict {
 export interface RoutedDecision {
   decision: string;
   title: string;
-  /** anchor kinds that routed this decision here: 'match' | 'export-convention' | 'rule' | the scope target string */
+  /** anchor kinds that routed this decision here: 'match' | 'export-convention' | 'rule' | 'semantic' | the scope target string */
   hitKinds: string[];
+}
+
+/** T53: config for the semantic routing stage cascadeCheck runs over decisions scope/content anchors missed. */
+export interface SemanticRouteOptions {
+  /** every decision's BM25 index doc (title + summary + index text) -- the repo's WHOLE candidate set, built by
+   *  the caller with route/index-text.ts's indexTextOf/oneLineSummaryOf (cascade.ts has no opinion on how a
+   *  decision's record text becomes an index doc, same posture as CascadeOptions.decisionText). */
+  decisions: Array<{ id: string; title: string; summary: string; text: string }>;
+  topK?: number;
+  minScore?: number;
+  confidenceRatio?: number;
+  /** stage 2's model call; can be the same LlmClient as CascadeOptions.llm, or a cheaper one -- the router's own
+   *  budget is independent of the escalation tier's. Omit to run the BM25-only tier. */
+  llm?: LlmClient;
 }
 
 export interface CascadeResult {
@@ -34,7 +50,12 @@ export interface CascadeResult {
   verdicts: CascadeVerdict[];
   /** files touched by this diff that no decision's scope covers at all (not in verdicts: nothing to decide) */
   files: string[];
-  /** T49: every decision prCheck found governing this change, zero-LLM, before any escalation decided a verdict */
+  /** T49: every decision prCheck found governing this change, zero-LLM, before any escalation decided a verdict.
+   *  T53: also includes any decision `semanticRoute` found that scope/content anchors missed entirely (hitKinds
+   *  `['semantic']`), additive to the scope/content/export/rule hits above, never replacing them. */
   routing: RoutedDecision[];
+  /** T53: semantic routing's own cost/confidence for this check, only when `semanticRoute` was configured and its
+   *  LLM stage actually ran (the zero-LLM BM25-only tier costs exactly $0 and is not reported here). */
+  semanticRouteUsage?: { inputTokens?: number; outputTokens?: number; costUsd?: number };
   ms: number;
 }
