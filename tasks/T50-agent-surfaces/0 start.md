@@ -1,22 +1,22 @@
 ---
-state: verified
+state: integrated
 owner: t50-builder
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t50-agent-surfaces
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T50-agent-surfaces
 base: c9f1f57
 reviewer: reviewer-T50-r1 (deleg_c0f42eec task 1)
-updated: 2026-11-02 06:17
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+updated: 2026-11-02 06:33
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-11-02 05:30
 ---
 ```notes
 T50-agent-surfaces      ledger task (rules.md §3 code features)      project tasks
     goal                    Make agents use the decision at the right moment, borrowing from official MCP servers, Serena and Claude Code hook docs: PreToolUse carries the governing decision's line/test evidence (as Stop already does); max_answer_chars + pagination on mole_check/mole_decisions/mole_coverage; tool annotations + outputSchema/structuredContent on all tools; caller-tunable mole_map cap; description-matched fallback for decisions without a file scope (Cursor rules). Source: Project/Mole/context/product-plan/systems/core-audit/agent-surfaces.md. Starts after T43 merges.
     done-when               1 failing tests first · 2 PreToolUse text for B3 case names the guard test + decision rule · 3 every tool output bounded + paginated · 4 MCP SDK schema validation passes for all tools · 5 M-C v3 (>= 8 tasks, 3 epochs) run after merge · 6 npm run check
-    status                  2026-11-02 verified      reviewer reviewer-T50-r1 (deleg_c0f42eec task 1) · findings: P2 only 3 of 11 tools have real callTool tests (reviewer ve
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-11-02 integrated      merge c721446 · combined checks exit 0 · note: npm run check on main exit 0 after temporal clock fix + coverage test tim
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    one worker
     boundary                packages/mcp/** plugins/claude-code/** + tests

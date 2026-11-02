@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-11-02 05:51      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T50-agent-surfaces → exit 0 (at new Promise (<anonymous>))
     2026-11-02 06:17      submitted → verified      reviewer reviewer-T50-r1 (deleg_c0f42eec task 1) · findings: P2 only 3 of 11 tools have real callTool tests (reviewer verified the other 4 by hand) -> follow-up, cli.test.ts fix-forward justified · checks exit 0
     2026-11-02 06:17      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T50-agent-surfaces → exit 0 (at new Promise (<anonymous>))
+    2026-11-02 06:33      verified → integrated      merge c721446 · combined checks exit 0 · note: npm run check on main exit 0 after temporal clock fix + coverage test timeout
+    2026-11-02 06:33      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (at new Promise (<anonymous>))
 ```
