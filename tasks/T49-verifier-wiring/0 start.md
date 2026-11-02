@@ -1,22 +1,22 @@
 ---
-state: submitted
+state: verified
 owner: t49-builder
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t49-verifier-wiring
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T49-verifier-wiring
 base: b9c2eda
-reviewer:
-updated: 2026-11-01 21:44
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+reviewer: reviewer-T49-r1 (deleg_969e97b1 task 1) + parent fix
+updated: 2026-11-01 23:26
+status: ledger verified
+next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
 claimed: 2026-11-01 21:11
 ---
 ```notes
 T49-verifier-wiring      ledger task (rules.md §3 code features)      project tasks
     goal                    Borrow mature verifier mechanics: wire Mole's existing dependency-cruiser rules engine (rules/check.ts) into prCheck + cascade; paginate check-run annotations past 50 (reviewdog); baseline/shrink-only mode for new rules (dependency-cruiser --baseline); token budget + chunking + fallback for the cascade LLM tier (PR-Agent); Semgrep-style rule fixtures (semgrep --test discipline) for anchors. Source: Project/Mole/context/product-plan/systems/core-audit/verifier.md. Starts after T46 merges.
     done-when               1 failing tests first, 2 import/call rule violation reaches prCheck governed + cascadeCheck zero-llm tier, 3 cascade batches all escalating decisions for one change into ONE LLM call carrying only governing decisions' text + diff chunked to governed hunks, 4 cascade emits a routing output (decision ids that govern a change, zero-LLM: scope+anchors+rules, no LLM call), 5 re-run M2 v2 dev to tune, held-out run ONCE at the end with v2/run scripts, report Mole-routed check vs llm-reviewer vs RAG (recall/FA/cost/p95/routing accuracy), 6 npm run check
-    status                  2026-11-01 submitted      report: Wired rules/check.ts into prCheck (crisp rule: hit kind, zero cost when no rules: item exists, throwaway git-wor
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    status                  2026-11-01 verified      reviewer reviewer-T49-r1 (deleg_969e97b1 task 1) + parent fix · findings: P0 rules gate checked head only -> PR could de
+    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
     pinned
     mode                    one worker
     boundary                packages/decisions/src/{check,rules,cascade}/** + tests (not rationale.ts, not cli.ts decisions(), not packages/server)
