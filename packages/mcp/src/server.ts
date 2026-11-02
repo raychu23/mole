@@ -14,6 +14,14 @@ export interface MoleMcpOptions extends EnsureOptions {
   noStart?: boolean;
 }
 
+// T43 review fix P2: documented aggregate rationale budget for mole_decisions when called without `files`
+// (see the handler below). A files-scoped call is already a handful of decisions and skips this cap.
+const MCP_DECISIONS_RATIONALE_AGGREGATE_BUDGET = 20_000;
+/** Loosely typed companion to @mole/decisions's DecisionsResult: this file adds `truncated` only on the
+ * MCP response object, never on the shared TS type (which stays the same shape `mole decisions --json`
+ * and this tool's `files`-scoped responses use). */
+type DecisionsResultWithTruncation = { decisions: Array<{ id: string; flag: string; rationale?: string }>; truncated?: string };
+
 /** `mole_map(path|symbol)`: the same ranked neighbourhood the editor panel draws, as compact text for an agent. */
 export function createServer(opts: MoleMcpOptions): McpServer {
   const server = new McpServer({ name: 'mole', version: '0.0.0' });
@@ -168,6 +176,31 @@ export function createServer(opts: MoleMcpOptions): McpServer {
               .map((n) => n.id),
           );
           json.decisions = json.decisions.filter((d) => governedIds.has(d.id));
+        } else {
+          // T43 review fix P2: without `files` to scope the call, a repo with many decisions/tenets, each
+          // carrying real rationale text (T43's own feature), had no total cap -- `mole_decisions` could
+          // return an unbounded response. Whole-decision dropping (never mid-rationale), ranked by flag
+          // severity so decisions that most need attention (red, then yellow) keep their full text longest;
+          // a dropped decision keeps every other field (id/title/status/flag/reasons), just not `rationale`.
+          const SEVERITY_RANK: Record<string, number> = { red: 0, yellow: 1, green: 2, grey: 3 };
+          const candidates = json.decisions.filter((d) => d.rationale);
+          const ranked = [...candidates].sort((a, b) => (SEVERITY_RANK[a.flag] ?? 4) - (SEVERITY_RANK[b.flag] ?? 4));
+          let used = 0;
+          let dropped = 0;
+          const keepIds = new Set<string>();
+          for (const d of ranked) {
+            const len = d.rationale!.length;
+            if (used + len <= MCP_DECISIONS_RATIONALE_AGGREGATE_BUDGET) {
+              used += len;
+              keepIds.add(d.id);
+            } else {
+              dropped += 1;
+            }
+          }
+          if (dropped > 0) {
+            json.decisions = json.decisions.map((d) => (d.rationale && !keepIds.has(d.id) ? { ...d, rationale: undefined } : d));
+            (json as DecisionsResultWithTruncation).truncated = `${dropped} more: full rationale omitted at the aggregate budget (${MCP_DECISIONS_RATIONALE_AGGREGATE_BUDGET} chars total) -- pass \`files\` to get the full rationale for specific decisions`;
+          }
         }
         return { content: [{ type: 'text' as const, text: JSON.stringify(json, null, 2) }] };
       } catch (e) {
