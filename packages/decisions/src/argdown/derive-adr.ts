@@ -38,7 +38,8 @@ export interface AdrArgumentFramework {
 
 const CONSIDERED_OPTIONS_HEADING = /^#{2,3}\s+considered options\s*$/i;
 const DECISION_OUTCOME_HEADING = /^#{2,3}\s+decision outcome\s*$/i;
-const CHOSEN_OPTION_LINE = /chosen option:\s*"?([^",\n]+)"?/i;
+// Quoted names may wrap across lines and contain commas (python-tuf 0002/0008); unquoted names stop at a comma/newline.
+const CHOSEN_OPTION_LINE = /chosen option:\s*(?:"([^"]+)"|([^",\n]+))/i;
 const BULLET = /^\s*[-*]\s+(.*)$/;
 const HEADING = /^#{2,3}\s+/;
 
@@ -58,12 +59,27 @@ function headingSlice(text: string, headingRe: RegExp): string | undefined {
   return body || undefined;
 }
 
+/** Bullet items, joining markdown continuation lines (indented or lazy) until a blank line or the next bullet. */
 function bulletsOf(block: string): string[] {
-  return block
-    .split(/\r?\n/)
-    .map((l) => BULLET.exec(l)?.[1])
-    .filter((x): x is string => !!x && x.trim().length > 0)
-    .map((x) => x.trim());
+  const items: string[] = [];
+  let open = false;
+  for (const line of block.split(/\r?\n/)) {
+    const m = BULLET.exec(line);
+    if (m) {
+      items.push(m[1] ?? '');
+      open = true;
+    } else if (open && line.trim() && !HEADING.test(line)) {
+      items[items.length - 1] += ' ' + line.trim();
+    } else {
+      open = false;
+    }
+  }
+  return items.map((x) => x.replace(/\s+/g, ' ').trim()).filter((x) => x.length > 0);
+}
+
+/** Compare option names ignoring wrapping whitespace, case and a trailing period. */
+function sameName(s: string): string {
+  return s.replace(/\s+/g, ' ').trim().replace(/\.$/, '').toLowerCase();
 }
 
 /** The option "name" from a MADR bullet (`- **Name** -- why`, `- [Name](url) -- why`, or plain `- Name`):
@@ -86,13 +102,14 @@ export function deriveAdrArgumentFramework(decisionId: string, adrText: string):
   const consideredBlock = headingSlice(adrText, CONSIDERED_OPTIONS_HEADING);
   const outcomeBlock = headingSlice(adrText, DECISION_OUTCOME_HEADING) ?? sections.decision;
   const chosenMatch = outcomeBlock ? CHOSEN_OPTION_LINE.exec(outcomeBlock) : null;
-  const chosenName = chosenMatch?.[1]?.trim().toLowerCase();
+  const chosenRaw = chosenMatch?.[1] ?? chosenMatch?.[2];
+  const chosenName = chosenRaw ? sameName(chosenRaw) : undefined;
 
   const optionIds: string[] = [];
   if (consideredBlock) {
     let n = 0;
     for (const bullet of bulletsOf(consideredBlock)) {
-      const name = optionNameOf(bullet).toLowerCase();
+      const name = sameName(optionNameOf(bullet));
       if (chosenName && name === chosenName) continue; // the chosen option is not its own counter-argument (exact match only -- two options can legitimately share a prefix, e.g. "MADR 2.1.2" vs "MADR 2.1.2 with Log4brains patch")
       n += 1;
       const optId = `${decisionId}::option:${n}`;
@@ -105,8 +122,17 @@ export function deriveAdrArgumentFramework(decisionId: string, adrText: string):
   if (outcomeBlock) {
     // reasons live after the "Chosen option: X, because" line when present, else the whole outcome block
     const reasonSource = chosenMatch ? outcomeBlock.slice(chosenMatch.index + chosenMatch[0].length) : outcomeBlock;
+    const reasons = bulletsOf(reasonSource);
+    // MADR also permits a plain-prose "because ..." paragraph. Without it,
+    // an explicitly defended decision was incorrectly labelled undefended.
+    if (reasons.length === 0) {
+      // ", because …" · ". Because …" (next sentence) · ", since …" · ", to …" (purpose clause, python-tuf 0004)
+      const prose = /^\s*[,.]?\s*(?:because|since|to)\b([\s\S]*)/i.exec(reasonSource)?.[1]?.trim();
+      const paragraph = prose?.split(/\r?\n\s*\r?\n/, 1)[0]?.replace(/\s+/g, ' ').trim();
+      if (paragraph) reasons.push(paragraph);
+    }
     let n = 0;
-    for (const bullet of bulletsOf(reasonSource)) {
+    for (const bullet of reasons) {
       n += 1;
       const reasonId = `${decisionId}::reason:${n}`;
       args.push({ id: reasonId, role: 'reason', text: bullet });
