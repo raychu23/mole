@@ -20,10 +20,31 @@
 //   <_        outgoing undercut  child --undercuts--> parent  (OUTGOING_UNDERCUT: to=parent)
 // `><` (contradiction) and bare statement-to-statement ENTAILS/CONTRARY derivations are a logical
 // relation, not a dialectical one (model.ts:46-53) -- out of scope for an EdgeType that only has
-// supports/attacks/undercuts; lines using `><` are left unparsed (no relation emitted).
+// supports/attacks/undercuts; lines using `><` emit no relation but ARE reported as an unsupported
+// token in `problems` (T48 fix), so a `><` edge is never silently dropped on the floor.
+//
+// NOTE (undercut semantics, T48 header note): this parser has no premise-conclusion-structure
+// (PCS) / inference model, so an undercut relation here can only ever target a conclusion
+// statement/argument node -- i.e. it collapses to "attack the conclusion". That is a simplification:
+// in Pollock's original sense (and ASPIC+'s formalization), an undercutter targets the *inference*
+// from premises to conclusion, not the conclusion itself -- it defeats the warrant without claiming
+// the conclusion is false. If/when this package grows PCS support (named premises, `--`/`----`
+// inference lines, inference rules), undercut edges must be re-pointed at the inference step, not
+// the conclusion node, or the attack/undercut distinction this EdgeType exists to preserve is lost.
+//
+// This parser also does not implement PCS (premise-conclusion-structure) / inference blocks
+// (`(1) premise`, `----`, inference rules) at all: such lines are ignored for graph-building
+// purposes (same as always), but are now reported once per parse via `problems` (T48 fix) so a
+// `.argdown` file that actually uses PCS doesn't silently lose that content with no signal.
 
 export type ArgdownItemKind = 'statement' | 'argument';
 export type ArgdownRelationType = 'supports' | 'attacks' | 'undercuts';
+
+/** One thing this parser's subset grammar couldn't represent; same shape as the graph's Problem minus `file` (the loader adds that). */
+export interface ArgdownProblem {
+  line: number;
+  message: string;
+}
 
 export interface ArgdownItem {
   /** Argdown keys its statement/argument dictionaries by title; Mole's graph id is that same title. */
@@ -44,6 +65,10 @@ export interface ArgdownRelation {
 export interface ParsedArgdown {
   items: ArgdownItem[];
   relations: ArgdownRelation[];
+  /** Syntax this parser's subset can't represent: blank-line-broken relation blocks, `><` and
+   * other unrecognized relation tokens, and PCS/inference lines. Same semantics as graph.ts's
+   * Problem (loader.ts pushes these into the graph's problems[] with `file` attached). */
+  problems: ArgdownProblem[];
 }
 
 const REL_TOKENS: Array<{ tok: string; dir: 'in' | 'out'; type: ArgdownRelationType }> = [
@@ -58,11 +83,18 @@ const REL_TOKENS: Array<{ tok: string; dir: 'in' | 'out'; type: ArgdownRelationT
 ];
 
 // Relation lines start at the beginning of the (indentation-stripped) line, same as argdown-core's
-// lexer (relations only match "at BOF or after a newline", lexer.ts:139).
-const RELATION_LINE = /^(\s*)(\+>|->|_>|<\+|<-|<_|\+|-)\s*(.*)$/;
+// lexer (relations only match "at BOF or after a newline", lexer.ts:139). `><` is included here so
+// it's recognized as a relation-shaped line (and reported) rather than silently falling through to
+// the "plain prose" catch-all below.
+const RELATION_LINE = /^(\s*)(\+>|->|_>|<\+|<-|<_|><|\+|-)\s*(.*)$/;
 const TITLE_DEF = /^(\[([^\]]+)\]|<([^>]+)>)\s*:\s*(.*)$/;
 const TITLE_REF = /^@?(\[([^\]]+)\]|<([^>]+)>)\s*$/;
 const INLINE_REF = /^@?(\[([^\]]+)\]|<([^>]+)>)\s*(:\s*.*)?$/;
+// PCS (premise-conclusion-structure) markers: numbered premises/conclusions `(1) ...` and the
+// `--`/`----`/`-- rule --` inference-rule separator. Neither is part of this parser's grammar;
+// both are reported once per parse (not per line) as "unsupported, ignored".
+const PCS_PREMISE = /^\(\d+\)/;
+const PCS_INFERENCE_RULE = /^-{2,}/;
 
 interface StackItem {
   id: string;
@@ -74,7 +106,16 @@ export function parseArgdown(text: string): ParsedArgdown {
   const items = new Map<string, ArgdownItem>();
   const relKeys = new Set<string>();
   const relations: ArgdownRelation[] = [];
+  const problems: ArgdownProblem[] = [];
   const stack: StackItem[] = [];
+  // Set when a blank line closes an open relation block (stack was non-empty). Real @argdown/core
+  // rejects any relation line that would otherwise attach across that blank (confirmed against the
+  // real parser in test/argdown-parser.test.ts); cleared the moment a fresh title definition/
+  // reference gives the parse a new, legitimate parent to hang relations off of. Left `false` for a
+  // relation line with no stack and no preceding blank (e.g. the very first line of the file) --
+  // @argdown/core silently emits no relation there too, so that case stays unreported.
+  let brokenByBlank = false;
+  let pcsReported = false;
 
   const ensure = (kind: ArgdownItemKind, title: string, line: number): string => {
     const id = title;
@@ -91,19 +132,42 @@ export function parseArgdown(text: string): ParsedArgdown {
   const pushScope = (id: string, indent: number): void => {
     while (stack.length > 0 && stack[stack.length - 1]!.indent >= indent) stack.pop();
     stack.push({ id, indent });
+    brokenByBlank = false; // a fresh title def/ref is a legitimate new parent, even after a break
   };
 
   const lines = text.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i] ?? '';
     const line = i + 1;
-    if (!raw.trim()) continue;
+    if (!raw.trim()) {
+      if (stack.length > 0) {
+        stack.length = 0;
+        brokenByBlank = true;
+      }
+      continue;
+    }
+    const trimmed = raw.trim();
+
+    // PCS (premise-conclusion-structure) / inference lines: not this parser's grammar at all.
+    // Reported once per parse (not once per line) -- same intent as @argdown/core's own
+    // "non-fatal, keep going" diagnostics, just collapsed to a single pointer at the first line.
+    if (PCS_PREMISE.test(trimmed) || PCS_INFERENCE_RULE.test(trimmed)) {
+      if (!pcsReported) {
+        problems.push({ line, message: 'premise-conclusion-structure (PCS) / inference lines are not supported by this Argdown subset; ignored (first occurrence shown)' });
+        pcsReported = true;
+      }
+      continue;
+    }
 
     const relM = RELATION_LINE.exec(raw);
     if (relM) {
       const indent = relM[1]!.length;
       const tok = relM[2]!;
       const rest = relM[3]!.trim();
+      if (tok === '><') {
+        problems.push({ line, message: "'><' (contradiction) is a logical, not dialectical, relation and is intentionally unsupported by this EdgeType (supports/attacks/undercuts only); ignored" });
+        continue;
+      }
       const found = REL_TOKENS.find((t) => t.tok === tok);
       const refM = found ? INLINE_REF.exec(rest) : null;
       if (found && refM && stack.length > 0) {
@@ -119,9 +183,13 @@ export function parseArgdown(text: string): ParsedArgdown {
           continue;
         }
       }
-      // a relation token with no enclosing item, or an unrecognized reference (`><`, free text):
-      // not a relation this schema models -- fall through and let title matching below have a shot,
-      // but in practice relation tokens never also match TITLE_DEF/TITLE_REF, so the line is dropped.
+      if (!found) {
+        problems.push({ line, message: `unrecognized relation token '${tok}'; ignored` });
+      } else if (brokenByBlank) {
+        problems.push({ line, message: `blank line broke the enclosing relation block (as @argdown/core also rejects); '${tok}' relation on this line was not attached` });
+      }
+      // else: a relation token with no enclosing item and no preceding blank (e.g. file's first
+      // line), or an unrecognized reference -- @argdown/core emits no relation here either, silently.
       continue;
     }
 
@@ -143,9 +211,9 @@ export function parseArgdown(text: string): ParsedArgdown {
       pushScope(ensure(kind, title, line), indent);
       continue;
     }
-    // Plain prose (wrapped title text, PCS premises/inferences, free commentary): not part of the
-    // relation graph this loader builds; left unparsed, same as the `><`/free-text case above.
+    // Plain prose (wrapped title text, free commentary): not part of the relation graph this
+    // loader builds; left unparsed, same as the unrecognized-reference case above.
   }
 
-  return { items: [...items.values()], relations };
+  return { items: [...items.values()], relations, problems };
 }

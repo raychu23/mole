@@ -64,6 +64,7 @@ function fencedBlocks(text: string): Array<{ body: string; startLine: number }> 
 }
 
 function applyParsed(b: GraphBuilder, file: string, offset: number, parsed: ReturnType<typeof parseArgdown>): void {
+  for (const p of parsed.problems) b.problems.push({ file, line: p.line + offset - 1, message: p.message });
   for (const it of parsed.items) {
     if (b.has(it.id)) continue; // another record (or an earlier .argdown file) already defined this title: first one kept, same rule as graph.ts's Builder.node
     b.node({
