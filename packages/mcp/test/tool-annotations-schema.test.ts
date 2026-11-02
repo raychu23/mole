@@ -9,12 +9,29 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createServer } from '../src/server.js';
 
 const dirs: string[] = [];
+// mole_coverage / mole_tried read the machine's real agent logs (~/.hermes/state.db, ~/.claude/projects,
+// ~/.codex/sessions; agentstate defaultSources). On a busy dev machine that took 17-18 s per call and timed this
+// schema test out (11-02, alone, after the T55 merge). The test proves output-schema validity, not log reading:
+// point the three sources at empty scratch paths.
+const SOURCE_ENV = ['MOLE_HERMES_DB', 'MOLE_CLAUDE_DIR', 'MOLE_CODEX_DIR'] as const;
+const savedEnv = new Map<string, string | undefined>();
+beforeAll(() => {
+  const empty = mkdtempSync(join(tmpdir(), 'mole-mcp-no-logs-'));
+  dirs.push(empty);
+  for (const k of SOURCE_ENV) savedEnv.set(k, process.env[k]);
+  process.env.MOLE_HERMES_DB = join(empty, 'state.db');
+  process.env.MOLE_CLAUDE_DIR = join(empty, 'claude');
+  process.env.MOLE_CODEX_DIR = join(empty, 'codex');
+});
+afterAll(() => {
+  for (const [k, v] of savedEnv) v === undefined ? delete process.env[k] : (process.env[k] = v);
+});
 afterEach(() => {
   for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true });
 });
