@@ -46,6 +46,9 @@ export default defineConfig({
       // It ships its own *.test.js files (bun:test, differing suite shapes) that are not
       // Mole tests and were never meant to run from this workspace root.
       'context/reference/**',
+      // context/ is gitignored planning + benchmark material; benchmark case fixtures there (e.g. M-C v3's
+      // cases/*-guard.test.ts, meant to run inside a scratch checkout) must never run in the product suite
+      'context/**',
     ],
   },
 });
