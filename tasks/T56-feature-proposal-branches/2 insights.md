@@ -29,3 +29,9 @@ limits            supports edges are display-only (Dung engine) · decisions wit
 - MEDIUM `--path` inside `.git` was allowed (prior-art.md said it wasn't) → refused, compared by real path (/var vs /private/var, symlinked parents)
 - LOW hand-edited baseline hash → raw stack trace → clean "baseline commit not found"
 - solid per reviewer: baseline never written · name injection rejected · deterministic · labels = @mole/reasoning direct · 3,000 records in ~2 s
+
+## 11-02 18:00 review 2 (deleg_2454d9c3) PASS
+- round-1 HIGH/MEDIUM/LOW confirmed fixed through the CLI
+- state pairs checked: absent→uncited · holds→defeated/contested/absent/uncited · uncited→absent, `because` attribution right
+- refused: --path = .git · inside a linked worktree's gitdir · via symlinks into .git · --repo itself a linked worktree
+- truly pruned baseline (gc --prune=now) → clean "baseline commit not found"
