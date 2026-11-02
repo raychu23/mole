@@ -19,6 +19,9 @@
       "path": "../questions"
     },
     {
+      "path": "../reasoning"
+    },
+    {
       "path": "../reviews"
     }
   ]
