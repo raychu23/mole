@@ -21,3 +21,11 @@ Decisions package: 32 files, 291 tests pass.
   rationale.ts AND the plugin's lib.mjs copy (parity test)
 - P2 NOT fixed: CONTEXT block still repeats the raw Considered Options list next to the labelled blocks (noise, no label flip)
 - real ADRs defended: 16/20 (was 9/20 before T54 follow-ups; 0004 lost on purpose) · decisions + plugin: 41 files, 317 tests
+
+## 11-02 18:05 review 3 (deleg_e17ab4d3) FAIL → fixed (2 new tests: red without the fix, green with)
+- round-2 P0/P1 all confirmed fixed · P2 deferred (accepted) · dotted names (Node.js 18, MADR 2.1.2) + containment + TS/JS parity OK
+- P1 new: fallback took the first "because" in the paragraph, even one about a REJECTED option ("almost chose Y because…,
+  but selected X since…") → now only the first sentence holding "because", and only if it names no rejected option and
+  doesn't turn (but/however/although/though); unsure → no reason (claim undefended), never a guess
+- limit: when the ADR lists no Considered Options, a sentence about an unlisted option can't be detected by name
+- real ADRs still 16/20 defended · decisions + plugin 41 files, 319 tests

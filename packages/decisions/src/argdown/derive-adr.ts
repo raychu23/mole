@@ -108,6 +108,7 @@ export function deriveAdrArgumentFramework(decisionId: string, adrText: string):
   const chosenName = chosenRaw ? sameName(chosenRaw) : undefined;
 
   const optionIds: string[] = [];
+  const rejectedNames: string[] = [];
   if (consideredBlock) {
     const bullets = bulletsOf(consideredBlock);
     const names = bullets.map((b) => sameName(optionNameOf(b)));
@@ -123,6 +124,7 @@ export function deriveAdrArgumentFramework(decisionId: string, adrText: string):
     let n = 0;
     for (const [i, bullet] of bullets.entries()) {
       if (i === chosenIdx) continue;
+      if (names[i]) rejectedNames.push(names[i]!);
       n += 1;
       const optId = `${decisionId}::option:${n}`;
       args.push({ id: optId, role: 'considered-option', text: bullet });
@@ -143,8 +145,18 @@ export function deriveAdrArgumentFramework(decisionId: string, adrText: string):
       // the first "because" inside it (". Because …", "… We picked it because …"). A leading "to" is NOT a reason
       // (review 2 P0: "to be revisited after the audit"); python-tuf 0004's purpose clause stays unread.
       const first = reasonSource.split(/\r?\n\s*\r?\n/, 1)[0] ?? '';
-      const after = /^\s*[,.]?\s*(?:because|since)\b([\s\S]*)/i.exec(first)?.[1] ?? /\bbecause\b([\s\S]*)/i.exec(first)?.[1];
-      const paragraph = after?.replace(/\s+/g, ' ').trim();
+      const opening = /^\s*[,.]?\s*(?:because|since)\b([\s\S]*)/i.exec(first)?.[1];
+      // otherwise: the first SENTENCE holding "because", and only if that sentence names no rejected option and
+      // does not turn ("but", "however") -- review 3 P1: "The team almost chose Y because it was popular, but
+      // finally selected X since …" handed Y's praise to X. Unsure -> no reason (claim undefended), never a guess.
+      let inner: string | undefined;
+      if (opening === undefined) {
+        const sentence = first.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+/).find((s) => /\bbecause\b/i.test(s));
+        const low = sentence ? sameName(sentence) : '';
+        const namesOther = rejectedNames.some((nm) => nm.length > 0 && low.includes(nm));
+        if (sentence && !namesOther && !/\b(?:but|however|although|though)\b/i.test(sentence)) inner = /\bbecause\b([\s\S]*)/i.exec(sentence)?.[1];
+      }
+      const paragraph = (opening ?? inner)?.replace(/\s+/g, ' ').trim();
       if (paragraph) reasons.push(paragraph);
     }
     let n = 0;

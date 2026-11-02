@@ -86,6 +86,16 @@ describe('ADR prose reasons remain evidence for the chosen option', () => {
     expect(derived.arguments.filter((a) => a.role === 'considered-option').map((a) => a.text)).toEqual(['MADR 2.1.2', 'Nygard']);
   });
 
+  // review 3 P1: a "because" about a rejected option is not the chosen option's reason
+  it.each([
+    'Chosen option: "Modern Python". The team almost chose Legacy Python because it was familiar, but picked Modern Python since it is maintained.',
+    'Chosen option: "Modern Python". We kept it because it was there, but this is under review.',
+  ])('does not take a because-clause about another option or a turned sentence: %s', (outcome) => {
+    const text = ['## Considered Options', '- Modern Python', '- Legacy Python', '## Decision Outcome', outcome].join('\n');
+    const derived = deriveAdrArgumentFramework('py', text);
+    expect(derived.arguments.filter((a) => a.role === 'reason')).toEqual([]);
+  });
+
   it('keeps the stated reason paragraph without absorbing later commentary', () => {
     const text = [
       '## Considered Options', '- Modern Python', '- Legacy Python',
