@@ -3,7 +3,7 @@ state: running
 owner: t45-builder
 repo: Project/Mole
 branch: t45-wire-prcheck-into-server-checkrun
-worktree: Project/Mole-worktrees/T45-wire-prcheck-into-server-checkrun
+worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T45-wire-prcheck-into-server-checkrun
 base:
 reviewer: unassigned
 updated: 2026-11-01 19:51
