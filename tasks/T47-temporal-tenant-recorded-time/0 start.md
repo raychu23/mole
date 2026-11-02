@@ -1,22 +1,22 @@
 ---
-state: submitted
+state: verified
 owner: t47-builder
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t47-temporal-tenant-recorded-time
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T47-temporal-tenant-recorded-time
 base: 278b176
-reviewer:
-updated: 2026-11-01 22:11
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+reviewer: reviewers T47-r1/r2/r3 (deleg_ba903ae9, deleg_1c811fd5, deleg_a27bf310) + parent re-run of r3 property script
+updated: 2026-11-01 22:17
+status: ledger verified
+next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
 claimed: 2026-11-01 20:42
 ---
 ```notes
 T47-temporal-tenant-recorded-time      ledger task (rules.md §3 code features)      project tasks
     goal                    Finish the temporal store's half-built parts with proven designs: (1) org_id on fact_versions/edge_versions + EXCLUDE constraint + RLS with FORCE, copying packages/server/src/db.ts's existing pattern (Graphiti group_id precedent); (2) a knownAt/as-of-recorded query so 'what did we believe on date X' works (SQL:2011 system time / XTDB bitemporal); (3) contradiction handling: a new conflicting fact invalidates (never deletes) the old one and raises a flag for a person (Graphiti resolve_edge_contradictions, ai-memory advisory flags). Source: Project/Mole/context/product-plan/systems/core-audit/storage-time-memory.md
     done-when               1 failing tests first · 2 org A and org B both using D1 never see each other's facts (test as non-owner role) · 3 asOf(valid) x knownAt(recorded) 2x2 tests incl. a late correction · 4 conflicting load produces invalidation + flag, history intact · 5 migration for existing rows documented · 6 npm run check
-    status                  2026-11-01 submitted      report: T47 4th submission: fixed same-value overlap crash (standard temporal coalescing, Snodgrass ch.6/SQL:2011/XTDB p
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    status                  2026-11-01 verified      reviewer reviewers T47-r1/r2/r3 (deleg_ba903ae9, deleg_1c811fd5, deleg_a27bf310) + parent re-run of r3 property script ·
+    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
     pinned
     mode                    one worker
     boundary                packages/temporal/** + tests

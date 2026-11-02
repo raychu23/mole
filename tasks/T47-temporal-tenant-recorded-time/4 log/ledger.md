@@ -14,4 +14,6 @@ ledger (newest last, nothing deleted)
     2026-11-01 22:10      submitted → running      changes requested: Review 3 FAIL: same-value overlapping recordFact fast path crashed 23P01 on 83/200 randomized sequences (reviewer's property-test-review.mjs, repro6-samevalue-crash.mjs). Fixed via standard temporal co
     2026-11-01 22:11      running → submitted      report: T47 4th submission: fixed same-value overlap crash (standard temporal coalescing, Snodgrass ch.6/SQL:2011/XTDB put) -- same-value overlapping/adjacent live rows now routed through the FOR-PORTION-OF path and merg
     2026-11-01 22:11      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T47-temporal-tenant-recorded-time → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-11-01 22:17      submitted → verified      reviewer reviewers T47-r1/r2/r3 (deleg_ba903ae9, deleg_1c811fd5, deleg_a27bf310) + parent re-run of r3 property script · findings: r1 forward change as correction + backdating -> fixed, r2 2-version span crash -> FOR POR
+    2026-11-01 22:17      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T47-temporal-tenant-recorded-time → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
