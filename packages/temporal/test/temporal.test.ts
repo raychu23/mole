@@ -6,13 +6,16 @@
 //
 // Local Postgres 16 (Homebrew) is assumed running on the default socket/port; each run creates and
 // drops its own database (mole_t38_test_<pid>) so it never touches another builder's database.
+//
+// T47 update: every call now goes through withOrgTx (default org 'default') so RLS applies the
+// same way application code must use it -- this file's assertions are unchanged, only the plumbing.
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { applySchema, asOf, closeFact, diff, insertFact, openPool, type FactInput } from '../src/index.js';
+import { applySchema, asOf, closeFact, diff, insertFact, openPool, withOrgTx, type FactInput } from '../src/index.js';
 import { loadDecisionsJsonl } from '../src/loader.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -42,6 +45,7 @@ async function withAdmin<T>(fn: (c: Client) => Promise<T>): Promise<T> {
 }
 
 let pool: ReturnType<typeof openPool>;
+const org = 'default';
 
 beforeAll(async () => {
   await withAdmin(async (c) => {
@@ -61,31 +65,39 @@ afterAll(async () => {
 
 describe('schema integrity (done-when 2: 0 overlapping validity rows, enforced by the database)', () => {
   it('rejects two overlapping valid ranges for the same fact via EXCLUDE USING gist', async () => {
-    const f: FactInput = { factId: 'D-test', kind: 'decision', attr: 'status', value: 'OPEN', validFrom: '2026-01-01T00:00:00Z', validTo: null };
-    await insertFact(pool, f);
-    await expect(insertFact(pool, { ...f, value: 'OTHER', validFrom: '2026-01-02T00:00:00Z', validTo: null })).rejects.toThrow();
+    const f: FactInput = { orgId: org, factId: 'D-test', kind: 'decision', attr: 'status', value: 'OPEN', validFrom: '2026-01-01T00:00:00Z', validTo: null };
+    await withOrgTx(pool, org, (client) => insertFact(client, f));
+    await expect(
+      withOrgTx(pool, org, (client) => insertFact(client, { ...f, value: 'OTHER', validFrom: '2026-01-02T00:00:00Z', validTo: null })),
+    ).rejects.toThrow();
   });
 
   it('never rewrites or removes a closed version row; closing writes a new row with a bounded range', async () => {
     const id = `D-close-${randomUUID()}`;
-    await insertFact(pool, { factId: id, kind: 'decision', attr: 'status', value: 'OPEN', validFrom: '2026-02-01T00:00:00Z', validTo: null });
-    const before = await pool.query('select count(*)::int as n from fact_versions where fact_id = $1', [id]);
-    await closeFact(pool, id, 'status', '2026-02-05T00:00:00Z');
-    await insertFact(pool, { factId: id, kind: 'decision', attr: 'status', value: 'REPLACED', validFrom: '2026-02-05T00:00:00Z', validTo: null });
-    const after = await pool.query('select count(*)::int as n from fact_versions where fact_id = $1', [id]);
+    await withOrgTx(pool, org, (client) =>
+      insertFact(client, { orgId: org, factId: id, kind: 'decision', attr: 'status', value: 'OPEN', validFrom: '2026-02-01T00:00:00Z', validTo: null }),
+    );
+    const before = await withOrgTx(pool, org, (client) => client.query('select count(*)::int as n from fact_versions where fact_id = $1', [id]));
+    await withOrgTx(pool, org, (client) => closeFact(client, id, 'status', '2026-02-05T00:00:00Z'));
+    await withOrgTx(pool, org, (client) =>
+      insertFact(client, { orgId: org, factId: id, kind: 'decision', attr: 'status', value: 'REPLACED', validFrom: '2026-02-05T00:00:00Z', validTo: null }),
+    );
+    const after = await withOrgTx(pool, org, (client) => client.query('select count(*)::int as n from fact_versions where fact_id = $1', [id]));
     expect(after.rows[0].n).toBeGreaterThan(before.rows[0].n);
-    const closedRow = await pool.query("select valid_to from fact_versions where fact_id = $1 and value = 'OPEN'", [id]);
+    const closedRow = await withOrgTx(pool, org, (client) =>
+      client.query("select valid_to from fact_versions where fact_id = $1 and value = 'OPEN'", [id]),
+    );
     expect(closedRow.rows[0].valid_to).not.toBeNull();
   });
 });
 
 describe('M32 as-of accuracy vs a latest-only baseline (done-when 1)', () => {
   it(`answers >= ${key.targets.asOfAccuracyPct}% of the frozen key's as-of questions correctly, reporting the baseline beside it`, async () => {
-    await loadDecisionsJsonl(pool, join(here, '../bench/decisions-fixture.jsonl'));
+    await withOrgTx(pool, org, (client) => loadDecisionsJsonl(client, join(here, '../bench/decisions-fixture.jsonl'), org));
     let right = 0;
     let baselineRight = 0;
     for (const q of key.questions) {
-      const got = (await asOf(pool, q.decisionId, 'status', q.asOf)) ?? 'not yet proposed';
+      const got = (await withOrgTx(pool, org, (client) => asOf(client, q.decisionId, 'status', q.asOf))) ?? 'not yet proposed';
       if (got === q.expected) right++;
       if (q.baselineLatestOnly === q.expected) baselineRight++;
     }
@@ -98,10 +110,14 @@ describe('M32 as-of accuracy vs a latest-only baseline (done-when 1)', () => {
 describe('diff between two points in time (done-when: as-of queries)', () => {
   it('reports what changed between T1 and T2 for a fact with history', async () => {
     const id = `D-diff-${randomUUID()}`;
-    await insertFact(pool, { factId: id, kind: 'decision', attr: 'status', value: 'OPEN', validFrom: '2026-03-01T00:00:00Z', validTo: null });
-    await closeFact(pool, id, 'status', '2026-03-05T00:00:00Z');
-    await insertFact(pool, { factId: id, kind: 'decision', attr: 'status', value: 'REPLACED', validFrom: '2026-03-05T00:00:00Z', validTo: null });
-    const d = await diff(pool, id, 'status', '2026-03-02T00:00:00Z', '2026-03-10T00:00:00Z');
+    await withOrgTx(pool, org, (client) =>
+      insertFact(client, { orgId: org, factId: id, kind: 'decision', attr: 'status', value: 'OPEN', validFrom: '2026-03-01T00:00:00Z', validTo: null }),
+    );
+    await withOrgTx(pool, org, (client) => closeFact(client, id, 'status', '2026-03-05T00:00:00Z'));
+    await withOrgTx(pool, org, (client) =>
+      insertFact(client, { orgId: org, factId: id, kind: 'decision', attr: 'status', value: 'REPLACED', validFrom: '2026-03-05T00:00:00Z', validTo: null }),
+    );
+    const d = await withOrgTx(pool, org, (client) => diff(client, id, 'status', '2026-03-02T00:00:00Z', '2026-03-10T00:00:00Z'));
     expect(d).toEqual({ from: 'OPEN', to: 'REPLACED' });
   });
 });
@@ -115,7 +131,7 @@ describe('0 model calls on any path (R6)', () => {
       return real(...a);
     }) as typeof real;
     try {
-      await asOf(pool, key.questions[0]!.decisionId, 'status', key.questions[0]!.asOf);
+      await withOrgTx(pool, org, (client) => asOf(client, key.questions[0]!.decisionId, 'status', key.questions[0]!.asOf));
     } finally {
       globalThis.fetch = real;
     }

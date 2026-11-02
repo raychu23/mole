@@ -115,7 +115,7 @@ async function part2Integrity(): Promise<{ attempted: number; committed: number;
         const i = next++;
         if (i >= concurrentWrites) return;
         try {
-          await insertFact(pool, { factId, kind: 'decision', attr: 'status', value: `writer-${i}`, validFrom: from, validTo: null });
+          await insertFact(pool, { orgId: 'bench', factId, kind: 'decision', attr: 'status', value: `writer-${i}`, validFrom: from, validTo: null });
           results[i] = true;
         } catch {
           results[i] = false;

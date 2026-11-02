@@ -9,8 +9,7 @@
 // placeholder (noon for replaced/decided, 15:00 for amended, 10:00 for answered) -- same convention
 // documented there.
 import { readFileSync } from 'node:fs';
-import type { Pool } from 'pg';
-import { insertFact } from './index.js';
+import { insertFact, type Queryable } from './index.js';
 
 interface DecisionRow {
   id: string;
@@ -90,8 +89,10 @@ export function timelineFor(r: DecisionRow): Event[] {
   return dedup;
 }
 
-/** Parse a decisions.jsonl file and insert one bitemporal 'status' fact per timeline segment. */
-export async function loadDecisionsJsonl(pool: Pool, path: string): Promise<number> {
+/** Parse a decisions.jsonl file and insert one bitemporal 'status' fact per timeline segment.
+ *  orgId defaults to 'default' (T47): existing callers that haven't adopted multi-tenancy yet
+ *  keep working against the single default tenant without a call-site change. */
+export async function loadDecisionsJsonl(client: Queryable, path: string, orgId = 'default'): Promise<number> {
   const lines = readFileSync(path, 'utf8').split('\n').filter((l) => l.trim().length > 0);
   let count = 0;
   for (const line of lines) {
@@ -100,7 +101,8 @@ export async function loadDecisionsJsonl(pool: Pool, path: string): Promise<numb
     for (let i = 0; i < events.length; i++) {
       const from = events[i]!.at;
       const to = i + 1 < events.length ? events[i + 1]!.at : null;
-      await insertFact(pool, {
+      await insertFact(client, {
+        orgId,
         factId: r.id,
         kind: 'decision',
         attr: 'status',
@@ -124,7 +126,12 @@ export async function loadDecisionsJsonl(pool: Pool, path: string): Promise<numb
  * replaced_by/decided/amended prose the way decisions.jsonl does), reviewed and scoped in
  * tasks/T38-bitemporal-decision-graph/2 insights.md.
  */
-export async function loadMoleDecisionsGit(pool: Pool, repoRoot: string, decisionsDir = '.mole/decisions'): Promise<number> {
+export async function loadMoleDecisionsGit(
+  client: Queryable,
+  repoRoot: string,
+  decisionsDir = '.mole/decisions',
+  orgId = 'default',
+): Promise<number> {
   const { execFileSync } = await import('node:child_process');
   const { readdirSync } = await import('node:fs');
   const { join: pathJoin } = await import('node:path');
@@ -159,7 +166,8 @@ export async function loadMoleDecisionsGit(pool: Pool, repoRoot: string, decisio
     for (let i = 0; i < timeline.length; i++) {
       const from = timeline[i]!.at;
       const to = i + 1 < timeline.length ? timeline[i + 1]!.at : null;
-      await insertFact(pool, {
+      await insertFact(client, {
+        orgId,
         factId: id,
         kind: 'decision',
         attr: 'status',
