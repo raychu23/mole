@@ -140,14 +140,16 @@ describe('recordFact 2x2: world change vs correction (valid-time direction decid
     };
     await withOrgTx(pool, org, (client) => insertFact(client, f));
     const recordedBefore = new Date().toISOString();
-    await sleep(25);
+    // Logical clock step instead of a real sleep: recordFact's test-only `now` hook lets this
+    // test assert a strict system-time ordering without waiting on the wall clock.
+    const correctionNow = new Date(Date.parse(recordedBefore) + 25).toISOString();
 
     // New information arrives much later: the decision was actually DECIDED the whole time --
     // same validFrom (not a forward move), so this is a correction, not a world change.
-    const result = await withOrgTx(pool, org, (client) => recordFact(client, { ...f, value: 'DECIDED' }));
+    const result = await withOrgTx(pool, org, (client) => recordFact(client, { ...f, value: 'DECIDED' }, { now: correctionNow }));
     expect(result.invalidated).toBe(true);
     expect(result.flagId).not.toBeNull();
-    const recordedAfter = new Date().toISOString();
+    const recordedAfter = correctionNow;
 
     expect(await withOrgTx(pool, org, (client) => asOf(client, id, 'status', '2026-01-02T00:00:00Z'))).toBe('DECIDED');
     expect(await withOrgTx(pool, org, (client) => knownAt(client, id, 'status', '2026-01-02T00:00:00Z', recordedBefore))).toBe('OPEN');
@@ -162,13 +164,14 @@ describe('recordFact 2x2: world change vs correction (valid-time direction decid
     };
     await withOrgTx(pool, org, (client) => insertFact(client, openFromMarch));
     const recordedBefore = new Date().toISOString();
-    await sleep(25);
+    // Logical clock step instead of a real sleep (see the [late correction] test above).
+    const correctionNow = new Date(Date.parse(recordedBefore) + 25).toISOString();
 
     // We learn the decision was actually CANCELLED starting earlier (Jan 1) -- validFrom moves
     // BACKWARD relative to the live row, so this must be flagged as a correction, never treated
     // as a forward world change even though the value differs and ranges overlap.
     const result = await withOrgTx(pool, org, (client) =>
-      recordFact(client, { ...openFromMarch, value: 'CANCELLED', validFrom: '2026-01-01T00:00:00Z' }),
+      recordFact(client, { ...openFromMarch, value: 'CANCELLED', validFrom: '2026-01-01T00:00:00Z' }, { now: correctionNow }),
     );
     expect(result.invalidated).toBe(true);
     expect(result.flagId).not.toBeNull();

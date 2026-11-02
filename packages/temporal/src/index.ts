@@ -171,41 +171,118 @@ export async function closeFact(client: Queryable, factId: string, attr: string,
  * that row's value, new_value = f.value). A retroactive change spanning several live rows can
  * therefore raise more than one flag -- the returned `flagId` is only the first one; callers that
  * need the full set should query listContradictionFlags.
+ *
+ * T47 third-review fix (P0, same-value overlap crash): a SAME-value live row that merely
+ * overlaps or touches f's valid range (e.g. live OPEN [Jan15,Jan18), new recordFact OPEN
+ * [Jan16,Jan19)) is not a "conflict" by value, but it is also not safe to hand to plain
+ * insertFact: insertFact's own dedup only short-circuits an EXACT-bounds duplicate, so any other
+ * same-value overlap gets inserted as a brand-new row that collides with the still-live row in
+ * BOTH `valid` and `recorded` -> fact_versions_no_overlap (EXCLUDE USING gist) raises 23P01.
+ * Fixed with standard temporal COALESCING (Snodgrass, "Developing Time-Oriented Database
+ * Applications in SQL", ch. 6; SQL:2011 PERIOD coalescing; XTDB `put` semantics,
+ * docs.xtdb.com/about/time-in-xtdb): every LIVE same-value row that overlaps OR is immediately
+ * adjacent to f's range is routed through the exact same FOR-PORTION-OF machinery as a
+ * conflicting row -- its recorded range is closed now, never mutated in place -- and instead of
+ * being reinserted as leftover pieces, all of them are merged with f's own range into ONE new
+ * row spanning [min(all valid_from), max(all valid_to)]. This keeps the live-row invariant (no
+ * two live rows for the same (fact, attr) ever overlap, and none of them sit needlessly
+ * fragmented across equal-value adjacent pieces) and makes the same-value fast path a true no-op
+ * only when f is a byte-for-byte duplicate of the one live row it would otherwise touch.
  */
 export async function recordFact(
   client: Queryable,
   f: FactInput,
+  /** Test-only clock hook (T47 third-review fix): lets tests step the system-time axis by
+   *  logical offsets instead of real wall-clock `sleep()`s between recordFact calls. Internal --
+   *  not meant for production callers, same spirit as insertFactVersion's recordedFrom. */
+  opts: { now?: string } = {},
 ): Promise<{ invalidated: boolean; flagId: number | null }> {
-  // Lock every LIVE row overlapping f's valid range. Any two live rows for the same
-  // (org, fact_id, attr) always have disjoint valid ranges (both have recorded ranges open to
-  // infinity, so they always overlap in `recorded`; fact_versions_no_overlap therefore already
-  // forces their `valid` ranges apart) -- so each candidate below can be processed independently
-  // without its leftover pieces colliding with another candidate's.
+  // Lock every LIVE row that overlaps f's valid range, OR merely touches one of its boundaries
+  // (needed to coalesce an adjacent equal-value piece, not just an overlapping one). Any two live
+  // rows for the same (org, fact_id, attr) always have disjoint valid ranges (both have recorded
+  // ranges open to infinity, so they always overlap in `recorded`; fact_versions_no_overlap
+  // therefore already forces their `valid` ranges apart) -- so each candidate below can be
+  // processed independently without its leftover/merged pieces colliding with another
+  // candidate's.
   const candidates = await client.query(
     `select id, value, lower(valid) as valid_from, upper(valid) as valid_to
      from fact_versions
      where fact_id = $1 and attr = $2
        and upper_inf(recorded)
-       and valid && tstzrange($3::timestamptz, $4::timestamptz, '[)')
+       and (
+         valid && tstzrange($3::timestamptz, $4::timestamptz, '[)')
+         or upper(valid) = $3::timestamptz
+         or ($4::timestamptz is not null and lower(valid) = $4::timestamptz)
+       )
      order by id
      for update`,
     [f.factId, f.attr, f.validFrom, f.validTo],
   );
-  // Rows whose value is unchanged are left completely untouched: an exact duplicate of a live row
-  // is an idempotent no-op (handled by insertFactVersion's own dup check below), and a same-value
-  // range extension is not a conflict at all.
-  const conflicting = (candidates.rows as Array<{ id: number; value: string; valid_from: string; valid_to: string | null }>).filter(
-    (r) => r.value !== f.value,
-  );
-  if (conflicting.length === 0) {
-    await insertFact(client, f);
+
+  const fFrom = new Date(f.validFrom).getTime();
+  const fTo = f.validTo ? new Date(f.validTo).getTime() : null;
+
+  const rows = (candidates.rows as Array<{ id: number; value: string; valid_from: string; valid_to: string | null }>).map((r) => ({
+    id: r.id,
+    value: r.value,
+    validFrom: r.valid_from,
+    validTo: r.valid_to,
+    from: new Date(r.valid_from).getTime(),
+    to: r.valid_to ? new Date(r.valid_to).getTime() : null,
+  }));
+
+  // True overlap with f (strict -- excludes rows that only touch a boundary), used to decide
+  // which different-value rows are genuine conflicts.
+  const overlapsF = (rowFrom: number, rowTo: number | null) => {
+    const afterFStart = rowTo === null || rowTo > fFrom;
+    const beforeFEnd = fTo === null || rowFrom < fTo;
+    return afterFStart && beforeFEnd;
+  };
+
+  const sameValue = rows.filter((r) => r.value === f.value);
+  const conflicting = rows.filter((r) => r.value !== f.value && overlapsF(r.from, r.to));
+
+  if (sameValue.length === 0 && conflicting.length === 0) {
+    await insertFactVersion(client, f, opts.now);
     return { invalidated: false, flagId: null };
   }
 
-  const now = new Date().toISOString();
-  const fFrom = new Date(f.validFrom).getTime();
-  const fTo = f.validTo ? new Date(f.validTo).getTime() : null;
+  // Idempotent no-op, preserved exactly: f is a byte-for-byte duplicate of the one live row it
+  // would otherwise touch, and there is nothing else to merge or flag.
+  if (conflicting.length === 0 && sameValue.length === 1 && sameValue[0]!.from === fFrom && sameValue[0]!.to === fTo) {
+    await insertFactVersion(client, f, opts.now);
+    return { invalidated: false, flagId: null };
+  }
+
+  const now = opts.now ?? new Date().toISOString();
   const flagTargets: Array<{ rowId: number; oldValue: string }> = [];
+
+  // Coalesce: close every same-value candidate's recorded range now, and widen the range that
+  // will be written for f to cover all of them (overlapping or merely adjacent).
+  let mergedFromStr = f.validFrom;
+  let mergedFromNum = fFrom;
+  let mergedToStr = f.validTo;
+  let mergedToNum = fTo;
+  let mergedToOpen = fTo === null;
+  for (const row of sameValue) {
+    await client.query(
+      `update fact_versions set recorded = tstzrange(lower(recorded), $2::timestamptz, '[)') where id = $1`,
+      [row.id, now],
+    );
+    if (row.from < mergedFromNum) {
+      mergedFromNum = row.from;
+      mergedFromStr = row.validFrom;
+    }
+    if (!mergedToOpen) {
+      if (row.to === null) {
+        mergedToOpen = true;
+        mergedToStr = null;
+      } else if (mergedToNum === null || row.to > mergedToNum) {
+        mergedToNum = row.to;
+        mergedToStr = row.validTo;
+      }
+    }
+  }
 
   for (const row of conflicting) {
     await client.query(
@@ -213,33 +290,35 @@ export async function recordFact(
       [row.id, now],
     );
 
-    const rowFrom = new Date(row.valid_from).getTime();
-    const rowTo = row.valid_to ? new Date(row.valid_to).getTime() : null;
-    const leftoverBefore = rowFrom < fFrom;
-    const leftoverAfter = fTo !== null && (rowTo === null || rowTo > fTo);
+    const leftoverBefore = row.from < fFrom;
+    const leftoverAfter = fTo !== null && (row.to === null || row.to > fTo);
 
     if (leftoverBefore) {
       await insertFactVersion(
         client,
-        { orgId: f.orgId, factId: f.factId, kind: f.kind, attr: f.attr, value: row.value, validFrom: row.valid_from, validTo: f.validFrom },
+        { orgId: f.orgId, factId: f.factId, kind: f.kind, attr: f.attr, value: row.value, validFrom: row.validFrom, validTo: f.validFrom },
         now,
       );
     }
     if (leftoverAfter) {
       await insertFactVersion(
         client,
-        { orgId: f.orgId, factId: f.factId, kind: f.kind, attr: f.attr, value: row.value, validFrom: f.validTo as string, validTo: row.valid_to },
+        { orgId: f.orgId, factId: f.factId, kind: f.kind, attr: f.attr, value: row.value, validFrom: f.validTo as string, validTo: row.validTo },
         now,
       );
     }
 
-    const isWorldChange = fFrom > rowFrom && !leftoverAfter;
+    const isWorldChange = fFrom > row.from && !leftoverAfter;
     if (!isWorldChange) {
       flagTargets.push({ rowId: row.id, oldValue: row.value });
     }
   }
 
-  const newId = await insertFactVersion(client, f, now);
+  const newId = await insertFactVersion(
+    client,
+    { ...f, validFrom: mergedFromStr, validTo: mergedToOpen ? null : mergedToStr },
+    now,
+  );
 
   let firstFlagId: number | null = null;
   for (const target of flagTargets) {

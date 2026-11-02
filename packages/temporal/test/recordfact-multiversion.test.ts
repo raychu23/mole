@@ -70,12 +70,14 @@ describe('recordFact: retroactive change spanning multiple live versions (SQL:20
     await withOrgTx(pool, org, (client) => recordFact(client, { ...base, value: 'DECIDED', validFrom: '2026-03-01T00:00:00Z' }));
     expect(await liveRows(id)).toHaveLength(2);
     const recordedBeforeCorrection = new Date().toISOString();
-    await new Promise((resolve) => setTimeout(resolve, 25));
+    // Logical clock step instead of a real sleep: recordFact's test-only `now` hook lets this
+    // test assert knownAt-before vs knownAt-after without waiting on the wall clock.
+    const correctionNow = new Date(Date.parse(recordedBeforeCorrection) + 25).toISOString();
 
     // Retroactive: REJECTED actually started Feb1 (inside OPEN's window) with no end -- overlaps
     // BOTH live rows at once.
     const result = await withOrgTx(pool, org, (client) =>
-      recordFact(client, { ...base, value: 'REJECTED', validFrom: '2026-02-01T00:00:00Z', validTo: null }),
+      recordFact(client, { ...base, value: 'REJECTED', validFrom: '2026-02-01T00:00:00Z', validTo: null }, { now: correctionNow }),
     );
     expect(result.invalidated).toBe(true);
     expect(result.flagId).not.toBeNull();
@@ -100,7 +102,7 @@ describe('recordFact: retroactive change spanning multiple live versions (SQL:20
 
     // knownAt: before this call we believed DECIDED held at Apr1; after, REJECTED.
     expect(await withOrgTx(pool, org, (client) => knownAt(client, id, 'status', '2026-04-01T00:00:00Z', recordedBeforeCorrection))).toBe('DECIDED');
-    expect(await withOrgTx(pool, org, (client) => knownAt(client, id, 'status', '2026-04-01T00:00:00Z', new Date().toISOString()))).toBe('REJECTED');
+    expect(await withOrgTx(pool, org, (client) => knownAt(client, id, 'status', '2026-04-01T00:00:00Z', correctionNow))).toBe('REJECTED');
   });
 
   it('spans exactly 3 live versions: closes all three, flags the two true corrections, no flag on the forward trim', async () => {
