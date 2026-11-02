@@ -1,22 +1,22 @@
 ---
-state: running
+state: submitted
 owner: t45-builder
 repo: Project/Mole
 branch: t45-wire-prcheck-into-server-checkrun
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T45-wire-prcheck-into-server-checkrun
 base:
 reviewer: unassigned
-updated: 2026-11-01 21:16
-status: ledger running
-next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+updated: 2026-11-01 21:18
+status: ledger submitted
+next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
 claimed: 2026-11-01 19:51
 ---
 ```notes
 T45-wire-prcheck-into-server-checkrun      ledger task (rules.md §3 code features)      project Mole
     goal                    packages/server/src/checkrun.ts's live per-push check-run hardcodes conclusion:'success' (line 46) and never calls prCheck's governed/content-anchor result; wire prCheck (packages/decisions) into the server's live conclusion so a real content-anchor match (T32) actually surfaces instead of being discarded before the check run is written.
     done-when               1 checkrun.ts calls prCheck (or its governed/content-anchor computation) instead of (or alongside) getGoverningDecisions' file-count-only check · 2 conclusion is 'neutral' when nothing governs, and a real signal (not hardcoded 'success') when a content-anchor match fires, consistent with Mole's own 'flags, not gates' rule (a warning-shaped annotation, not a hard failure) · 3 existing checkrun tests updated + new test: a content-anchor match on a real diff changes the computed result, not just file counts · 4 npm run check green
-    status                  2026-11-01 running      changes requested: Fresh review FAILED (round 2): P1 baseOf() in packages/server/src/checkrun.ts used ref^ only, so a mu
-    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+    status                  2026-11-01 submitted      report: Fixed both review round 2 findings, tests-first. P1: threaded GitHub push payload 'before' through webhook.ts ->
+    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
     pinned
     mode                    one worker
     boundary                packages/server/src/checkrun.ts + its tests

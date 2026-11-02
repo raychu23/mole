@@ -6,4 +6,6 @@ ledger (newest last, nothing deleted)
     2026-11-01 20:00      running → submitted      report: npm run check: 81 test files passed, 7 skipped (DB-gated, no DATABASE_URL in this env), 559 tests passed / 15 skipped, 0 failed. computeCheckRun now calls prCheck (history:false) instead of hardcoding conclusion:
     2026-11-01 20:00      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T45-wire-prcheck-into-server-checkrun → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-11-01 21:16      submitted → running      changes requested: Fresh review FAILED (round 2): P1 baseOf() in packages/server/src/checkrun.ts used ref^ only, so a multi-commit push diffed only the last commit and a violation in an earlier commit of the same push wa
+    2026-11-01 21:18      running → submitted      report: Fixed both review round 2 findings, tests-first. P1: threaded GitHub push payload 'before' through webhook.ts -> compute-check-run job data -> computeCheckRun, used as prCheck's base when present/not all-zero/an 
+    2026-11-01 21:18      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T45-wire-prcheck-into-server-checkrun → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
