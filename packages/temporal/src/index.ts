@@ -254,7 +254,12 @@ export async function recordFact(
     return { invalidated: false, flagId: null };
   }
 
-  const now = opts.now ?? new Date().toISOString();
+  // System time comes from the DATABASE clock, never the app server's: existing rows' recorded ranges
+  // were opened by Postgres now(), so a Node clock even slightly behind the DB would close a row before
+  // it opened ("range lower bound must be less than or equal to range upper bound"; found by the T47
+  // review property test, 9/200 sequences). clock_timestamp() advances within the transaction, unlike now().
+  const now =
+    opts.now ?? ((await client.query('SELECT clock_timestamp()::text AS t')).rows[0] as { t: string }).t;
   const flagTargets: Array<{ rowId: number; oldValue: string }> = [];
 
   // Coalesce: close every same-value candidate's recorded range now, and widen the range that
