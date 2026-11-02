@@ -1,0 +1,243 @@
+[
+  {
+    "id": "dev-adr003-violate",
+    "adr": "adr003",
+    "label": "violate",
+    "predicted": true,
+    "targetVerdict": {
+      "decision": "bs-adr003",
+      "title": "Avoid Default Exports and Prefer Named Exports",
+      "tier": "zero-llm",
+      "flag": "violates",
+      "reason": "content anchor matched (match:\\bexport\\s+default\\b)",
+      "ms": 0
+    },
+    "allVerdicts": [
+      {
+        "decision": "bs-adr003",
+        "title": "Avoid Default Exports and Prefer Named Exports",
+        "tier": "zero-llm",
+        "flag": "violates",
+        "reason": "content anchor matched (match:\\bexport\\s+default\\b)",
+        "ms": 0
+      },
+      {
+        "decision": "bs-adr004",
+        "title": "Module Export Structure",
+        "tier": "zero-llm",
+        "flag": "violates",
+        "reason": "content anchor matched (match:^\\s*export\\s)",
+        "ms": 0
+      }
+    ],
+    "llmCallCount": 0,
+    "totalCostUsd": 0,
+    "wallMs": 183
+  },
+  {
+    "id": "dev-adr003-compliant",
+    "adr": "adr003",
+    "label": "compliant",
+    "predicted": false,
+    "targetVerdict": null,
+    "allVerdicts": [],
+    "llmCallCount": 0,
+    "totalCostUsd": 0,
+    "wallMs": 89
+  },
+  {
+    "id": "dev-adr006-violate",
+    "adr": "adr006",
+    "label": "violate",
+    "predicted": true,
+    "targetVerdict": {
+      "decision": "bs-adr006",
+      "title": "Avoid React.FC and React.SFC",
+      "tier": "zero-llm",
+      "flag": "violates",
+      "reason": "content anchor matched (match:\\bReact\\.(FC|SFC|FunctionComponent)\\b|:\\s*(FC|SFC|FunctionComponent)\\s*<)",
+      "ms": 0
+    },
+    "allVerdicts": [
+      {
+        "decision": "bs-adr003",
+        "title": "Avoid Default Exports and Prefer Named Exports",
+        "tier": "zero-llm",
+        "flag": "violates",
+        "reason": "content anchor matched (match:^\\s*export\\s+(const|let|function|async\\s+function|class|abstract\\s+class|enum|interface|type|\\{|\\*))",
+        "ms": 0
+      },
+      {
+        "decision": "bs-adr004",
+        "title": "Module Export Structure",
+        "tier": "zero-llm",
+        "flag": "violates",
+        "reason": "content anchor matched (match:^\\s*export\\s)",
+        "ms": 0
+      },
+      {
+        "decision": "bs-adr006",
+        "title": "Avoid React.FC and React.SFC",
+        "tier": "zero-llm",
+        "flag": "violates",
+        "reason": "content anchor matched (match:\\bReact\\.(FC|SFC|FunctionComponent)\\b|:\\s*(FC|SFC|FunctionComponent)\\s*<)",
+        "ms": 0
+      }
+    ],
+    "llmCallCount": 0,
+    "totalCostUsd": 0,
+    "wallMs": 151
+  },
+  {
+    "id": "dev-adr006-compliant",
+    "adr": "adr006",
+    "label": "compliant",
+    "predicted": false,
+    "targetVerdict": null,
+    "allVerdicts": [
+      {
+        "decision": "bs-adr003",
+        "title": "Avoid Default Exports and Prefer Named Exports",
+        "tier": "zero-llm",
+        "flag": "violates",
+        "reason": "content anchor matched (match:^\\s*export\\s+(const|let|function|async\\s+function|class|abstract\\s+class|enum|interface|type|\\{|\\*))",
+        "ms": 0
+      },
+      {
+        "decision": "bs-adr004",
+        "title": "Module Export Structure",
+        "tier": "zero-llm",
+        "flag": "violates",
+        "reason": "content anchor matched (match:^\\s*export\\s)",
+        "ms": 0
+      }
+    ],
+    "llmCallCount": 0,
+    "totalCostUsd": 0,
+    "wallMs": 143
+  },
+  {
+    "id": "dev-adr002-violate",
+    "adr": "adr002",
+    "label": "violate",
+    "predicted": true,
+    "targetVerdict": {
+      "decision": "bs-adr002",
+      "title": "Default Software Catalog File Format",
+      "tier": "zero-llm",
+      "flag": "violates",
+      "reason": "content anchor matched (match:^\\s*export\\s+(const|let|function|class|interface|type)\\s, packages/catalog-model/src/entity/index.ts)",
+      "ms": 0
+    },
+    "allVerdicts": [
+      {
+        "decision": "bs-adr002",
+        "title": "Default Software Catalog File Format",
+        "tier": "zero-llm",
+        "flag": "violates",
+        "reason": "content anchor matched (match:^\\s*export\\s+(const|let|function|class|interface|type)\\s, packages/catalog-model/src/entity/index.ts)",
+        "ms": 0
+      },
+      {
+        "decision": "bs-adr003",
+        "title": "Avoid Default Exports and Prefer Named Exports",
+        "tier": "zero-llm",
+        "flag": "violates",
+        "reason": "content anchor matched (match:^\\s*export\\s+(const|let|function|async\\s+function|class|abstract\\s+class|enum|interface|type|\\{|\\*))",
+        "ms": 0
+      },
+      {
+        "decision": "bs-adr004",
+        "title": "Module Export Structure",
+        "tier": "zero-llm",
+        "flag": "violates",
+        "reason": "content anchor matched (match:^\\s*export\\s)",
+        "ms": 0
+      },
+      {
+        "decision": "bs-adr009",
+        "title": "Entity References",
+        "tier": "zero-llm",
+        "flag": "violates",
+        "reason": "content anchor matched (match:^\\s*export\\s+(const|let|function|class|interface|type)\\s, packages/catalog-model/src/entity/index.ts)",
+        "ms": 0
+      }
+    ],
+    "llmCallCount": 0,
+    "totalCostUsd": 0,
+    "wallMs": 147
+  },
+  {
+    "id": "dev-adr002-compliant",
+    "adr": "adr002",
+    "label": "compliant",
+    "predicted": false,
+    "targetVerdict": null,
+    "allVerdicts": [],
+    "llmCallCount": 0,
+    "totalCostUsd": 0,
+    "wallMs": 80
+  },
+  {
+    "id": "dev-adr009-violate",
+    "adr": "adr009",
+    "label": "violate",
+    "predicted": true,
+    "targetVerdict": {
+      "decision": "bs-adr009",
+      "title": "Entity References",
+      "tier": "zero-llm",
+      "flag": "violates",
+      "reason": "content anchor matched (match:^\\s*export\\s+(const|let|function|class|interface|type)\\s, packages/catalog-model/src/entity/index.ts)",
+      "ms": 0
+    },
+    "allVerdicts": [
+      {
+        "decision": "bs-adr002",
+        "title": "Default Software Catalog File Format",
+        "tier": "zero-llm",
+        "flag": "violates",
+        "reason": "content anchor matched (match:^\\s*export\\s+(const|let|function|class|interface|type)\\s, packages/catalog-model/src/entity/index.ts)",
+        "ms": 0
+      },
+      {
+        "decision": "bs-adr003",
+        "title": "Avoid Default Exports and Prefer Named Exports",
+        "tier": "zero-llm",
+        "flag": "violates",
+        "reason": "content anchor matched (match:^\\s*export\\s+(const|let|function|async\\s+function|class|abstract\\s+class|enum|interface|type|\\{|\\*))",
+        "ms": 0
+      },
+      {
+        "decision": "bs-adr004",
+        "title": "Module Export Structure",
+        "tier": "zero-llm",
+        "flag": "violates",
+        "reason": "content anchor matched (match:^\\s*export\\s)",
+        "ms": 0
+      },
+      {
+        "decision": "bs-adr009",
+        "title": "Entity References",
+        "tier": "zero-llm",
+        "flag": "violates",
+        "reason": "content anchor matched (match:^\\s*export\\s+(const|let|function|class|interface|type)\\s, packages/catalog-model/src/entity/index.ts)",
+        "ms": 0
+      }
+    ],
+    "llmCallCount": 0,
+    "totalCostUsd": 0,
+    "wallMs": 140
+  },
+  {
+    "id": "dev-adr009-compliant",
+    "adr": "adr009",
+    "label": "compliant",
+    "predicted": false,
+    "targetVerdict": null,
+    "allVerdicts": [],
+    "llmCallCount": 0,
+    "totalCostUsd": 0,
+    "wallMs": 80
+  }
+]

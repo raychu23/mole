@@ -6,6 +6,8 @@ export { computeFlags } from './flags.js';
 export { contentHash } from './anchors.js';
 export { decisions, decisionsCli, formatDecisions } from './cli.js';
 export * from './check/index.js';
+export * from './compile/index.js';
+export * from './cascade/index.js';
 // T30: the annotated file tree (badges, colors, intent cards per folder)
 export * from './tree/index.js';
 export { CALL_RULES_FILE, checkRules, DEPCRUISE_FILE, depcruiseRuleSet, emitConfig, formatRules, loadRules, rulesCli } from './rules/index.js';

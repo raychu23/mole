@@ -1,0 +1,48 @@
+[
+  {
+    "decision": "bs-adr014",
+    "recordFile": ".mole/decisions/bs-adr014.md",
+    "draftedAt": "2026-11-02T02:12:21.210Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"scope\": [\"packages/core-plugin-api/src/index.ts\"],\n  \"match\": [\n    {\n      \"pattern\": \"from\\\\s+['\\\"]node-fetch['\\\"]\",\n      \"in\": \"**/*.{ts,tsx,js}\",\n      \"why\": \"We will gradually transition away from third party `fetch` replacement packages such as `node-fetch`\"\n    },\n    {\n      \"pattern\": \"require\\\\(\\\\s*['\\\"]node-fetch['\\\"]\\\\s*\\\\)\",\n      \"in\": \"**/*.{ts,tsx,js}\",\n      \"why\": \"We will gradually transition away from third party `fetch` replacement packages such as `node-fetch`\"\n    },\n    {\n      \"pattern\": \"from\\\\s+['\\\"]isomorphic-fetch['\\\"]\",\n      \"in\": \"**/*.{ts,tsx,js}\",\n      \"why\": \"Isomorphic packages should have a dependency on the `cross-fetch` package for mocking and type definitions\"\n    }\n  ],\n  \"rules\": [\n    {\n      \"forbid\": \"import\",\n      \"from\": \"packages/*/src/**\",\n      \"to\": [\"node-fetch\"],\n      \"except\": [],\n      \"why\": \"All code that is executed in Node.js ... should use the native `fetch`\"\n    }\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 2905,
+      "outputTokens": 1886,
+      "costUsd": 0.0236789
+    },
+    "scope": [
+      "packages/core-plugin-api/src/index.ts"
+    ],
+    "match": [
+      {
+        "pattern": "from\\s+['\"]node-fetch['\"]",
+        "in": "**/*.{ts,tsx,js}",
+        "why": "We will gradually transition away from third party `fetch` replacement packages such as `node-fetch`"
+      },
+      {
+        "pattern": "require\\(\\s*['\"]node-fetch['\"]\\s*\\)",
+        "in": "**/*.{ts,tsx,js}",
+        "why": "We will gradually transition away from third party `fetch` replacement packages such as `node-fetch`"
+      },
+      {
+        "pattern": "from\\s+['\"]isomorphic-fetch['\"]",
+        "in": "**/*.{ts,tsx,js}",
+        "why": "Isomorphic packages should have a dependency on the `cross-fetch` package for mocking and type definitions"
+      }
+    ],
+    "rules": [
+      {
+        "forbid": "import",
+        "from": "packages/*/src/**",
+        "to": [
+          "node-fetch"
+        ],
+        "why": "All code that is executed in Node.js ... should use the native `fetch`"
+      }
+    ],
+    "guardTests": [],
+    "version": 1,
+    "approvedBy": "t46-builder (ledger task T46, read ADR text only, no case data)",
+    "approvedAt": "2026-11-02T02:12:21.212Z"
+  }
+]
