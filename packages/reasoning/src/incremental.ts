@@ -1,5 +1,5 @@
 import type { ArgId, ArgumentSpec, Audience, EvaluationResult, Framework, Label, Why } from './types.js';
-import { attackSucceeds, type Graph } from './engine.js';
+import { attackSucceeds, buildGraph, runGrounded, type Graph } from './engine.js';
 
 /** Forward closure: every id reachable from `seeds` by following defeat edges. */
 function forwardClosure(graph: Graph, seeds: Iterable<ArgId>): Set<ArgId> {
@@ -137,10 +137,15 @@ export class IncrementalEvaluator {
 
   constructor(framework?: Framework, audience?: Audience) {
     this.audience = audience;
-    if (framework) {
-      for (const a of framework.args) this.addArg(a);
-      for (const [from, to] of framework.attacks) this.addAttack(from, to);
-    }
+    const initial = framework ?? { args: [], attacks: [] };
+    // Populate adjacency once before deriving labels, rather than replaying an
+    // incremental recomputation for every existing edge (T55 bulk construction).
+    this.graph = buildGraph(initial, audience);
+    for (const arg of initial.args) this.args.set(arg.id, arg);
+    for (const [from, to] of initial.attacks) this.rawAttacks.set(this.key(from, to), [from, to]);
+    const state = runGrounded(this.graph);
+    this.labels = state.labels;
+    this.why = state.why;
   }
 
   private key(from: ArgId, to: ArgId): string {
