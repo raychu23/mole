@@ -1,22 +1,22 @@
 ---
-state: verified
+state: integrated
 owner: t48-builder
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t48-argument-edges-argdown
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T48-argument-edges-argdown
 base: 9f7f393
 reviewer: reviewer-T48-r1 (fresh subagent deleg_ba903ae9 task 1) + parent re-check
-updated: 2026-11-01 21:28
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+updated: 2026-11-01 21:33
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-11-01 20:45
 ---
 ```notes
 T48-argument-edges-argdown      ledger task (rules.md §3 code features)      project tasks
     goal                    Give the decision graph argumentation relations and an authoring format next to design docs, borrowing Argdown's data model (RelationType support/attack/undercut, JSON export) and AIF's RA/CA node split: EdgeType gains supports/attacks/undercuts; an Argdown loader reads .argdown files / argdown code blocks in markdown into the graph; packages/reasoning (T42) evaluates the resulting framework and  shows in/out/undecided per argument. Source: Project/Mole/context/product-plan/systems/core-audit/capture-records-schema.md top 1-2
     done-when               1 failing tests first · 2 Argdown fixtures from the Argdown repo's own examples parse to the same relation counts as Argdown's JSON export (use @argdown/core as a dev dependency or its exported JSON as fixtures; licence checked) · 3 Nixon diamond + an undercut example labelled correctly end to end through the reasoning engine · 4 existing ADR/YAML records unchanged (regression tests) · 5 npm run check
-    status                  2026-11-01 verified      reviewer reviewer-T48-r1 (fresh subagent deleg_ba903ae9 task 1) + parent re-check · findings: P1 silent invalid Argdown
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-11-01 integrated      merge 616e00f · combined checks exit 0 · note: npm run check on main 616e00f → exit 0 (see scratch/t48-main-check.log)
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    one worker
     boundary                packages/decisions/src/{types.ts,graph.ts} + new packages/decisions/src/argdown/** + packages/reasoning wiring + tests, avoid compile/, cascade/, rationale.ts, cli.ts except a minimal display hook
