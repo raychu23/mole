@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { MoleMcpOptions } from './server.js';
+import { sc } from './annotations.js';
 
 interface LoggedQuestion {
   id: string;
@@ -62,6 +63,11 @@ export function registerOneOnOneTool(server: McpServer, opts: MoleMcpOptions): v
         verdict: z.enum(['confirmed', 'rejected']).optional().describe('readback: the owner\'s verdict'),
         recordId: z.string().optional().describe('readback: the record id the verdict is about, if the question had a match'),
       },
+      // T50: action=prep is a pure read; action=readback writes a local confirm/reject verdict
+      // (.mole/local/oneonone/readback.json) -- never read-only overall, so this tool is NOT in the audit's
+      // read-only list. idempotentHint: true because storing the same verdict twice has the same end state.
+      annotations: { title: 'Mole 1:1 prep + read-back', readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      outputSchema: z.object({ groups: z.array(z.unknown()).optional(), readback: z.unknown().optional(), stored: z.unknown().optional() }).passthrough(),
     },
     async (args) => {
       const root = resolve(opts.root, args.root ?? '.');
@@ -73,7 +79,8 @@ export function registerOneOnOneTool(server: McpServer, opts: MoleMcpOptions): v
           }
           const path = defaultReadBackPath(root);
           const store = recordReadBack(path, args.folder, args.questionId, args.verdict, args.recordId);
-          return { content: [{ type: 'text' as const, text: JSON.stringify({ stored: store[args.folder]?.[args.questionId] }, null, 2) }] };
+          const out = { stored: store[args.folder]?.[args.questionId] };
+          return { content: [{ type: 'text' as const, text: JSON.stringify(out, null, 2) }], structuredContent: sc(out) };
         }
         const questionsPath = resolve(root, args.questionsFile ?? join('.mole', 'local', 'oneonone', 'questions.json'));
         const questions = loadQuestions(questionsPath);
@@ -82,7 +89,8 @@ export function registerOneOnOneTool(server: McpServer, opts: MoleMcpOptions): v
         let groups = prep(matcher, questions);
         if (args.folder) groups = groups.filter((g) => g.folder === args.folder);
         const readback = loadReadBack(defaultReadBackPath(root));
-        return { content: [{ type: 'text' as const, text: JSON.stringify({ groups, readback }, null, 2) }] };
+        const out = { groups, readback };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(out, null, 2) }], structuredContent: sc(out) };
       } catch (e) {
         return { content: [{ type: 'text' as const, text: `mole_oneonone: ${(e as Error).message}` }], isError: true };
       }

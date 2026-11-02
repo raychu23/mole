@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { formatNeighborhood } from '@mole/core';
+import { formatNeighborhood, MAX_MAP_NODES } from '@mole/core';
 import { ensureDaemon, MoleClient, type EnsureOptions } from '@mole/daemon';
 import { agentIntentsFor, claims, defaultSources, tried } from '@mole/agentstate';
 import { registerCollisionsTool } from './collisions-tool.js';
@@ -9,6 +9,8 @@ import { registerOneOnOneTool } from './oneonone-tool.js'; // T31: 1:1 prep + re
 import { executeTool, GEN_AI } from '@mole/telemetry';
 import type { Change } from '@mole/history';
 import { resolve } from 'node:path';
+import { boundedPage } from './limit.js';
+import { READ_ONLY_ANNOTATIONS, sc } from './annotations.js';
 
 export interface MoleMcpOptions extends EnsureOptions {
   /** Do not spawn a daemon if none runs (tests). */
@@ -31,16 +33,24 @@ export function createServer(opts: MoleMcpOptions): McpServer {
     {
       title: 'Mole map',
       description:
-        'Ranked neighbourhood (<=25 nodes) of a file or symbol: what it defines, who calls it, what it calls, who imports it. ' +
+        'Ranked neighbourhood (<=25 nodes, or `maxNodes` if lower) of a file or symbol: what it defines, who calls it, what it calls, who imports it. ' +
         'Facts come from the TypeScript compiler index with file:line evidence; no LLM. Use before reading unfamiliar code. ' +
         'For "called by" and "imported by" the line is where the call or import happens (the first one; ×N means N sites); for everything else it is the declaration line.',
       inputSchema: {
         target: z.string().describe('repo-relative file (src/a.ts), file#Symbol (src/a.ts#Cls.method), or a bare symbol name'),
         impact: z.boolean().optional().describe('also mark transitive callers (what breaks if this changes) with !impact'),
+        // T50 (core-audit rank 4; Serena symbol_tools.py max_matches): caller-tunable cap, never above the
+        // server's own ceiling (MAX_MAP_NODES) -- that ceiling itself stays in packages/daemon, out of this tool's boundary.
+        maxNodes: z.number().int().positive().optional().describe('cap the returned node count at this many (<= the server ceiling, ' + String(MAX_MAP_NODES) + '); dropped nodes are folded into the existing more groups, never silently lost'),
       },
+      annotations: { ...READ_ONLY_ANNOTATIONS, title: 'Mole map' },
+      // T50 (core-audit rank 3): mole_map's content is deliberately compact TEXT (not raw JSON, see the file
+      // header) -- structuredContent still gives a client the two fields that text already encodes (state +
+      // the text itself), matching the official filesystem server's "content text AND structuredContent" shape.
+      outputSchema: { text: z.string().describe('same text as the content block'), state: z.enum(['ok', 'indexing', 'not-indexed', 'index-unavailable']) },
     },
     // T16: OTel GenAI execute_tool span per call (no-op unless MOLE_OTEL=1)
-    async ({ target, impact }, extra) =>
+    async ({ target, impact, maxNodes }, extra) =>
       executeTool('mole_map', { [GEN_AI.toolCallId]: String(extra.requestId), [GEN_AI.mcpMethod]: 'tools/call', 'mole.target': target }, async (span) => {
       const client = opts.noStart ? new MoleClient(opts) : await ensureDaemon(opts);
       let n = await client.map(target, impact === true);
@@ -49,7 +59,18 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         n = await client.map(target, impact === true);
       }
       span({ 'mole.map.state': n.state });
-      return { content: [{ type: 'text' as const, text: formatNeighborhood(n) }], isError: n.state === 'index-unavailable' };
+      // T50: maxNodes trims the response client-side, below whatever the daemon's own fixed cap already gave;
+      // dropped nodes move into `more` (same shape the daemon already uses), so nothing vanishes silently.
+      if (maxNodes !== undefined && n.state === 'ok' && n.nodes.length > maxNodes) {
+        const kept = n.nodes.slice(0, Math.max(1, maxNodes)); // always keep the focus node
+        const dropped = n.nodes.slice(kept.length);
+        const moreCounts = new Map(n.more.map((m) => [m.role, m.count]));
+        for (const d of dropped) moreCounts.set(d.role, (moreCounts.get(d.role) ?? 0) + 1);
+        const keptIds = new Set(kept.map((x) => x.id));
+        n = { ...n, nodes: kept, more: [...moreCounts].map(([role, count]) => ({ role, count })), edges: n.edges.filter((e) => keptIds.has(e.from) && keptIds.has(e.to)) };
+      }
+      const text = formatNeighborhood(n);
+      return { content: [{ type: 'text' as const, text }], isError: n.state === 'index-unavailable', structuredContent: sc({ text, state: n.state }) };
     }),
   );
   // T18: what agents already tried (commands, tests, fixes + outcome), including before a context compaction
@@ -62,8 +83,13 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         'Target = a run id (Hermes session, Claude Code or Codex session id, or a unique prefix) or file#Symbol / file (the runs that edited it). ' +
         'Read from the local transcripts (read-only); no LLM. Use after a compaction, before retrying a fix.',
       inputSchema: { target: z.string().describe('run id or prefix, file#Symbol, or repo-relative file') },
+      annotations: { ...READ_ONLY_ANNOTATIONS, title: 'Mole tried' },
+      outputSchema: z.object({ target: z.string(), runs: z.array(z.string()), items: z.array(z.unknown()), skipped: z.array(z.unknown()) }).passthrough(),
     },
-    async ({ target }) => ({ content: [{ type: 'text' as const, text: JSON.stringify(tried(target, { ...defaultSources(), root: opts.root }), null, 2) }] }),
+    async ({ target }) => {
+      const r = tried(target, { ...defaultSources(), root: opts.root });
+      return { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }], structuredContent: sc(r) };
+    },
   );
   // T24: what an agent says it did (its final answer) checked against what it did (its own tool calls + git)
   server.registerTool(
@@ -75,10 +101,21 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         "against the run's own tool calls and results and git, as supported / unsupported / contradicted with the evidence (tool call id, exit code, commit). " +
         'A claim only a subagent reported is unsupported. Same JSON as `mole claims <run> --json`. Deterministic patterns, no LLM.',
       inputSchema: { run: z.string().describe('run id (Hermes session, Claude Code or Codex session id, or a unique prefix)'), at: z.number().int().optional().describe('check the answer at this row instead of the last one') },
+      annotations: { ...READ_ONLY_ANNOTATIONS, title: 'Mole claims' },
+      outputSchema: z.object({
+        run: z.string(),
+        harness: z.string().nullable(),
+        answer: z.unknown().nullable(),
+        claims: z.array(z.unknown()),
+        summary: z.object({ supported: z.number(), unsupported: z.number(), contradicted: z.number() }),
+        nothing: z.boolean(),
+        skipped: z.array(z.unknown()),
+      }).passthrough(),
     },
     async ({ run, at }) => {
       try {
-        return { content: [{ type: 'text' as const, text: JSON.stringify(claims(run, { ...defaultSources(), at }), null, 2) }] };
+        const r = claims(run, { ...defaultSources(), at });
+        return { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }], structuredContent: sc(r) };
       } catch (e) {
         return { content: [{ type: 'text' as const, text: `mole_claims: ${(e as Error).message}` }], isError: true };
       }
@@ -95,10 +132,13 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         'What an external agent-session tool (Entire Checkpoints, git-ai, or Agent Trace) recorded about why a function was written, anchored to that function and re-checked: ' +
         "fresh if the function's body is unchanged since, stale if it changed or the function is gone. Target = repo-relative file or file#Symbol. Consumes existing records; Mole captures nothing of its own here.",
       inputSchema: { target: z.string().describe('repo-relative file, or file#Symbol') },
+      annotations: { ...READ_ONLY_ANNOTATIONS, title: 'Mole agent intent' },
+      outputSchema: z.object({ target: z.string(), statuses: z.array(z.unknown()), misses: z.array(z.unknown()) }).passthrough(),
     },
     async ({ target }) => {
       try {
-        return { content: [{ type: 'text' as const, text: JSON.stringify(agentIntentsFor(opts.root, target), null, 2) }] };
+        const r = agentIntentsFor(opts.root, target);
+        return { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }], structuredContent: sc(r) };
       } catch (e) {
         return { content: [{ type: 'text' as const, text: `mole_agent_intent: ${(e as Error).message}` }], isError: true };
       }
@@ -124,7 +164,13 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         fixRule: z.string().optional().describe('regex for which commits count as fixes (default: fix/revert/regression/review fixes, or .mole/config.json)'),
         notesRoot: z.string().optional().describe('read .mole/notes from this directory instead of the root'),
         files: z.array(z.string()).optional().describe('T37: only report hunks on these repo-relative files (e.g. the files Edit/Write just touched); others are dropped from the result'),
+        // T50 (core-audit rank 2): hunks can be unbounded on a growing repo/diff; same bounded+paginated shape as mole_decisions/mole_coverage.
+        limit: z.number().int().nonnegative().optional().describe('page size over `hunks` (default: all, subject to maxAnswerChars)'),
+        offset: z.number().int().nonnegative().optional().describe('page offset over `hunks` (default 0)'),
+        maxAnswerChars: z.number().int().nonnegative().optional().describe(`ceiling on this page's serialized size in characters (default ${String(25_000)}); hunks are dropped from the end of the page, never mid-item, if exceeded`),
       },
+      annotations: { ...READ_ONLY_ANNOTATIONS, title: 'Mole check' },
+      outputSchema: z.object({ hunks: z.array(z.unknown()), questions: z.array(z.unknown()).optional(), total: z.number().optional(), offset: z.number().optional(), hasMore: z.boolean().optional(), nextOffset: z.number().optional(), truncated: z.string().optional() }).passthrough(),
     },
     async (args) => {
       const modes = [args.sha !== undefined, args.diff !== undefined, args.worktree === true].filter(Boolean).length;
@@ -140,7 +186,12 @@ export function createServer(opts: MoleMcpOptions): McpServer {
           const questions = Array.isArray(json.result.questions) ? (json.result.questions as Array<{ source?: { file?: string } }>).filter((q) => !q.source?.file || keptFiles.has(q.source.file)) : json.result.questions;
           json.result = { ...json.result, hunks, questions };
         }
-        return { content: [{ type: 'text' as const, text: JSON.stringify(json.result, null, 2) }, ...json.notices.map((n) => ({ type: 'text' as const, text: `mole: ${n}` }))] };
+        // T50 (core-audit rank 2): bound + paginate `hunks` -- the one array on this tool that can grow without limit
+        // (a large diff / a long-lived worktree change). `questions` stays as-is: @mole/questions already caps it at 3.
+        const allHunks = Array.isArray(json.result.hunks) ? json.result.hunks : [];
+        const page = boundedPage(allHunks, args, (hunks) => ({ hunks }));
+        json.result = { ...json.result, hunks: page.items, total: page.total, offset: page.offset, hasMore: page.hasMore, ...(page.nextOffset !== undefined ? { nextOffset: page.nextOffset } : {}), ...(page.truncated ? { truncated: page.truncated } : {}) };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(json.result, null, 2) }, ...json.notices.map((n) => ({ type: 'text' as const, text: `mole: ${n}` }))], structuredContent: sc(json.result) };
       } catch (e) {
         return { content: [{ type: 'text' as const, text: `mole_check: ${(e as Error).message}` }], isError: true };
       }
@@ -161,7 +212,14 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         adrDir: z.array(z.string()).optional().describe('plain ADR folders to include, relative to root (e.g. docs/architecture-decisions)'),
         testReport: z.string().optional().describe('a vitest JSON report: evidence tests that fail there turn their decisions yellow'),
         files: z.array(z.string()).optional().describe('T37: only decisions whose scope: covers one of these repo-relative files or symbols in them (file exact match, path#Symbol by its file, folder/ by prefix) -- this is what the Claude Code / Codex / Cursor plugins call for "the decisions governing the files in play"'),
+        // T50 (core-audit rank 2): the `decisions` array itself is now bounded + paginated too, on top of the T43
+        // aggregate rationale budget above (that budget trims rationale TEXT; this trims the ARRAY of decisions).
+        limit: z.number().int().nonnegative().optional().describe('page size over `decisions` (default: all, subject to maxAnswerChars)'),
+        offset: z.number().int().nonnegative().optional().describe('page offset over `decisions` (default 0)'),
+        maxAnswerChars: z.number().int().nonnegative().optional().describe(`ceiling on this page's serialized size in characters (default ${String(25_000)}); decisions are dropped from the end of the page, never mid-item, if exceeded`),
       },
+      annotations: { ...READ_ONLY_ANNOTATIONS, title: 'Mole decisions' },
+      outputSchema: z.object({ decisions: z.array(z.unknown()), problems: z.array(z.unknown()).optional(), total: z.number().optional(), offset: z.number().optional(), hasMore: z.boolean().optional(), nextOffset: z.number().optional(), truncated: z.string().optional() }).passthrough(),
     },
     async (args) => {
       const root = resolve(opts.root, args.root ?? '.');
@@ -204,7 +262,20 @@ export function createServer(opts: MoleMcpOptions): McpServer {
             (json as DecisionsResultWithTruncation).truncated = `${dropped} more: full rationale omitted at the aggregate budget (${MCP_DECISIONS_RATIONALE_AGGREGATE_BUDGET} chars total) -- pass \`files\` to get the full rationale for specific decisions`;
           }
         }
-        return { content: [{ type: 'text' as const, text: JSON.stringify(json, null, 2) }] };
+        // T50 (core-audit rank 2): bound + paginate the `decisions` ARRAY itself (separate from the rationale-text
+        // budget above), same shared helper as mole_check/mole_coverage.
+        const page = boundedPage(json.decisions, args, (decisions) => ({ decisions }));
+        const priorTruncated = (json as DecisionsResultWithTruncation).truncated;
+        const out = {
+          ...json,
+          decisions: page.items,
+          total: page.total,
+          offset: page.offset,
+          hasMore: page.hasMore,
+          ...(page.nextOffset !== undefined ? { nextOffset: page.nextOffset } : {}),
+          ...(priorTruncated || page.truncated ? { truncated: [priorTruncated, page.truncated].filter(Boolean).join(' | ') } : {}),
+        };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(out, null, 2) }], structuredContent: sc(out) };
       } catch (e) {
         return { content: [{ type: 'text' as const, text: `mole_decisions: ${(e as Error).message}` }], isError: true };
       }
@@ -226,7 +297,28 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         file: z.string().optional().describe('one file, repo-relative or absolute; omit for the whole repo scan'),
         session: z.string().optional().describe('filter to files touched by this session id (or its prefix)'),
         weak: z.boolean().optional().describe('only files flagged as a weak spot'),
+        // T50 (core-audit rank 2): a whole-repo scan (`file` omitted) can be unbounded on a large repo; same
+        // bounded+paginated shape as mole_check/mole_decisions. Has no effect on the single-`file` call (one record).
+        limit: z.number().int().nonnegative().optional().describe('page size over `files` on a whole-repo scan (default: all, subject to maxAnswerChars)'),
+        offset: z.number().int().nonnegative().optional().describe('page offset over `files` (default 0)'),
+        maxAnswerChars: z.number().int().nonnegative().optional().describe(`ceiling on this page's serialized size in characters (default ${String(25_000)}); files are dropped from the end of the page, never mid-item, if exceeded`),
       },
+      annotations: { ...READ_ONLY_ANNOTATIONS, title: 'Mole agent coverage' },
+      // loose on purpose: `file` (one record: file/agents/human/tests/decisions/weak), the whole-scan shape
+      // (scannedAt/files/skipped/malformed/notice + T50's total/offset/hasMore/nextOffset/truncated), and the
+      // bare-notice shape are three different top-level shapes from the same tool -- every field stays optional.
+      outputSchema: z.object({
+        files: z.array(z.unknown()).optional(),
+        notice: z.string().nullable().optional(),
+        scannedAt: z.string().optional(),
+        skipped: z.array(z.unknown()).optional(),
+        malformed: z.number().optional(),
+        total: z.number().optional(),
+        offset: z.number().optional(),
+        hasMore: z.boolean().optional(),
+        nextOffset: z.number().optional(),
+        truncated: z.string().optional(),
+      }).passthrough(),
     },
     async (args) => {
       const root = resolve(opts.root, args.root ?? '.');
@@ -234,14 +326,17 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         const { coverage, scanCoverage } = await import('@mole/coverage');
         if (args.file) {
           const r = await coverage(root, args.file);
-          return { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }] };
+          return { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }], structuredContent: sc(r) };
         }
         const scan = scanCoverage(root);
-        if (scan.notice) return { content: [{ type: 'text' as const, text: scan.notice }] };
+        if (scan.notice) return { content: [{ type: 'text' as const, text: scan.notice }], structuredContent: sc({ notice: scan.notice, files: [] }) };
         let files = scan.files;
         if (args.session) files = files.filter((f) => f.agents.some((a) => a.session.startsWith(args.session!)));
         if (args.weak) files = files.filter((f) => f.weak.is);
-        return { content: [{ type: 'text' as const, text: JSON.stringify({ ...scan, files }, null, 2) }] };
+        // T50 (core-audit rank 2): bound + paginate `files` on a whole-repo scan.
+        const page = boundedPage(files, args, (files) => ({ files }));
+        const out = { ...scan, files: page.items, total: page.total, offset: page.offset, hasMore: page.hasMore, ...(page.nextOffset !== undefined ? { nextOffset: page.nextOffset } : {}), ...(page.truncated ? { truncated: page.truncated } : {}) };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(out, null, 2) }], structuredContent: sc(out) };
       } catch (e) {
         return { content: [{ type: 'text' as const, text: `mole_coverage: ${(e as Error).message}` }], isError: true };
       }
@@ -266,6 +361,8 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         base: z.string().optional().describe('base sha for diff'),
         worktree: z.boolean().optional().describe('interrogate the uncommitted working tree'),
       },
+      annotations: { ...READ_ONLY_ANNOTATIONS, title: 'Mole interrogate' },
+      outputSchema: z.object({ governed: z.boolean().optional(), questions: z.array(z.unknown()).optional(), decisions: z.array(z.unknown()).optional() }).passthrough(),
     },
     async (args) => {
       const modes = [args.sha !== undefined, args.diff !== undefined, args.worktree === true].filter(Boolean).length;
@@ -275,7 +372,7 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         const { interrogate } = await import('@mole/intake');
         const change = args.sha ? { sha: args.sha } : args.diff ? { diffFile: args.diff, base: args.base } : { worktree: true as const };
         const result = await interrogate(root, change);
-        return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }], structuredContent: sc(result) };
       } catch (e) {
         return { content: [{ type: 'text' as const, text: `mole_interrogate: ${(e as Error).message}` }], isError: true };
       }
@@ -297,6 +394,11 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         attr: z.string().optional().describe("the fact attribute (default 'status')"),
         asOf: z.string().describe('an ISO timestamp: what held at that instant'),
       },
+      // T50: the audit's own rank-3 recommendation names this tool explicitly ("readOnlyHint: true,
+      // openWorldHint: false on all 8" -- agent-surfaces.md section 1 item 1) even though it reads Postgres: it
+      // never writes and is not an open-world (web/API) call in the sense the annotation means.
+      annotations: { ...READ_ONLY_ANNOTATIONS, title: 'Mole decisions as-of' },
+      outputSchema: { value: z.string() },
     },
     async (args) => {
       const connectionString = process.env.MOLE_TEMPORAL_PG;
@@ -307,8 +409,8 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         const { openPool, asOf } = await import('@mole/temporal');
         const pool = openPool(connectionString);
         try {
-          const value = await asOf(pool, args.decisionId, args.attr ?? 'status', args.asOf);
-          return { content: [{ type: 'text' as const, text: value ?? 'not yet proposed' }] };
+          const value = (await asOf(pool, args.decisionId, args.attr ?? 'status', args.asOf)) ?? 'not yet proposed';
+          return { content: [{ type: 'text' as const, text: value }], structuredContent: { value } };
         } finally {
           await pool.end();
         }

@@ -28,8 +28,11 @@ async function connect(root: string) {
 }
 
 // every tool whose real-world behaviour is a pure read (no writes, no deletes) -- the audit's own list (rank 3) plus
-// the collisions/agent-intent/cascade tools added since, which are equally read-only
-const READ_ONLY_TOOLS = ['mole_map', 'mole_tried', 'mole_claims', 'mole_collisions', 'mole_agent_intent', 'mole_check', 'mole_decisions', 'mole_coverage', 'mole_interrogate', 'mole_decisions_asof', 'mole_cascade_check'];
+// the collisions/agent-intent tools added since, which are equally read-only and never call an external service
+const READ_ONLY_TOOLS = ['mole_map', 'mole_tried', 'mole_claims', 'mole_collisions', 'mole_agent_intent', 'mole_check', 'mole_decisions', 'mole_coverage', 'mole_interrogate', 'mole_decisions_asof'];
+// read-only but may escalate to an LLM call (openWorldHint: true) -- T46's cascade tier, not one of the audit's
+// original 8, so it is checked separately rather than forced into the closed-world assumption those 8 share
+const READ_ONLY_OPEN_WORLD_TOOLS = ['mole_cascade_check'];
 // tools that actually write local state or a decision record (never read-only)
 const WRITE_TOOLS = ['mole_oneonone', 'mole_compile_draft', 'mole_compile_review'];
 
@@ -46,6 +49,12 @@ describe('every Mole MCP tool declares annotations (readOnlyHint at minimum) and
       expect(t, `${name} should be registered`).toBeDefined();
       expect(t?.annotations?.readOnlyHint, `${name}.annotations.readOnlyHint`).toBe(true);
       expect(t?.annotations?.openWorldHint, `${name}.annotations.openWorldHint`).toBe(false);
+      expect(t?.outputSchema, `${name}.outputSchema`).toBeDefined();
+    }
+    for (const name of READ_ONLY_OPEN_WORLD_TOOLS) {
+      const t = byName.get(name);
+      expect(t, `${name} should be registered`).toBeDefined();
+      expect(t?.annotations?.readOnlyHint, `${name}.annotations.readOnlyHint`).toBe(true);
       expect(t?.outputSchema, `${name}.outputSchema`).toBeDefined();
     }
     for (const name of WRITE_TOOLS) {

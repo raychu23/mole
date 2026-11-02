@@ -295,8 +295,38 @@ export function formatSectionsText(s, budget) {
   return parts.join('\n\n');
 }
 
+/** T50 (core-audit agent-surfaces.md rank 5, Cursor rules "description-matched" tier): a decision with no file/folder
+ * scope anchor at all never surfaced via SessionStart or PreToolUse before this -- governingDecisions() only matched
+ * literal scope paths. Mole stays model-free at hook time (R6), so instead of Cursor's semantic description match this
+ * is the audit's own narrower, deterministic, opt-in fallback: a decision whose `scope:` list contains the literal
+ * item `repo-wide` governs every file. Capped separately (REPO_WIDE_CAP) so a repo with many repo-wide decisions can't
+ * crowd out the file-scoped ones a PreToolUse/SessionStart call is actually about.
+ * */
+export const REPO_WIDE_CAP = 5;
+
+/** T50: a decision's own evidence (.mole/decisions/*.md `evidence:` list) -- the same guard-test fact the Stop hook's
+ * line-level `mole check` finds post-edit, but read straight from the record so PreToolUse (pre-edit, no diff exists
+ * yet to blame) can name it too. kind: 'test' pairs = test file + optional #title (the YAML value after the colon,
+ * e.g. 'packages/daemon/test/daemon.test.ts#idle shutdown (T9)'); kind: 'incident' = an incident record slug. */
+function parseEvidenceBlock(text) {
+  const block = /^evidence:\n((?:\s+-.*\n)+)/m.exec(text);
+  const out = [];
+  if (!block) return out;
+  for (const line of block[1].split('\n')) {
+    const item = line.trim().replace(/^-\s*/, '');
+    if (!item) continue;
+    const test = /^test:\s*(.+)$/.exec(item);
+    const incident = /^incident:\s*(.+)$/.exec(item);
+    const strip = (s) => s.trim().replace(/^['"]|['"]$/g, '');
+    if (test) out.push({ kind: 'test', value: strip(test[1]) });
+    else if (incident) out.push({ kind: 'incident', value: strip(incident[1]) });
+  }
+  return out;
+}
+
 /** .mole/decisions/*.md, parsed by hand: id, title, status, approver, scope file list (symbol/folder tail dropped),
- * plus (T43) its full rationale text, named by section and bounded by RATIONALE_BUDGET_PER_DECISION. */
+ * plus (T43) its full rationale text, named by section and bounded by RATIONALE_BUDGET_PER_DECISION, plus (T50) its
+ * raw scope anchor targets (file#Symbol, never just the file part), a repo-wide flag, and its evidence (guard tests). */
 export function readDecisionRecords(root) {
   const dir = join(root, '.mole', 'decisions');
   const out = [];
@@ -317,11 +347,18 @@ export function readDecisionRecords(root) {
     if (!id) continue;
     const scopeBlock = /^scope:\n((?:\s+-.*\n)+)/m.exec(text);
     const files = new Set();
+    const scopeTargets = []; // T50: full raw anchor (file#Symbol or folder/), for display -- `files` above keeps only the file part for matching
+    let repoWide = false; // T50
     if (scopeBlock) {
       for (const line of scopeBlock[1].split('\n')) {
         const item = line.trim().replace(/^-\s*/, '').replace(/^['"]|['"]$/g, '');
         if (!item) continue;
+        if (item.toLowerCase() === 'repo-wide') {
+          repoWide = true;
+          continue;
+        }
         files.add(item.split('#')[0]);
+        scopeTargets.push(item);
       }
     }
     out.push({
@@ -331,6 +368,9 @@ export function readDecisionRecords(root) {
       approver: parseFrontMatterField(text, 'approver'),
       file: `.mole/decisions/${name}`,
       files, // repo-relative paths (folder targets keep their trailing '/')
+      scopeTargets, // T50: raw anchors, for "which exact symbol/file this governs" in the PreToolUse text
+      repoWide, // T50: `scope:` contained the literal item `repo-wide`
+      evidence: parseEvidenceBlock(text), // T50: guard tests / incidents this decision itself cites
       rationale: formatSectionsText(sectionsOfText(text), RATIONALE_BUDGET_PER_DECISION), // T43, '' when none
     });
   }
@@ -344,13 +384,29 @@ function scopeMatches(scopeFile, changed) {
   return false;
 }
 
-/** Decisions (hand-parsed, see readDecisionRecords) whose scope covers any of `files`. `liveFlags: true` enriches each
- * with its CURRENT citator flag via `mole decisions --json` (tenet-3 / decision 0013: heavy work stays out of the fast
- * path -- `mole decisions --json` walks git history for every scope anchor and can take seconds on a repo with a long
- * history, so SessionStart and PreToolUse (M31a's p95 <= 2 s budget) use the record's own `status` as a fast, honest
- * proxy for the flag instead; Stop, which has no such budget, asks for the live flag so drift is visible there). */
+/** Decisions (hand-parsed, see readDecisionRecords) whose scope covers any of `files`, PLUS (T50) at most
+ * REPO_WIDE_CAP decisions tagged `scope: - repo-wide` (the file-scope fallback, rank 5) -- those are added
+ * regardless of `files` and capped on their own so they can't crowd out the file-scoped matches a caller asked
+ * about. Each returned decision carries `matchedTargets`: the specific scope anchor(s) that matched (or
+ * `['repo-wide']`), so the hook text can say WHICH symbol/file governs, not just the decision's title.
+ * `liveFlags: true` enriches each with its CURRENT citator flag via `mole decisions --json` (tenet-3 / decision
+ * 0013: heavy work stays out of the fast path -- `mole decisions --json` walks git history for every scope anchor
+ * and can take seconds on a repo with a long history, so SessionStart and PreToolUse (M31a's p95 <= 2 s budget) use
+ * the record's own `status` as a fast, honest proxy for the flag instead; Stop, which has no such budget, asks for
+ * the live flag so drift is visible there). */
 export function governingDecisions(mole, root, files, { liveFlags = false } = {}) {
-  const records = readDecisionRecords(root).filter((d) => [...d.files].some((f) => [...files].some((c) => scopeMatches(f, c))));
+  const all = readDecisionRecords(root);
+  const fileMatched = all
+    .filter((d) => [...d.files].some((f) => [...files].some((c) => scopeMatches(f, c))))
+    .map((d) => ({ ...d, matchedTargets: d.scopeTargets.filter((t) => [...files].some((c) => scopeMatches(t.split('#')[0], c))) }));
+  const fileMatchedIds = new Set(fileMatched.map((d) => d.id));
+  // T50 rank 5: repo-wide fallback, capped independently of how many file-scoped decisions already matched
+  const repoWide = all
+    .filter((d) => d.repoWide && !fileMatchedIds.has(d.id))
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .slice(0, REPO_WIDE_CAP)
+    .map((d) => ({ ...d, matchedTargets: ['repo-wide'] }));
+  const records = [...fileMatched, ...repoWide];
   if (records.length === 0) return [];
   let flags = new Map();
   if (liveFlags && mole) {
@@ -370,7 +426,16 @@ export function governingDecisions(mole, root, files, { liveFlags = false } = {}
  * scripts' outer clip() never has to cut inside a kept block. */
 export function decisionsBlock(decisions, header = 'Mole decisions governing the files in play') {
   if (!decisions.length) return '';
-  const lines = decisions.map((d) => `- ${d.id} [${d.flag ?? d.status}] ${d.status} \u2014 ${d.title} \u2014 owner: ${d.approver ?? 'unassigned'} (${d.file})`);
+  // T50 (core-audit rank 1, M-C v2's B3 case): the rule line now also names WHICH exact anchor governs (not just the
+  // decision's title/file) and its guard test(s) straight from the record's own `evidence:` -- the specificity the
+  // Stop hook's post-edit `mole check` has (line + guarding test), surfaced here pre-edit instead.
+  const lines = decisions.map((d) => {
+    const covers = (d.matchedTargets ?? []).filter((t) => t !== 'repo-wide');
+    const coversPart = covers.length ? ` \u2014 covers: ${covers.join(', ')}` : '';
+    const tests = (d.evidence ?? []).filter((e) => e.kind === 'test').map((e) => e.value);
+    const guardPart = tests.length ? ` \u2014 guard test: ${tests.join('; ')}` : '';
+    return `- ${d.id} [${d.flag ?? d.status}] ${d.status} \u2014 ${d.title} \u2014 owner: ${d.approver ?? 'unassigned'} (${d.file})${coversPart}${guardPart}`;
+  });
   let kept = decisions;
   let out = `${header} (${decisions.length}):\n${lines.join('\n')}`;
   if (out.length > SCOPE_BUDGET) {

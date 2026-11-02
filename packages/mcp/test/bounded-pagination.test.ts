@@ -134,7 +134,7 @@ describe('mole_coverage: a whole-repo scan is bounded + paginated', () => {
     expect(j.hasMore).toBe(true);
     expect(j.total).toBeGreaterThanOrEqual(n); // src files + any coverage bookkeeping files
 
-    const rest = await client.callTool({ name: 'mole_coverage', arguments: { offset: j.nextOffset } });
+    const rest = await client.callTool({ name: 'mole_coverage', arguments: { offset: j.nextOffset, maxAnswerChars: 10_000_000 } });
     const jRest = JSON.parse((rest.content as Array<{ text: string }>)[0]?.text ?? '{}') as { files: unknown[]; hasMore?: boolean };
     expect(jRest.hasMore).toBe(false);
     await client.close();

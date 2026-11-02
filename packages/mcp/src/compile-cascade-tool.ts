@@ -4,6 +4,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { z } from 'zod';
+import { sc } from './annotations.js';
 
 export function registerCompileAndCascadeTools(server: McpServer, opts: { root: string }): void {
   server.registerTool(
@@ -22,6 +23,9 @@ export function registerCompileAndCascadeTools(server: McpServer, opts: { root: 
         adrDir: z.array(z.string()).optional().describe('plain ADR folders also loaded (e.g. docs/architecture-decisions)'),
         from: z.string().optional().describe('read the decision text from this file instead of the record file (e.g. the original imported ADR)'),
       },
+      // T50: writes a new compiled-draft JSON file (not read-only) and makes one model call (openWorldHint: true).
+      annotations: { title: 'Mole compile draft', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+      outputSchema: z.object({ id: z.string().optional(), version: z.unknown().optional() }).passthrough(),
     },
     async (args) => {
       const root = resolve(opts.root, args.root ?? '.');
@@ -42,7 +46,7 @@ export function registerCompileAndCascadeTools(server: McpServer, opts: { root: 
           existingMatch,
         });
         const saved = saveDraft(recordsRoot, draft);
-        return { content: [{ type: 'text' as const, text: JSON.stringify(saved, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(saved, null, 2) }], structuredContent: sc(saved) };
       } catch (e) {
         return { content: [{ type: 'text' as const, text: `mole_compile_draft: ${(e as Error).message}` }], isError: true };
       }
@@ -66,6 +70,10 @@ export function registerCompileAndCascadeTools(server: McpServer, opts: { root: 
         root: z.string().optional(),
         records: z.string().optional(),
       },
+      // T50: approve writes into the decision record's own front matter; reject writes the draft store. No
+      // model call either way (openWorldHint: false). destructiveHint: true -- approve modifies existing record content.
+      annotations: { title: 'Mole compile review', readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
+      outputSchema: z.object({ recordPath: z.string().optional(), draft: z.unknown().optional() }).passthrough(),
     },
     async (args) => {
       const root = resolve(opts.root, args.root ?? '.');
@@ -75,11 +83,12 @@ export function registerCompileAndCascadeTools(server: McpServer, opts: { root: 
         if (args.action === 'approve') {
           if (!args.approver) return { content: [{ type: 'text' as const, text: 'mole_compile_review: approve needs approver' }], isError: true };
           const { recordPath, draft } = approveDraft(recordsRoot, args.id, { version: args.version, approver: args.approver });
-          return { content: [{ type: 'text' as const, text: JSON.stringify({ recordPath, draft }, null, 2) }] };
+          const out = { recordPath, draft };
+          return { content: [{ type: 'text' as const, text: JSON.stringify(out, null, 2) }], structuredContent: sc(out) };
         }
         if (!args.reason) return { content: [{ type: 'text' as const, text: 'mole_compile_review: reject needs reason' }], isError: true };
         const draft = rejectDraft(recordsRoot, args.id, { version: args.version, reason: args.reason });
-        return { content: [{ type: 'text' as const, text: JSON.stringify(draft, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(draft, null, 2) }], structuredContent: sc({ draft }) };
       } catch (e) {
         return { content: [{ type: 'text' as const, text: `mole_compile_review: ${(e as Error).message}` }], isError: true };
       }
@@ -102,6 +111,10 @@ export function registerCompileAndCascadeTools(server: McpServer, opts: { root: 
         adrDir: z.array(z.string()).optional(),
         noLlm: z.boolean().optional().describe('run the zero-LLM tier only; never escalate (default false)'),
       },
+      // T50: never writes (readOnlyHint: true); may escalate to one LLM call per decision (openWorldHint: true),
+      // unless noLlm is set -- the annotation is static per tool, so it states the worst case.
+      annotations: { title: 'Mole cascade check', readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+      outputSchema: z.object({ decisions: z.array(z.unknown()).optional(), tokens: z.unknown().optional(), cost: z.unknown().optional() }).passthrough(),
     },
     async (args) => {
       const root = resolve(opts.root, args.root ?? '.');
@@ -118,7 +131,7 @@ export function registerCompileAndCascadeTools(server: McpServer, opts: { root: 
           llm: args.noLlm ? undefined : hermesLlmClient(),
           decisionText: decisionTextFromRecords(recordsRoot, graph.nodes),
         });
-        return { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }] };
+        return { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }], structuredContent: sc(r) };
       } catch (e) {
         return { content: [{ type: 'text' as const, text: `mole_cascade_check: ${(e as Error).message}` }], isError: true };
       }
