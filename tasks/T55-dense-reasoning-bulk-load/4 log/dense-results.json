@@ -1,0 +1,13 @@
+[
+  {
+    "arm": "baseline",
+    "status": "timeout",
+    "timeout_s": 20
+  },
+  {
+    "arm": "bulk",
+    "exit": 0,
+    "stdout": "{\"id\":\"iccma19-grd_5178_1_1\",\"args\":5178,\"attacks\":134016,\"buildMs\":147.57095900000002,\"editMs\":22.914917000000003,\"sameBefore\":true,\"sameAfter\":true}\n",
+    "stderr": ""
+  }
+]

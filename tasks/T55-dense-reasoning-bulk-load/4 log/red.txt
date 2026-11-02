@@ -1,0 +1,1319 @@
+
+ RUN  v3.2.7 /Users/a1/.hermes/cache/scratch/mole-build/T55
+
+ ❯ packages/reasoning/test/bulk-initialization.test.ts (1 test | 1 failed) 9ms
+   × bulk initialization of incremental reasoning > loads existing edges without replaying per-edit mutation/re-evaluation 8ms
+     → expected "addArg" to not be called at all, but actually been called 80 times[90m
+
+Received: 
+
+[1m  1st addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a0",
+      },
+    ]
+
+[1m  2nd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a1",
+      },
+    ]
+
+[1m  3rd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a2",
+      },
+    ]
+
+[1m  4th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a3",
+      },
+    ]
+
+[1m  5th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a4",
+      },
+    ]
+
+[1m  6th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a5",
+      },
+    ]
+
+[1m  7th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a6",
+      },
+    ]
+
+[1m  8th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a7",
+      },
+    ]
+
+[1m  9th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a8",
+      },
+    ]
+
+[1m  10th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a9",
+      },
+    ]
+
+[1m  11th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a10",
+      },
+    ]
+
+[1m  12th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a11",
+      },
+    ]
+
+[1m  13th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a12",
+      },
+    ]
+
+[1m  14th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a13",
+      },
+    ]
+
+[1m  15th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a14",
+      },
+    ]
+
+[1m  16th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a15",
+      },
+    ]
+
+[1m  17th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a16",
+      },
+    ]
+
+[1m  18th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a17",
+      },
+    ]
+
+[1m  19th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a18",
+      },
+    ]
+
+[1m  20th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a19",
+      },
+    ]
+
+[1m  21st addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a20",
+      },
+    ]
+
+[1m  22nd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a21",
+      },
+    ]
+
+[1m  23rd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a22",
+      },
+    ]
+
+[1m  24th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a23",
+      },
+    ]
+
+[1m  25th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a24",
+      },
+    ]
+
+[1m  26th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a25",
+      },
+    ]
+
+[1m  27th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a26",
+      },
+    ]
+
+[1m  28th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a27",
+      },
+    ]
+
+[1m  29th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a28",
+      },
+    ]
+
+[1m  30th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a29",
+      },
+    ]
+
+[1m  31st addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a30",
+      },
+    ]
+
+[1m  32nd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a31",
+      },
+    ]
+
+[1m  33rd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a32",
+      },
+    ]
+
+[1m  34th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a33",
+      },
+    ]
+
+[1m  35th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a34",
+      },
+    ]
+
+[1m  36th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a35",
+      },
+    ]
+
+[1m  37th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a36",
+      },
+    ]
+
+[1m  38th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a37",
+      },
+    ]
+
+[1m  39th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a38",
+      },
+    ]
+
+[1m  40th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a39",
+      },
+    ]
+
+[1m  41st addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a40",
+      },
+    ]
+
+[1m  42nd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a41",
+      },
+    ]
+
+[1m  43rd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a42",
+      },
+    ]
+
+[1m  44th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a43",
+      },
+    ]
+
+[1m  45th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a44",
+      },
+    ]
+
+[1m  46th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a45",
+      },
+    ]
+
+[1m  47th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a46",
+      },
+    ]
+
+[1m  48th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a47",
+      },
+    ]
+
+[1m  49th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a48",
+      },
+    ]
+
+[1m  50th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a49",
+      },
+    ]
+
+[1m  51st addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a50",
+      },
+    ]
+
+[1m  52nd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a51",
+      },
+    ]
+
+[1m  53rd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a52",
+      },
+    ]
+
+[1m  54th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a53",
+      },
+    ]
+
+[1m  55th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a54",
+      },
+    ]
+
+[1m  56th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a55",
+      },
+    ]
+
+[1m  57th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a56",
+      },
+    ]
+
+[1m  58th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a57",
+      },
+    ]
+
+[1m  59th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a58",
+      },
+    ]
+
+[1m  60th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a59",
+      },
+    ]
+
+[1m  61st addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a60",
+      },
+    ]
+
+[1m  62nd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a61",
+      },
+    ]
+
+[1m  63rd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a62",
+      },
+    ]
+
+[1m  64th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a63",
+      },
+    ]
+
+[1m  65th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a64",
+      },
+    ]
+
+[1m  66th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a65",
+      },
+    ]
+
+[1m  67th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a66",
+      },
+    ]
+
+[1m  68th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a67",
+      },
+    ]
+
+[1m  69th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a68",
+      },
+    ]
+
+[1m  70th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a69",
+      },
+    ]
+
+[1m  71st addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a70",
+      },
+    ]
+
+[1m  72nd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a71",
+      },
+    ]
+
+[1m  73rd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a72",
+      },
+    ]
+
+[1m  74th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a73",
+      },
+    ]
+
+[1m  75th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a74",
+      },
+    ]
+
+[1m  76th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a75",
+      },
+    ]
+
+[1m  77th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a76",
+      },
+    ]
+
+[1m  78th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a77",
+      },
+    ]
+
+[1m  79th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a78",
+      },
+    ]
+
+[1m  80th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a79",
+      },
+    ]
+[39m[90m
+
+Number of calls: [1m80[22m
+[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/reasoning/test/bulk-initialization.test.ts > bulk initialization of incremental reasoning > loads existing edges without replaying per-edit mutation/re-evaluation
+AssertionError: expected "addArg" to not be called at all, but actually been called 80 times[90m
+
+Received: 
+
+[1m  1st addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a0",
+      },
+    ]
+
+[1m  2nd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a1",
+      },
+    ]
+
+[1m  3rd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a2",
+      },
+    ]
+
+[1m  4th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a3",
+      },
+    ]
+
+[1m  5th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a4",
+      },
+    ]
+
+[1m  6th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a5",
+      },
+    ]
+
+[1m  7th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a6",
+      },
+    ]
+
+[1m  8th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a7",
+      },
+    ]
+
+[1m  9th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a8",
+      },
+    ]
+
+[1m  10th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a9",
+      },
+    ]
+
+[1m  11th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a10",
+      },
+    ]
+
+[1m  12th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a11",
+      },
+    ]
+
+[1m  13th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a12",
+      },
+    ]
+
+[1m  14th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a13",
+      },
+    ]
+
+[1m  15th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a14",
+      },
+    ]
+
+[1m  16th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a15",
+      },
+    ]
+
+[1m  17th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a16",
+      },
+    ]
+
+[1m  18th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a17",
+      },
+    ]
+
+[1m  19th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a18",
+      },
+    ]
+
+[1m  20th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a19",
+      },
+    ]
+
+[1m  21st addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a20",
+      },
+    ]
+
+[1m  22nd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a21",
+      },
+    ]
+
+[1m  23rd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a22",
+      },
+    ]
+
+[1m  24th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a23",
+      },
+    ]
+
+[1m  25th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a24",
+      },
+    ]
+
+[1m  26th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a25",
+      },
+    ]
+
+[1m  27th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a26",
+      },
+    ]
+
+[1m  28th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a27",
+      },
+    ]
+
+[1m  29th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a28",
+      },
+    ]
+
+[1m  30th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a29",
+      },
+    ]
+
+[1m  31st addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a30",
+      },
+    ]
+
+[1m  32nd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a31",
+      },
+    ]
+
+[1m  33rd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a32",
+      },
+    ]
+
+[1m  34th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a33",
+      },
+    ]
+
+[1m  35th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a34",
+      },
+    ]
+
+[1m  36th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a35",
+      },
+    ]
+
+[1m  37th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a36",
+      },
+    ]
+
+[1m  38th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a37",
+      },
+    ]
+
+[1m  39th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a38",
+      },
+    ]
+
+[1m  40th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a39",
+      },
+    ]
+
+[1m  41st addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a40",
+      },
+    ]
+
+[1m  42nd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a41",
+      },
+    ]
+
+[1m  43rd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a42",
+      },
+    ]
+
+[1m  44th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a43",
+      },
+    ]
+
+[1m  45th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a44",
+      },
+    ]
+
+[1m  46th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a45",
+      },
+    ]
+
+[1m  47th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a46",
+      },
+    ]
+
+[1m  48th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a47",
+      },
+    ]
+
+[1m  49th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a48",
+      },
+    ]
+
+[1m  50th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a49",
+      },
+    ]
+
+[1m  51st addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a50",
+      },
+    ]
+
+[1m  52nd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a51",
+      },
+    ]
+
+[1m  53rd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a52",
+      },
+    ]
+
+[1m  54th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a53",
+      },
+    ]
+
+[1m  55th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a54",
+      },
+    ]
+
+[1m  56th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a55",
+      },
+    ]
+
+[1m  57th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a56",
+      },
+    ]
+
+[1m  58th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a57",
+      },
+    ]
+
+[1m  59th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a58",
+      },
+    ]
+
+[1m  60th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a59",
+      },
+    ]
+
+[1m  61st addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a60",
+      },
+    ]
+
+[1m  62nd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a61",
+      },
+    ]
+
+[1m  63rd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a62",
+      },
+    ]
+
+[1m  64th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a63",
+      },
+    ]
+
+[1m  65th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a64",
+      },
+    ]
+
+[1m  66th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a65",
+      },
+    ]
+
+[1m  67th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a66",
+      },
+    ]
+
+[1m  68th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a67",
+      },
+    ]
+
+[1m  69th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a68",
+      },
+    ]
+
+[1m  70th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a69",
+      },
+    ]
+
+[1m  71st addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a70",
+      },
+    ]
+
+[1m  72nd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a71",
+      },
+    ]
+
+[1m  73rd addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a72",
+      },
+    ]
+
+[1m  74th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a73",
+      },
+    ]
+
+[1m  75th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a74",
+      },
+    ]
+
+[1m  76th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a75",
+      },
+    ]
+
+[1m  77th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a76",
+      },
+    ]
+
+[1m  78th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a77",
+      },
+    ]
+
+[1m  79th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a78",
+      },
+    ]
+
+[1m  80th addArg call:
+
+[22m    Array [
+      Object {
+        "id": "a79",
+      },
+    ]
+[39m[90m
+
+Number of calls: [1m80[22m
+[39m
+ ❯ packages/reasoning/test/bulk-initialization.test.ts:17:26
+     15|       const evaluator = new IncrementalEvaluator(framework);
+     16|       expect(evaluator.evaluate()).toEqual(evaluate(framework));
+     17|       expect(addArg).not.toHaveBeenCalled();
+       |                          ^
+     18|       expect(addAttack).not.toHaveBeenCalled();
+     19|     } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  16:57:00
+   Duration  295ms (transform 56ms, setup 0ms, collect 47ms, tests 9ms, environment 0ms, prepare 52ms)
+

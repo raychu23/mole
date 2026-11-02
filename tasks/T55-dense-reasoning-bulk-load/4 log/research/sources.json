@@ -1,0 +1,43 @@
+[
+  {
+    "name": "networkx-digraph",
+    "url": "https://raw.githubusercontent.com/networkx/networkx/main/networkx/classes/digraph.py",
+    "bytes": 48733,
+    "fetched": "2026-11-02T16:55:23.883253-06:00",
+    "ok": true
+  },
+  {
+    "name": "networkx-convert",
+    "url": "https://raw.githubusercontent.com/networkx/networkx/main/networkx/convert.py",
+    "bytes": 16143,
+    "fetched": "2026-11-02T16:55:23.871864-06:00",
+    "ok": true
+  },
+  {
+    "name": "python-graphlib",
+    "url": "https://raw.githubusercontent.com/python/cpython/main/Lib/graphlib.py",
+    "bytes": 12482,
+    "fetched": "2026-11-02T16:55:23.871801-06:00",
+    "ok": true
+  },
+  {
+    "name": "boost-adjacency",
+    "url": "https://www.boost.org/doc/libs/latest/libs/graph/doc/adjacency_list.html",
+    "ok": false,
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "name": "graphology-graph",
+    "url": "https://raw.githubusercontent.com/graphology/graphology/master/src/graphology/src/graph.js",
+    "bytes": 78686,
+    "fetched": "2026-11-02T16:55:23.887806-06:00",
+    "ok": true
+  },
+  {
+    "name": "boost-adjacency-pinned",
+    "url": "https://www.boost.org/doc/libs/1_85_0/libs/graph/doc/adjacency_list.html",
+    "bytes": 47110,
+    "fetched": "2026-11-02",
+    "ok": true
+  }
+]
