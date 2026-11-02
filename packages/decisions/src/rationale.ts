@@ -32,7 +32,7 @@ const BUCKET_OF: Array<{ bucket: Bucket; test: (h: string) => boolean }> = [
   { bucket: 'consequences', test: (h) => /^consequences\b/.test(h) },
   {
     bucket: 'context',
-    test: (h) => /^context\b/.test(h) || /^rationale\b/.test(h) || /^decision drivers\b/.test(h) || /^considered options\b/.test(h) || /^links\b/.test(h) || /^entity references\b/.test(h),
+    test: (h) => /^context\b/.test(h) || /^rationale\b/.test(h) || /^decision drivers\b/.test(h) || /^considered options\b/.test(h) || /^links\b/.test(h),
   },
 ];
 
@@ -44,35 +44,53 @@ function stripFrontMatter(text: string): string {
 }
 
 /** MADR / Nygard / adr-tools heading extraction (same vocabulary graph.ts's loadAdrDir already knows for
- * status). Headings are '##' or '###'; a section runs to the next '##'-level heading or end of body. Returns
- * {} with the whole (trimmed) body as `decision` when no recognized heading is found. */
+ * status). Headings are '##' or '###'; a section runs to the next '##'-level heading or end of body.
+ *
+ * Two fallback shapes, both preserving every non-empty section (P0 fix, reviewer-1 FAIL on T43's first
+ * submission: Backstage adr001's 'Discussion'/'Risks' siblings of a matched '## Decision' heading were
+ * silently dropped -- `continue`d past with no `bucket` match and never recorded anywhere):
+ *   - NO heading in the record matches any recognized bucket at all (a spec-style ADR with
+ *     Background/Format/Envelope headings, or no headings at all): whole (trimmed) body as `decision`,
+ *     same as before -- nothing is lost, every heading and its content is still in that trimmed text.
+ *   - SOME headings match a bucket but others don't (adr001's Discussion/Risks siblings of Decision;
+ *     adr009's Background, once the one-off `^entity references\b` hack below was removed): every
+ *     unmatched heading with non-empty content joins the context/rationale bucket, in document order,
+ *     labeled by its own heading text (e.g. 'Discussion: There is a need...') so the reader can tell it
+ *     wasn't a recognized MADR/Nygard name. Matched headings never carry a label -- only the fallback ones. */
 export function sectionsOf(text: string): DecisionSections {
   const body = stripFrontMatter(text);
   const lines = body.split(/\r?\n/);
-  const idx: Array<{ line: number; heading: string }> = [];
+  const idx: Array<{ line: number; heading: string; raw: string }> = [];
   for (let i = 0; i < lines.length; i++) {
     const m = /^#{2,3}\s+(.+?)\s*$/.exec(lines[i] ?? '');
-    if (m) idx.push({ line: i, heading: m[1]!.toLowerCase() });
+    if (m) idx.push({ line: i, heading: m[1]!.toLowerCase(), raw: m[1]! });
   }
   if (idx.length === 0) {
     const whole = body.trim();
     return whole ? { decision: whole } : {};
   }
-  const out: DecisionSections = {};
-  for (let n = 0; n < idx.length; n++) {
-    const { line, heading } = idx[n]!;
-    const end = idx[n + 1]?.line ?? lines.length;
-    const bucket = BUCKET_OF.find((b) => b.test(heading))?.bucket;
-    if (!bucket) continue;
-    const content = lines.slice(line + 1, end).join('\n').trim();
-    if (!content) continue;
-    out[bucket] = out[bucket] ? `${out[bucket]}\n\n${content}` : content;
-  }
-  if (Object.keys(out).length === 0) {
-    // headings exist, but none are a recognized MADR/Nygard bucket name (e.g. a spec-style ADR with
-    // Background/Format/Envelope headings) -- same fallback as the no-heading case, whole body as Decision.
+  const anyMatched = idx.some(({ heading }) => BUCKET_OF.some((b) => b.test(heading)));
+  if (!anyMatched) {
+    // no heading in the record is a recognized MADR/Nygard bucket name -- same fallback as the
+    // no-heading case, whole body as Decision (nothing dropped: the headings stay in that raw text).
     const whole = body.trim();
     return whole ? { decision: whole } : {};
+  }
+  const out: DecisionSections = {};
+  for (let n = 0; n < idx.length; n++) {
+    const { line, heading, raw } = idx[n]!;
+    const end = idx[n + 1]?.line ?? lines.length;
+    const content = lines.slice(line + 1, end).join('\n').trim();
+    if (!content) continue;
+    const bucket = BUCKET_OF.find((b) => b.test(heading))?.bucket;
+    if (bucket) {
+      out[bucket] = out[bucket] ? `${out[bucket]}\n\n${content}` : content;
+    } else {
+      // unmatched sibling of a matched heading -- keep it, labeled, in the context/rationale bucket
+      // rather than silently dropping it (the P0 bug).
+      const labeled = `${raw}: ${content}`;
+      out.context = out.context ? `${out.context}\n\n${labeled}` : labeled;
+    }
   }
   return out;
 }
