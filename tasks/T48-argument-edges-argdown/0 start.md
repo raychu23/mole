@@ -1,22 +1,22 @@
 ---
-state: submitted
+state: running
 owner: t48-builder
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t48-argument-edges-argdown
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T48-argument-edges-argdown
 base: 9f7f393
 reviewer:
-updated: 2026-11-01 21:03
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+updated: 2026-11-01 21:18
+status: ledger running
+next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
 claimed: 2026-11-01 20:45
 ---
 ```notes
 T48-argument-edges-argdown      ledger task (rules.md §3 code features)      project tasks
     goal                    Give the decision graph argumentation relations and an authoring format next to design docs, borrowing Argdown's data model (RelationType support/attack/undercut, JSON export) and AIF's RA/CA node split: EdgeType gains supports/attacks/undercuts; an Argdown loader reads .argdown files / argdown code blocks in markdown into the graph; packages/reasoning (T42) evaluates the resulting framework and  shows in/out/undecided per argument. Source: Project/Mole/context/product-plan/systems/core-audit/capture-records-schema.md top 1-2
     done-when               1 failing tests first · 2 Argdown fixtures from the Argdown repo's own examples parse to the same relation counts as Argdown's JSON export (use @argdown/core as a dev dependency or its exported JSON as fixtures; licence checked) · 3 Nixon diamond + an undercut example labelled correctly end to end through the reasoning engine · 4 existing ADR/YAML records unchanged (regression tests) · 5 npm run check
-    status                  2026-11-01 submitted      report: 2 commits (red then green) in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T48-argument-edges-argdown (branc
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    status                  2026-11-01 running      changes requested: PASS with 1 P1: parser.ts silently accepted invalid Argdown (blank line inside an indented relation b
+    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
     pinned
     mode                    one worker
     boundary                packages/decisions/src/{types.ts,graph.ts} + new packages/decisions/src/argdown/** + packages/reasoning wiring + tests, avoid compile/, cascade/, rationale.ts, cli.ts except a minimal display hook

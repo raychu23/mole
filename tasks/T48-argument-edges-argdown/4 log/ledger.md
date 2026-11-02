@@ -5,4 +5,5 @@ ledger (newest last, nothing deleted)
     2026-11-01 20:45      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T48-argument-edges-argdown · branch ledger/t48-argument-edges-argdown · base 9f7f393
     2026-11-01 21:03      running → submitted      report: 2 commits (red then green) in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T48-argument-edges-argdown (branch ledger/t48-argument-edges-argdown): 63ea6ad failing-tests-first (EdgeType supports/attacks/undercu
     2026-11-01 21:03      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T48-argument-edges-argdown → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-11-01 21:18      submitted → running      changes requested: PASS with 1 P1: parser.ts silently accepted invalid Argdown (blank line inside an indented relation block that real @argdown/core rejects) and never reported unrecognized/unsupported lines (><, PCS/inf
 ```
