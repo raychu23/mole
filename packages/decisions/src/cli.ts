@@ -6,6 +6,8 @@ import { computeFlags } from './flags.js';
 import { loadGraph } from './graph.js';
 import { formatSections, sectionsOf } from './rationale.js';
 import type { DecisionsResult, FlagContext, FlagResult, LoadOptions } from './types.js';
+import { CaptureError, linkDecisions, newDecision, readDecisionRecords, recoverTransactions, supersedeDecision } from './capture/records.js';
+import { suggestDuplicates } from './capture/dedupe.js';
 
 /** The JSON `mole decisions --json` prints and the MCP tool mole_decisions returns. Every decision/tenet
  * node (T43) gets its full rationale text attached (bounded, section-aware -- see rationale.ts), read
@@ -58,4 +60,88 @@ export function decisionsCli(_pos: string[], flags: Record<string, string | true
   });
   console.log(flags.json ? JSON.stringify(r, null, 2) : formatDecisions(r));
   return 0;
+}
+
+/** Write-side decision-record CLI. Kept separate from `decisionsCli` so existing read-only output is unchanged. */
+export function decisionCli(pos: string[], flags: Record<string, string | true>, root: string): number {
+  const [sub] = pos;
+  if (sub === 'recover') {
+    try {
+      console.log(`recovered ${recoverTransactions(root)} transaction(s)`);
+      return 0;
+    } catch (error) {
+      console.error(`mole decision recover: ${error instanceof Error ? error.message : String(error)}`);
+      return 2;
+    }
+  }
+  if (sub === 'supersede') {
+    const oldId = str(flags.old);
+    const newId = str(flags.new);
+    if (!oldId || !newId) {
+      console.error('usage: mole decision supersede --old ID --new ID');
+      return 2;
+    }
+    try {
+      supersedeDecision(root, oldId, newId);
+      console.log(`superseded ${oldId} with ${newId}`);
+      return 0;
+    } catch (error) {
+      console.error(`mole decision supersede: ${error instanceof Error ? error.message : String(error)}`);
+      return error instanceof CaptureError ? 2 : 1;
+    }
+  }
+  if (sub === 'link') {
+    const from = str(flags.from);
+    const to = str(flags.to);
+    const relation = str(flags.relation);
+    if (!from || !to || !relation) {
+      console.error('usage: mole decision link --from ID --to ID --relation amends|overrides');
+      return 2;
+    }
+    try {
+      linkDecisions(root, from, to, relation);
+      console.log(`linked ${from} ${relation} ${to}`);
+      return 0;
+    } catch (error) {
+      console.error(`mole decision link: ${error instanceof Error ? error.message : String(error)}`);
+      return error instanceof CaptureError ? 2 : 1;
+    }
+  }
+  if (sub === 'suggest') {
+    // read-only: which existing records look like this incoming one (exact, then near); never writes or merges
+    const id = str(flags.id);
+    const title = str(flags.title);
+    if (!id || !title) {
+      console.error('usage: mole decision suggest --id ID --title TITLE [--body TEXT]');
+      return 2;
+    }
+    try {
+      const suggestions = suggestDuplicates({ id, title, body: str(flags.body) ?? '' }, readDecisionRecords(root));
+      console.log(JSON.stringify({ id, suggestions }, null, 2));
+      return 0;
+    } catch (error) {
+      console.error(`mole decision suggest: ${error instanceof Error ? error.message : String(error)}`);
+      return error instanceof CaptureError ? 2 : 1;
+    }
+  }
+  if (sub !== 'new') {
+    console.error('usage: mole decision <new|supersede|link|suggest|recover> ...');
+    return 2;
+  }
+  const id = str(flags.id);
+  const title = str(flags.title);
+  const status = str(flags.status);
+  const body = str(flags.body);
+  if (!id || !title) {
+    console.error('usage: mole decision new --id ID --title TITLE [--status proposed|accepted] [--body TEXT]');
+    return 2;
+  }
+  try {
+    const r = newDecision(root, { id, title, status, body });
+    console.log(`wrote ${r.file}`);
+    return 0;
+  } catch (error) {
+    console.error(`mole decision new: ${error instanceof Error ? error.message : String(error)}`);
+    return error instanceof CaptureError ? 2 : 1;
+  }
 }

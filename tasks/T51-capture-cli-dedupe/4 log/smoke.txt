@@ -1,0 +1,35 @@
+wrote .mole/decisions/ADR-1.md
+wrote .mole/decisions/ADR-2.md
+{
+  "id": "ADR-3",
+  "suggestions": [
+    {
+      "id": "ADR-1",
+      "kind": "near",
+      "score": 0.9032258064516129
+    }
+  ]
+}
+mole decision supersede: supersede requires accepted old and new records
+mole decision new: record already exists: .mole/decisions/ADR-1.md
+re-create exit=2
+--- ADR-1
+---
+id: 'ADR-1'
+title: "Use Postgres for decision history"
+status: accepted
+---
+
+## Decision
+
+Two time axes in one store.--- ADR-2
+---
+id: 'ADR-2'
+title: "Use Postgres + pgvector for decision history"
+status: proposed
+---
+
+## Decision
+.
+..
+decisions
