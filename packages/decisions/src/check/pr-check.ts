@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { computeFlags } from '../flags.js';
 import { loadGraph, MOLE_DIR } from '../graph.js';
+import { checkRules } from '../rules/check.js';
 import { reviewDraftsSummary } from '@mole/reviews';
 import type { Flag, GraphNode, Problem } from '../types.js';
 import { codeownersAt, parseCodeowners } from './codeowners.js';
@@ -27,6 +28,63 @@ function gitOrNull(root: string, args: string[]): string | null {
   } catch {
     return null;
   }
+}
+
+/** T49: cheap pre-check (one `git grep` at `head`, no checkout) so rules wiring costs nothing on the common case
+ *  (no decision in this repo has a `rules:` item -- true of every M2 bench ADR, since none author rules items).
+ *  Only when this is true do we pay for a worktree checkout + a real dependency-cruiser cruise below. */
+function hasRuleRecords(root: string, head: string): boolean {
+  try {
+    const out = execFileSync('git', ['-C', root, 'grep', '-I', '-l', '-e', '^\\s*rules\\s*:', head, '--', MOLE_DIR], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    return out.trim().length > 0;
+  } catch {
+    return false; // git grep exits 1 on "no match" (not an error) and on any other failure -- either way, skip
+  }
+}
+
+/** T49: runs rules/check.ts's real dependency-cruiser + TS-AST engine against the repo AS IT IS AT `head` --
+ *  checkRules reads real files off disk (dependency-cruiser's resolver needs a real module graph), so this uses a
+ *  throwaway `git worktree` checkout rather than mutating the caller's own working tree. Never throws: a rules
+ *  engine failure (git worktree unsupported, no decision records, syntax error in a rule) is additive and must
+ *  never block the rest of prCheck. */
+async function ruleViolationsAtHead(root: string, head: string, mergeBase: string, recordPaths: string[]): Promise<Map<string, Array<{ file: string; line: number; rule: string }>>> {
+  const byDecision = new Map<string, Array<{ file: string; line: number; rule: string }>>();
+  // the gate must look at the MERGE BASE too: gating on head alone let a PR skip the whole rules run by deleting the
+  // record or stripping its rules: key in the same diff (T49 review FAIL, done-when 2)
+  if (!hasRuleRecords(root, mergeBase) && !hasRuleRecords(root, head)) {
+    return byDecision;
+  }
+  const tmp = mkdtempSync(join(tmpdir(), 'mole-rules-head-'));
+  try {
+    execFileSync('git', ['-C', root, 'worktree', 'add', '--detach', '-f', tmp, head], { stdio: 'ignore' });
+    // review 1 P1-1 invariant, extended to rules: a PR must not be able to silence its own rules check by editing
+    // or deleting the rule item in the SAME diff -- the records are the merge base's, same as every other anchor
+    // kind in this file; only the SOURCE CODE being scanned for a violation is the PR's own head.
+    for (const p of recordPaths) {
+      try {
+        rmSync(join(tmp, p), { recursive: true, force: true });
+        const archive = execFileSync('git', ['-C', root, 'archive', mergeBase, '--', p]);
+        execFileSync('tar', ['-x', '-C', tmp], { input: archive });
+      } catch {
+        // the path may not exist at the merge base (a record only added by this PR) -- leave head's copy, if any
+      }
+    }
+    const result = await checkRules(realpathSync(tmp));
+    for (const v of result.violations) {
+      if (!byDecision.has(v.decision.id)) byDecision.set(v.decision.id, []);
+      byDecision.get(v.decision.id)!.push({ file: v.file, line: v.line, rule: v.rule });
+    }
+  } catch {
+    // additive: a broken rules engine run never blocks the content/scope-anchor governance below
+  } finally {
+    try {
+      execFileSync('git', ['-C', root, 'worktree', 'remove', '--force', tmp]);
+    } catch {
+      // the worktree metadata is cleaned up by rmSync below either way
+    }
+    rmSync(tmp, { recursive: true, force: true });
+  }
+  return byDecision;
 }
 
 type Range = [number, number];
@@ -216,15 +274,31 @@ async function prCheckIn(opts: PrCheckOptions, cleanups: Array<() => void>): Pro
     }
     return t;
   };
+  // T49 (verifier.md #1, "wire, don't rebuild"): rules/check.ts (dependency-cruiser import rules + Mole's own
+  // TS-AST call-rule scan) is a complete, separately-invoked decision-matching engine that prCheck never called --
+  // a decision whose ONLY rule items are `rules:` (no scope, no content anchor) could never govern a line even
+  // though Mole can already detect the violation with a real dependency-cruiser cruise. Folded in here as a third,
+  // crisp-by-construction hit kind (`rule:<name>`), same as a `match:` content anchor.
+  const ruleViolationsByDecision = opts.rules !== false && sameRepo ? await ruleViolationsAtHead(root, head, mergeBase, recordPaths) : new Map<string, Array<{ file: string; line: number; rule: string }>>();
   const candidates = graph.nodes.filter(
     (n) =>
       n.kind === 'decision' &&
       !NOT_GOVERNING.has(n.status) &&
-      (n.scope.length > 0 || (content.get(n.id)?.length ?? 0) > 0 || (exportGate && isExportConventionTitle(n.title))),
+      (n.scope.length > 0 || (content.get(n.id)?.length ?? 0) > 0 || (exportGate && isExportConventionTitle(n.title)) || ruleViolationsByDecision.has(n.id)),
   );
   for (const n of candidates) {
     const hits: GovernedRecord['hits'] = [];
     const lost: UnanchoredRecord[] = [];
+    // rules (T49): an import:/call: rule violation on a line THIS diff added governs it -- a pre-existing
+    // violation elsewhere in the repo that the PR never touched is not something this diff introduced (review 1
+    // P1-1 analog), so it is intersected against the diff's own added-line ranges, not reported bare.
+    for (const rv of ruleViolationsByDecision.get(n.id) ?? []) {
+      const cf = changed.find((f) => f.newPath === rv.file);
+      if (!cf) continue;
+      const { added } = changedRanges(cf);
+      if (!added.some(([a, b]) => rv.line >= a && rv.line <= b)) continue;
+      hits.push({ anchor: `rule:${rv.rule}`, path: rv.file, side: 'new', ranges: [[rv.line, rv.line]] });
+    }
     // content anchors (option 1): added lines whose text matches, in files the glob covers
     if (useContent)
       for (const c of content.get(n.id) ?? [])

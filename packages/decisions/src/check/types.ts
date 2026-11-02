@@ -19,6 +19,11 @@ export interface PrCheckOptions {
   fixRule?: string;
   /** option 1: records' `match:` content anchors govern added lines whose text matches (default true) */
   contentAnchors?: boolean;
+  /** T49: fold rules/check.ts (import:/call: rule item) violations into governed as a crisp `rule:` hit kind.
+   *  Default true. Runs a throwaway `git worktree` checkout at `head` only when a decision record actually has a
+   *  `rules:` item (cheap `git grep` pre-check; zero cost otherwise). Only applies when recordsRoot === root
+   *  (the decisions and the source live in the same checkout -- the bench-overlay case does not apply this). */
+  rules?: boolean;
   /** option 2: version-only hunks are not governed by scope anchors (default false: the M24 keys label bumps of a decided
    *  component as governed, so the rule cost recall 0.52 -> 0.31 on the frozen key; kept for the options bench) */
   versionBumpRule?: boolean;
