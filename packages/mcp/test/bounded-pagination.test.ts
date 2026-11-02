@@ -101,9 +101,7 @@ describe('mole_check: hunks are bounded + paginated (limit/offset/has_more/next_
     expect(jCapped.hasMore).toBe(true);
     expect(jCapped.truncated).toMatch(/maxAnswerChars/);
     await client.close();
-    // two real whole-repo coverage scans: ~2 s idle, 26 s at load average 18 (T50 integrate check timed out at 30 s
-    // while the M-C v3 agent runs shared the machine) -- same shared-load mitigation as vitest.config.ts
-  }, 90_000);
+  }, 30_000);
 });
 
 describe('mole_decisions: decisions array is bounded + paginated, on top of the T43 aggregate rationale budget', () => {
@@ -140,5 +138,7 @@ describe('mole_coverage: a whole-repo scan is bounded + paginated', () => {
     const jRest = JSON.parse((rest.content as Array<{ text: string }>)[0]?.text ?? '{}') as { files: unknown[]; hasMore?: boolean };
     expect(jRest.hasMore).toBe(false);
     await client.close();
-  }, 30_000);
+    // two real whole-repo coverage scans: ~2 s idle, 26 s at load average 18 (T50 integrate check timed out at 30 s
+    // while the M-C v3 agent runs shared the machine) -- same shared-load mitigation as vitest.config.ts
+  }, 90_000);
 });
