@@ -121,7 +121,11 @@ describe('MCP mole_decisions', () => {
     expect(res.isError).toBeFalsy();
     const text = (res.content as Array<{ type: string; text: string }>)[0]?.text ?? '';
     const viaCli = JSON.parse(run('--json', '--root', root, '--adr-dir', 'docs/adr').stdout);
-    expect(JSON.parse(text)).toEqual(viaCli);
+    // T50: the MCP tool now adds bounded+paginated response metadata (total/offset/hasMore/nextOffset/truncated)
+    // that `mole decisions --json` (the CLI, unchanged) never had -- strip those before comparing, same spirit as
+    // packages/mcp/test/check.test.ts's strip().
+    const { hasMore: _hasMore, offset: _offset, total: _total, nextOffset: _nextOffset, truncated: _truncated, ...viaMcp } = JSON.parse(text);
+    expect(viaMcp).toEqual(viaCli);
   }, 30000);
 });
 

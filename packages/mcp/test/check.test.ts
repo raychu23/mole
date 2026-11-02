@@ -36,8 +36,11 @@ function fixtureRepo(): string {
   return root;
 }
 
+// T50: the MCP tool now adds bounded+paginated response metadata (total/offset/hasMore/nextOffset/truncated) that
+// `mole check --json` (the CLI, unchanged) never had -- strip those here too, same as `ms` (timing), so this test
+// keeps asserting the invariant it actually cares about (same underlying hunks/questions data), not byte-identical JSON.
 const strip = (j: Record<string, unknown>) => {
-  const { ms: _ms, ...rest } = j;
+  const { ms: _ms, hasMore: _hasMore, offset: _offset, total: _total, nextOffset: _nextOffset, truncated: _truncated, ...rest } = j;
   return rest;
 };
 
