@@ -2,6 +2,7 @@
 // with citator-style flags computed by code (T29). Pure API: loadGraph(root, opts) -> computeFlags(graph, ctx).
 export type * from './types.js';
 export { frontMatter, loadGraph, MOLE_DIR, normStatus } from './graph.js';
+export { formatSections, RATIONALE_BUDGET, sectionsOf, type DecisionSections } from './rationale.js';
 export { computeFlags } from './flags.js';
 export { contentHash } from './anchors.js';
 export { decisions, decisionsCli, formatDecisions } from './cli.js';

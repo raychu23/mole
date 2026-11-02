@@ -184,14 +184,119 @@ export function collisionsStopText(r, sessionId) {
 // agent's effect on them back to the person (Raymond 10-29 15:30). Parsed here with a plain regex, not @mole/decisions:
 // the plugin scripts stay dependency-free (see the file header), and this only needs id/title/status/approver/scope,
 // never the full citator graph. Flags (red/yellow/green/grey) still come from the real engine via `mole decisions --json`.
-const SCOPE_BUDGET = 1500; // M31a: the governing-decisions block fits in 1,500 characters
+const SCOPE_BUDGET = 1500; // M31a: the governing-decisions block's id/title/status/owner lines fit in 1,500 characters
+// T43: each decision's full rationale (Decision + Context/Rationale + Consequences, MADR/Nygard section
+// names -- the vocabulary graph.ts's loadAdrDir already recognizes for status) gets its own, separate,
+// documented budget per decision, added after the one-liner. Kept well under MAX_CHARS (9500, Claude Code's
+// additionalContext/systemMessage cap) even with several decisions in play; decisionsBlock's outer clip()
+// in the hook scripts is the absolute last-resort cutoff, this budget is what should make that rare.
+const RATIONALE_BUDGET_PER_DECISION = 1200;
+// T43 review fix P1 (reviewer-1 FAIL on T43's first submission): decisionsBlock's per-decision budget had
+// no AGGREGATE cap of its own, so with ~8+ decisions in play the rationale blocks together blew past the
+// outer clip() (MAX_CHARS 9,500, see pre-tool-use.mjs/session-start.mjs) and clip() cut mid-block, mid-
+// sentence -- never what "never mid-Decision" was supposed to mean. Kept comfortably under MAX_CHARS minus
+// the SCOPE_BUDGET (1,500) one-liner list and some margin for the header/pointer line, so clip() is a true
+// no-op on this function's own output and never has to cut inside a kept rationale block.
+const RATIONALE_AGGREGATE_BUDGET = 6000;
 
 function parseFrontMatterField(text, key) {
   const m = new RegExp(`^${key}:\\s*'?([^'\\n]*)'?\\s*$`, 'm').exec(text);
   return m ? m[1].trim() : undefined;
 }
 
-/** .mole/decisions/*.md, parsed by hand: id, title, status, approver, scope file list (symbol/folder tail dropped). */
+/** Dependency-free MADR/Nygard/adr-tools section extraction (mirrors packages/decisions/src/rationale.ts's
+ * sectionsOf exactly in spirit -- kept as a separate, duplicated implementation here on purpose, since
+ * these hook scripts stay dependency-free, see the file header comment above). Returns {} with the whole
+ * stripped body as `decision` when no recognized '##'/'###' heading is found. */
+function stripFrontMatterBody(text) {
+  const lines = text.split(/\r?\n/);
+  if ((lines[0] ?? '').trim() !== '---') return text;
+  const end = lines.findIndex((l, i) => i > 0 && l.trim() === '---');
+  return end < 0 ? text : lines.slice(end + 1).join('\n');
+}
+
+function bucketOf(heading) {
+  const h = heading.toLowerCase();
+  if (/^decision\b/.test(h) || /^decision outcome\b/.test(h)) return 'decision';
+  if (/^consequences\b/.test(h)) return 'consequences';
+  if (/^context\b/.test(h) || /^rationale\b/.test(h) || /^decision drivers\b/.test(h) || /^considered options\b/.test(h) || /^links\b/.test(h)) return 'context';
+  return undefined;
+}
+
+/** Mirrors packages/decisions/src/rationale.ts's sectionsOf exactly (P0/P2 review fix: the two were
+ * drifting -- this one kept a one-off `^entity references\b` hack the TS side never had, and both used to
+ * silently drop an unmatched sibling heading next to a matched one, e.g. Backstage adr001's Discussion/Risks
+ * next to Decision). Exported so a parity test can run both implementations on the same fixtures and fail
+ * on any difference, instead of relying on eyeballing two copy-pasted functions staying in sync. */
+export function sectionsOfText(text) {
+  const body = stripFrontMatterBody(text);
+  const lines = body.split(/\r?\n/);
+  const idx = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = /^#{2,3}\s+(.+?)\s*$/.exec(lines[i] ?? '');
+    if (m) idx.push({ line: i, heading: m[1] });
+  }
+  if (idx.length === 0) {
+    const whole = body.trim();
+    return whole ? { decision: whole } : {};
+  }
+  const anyMatched = idx.some(({ heading }) => bucketOf(heading) !== undefined);
+  if (!anyMatched) {
+    const whole = body.trim();
+    return whole ? { decision: whole } : {};
+  }
+  const out = {};
+  for (let n = 0; n < idx.length; n++) {
+    const { line, heading } = idx[n];
+    const end = idx[n + 1]?.line ?? lines.length;
+    const content = lines.slice(line + 1, end).join('\n').trim();
+    if (!content) continue;
+    const bucket = bucketOf(heading);
+    if (bucket) {
+      out[bucket] = out[bucket] ? `${out[bucket]}\n\n${content}` : content;
+    } else {
+      const labeled = `${heading}: ${content}`;
+      out.context = out.context ? `${out.context}\n\n${labeled}` : labeled;
+    }
+  }
+  return out;
+}
+
+function clipWords(s, n) {
+  if (s.length <= n) return s;
+  const cut = s.slice(0, Math.max(0, n - 1));
+  const space = cut.lastIndexOf(' ');
+  return `${(space > n * 0.6 ? cut.slice(0, space) : cut).trim()}\u2026`;
+}
+
+/** Named sections, Decision first (never truncated while Context/Consequences still have budget to give up
+ * -- "never mid-Decision"), within `budget` characters total. '' when there is nothing to say. Exported for
+ * the TS/JS parity test (P2). */
+export function formatSectionsText(s, budget) {
+  const order = [['Decision', s.decision], ['Context/Rationale', s.context], ['Consequences', s.consequences]].filter(([, v]) => v);
+  if (!order.length) return '';
+  const parts = [];
+  let remaining = budget;
+  for (const [label, text] of order) {
+    if (remaining <= 0) {
+      parts.push(`(${label} omitted: budget exhausted)`);
+      continue;
+    }
+    const line = `${label}: ${text}`;
+    if (line.length <= remaining) {
+      parts.push(line);
+      remaining -= line.length + 2;
+    } else {
+      const keep = Math.max(0, remaining - `${label}: `.length);
+      parts.push(`${label}: ${clipWords(text, keep)}`);
+      remaining = 0;
+    }
+  }
+  return parts.join('\n\n');
+}
+
+/** .mole/decisions/*.md, parsed by hand: id, title, status, approver, scope file list (symbol/folder tail dropped),
+ * plus (T43) its full rationale text, named by section and bounded by RATIONALE_BUDGET_PER_DECISION. */
 export function readDecisionRecords(root) {
   const dir = join(root, '.mole', 'decisions');
   const out = [];
@@ -226,6 +331,7 @@ export function readDecisionRecords(root) {
       approver: parseFrontMatterField(text, 'approver'),
       file: `.mole/decisions/${name}`,
       files, // repo-relative paths (folder targets keep their trailing '/')
+      rationale: formatSectionsText(sectionsOfText(text), RATIONALE_BUDGET_PER_DECISION), // T43, '' when none
     });
   }
   return out;
@@ -254,25 +360,54 @@ export function governingDecisions(mole, root, files, { liveFlags = false } = {}
   return records.map((d) => ({ ...d, flag: flags.get(d.id) })).sort((a, b) => a.id.localeCompare(b.id));
 }
 
-/** One rule line per decision (M31a: "each as a rule to follow with its flag and owner"), clipped to SCOPE_BUDGET chars. */
+/** One rule line per decision (M31a: "each as a rule to follow with its flag and owner"), clipped to SCOPE_BUDGET
+ * chars; then (T43) each decision that made the cut gets its own full-rationale block appended, named by section
+ * (Decision/Context-Rationale/Consequences) and bounded by RATIONALE_BUDGET_PER_DECISION each -- never mid-Decision,
+ * and never replacing the one-liner summary above it (done-when 2: the compact line still always comes through).
+ * The rationale blocks together are ALSO capped by RATIONALE_AGGREGATE_BUDGET (P1 review fix): once that budget is
+ * spent, remaining decisions keep their one-liner in the list above but their rationale block is dropped WHOLE
+ * (never clipped mid-block) with a trailing pointer naming how many and where to get the rest -- so the hook
+ * scripts' outer clip() never has to cut inside a kept block. */
 export function decisionsBlock(decisions, header = 'Mole decisions governing the files in play') {
   if (!decisions.length) return '';
   const lines = decisions.map((d) => `- ${d.id} [${d.flag ?? d.status}] ${d.status} \u2014 ${d.title} \u2014 owner: ${d.approver ?? 'unassigned'} (${d.file})`);
+  let kept = decisions;
   let out = `${header} (${decisions.length}):\n${lines.join('\n')}`;
   if (out.length > SCOPE_BUDGET) {
     // keep as many whole rule lines as fit, then say how many were cut (never truncate a line mid-decision)
     const head = `${header} (${decisions.length}):`;
-    const kept = [];
+    const keptLines = [];
+    kept = [];
     let len = head.length;
-    for (const l of lines) {
-      if (len + 1 + l.length > SCOPE_BUDGET - 24) break;
-      kept.push(l);
-      len += 1 + l.length;
+    for (let i = 0; i < lines.length; i++) {
+      if (len + 1 + lines[i].length > SCOPE_BUDGET - 24) break;
+      keptLines.push(lines[i]);
+      kept.push(decisions[i]);
+      len += 1 + lines[i].length;
     }
-    const cut = lines.length - kept.length;
-    out = `${head}\n${kept.join('\n')}${cut > 0 ? `\n(${cut} more: mole decisions --json)` : ''}`;
+    const cut = lines.length - keptLines.length;
+    out = `${head}\n${keptLines.join('\n')}${cut > 0 ? `\n(${cut} more: mole decisions --json)` : ''}`;
   }
-  return out;
+  const candidates = kept.filter((d) => d.rationale);
+  const rationaleBlocks = [];
+  let used = 0;
+  let dropped = 0;
+  for (const d of candidates) {
+    const block = `why ${d.id}:\n${d.rationale}`;
+    if (used + block.length + 2 <= RATIONALE_AGGREGATE_BUDGET) {
+      rationaleBlocks.push(block);
+      used += block.length + 2;
+    } else {
+      dropped += 1;
+    }
+  }
+  if (dropped > 0) {
+    rationaleBlocks.push(
+      `(${dropped} more rationale block${dropped === 1 ? '' : 's'} omitted (aggregate rationale budget ${RATIONALE_AGGREGATE_BUDGET} chars): ` +
+        `their one-line summary is still in the list above -- run \`mole decisions --json\` or the MCP mole_decisions tool for the full text)`,
+    );
+  }
+  return rationaleBlocks.length ? `${out}\n\n${rationaleBlocks.join('\n\n')}` : out;
 }
 
 /** Decisions touched by a diff's files, with their CURRENT flag (Stop: "decisions the session's diff touched"). */

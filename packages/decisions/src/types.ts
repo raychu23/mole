@@ -109,6 +109,11 @@ export interface FlagResult extends Loc {
   status: string;
   flag: Flag;
   reasons: Reason[];
+  /** T43: the record's full Decision + Context/Rationale + Consequences text (MADR/Nygard section names),
+   * bounded by rationale.ts's RATIONALE_BUDGET with section-aware truncation. Undefined when the record's
+   * file could not be read, or has no decision-bearing content at all (a tenet/intent/incident node, or an
+   * empty record). This is in ADDITION to the tree view's summaryOf() 240-char preview, never a replacement. */
+  rationale?: string;
 }
 
 export interface FlagContext {

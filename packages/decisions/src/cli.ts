@@ -1,14 +1,35 @@
 // `mole decisions [--json] [--root DIR] [--adr-dir DIR[,DIR]] [--test-report FILE]`: every decision and tenet with its flag,
 // reasons and file:line. No daemon, no model.
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { computeFlags } from './flags.js';
 import { loadGraph } from './graph.js';
+import { formatSections, sectionsOf } from './rationale.js';
 import type { DecisionsResult, FlagContext, FlagResult, LoadOptions } from './types.js';
 
-/** The JSON `mole decisions --json` prints and the MCP tool mole_decisions returns. */
+/** The JSON `mole decisions --json` prints and the MCP tool mole_decisions returns. Every decision/tenet
+ * node (T43) gets its full rationale text attached (bounded, section-aware -- see rationale.ts), read
+ * straight from the record's own file so this works the same for .mole/decisions/*.md records and plain
+ * ADR-folder records (graph.ts loadAdrDir) alike: both already carry a file:line, and neither needed a
+ * new on-disk copy of the text to get this -- it was always right there, just never read past the title. */
 export function decisions(root: string, opts: LoadOptions & FlagContext = {}): DecisionsResult {
   const graph = loadGraph(root, { adrDirs: opts.adrDirs });
-  return { root, decisions: computeFlags(graph, { testReport: opts.testReport }), problems: graph.problems };
+  const flagged = computeFlags(graph, { testReport: opts.testReport });
+  const fileOf = new Map(graph.nodes.map((n) => [n.id, n.file]));
+  const withRationale: FlagResult[] = flagged.map((d) => {
+    const file = fileOf.get(d.id);
+    if (!file) return d;
+    let text: string | undefined;
+    try {
+      text = readFileSync(resolve(root, file), 'utf8');
+    } catch {
+      text = undefined;
+    }
+    if (text === undefined) return d;
+    const rationale = formatSections(sectionsOf(text));
+    return rationale ? { ...d, rationale } : d;
+  });
+  return { root, decisions: withRationale, problems: graph.problems };
 }
 
 export function formatDecisions(r: DecisionsResult): string {
