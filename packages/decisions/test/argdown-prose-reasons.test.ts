@@ -8,8 +8,8 @@ describe('ADR prose reasons remain evidence for the chosen option', () => {
     ['next-line', 'Chosen option: "Modern Python", because\nwe need maintained dependencies.'],
     // log4brains 20201026: the reason is the next sentence, opening with "Because"
     ['next-sentence', 'Chosen option: "Modern Python".\nBecause we need maintained dependencies.'],
-    // python-tuf 0004: a purpose clause ("to ...") states the reason
-    ['purpose-clause', 'Chosen option: "Modern Python", to we need maintained dependencies.'],
+    // review 2 P0: unquoted name ending at a period, reason later in the same paragraph (Nygard style)
+    ['unquoted-then-because', 'Chosen option: Modern Python. We picked it because we need maintained dependencies.'],
   ])('uses explicitly stated %s prose instead of labelling the decision undefended', (_shape, outcome) => {
     const text = [
       '## Considered Options', '- Modern Python', '- Legacy Python',
@@ -23,7 +23,12 @@ describe('ADR prose reasons remain evidence for the chosen option', () => {
     expect(evaluate(derived.framework).labels[derived.claimId]).toBe('in');
   });
 
-  it.each(['Chosen option: "Modern Python".', 'Chosen option: "Modern Python", because'])('does not invent a reason for %s', (outcome) => {
+  it.each([
+    'Chosen option: "Modern Python".',
+    'Chosen option: "Modern Python", because',
+    // review 2 P0: a leading "to" is not a stated reason ("to" purpose clauses were dropped as too ambiguous)
+    'Chosen option: "Modern Python", to be revisited after the Q3 audit.',
+  ])('does not invent a reason for %s', (outcome) => {
     const text = [
       '## Considered Options', '- Modern Python', '- Legacy Python',
       '## Decision Outcome', outcome,
@@ -59,6 +64,26 @@ describe('ADR prose reasons remain evidence for the chosen option', () => {
     expect(derived.arguments.filter((a) => a.role === 'reason').map((a) => a.text))
       .toEqual(['we only have finite resources, and want to focus them.']);
     expect(evaluate(derived.framework).labels[derived.claimId]).toBe('in');
+  });
+
+  // review 2 P1 (real log4brains l4b-adr-gitflow-simplified): bullet "Transition to Simplified Git Flow." vs
+  // outcome **Simplified Git Flow** -- the chosen option must not be listed as its own rejected alternative
+  it('matches a chosen option written in bold or shorter than its bullet, when exactly one bullet fits', () => {
+    const text = [
+      '## Considered Options', '- Keep Git Flow.', '- Transition to Simplified Git Flow.',
+      '## Decision Outcome', 'Chosen option: **Simplified Git Flow**, because releases are rare.',
+    ].join('\n');
+    const derived = deriveAdrArgumentFramework('gitflow', text);
+    expect(derived.arguments.filter((a) => a.role === 'considered-option').map((a) => a.text)).toEqual(['Keep Git Flow.']);
+  });
+
+  it('keeps both options when a shortened chosen name fits more than one bullet (no guess)', () => {
+    const text = [
+      '## Considered Options', '- MADR 2.1.2', '- MADR 2.1.2 with Log4brains patch', '- Nygard',
+      '## Decision Outcome', 'Chosen option: "MADR 2.1.2 with Log4brains patch", because it renders.',
+    ].join('\n');
+    const derived = deriveAdrArgumentFramework('fmt', text);
+    expect(derived.arguments.filter((a) => a.role === 'considered-option').map((a) => a.text)).toEqual(['MADR 2.1.2', 'Nygard']);
   });
 
   it('keeps the stated reason paragraph without absorbing later commentary', () => {

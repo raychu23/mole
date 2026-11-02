@@ -9,6 +9,16 @@ import { formatSections, RATIONALE_BUDGET, sectionsOf } from '../src/rationale.j
 
 const LONG = 'Lorem ipsum dolor sit amet consectetur adipiscing elit. '.repeat(30); // ~1,770 chars
 
+// T54 review 2 P1: '## Decision Drivers' is context, not the decision (it used to match /^decision\b/ first)
+describe('Decision Drivers heading', () => {
+  it('goes to context, so the decision text starts with the outcome', async () => {
+    const { sectionsOf } = await import('../src/rationale.js');
+    const s = sectionsOf(['## Decision Drivers', '- speed', '## Decision Outcome', 'Chosen option: A'].join('\n'));
+    expect(s.decision?.startsWith('Chosen option: A')).toBe(true);
+    expect(s.context).toContain('speed');
+  });
+});
+
 describe('sectionsOf: MADR / Nygard section extraction', () => {
   it('pulls Decision, Context and Consequences bodies by heading, case-insensitively', () => {
     const text = `---\nid: '0099'\ntitle: Test\nstatus: accepted\n---\n\n## Context and Problem Statement\n\n${LONG}\n\n## Decision\n\nWe picked option A because it is simplest.\n\n## Consequences\n\nFuture changes must keep A compatible.\n`;

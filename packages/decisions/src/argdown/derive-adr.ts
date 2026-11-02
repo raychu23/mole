@@ -39,7 +39,9 @@ export interface AdrArgumentFramework {
 const CONSIDERED_OPTIONS_HEADING = /^#{2,3}\s+considered options\s*$/i;
 const DECISION_OUTCOME_HEADING = /^#{2,3}\s+decision outcome\s*$/i;
 // Quoted names may wrap across lines and contain commas (python-tuf 0002/0008); unquoted names stop at a comma/newline.
-const CHOSEN_OPTION_LINE = /chosen option:\s*(?:"([^"]+)"|([^",\n]+))/i;
+// "quoted" (may wrap, may hold commas) · **bold** · unquoted up to a comma, a sentence-ending period or the line end
+// (review 2 P0: "Chosen option: Modern Python. We picked it because ..." used to swallow the whole sentence)
+const CHOSEN_OPTION_LINE = /chosen option:\s*(?:"([^"]+)"|\*\*([^*]+)\*\*|([^",\n]+?)(?=,|\.(?:\s|$)|\n|$))/i;
 const BULLET = /^\s*[-*]\s+(.*)$/;
 const HEADING = /^#{2,3}\s+/;
 
@@ -79,7 +81,7 @@ function bulletsOf(block: string): string[] {
 
 /** Compare option names ignoring wrapping whitespace, case and a trailing period. */
 function sameName(s: string): string {
-  return s.replace(/\s+/g, ' ').trim().replace(/\.$/, '').toLowerCase();
+  return s.replace(/\*\*/g, '').replace(/["“”]/g, '').replace(/\s+/g, ' ').trim().replace(/\.$/, '').toLowerCase();
 }
 
 /** The option "name" from a MADR bullet (`- **Name** -- why`, `- [Name](url) -- why`, or plain `- Name`):
@@ -102,15 +104,25 @@ export function deriveAdrArgumentFramework(decisionId: string, adrText: string):
   const consideredBlock = headingSlice(adrText, CONSIDERED_OPTIONS_HEADING);
   const outcomeBlock = headingSlice(adrText, DECISION_OUTCOME_HEADING) ?? sections.decision;
   const chosenMatch = outcomeBlock ? CHOSEN_OPTION_LINE.exec(outcomeBlock) : null;
-  const chosenRaw = chosenMatch?.[1] ?? chosenMatch?.[2];
+  const chosenRaw = chosenMatch?.[1] ?? chosenMatch?.[2] ?? chosenMatch?.[3];
   const chosenName = chosenRaw ? sameName(chosenRaw) : undefined;
 
   const optionIds: string[] = [];
   if (consideredBlock) {
+    const bullets = bulletsOf(consideredBlock);
+    const names = bullets.map((b) => sameName(optionNameOf(b)));
+    // the chosen option is not its own counter-argument: an exact name match first (two options can share a
+    // prefix, "MADR 2.1.2" vs "MADR 2.1.2 with Log4brains patch"); only when none is exact, a bullet whose name
+    // contains the chosen name or the reverse -- and only if exactly ONE bullet fits (review 2 P1, real log4brains
+    // "Transition to Simplified Git Flow." vs **Simplified Git Flow**); otherwise no guess
+    let chosenIdx = chosenName ? names.indexOf(chosenName) : -1;
+    if (chosenName && chosenIdx === -1) {
+      const fits = names.flatMap((nm, i) => (nm.includes(chosenName) || chosenName.includes(nm) ? [i] : []));
+      if (fits.length === 1) chosenIdx = fits[0]!;
+    }
     let n = 0;
-    for (const bullet of bulletsOf(consideredBlock)) {
-      const name = sameName(optionNameOf(bullet));
-      if (chosenName && name === chosenName) continue; // the chosen option is not its own counter-argument (exact match only -- two options can legitimately share a prefix, e.g. "MADR 2.1.2" vs "MADR 2.1.2 with Log4brains patch")
+    for (const [i, bullet] of bullets.entries()) {
+      if (i === chosenIdx) continue;
       n += 1;
       const optId = `${decisionId}::option:${n}`;
       args.push({ id: optId, role: 'considered-option', text: bullet });
@@ -126,10 +138,13 @@ export function deriveAdrArgumentFramework(decisionId: string, adrText: string):
     // MADR also permits a plain-prose "because ..." paragraph. Without it,
     // an explicitly defended decision was incorrectly labelled undefended.
     if (reasons.length === 0) {
-      // ", because …" · ". Because …" (next sentence) · ", since …" · ", to …" (purpose clause, python-tuf 0004)
-      const after = /^\s*[,.]?\s*(?:because|since|to)\b([\s\S]*)/i.exec(reasonSource)?.[1];
-      // split BEFORE trimming: a bare "because" + blank line must not adopt the next paragraph (review 11-02)
-      const paragraph = after?.split(/\r?\n\s*\r?\n/, 1)[0]?.replace(/\s+/g, ' ').trim();
+      // only the paragraph right after the chosen option: split BEFORE trimming, so a bare "because" + blank line
+      // never adopts the next paragraph (review 1). Reason = text after ", because" / ", since" opening it, or after
+      // the first "because" inside it (". Because …", "… We picked it because …"). A leading "to" is NOT a reason
+      // (review 2 P0: "to be revisited after the audit"); python-tuf 0004's purpose clause stays unread.
+      const first = reasonSource.split(/\r?\n\s*\r?\n/, 1)[0] ?? '';
+      const after = /^\s*[,.]?\s*(?:because|since)\b([\s\S]*)/i.exec(first)?.[1] ?? /\bbecause\b([\s\S]*)/i.exec(first)?.[1];
+      const paragraph = after?.replace(/\s+/g, ' ').trim();
       if (paragraph) reasons.push(paragraph);
     }
     let n = 0;
