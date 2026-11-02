@@ -98,7 +98,8 @@ describe('parseArgdown reports problems instead of silently accepting invalid/un
     app.addPlugin(new ModelPlugin(), 'build-model');
     try {
       const result = app.run({ process: ['parse-input', 'build-model'], input: source, logLevel: 'error' }) as unknown as Record<string, unknown>;
-      return Boolean(result['hasFatalError'] || result['hasSyntaxErrors'] || !('relations' in result));
+      const parserErrors = result['parserErrors'];
+      return Boolean(result['hasFatalError'] || result['hasSyntaxErrors'] || !('relations' in result) || (Array.isArray(parserErrors) && parserErrors.length > 0));
     } catch {
       return true;
     }
@@ -113,6 +114,15 @@ describe('parseArgdown reports problems instead of silently accepting invalid/un
     expect(parsed.problems.length).toBeGreaterThan(0);
     expect(parsed.problems[0]).toMatchObject({ line: 3 });
     expect(parsed.problems[0]!.message).toMatch(/blank line/i);
+  });
+
+  it('unindented relation lines under a title: real @argdown/core errors, this parser reports them instead of dropping silently', () => {
+    const source = '[A]: a\n+ [B]: b\n- [C]: c\n';
+    expect(realArgdownRejects(source)).toBe(true);
+    const parsed = parseArgdown(source);
+    expect(parsed.relations).toHaveLength(0);
+    expect(parsed.problems.map((p) => p.line)).toEqual([2, 3]);
+    expect(parsed.problems[0]!.message).toMatch(/indented/);
   });
 
   it('two relations separated by a blank line (both orphaned): neither relation is attached, both reported', () => {
@@ -133,10 +143,12 @@ describe('parseArgdown reports problems instead of silently accepting invalid/un
     expect(parsed.problems).toHaveLength(0);
   });
 
-  it('a relation token on the very first line, with no preceding blank, stays silently empty (matches @argdown/core)', () => {
-    const parsed = parseArgdown('+ [B]: a lone relation token with no enclosing item\n');
+  it('a relation token on the very first line is reported (real @argdown/core reports a parser error too)', () => {
+    const source = '+ [B]: a lone relation token with no enclosing item\n';
+    expect(realArgdownRejects(source)).toBe(true);
+    const parsed = parseArgdown(source);
     expect(parsed.relations).toHaveLength(0);
-    expect(parsed.problems).toHaveLength(0);
+    expect(parsed.problems).toHaveLength(1);
   });
 
   it('the `><` contradiction token is reported as intentionally unsupported, matching real @argdown/core emitting a "contradictory" relation this EdgeType has no slot for', () => {

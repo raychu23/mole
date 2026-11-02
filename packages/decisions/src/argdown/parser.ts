@@ -187,9 +187,11 @@ export function parseArgdown(text: string): ParsedArgdown {
         problems.push({ line, message: `unrecognized relation token '${tok}'; ignored` });
       } else if (brokenByBlank) {
         problems.push({ line, message: `blank line broke the enclosing relation block (as @argdown/core also rejects); '${tok}' relation on this line was not attached` });
+      } else {
+        // no enclosing item at a smaller indent (e.g. an unindented `+ [B]` under `[A]`, or a relation on the
+        // file's first line) or no [title]/<title> reference: @argdown/core reports a parser error here too.
+        problems.push({ line, message: `'${tok}' relation has no enclosing statement/argument at a smaller indent (relations must be indented under their target) or no [title]/<title> reference; not attached` });
       }
-      // else: a relation token with no enclosing item and no preceding blank (e.g. file's first
-      // line), or an unrecognized reference -- @argdown/core emits no relation here either, silently.
       continue;
     }
 
