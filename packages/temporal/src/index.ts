@@ -79,7 +79,20 @@ export async function withOrgTx<T>(pool: Pool, orgId: string, fn: (client: PoolC
  * duplicate of an existing LIVE row (same fact/attr/value/valid bounds, recorded still open) is a
  * no-op: idempotent re-insertion is not the same thing as a conflicting fact.
  */
-export async function insertFact(client: Queryable, f: FactInput, recordedFrom?: string): Promise<void> {
+/**
+ * recordedFrom is INTERNAL ONLY (T47 fresh-review P1): it exists purely so recordFact() below can
+ * hand in the exact clock.timestamp.now() instant it used to CLOSE the conflicting row's recorded
+ * range -- Postgres's own now() is frozen to the enclosing transaction's start time (every
+ * statement in one tx sees the same now()), so relying on the column DEFAULT here would make this
+ * row's recorded START predate the old row's just-closed recorded END within the same
+ * transaction, re-triggering the EXCLUDE. It is deliberately NOT a parameter of the exported
+ * insertFact -- a prior version took it as a public third argument, which let any caller backdate
+ * system time arbitrarily (e.g. "we knew this back in 2015") with zero audit trail. If a caller
+ * still reaches past the TypeScript signature (plain JS, `as any`) and passes a third positional
+ * argument to the exported insertFact, it is simply ignored: the row is always recorded as of
+ * now().
+ */
+async function insertFactVersion(client: Queryable, f: FactInput, recordedFrom?: string): Promise<void> {
   const dup = await client.query(
     `select 1 from fact_versions
      where fact_id = $1 and attr = $2 and value = $3
@@ -91,17 +104,18 @@ export async function insertFact(client: Queryable, f: FactInput, recordedFrom?:
     [f.factId, f.attr, f.value, f.validFrom, f.validTo],
   );
   if ((dup.rowCount ?? 0) > 0) return;
-  // recordedFrom lets recordFact() hand in the exact clock.timestamp.now() instant it used to
-  // CLOSE the conflicting row's recorded range -- Postgres's own now() is frozen to the
-  // enclosing transaction's start time (every statement in one tx sees the same now()), so
-  // relying on the column DEFAULT here would make this row's recorded START predate the old
-  // row's just-closed recorded END within the same transaction, re-triggering the EXCLUDE.
   await client.query(
     `insert into fact_versions (org_id, fact_id, kind, attr, value, valid, recorded, source)
      values ($1, $2, $3, $4, $5, tstzrange($6::timestamptz, $7::timestamptz, '[)'),
              tstzrange(coalesce($9::timestamptz, now()), NULL, '[)'), $8)`,
     [f.orgId, f.factId, f.kind, f.attr, f.value, f.validFrom, f.validTo, f.source ?? null, recordedFrom ?? null],
   );
+}
+
+/** Insert one fact version, recorded as of now(). See insertFactVersion's doc comment for why
+ *  recordedFrom is not part of this public signature. */
+export async function insertFact(client: Queryable, f: FactInput): Promise<void> {
+  return insertFactVersion(client, f);
 }
 
 /** Close the currently-open version of (factId, attr): bound its valid range's upper end at `at`.
@@ -121,17 +135,42 @@ export async function closeFact(client: Queryable, factId: string, attr: string,
  * one row"; Graphiti's resolve_edge_contradictions, edge_operations.py:715-783; ai-memory's
  * advisory-only contradiction_lint.rs: "writes no supersession and deletes nothing"). Looks for an
  * existing LIVE row (recorded still open) for the same (org, fact_id, attr) whose valid range
- * overlaps f's and whose value differs. If found: closes that row's RECORDED range now (never its
- * value, never a DELETE), inserts f as a new row, and writes one contradiction_flags row for a
- * person to review. If no such row exists (or the value is identical -- idempotent re-insertion),
- * it is just a normal insertFact.
+ * overlaps f's and whose value differs. If no such row exists (or the value is identical --
+ * idempotent re-insertion), it is just a normal insertFact.
+ *
+ * T47 fresh-review fix (P0): a mere valid-overlap + different-value match is NOT always a
+ * contradiction. This distinguishes the two standard bitemporal cases (XTDB valid vs transaction
+ * time, docs.xtdb.com/about/time-in-xtdb; SQL:2011 application-time vs system-versioned time;
+ * Graphiti's invalid_at (valid time) vs expired_at (system time), edge_operations.py
+ * resolve_edge_contradictions -- which sets invalid_at to the NEW edge's valid_at, the same
+ * direction test used here):
+ *
+ *   - f.validFrom is AFTER the conflicting row's validFrom -> WORLD CHANGE (forward supersession,
+ *     e.g. a decision going OPEN -> DECIDED later). The old belief was never wrong, the WORLD
+ *     changed, so this performs a standard SQL:2011 period split instead of a correction: the old
+ *     row's RECORDED range is closed now (its value/valid are never touched), a new row re-states
+ *     the OLD value for the now-bounded period [old.validFrom, f.validFrom) with a fresh recorded
+ *     range starting now, and f itself is inserted as the live version from f.validFrom onward.
+ *     No flag: asOf() for any instant inside the old row's original window keeps returning the
+ *     old value, and knownAt() for "what we believed before this change" is unaffected.
+ *   - f.validFrom is the SAME AS OR EARLIER THAN the conflicting row's validFrom (a retroactive
+ *     overlap) -> CORRECTION: we now believe something different was already true for a window we
+ *     already recorded. Closes the old row's RECORDED range now (never its value, never a
+ *     DELETE), inserts f as a new row, and writes one contradiction_flags row for a person to
+ *     review.
+ *
+ * Concurrency note: two recordFact calls racing on the same (org_id, fact_id, attr) can both try
+ * to write recorded ranges that overlap once committed -- fact_versions_no_overlap (EXCLUDE USING
+ * gist over valid && recorded) rejects the loser with a Postgres exclusion-violation error
+ * (SQLSTATE 23P01), it does not silently corrupt history. Callers must catch 23P01 and retry the
+ * whole recordFact call (typically after a short backoff) rather than treating it as fatal.
  */
 export async function recordFact(
   client: Queryable,
   f: FactInput,
 ): Promise<{ invalidated: boolean; flagId: number | null }> {
   const candidates = await client.query(
-    `select id, value from fact_versions
+    `select id, value, lower(valid) as valid_from from fact_versions
      where fact_id = $1 and attr = $2
        and upper_inf(recorded)
        and valid && tstzrange($3::timestamptz, $4::timestamptz, '[)')
@@ -145,11 +184,26 @@ export async function recordFact(
   }
 
   const now = new Date().toISOString();
+  const isWorldChange = new Date(f.validFrom).getTime() > new Date(conflicting.valid_from).getTime();
+
   await client.query(
     `update fact_versions set recorded = tstzrange(lower(recorded), $2::timestamptz, '[)') where id = $1`,
     [conflicting.id, now],
   );
-  await insertFact(client, f, now);
+
+  if (isWorldChange) {
+    // Period split: re-state the OLD value for the now-bounded period, then insert f.
+    await insertFactVersion(
+      client,
+      { orgId: f.orgId, factId: f.factId, kind: f.kind, attr: f.attr, value: conflicting.value, validFrom: conflicting.valid_from, validTo: f.validFrom },
+      now,
+    );
+    await insertFactVersion(client, f, now);
+    return { invalidated: false, flagId: null };
+  }
+
+  // Correction: close recorded (above), insert f, raise a flag.
+  await insertFactVersion(client, f, now);
   const newRow = await client.query(
     `select id from fact_versions where fact_id = $1 and attr = $2 and value = $3 and upper_inf(recorded) order by id desc limit 1`,
     [f.factId, f.attr, f.value],
