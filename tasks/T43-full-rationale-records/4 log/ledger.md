@@ -3,4 +3,6 @@ ledger (newest last, nothing deleted)
     2026-11-01 17:49      new → proposed      Agent-facing decision output (MCP tools, hook text, .mole/decisions records, T36 ADR import) carries the full Decision + Rationale/Context + Consequences text, 
     2026-11-01 17:51      proposed → ready      owner t43-builder
     2026-11-01 17:51      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T43-full-rationale-records · branch ledger/t43-full-rationale-records · base 9eb8fad
+    2026-11-01 18:35      running → submitted      report: npm run check: 572 passed, 15 skipped, 0 failed (84/91 files, 7 skipped files pre-existing, need live Postgres). M-B dev B-arm rerun with PRODUCT importer: 11/12 CORRECT, 1/12 INCORRECT, 0/12 NOT_ATTEMPTED vs v2 
+    2026-11-01 18:35      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T43-full-rationale-records → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
