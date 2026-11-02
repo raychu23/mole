@@ -10,5 +10,8 @@
     "bench",
     "test",
     "bench/**/*.json"
+  ],
+  "references": [
+    { "path": "../decisions" }
   ]
 }
