@@ -191,6 +191,13 @@ const SCOPE_BUDGET = 1500; // M31a: the governing-decisions block's id/title/sta
 // additionalContext/systemMessage cap) even with several decisions in play; decisionsBlock's outer clip()
 // in the hook scripts is the absolute last-resort cutoff, this budget is what should make that rare.
 const RATIONALE_BUDGET_PER_DECISION = 1200;
+// T43 review fix P1 (reviewer-1 FAIL on T43's first submission): decisionsBlock's per-decision budget had
+// no AGGREGATE cap of its own, so with ~8+ decisions in play the rationale blocks together blew past the
+// outer clip() (MAX_CHARS 9,500, see pre-tool-use.mjs/session-start.mjs) and clip() cut mid-block, mid-
+// sentence -- never what "never mid-Decision" was supposed to mean. Kept comfortably under MAX_CHARS minus
+// the SCOPE_BUDGET (1,500) one-liner list and some margin for the header/pointer line, so clip() is a true
+// no-op on this function's own output and never has to cut inside a kept rationale block.
+const RATIONALE_AGGREGATE_BUDGET = 6000;
 
 function parseFrontMatterField(text, key) {
   const m = new RegExp(`^${key}:\\s*'?([^'\\n]*)'?\\s*$`, 'm').exec(text);
@@ -212,11 +219,16 @@ function bucketOf(heading) {
   const h = heading.toLowerCase();
   if (/^decision\b/.test(h) || /^decision outcome\b/.test(h)) return 'decision';
   if (/^consequences\b/.test(h)) return 'consequences';
-  if (/^context\b/.test(h) || /^rationale\b/.test(h) || /^decision drivers\b/.test(h) || /^considered options\b/.test(h)) return 'context';
+  if (/^context\b/.test(h) || /^rationale\b/.test(h) || /^decision drivers\b/.test(h) || /^considered options\b/.test(h) || /^links\b/.test(h)) return 'context';
   return undefined;
 }
 
-function sectionsOfText(text) {
+/** Mirrors packages/decisions/src/rationale.ts's sectionsOf exactly (P0/P2 review fix: the two were
+ * drifting -- this one kept a one-off `^entity references\b` hack the TS side never had, and both used to
+ * silently drop an unmatched sibling heading next to a matched one, e.g. Backstage adr001's Discussion/Risks
+ * next to Decision). Exported so a parity test can run both implementations on the same fixtures and fail
+ * on any difference, instead of relying on eyeballing two copy-pasted functions staying in sync. */
+export function sectionsOfText(text) {
   const body = stripFrontMatterBody(text);
   const lines = body.split(/\r?\n/);
   const idx = [];
@@ -228,18 +240,24 @@ function sectionsOfText(text) {
     const whole = body.trim();
     return whole ? { decision: whole } : {};
   }
-  const out = {};
-  for (let n = 0; n < idx.length; n++) {
-    const bucket = bucketOf(idx[n].heading);
-    if (!bucket) continue;
-    const end = idx[n + 1]?.line ?? lines.length;
-    const content = lines.slice(idx[n].line + 1, end).join('\n').trim();
-    if (!content) continue;
-    out[bucket] = out[bucket] ? `${out[bucket]}\n\n${content}` : content;
-  }
-  if (Object.keys(out).length === 0) {
+  const anyMatched = idx.some(({ heading }) => bucketOf(heading) !== undefined);
+  if (!anyMatched) {
     const whole = body.trim();
     return whole ? { decision: whole } : {};
+  }
+  const out = {};
+  for (let n = 0; n < idx.length; n++) {
+    const { line, heading } = idx[n];
+    const end = idx[n + 1]?.line ?? lines.length;
+    const content = lines.slice(line + 1, end).join('\n').trim();
+    if (!content) continue;
+    const bucket = bucketOf(heading);
+    if (bucket) {
+      out[bucket] = out[bucket] ? `${out[bucket]}\n\n${content}` : content;
+    } else {
+      const labeled = `${heading}: ${content}`;
+      out.context = out.context ? `${out.context}\n\n${labeled}` : labeled;
+    }
   }
   return out;
 }
@@ -252,8 +270,9 @@ function clipWords(s, n) {
 }
 
 /** Named sections, Decision first (never truncated while Context/Consequences still have budget to give up
- * -- "never mid-Decision"), within `budget` characters total. '' when there is nothing to say. */
-function formatSectionsText(s, budget) {
+ * -- "never mid-Decision"), within `budget` characters total. '' when there is nothing to say. Exported for
+ * the TS/JS parity test (P2). */
+export function formatSectionsText(s, budget) {
   const order = [['Decision', s.decision], ['Context/Rationale', s.context], ['Consequences', s.consequences]].filter(([, v]) => v);
   if (!order.length) return '';
   const parts = [];
@@ -344,7 +363,11 @@ export function governingDecisions(mole, root, files, { liveFlags = false } = {}
 /** One rule line per decision (M31a: "each as a rule to follow with its flag and owner"), clipped to SCOPE_BUDGET
  * chars; then (T43) each decision that made the cut gets its own full-rationale block appended, named by section
  * (Decision/Context-Rationale/Consequences) and bounded by RATIONALE_BUDGET_PER_DECISION each -- never mid-Decision,
- * and never replacing the one-liner summary above it (done-when 2: the compact line still always comes through). */
+ * and never replacing the one-liner summary above it (done-when 2: the compact line still always comes through).
+ * The rationale blocks together are ALSO capped by RATIONALE_AGGREGATE_BUDGET (P1 review fix): once that budget is
+ * spent, remaining decisions keep their one-liner in the list above but their rationale block is dropped WHOLE
+ * (never clipped mid-block) with a trailing pointer naming how many and where to get the rest -- so the hook
+ * scripts' outer clip() never has to cut inside a kept block. */
 export function decisionsBlock(decisions, header = 'Mole decisions governing the files in play') {
   if (!decisions.length) return '';
   const lines = decisions.map((d) => `- ${d.id} [${d.flag ?? d.status}] ${d.status} \u2014 ${d.title} \u2014 owner: ${d.approver ?? 'unassigned'} (${d.file})`);
@@ -365,7 +388,25 @@ export function decisionsBlock(decisions, header = 'Mole decisions governing the
     const cut = lines.length - keptLines.length;
     out = `${head}\n${keptLines.join('\n')}${cut > 0 ? `\n(${cut} more: mole decisions --json)` : ''}`;
   }
-  const rationaleBlocks = kept.filter((d) => d.rationale).map((d) => `why ${d.id}:\n${d.rationale}`);
+  const candidates = kept.filter((d) => d.rationale);
+  const rationaleBlocks = [];
+  let used = 0;
+  let dropped = 0;
+  for (const d of candidates) {
+    const block = `why ${d.id}:\n${d.rationale}`;
+    if (used + block.length + 2 <= RATIONALE_AGGREGATE_BUDGET) {
+      rationaleBlocks.push(block);
+      used += block.length + 2;
+    } else {
+      dropped += 1;
+    }
+  }
+  if (dropped > 0) {
+    rationaleBlocks.push(
+      `(${dropped} more rationale block${dropped === 1 ? '' : 's'} omitted (aggregate rationale budget ${RATIONALE_AGGREGATE_BUDGET} chars): ` +
+        `their one-line summary is still in the list above -- run \`mole decisions --json\` or the MCP mole_decisions tool for the full text)`,
+    );
+  }
   return rationaleBlocks.length ? `${out}\n\n${rationaleBlocks.join('\n\n')}` : out;
 }
 
