@@ -12,3 +12,9 @@ export * from './cascade/index.js';
 export * from './tree/index.js';
 export { CALL_RULES_FILE, checkRules, DEPCRUISE_FILE, depcruiseRuleSet, emitConfig, formatRules, loadRules, rulesCli } from './rules/index.js';
 export type { RuleDecision, RuleKind, RuleSpec, RulesLoad, RulesOptions, RulesResult, SkippedRules, Violation } from './rules/index.js';
+// T48: Argdown-sourced argument relations (supports/attacks/undercuts) + the packages/reasoning adapter
+export { argumentFramework } from './argdown/framework.js';
+export type { ArgumentFramework } from './argdown/framework.js';
+export { parseArgdown } from './argdown/parser.js';
+export type { ArgdownItem, ArgdownItemKind, ArgdownRelation, ArgdownRelationType, ParsedArgdown } from './argdown/parser.js';
+export { loadArgdown } from './argdown/loader.js';
