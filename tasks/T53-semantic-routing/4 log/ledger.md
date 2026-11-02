@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-11-02 06:09      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T53-semantic-routing → exit 0 (at new Promise (<anonymous>))
     2026-11-02 06:18      submitted → verified      reviewer reviewer-T53-r1 (deleg_c0f42eec task 0) · findings: done-when 4 dev gates missed and accepted as deviation: routing 0.71 < 0.85, cost 43% > 30% of RAG, P2 tokenizer drops non-ASCII-letter tokens (CJK), P2 listwi
     2026-11-02 06:18      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T53-semantic-routing → exit 0 (at new Promise (<anonymous>))
+    2026-11-02 06:25      verified → integrated      merge fbc3ac0 · combined checks exit 0 · note: npm run check on main fbc3ac0 exit 0 (after excluding context/ from vitest)
+    2026-11-02 06:25      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (at new Promise (<anonymous>))
 ```
