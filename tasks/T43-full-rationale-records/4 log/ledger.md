@@ -10,4 +10,6 @@ ledger (newest last, nothing deleted)
     2026-11-01 20:43      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T43-full-rationale-records → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-11-01 21:50      submitted → verified      reviewer reviewer-T43-r2 (fresh subagent deleg_463af3a3 task 1), r1 FAIL deleg_dd5f59de task 0 · findings: r1: P0 dropped sections, P1 hook mid-Decision clip, P2 TS/mjs drift, P2 MCP total budget -> all fixed, M-B dev wi
     2026-11-01 21:50      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T43-full-rationale-records → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-11-01 21:57      verified → integrated      merge 3d9fe50 · combined checks exit 0 · note: npm run check on main 3d9fe50 exit 0
+    2026-11-01 21:57      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (at new Promise (<anonymous>))
 ```

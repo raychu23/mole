@@ -1,22 +1,22 @@
 ---
-state: verified
+state: integrated
 owner: t43-builder
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t43-full-rationale-records
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T43-full-rationale-records
 base: 9eb8fad
 reviewer: reviewer-T43-r2 (fresh subagent deleg_463af3a3 task 1); r1 FAIL deleg_dd5f59de task 0
-updated: 2026-11-01 21:50
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+updated: 2026-11-01 21:57
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-11-01 17:51
 ---
 ```notes
 T43-full-rationale-records      ledger task (rules.md §3 code features)      project tasks
     goal                    Agent-facing decision output (MCP tools, hook text, .mole/decisions records, T36 ADR import) carries the full Decision + Rationale/Context + Consequences text, not only the 240-char summaryOf() list summary. Evidence: M-B v2 full-rationale records 18/22 correct vs 1/22 (prelim-11-01/mb-why/v2/results.md); v1 thin records 0.083.
     done-when               1 failing tests first: an imported ADR with a 1,500-char rationale reaches the MCP get/why tool and hook output intact (sections named) · 2 summaryOf stays for list/compact views only · 3 output size bounded by a documented budget with section-aware truncation (never mid-Decision) · 4 re-run M-B dev B arm with records produced by the PRODUCT importer (not hand-made v2) → CORRECT within 1 of v2 hand-made 9/12 · 5 npm run check passes
-    status                  2026-11-01 verified      reviewer reviewer-T43-r2 (fresh subagent deleg_463af3a3 task 1), r1 FAIL deleg_dd5f59de task 0 · findings: r1: P0 droppe
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-11-01 integrated      merge 3d9fe50 · combined checks exit 0 · note: npm run check on main 3d9fe50 exit 0
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    one worker
     boundary                packages/decisions/** packages/mcp/** packages/daemon/** (hook text) + their tests; read-only elsewhere
