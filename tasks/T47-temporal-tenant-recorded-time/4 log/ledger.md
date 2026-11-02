@@ -11,4 +11,5 @@ ledger (newest last, nothing deleted)
     2026-11-01 21:42      submitted → running      changes requested: FAIL: recordFact .find() only closed one of two live rows overlapping a retroactive change spanning 2+ versions (OPEN[Jan1,Mar1)+DECIDED[Mar1,inf) after forward split, then REJECTED from Feb1 open-ende
     2026-11-01 21:48      running → submitted      report: Fix #2: recordFact now follows SQL:2011 UPDATE...FOR PORTION OF semantics (XTDB multi-version put). Locks every live row overlapping the new valid range (SELECT...FOR UPDATE), closes each row's recorded range, re
     2026-11-01 21:48      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T47-temporal-tenant-recorded-time → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
+    2026-11-01 22:10      submitted → running      changes requested: Review 3 FAIL: same-value overlapping recordFact fast path crashed 23P01 on 83/200 randomized sequences (reviewer's property-test-review.mjs, repro6-samevalue-crash.mjs). Fixed via standard temporal co
 ```
