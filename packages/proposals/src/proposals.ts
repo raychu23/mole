@@ -7,9 +7,9 @@
 // change. Nothing here approves, commits, merges or touches the approved checkout. Files a proposal
 // changes that are not structured records are listed as notEvaluated, never interpreted.
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { isAbsolute, join, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path';
 import { argumentFramework, loadGraph, type DecisionGraph, type GraphNode } from '@mole/decisions';
 import { evaluate, type Label } from '@mole/reasoning';
 
@@ -25,7 +25,8 @@ export interface ProposalMeta {
 }
 
 export type ArgState = Label | 'absent';
-export type DecisionState = 'holds' | 'contested' | 'defeated' | 'absent';
+/** uncited = the record exists but cites no argument (so the engine cannot judge it); absent = no record */
+export type DecisionState = 'holds' | 'contested' | 'defeated' | 'uncited' | 'absent';
 
 export interface ArgumentChange {
   id: string;
@@ -94,6 +95,19 @@ export function readMeta(path: string): ProposalMeta {
   return meta;
 }
 
+/** realpath of the nearest existing ancestor + the not-yet-existing remainder */
+function realExisting(p: string): string {
+  const rest: string[] = [];
+  let cur = p;
+  while (!existsSync(cur)) {
+    rest.unshift(basename(cur));
+    const up = dirname(cur);
+    if (up === cur) break;
+    cur = up;
+  }
+  return join(realpathSync(cur), ...rest);
+}
+
 export interface CreateOptions {
   repo: string;
   name: string;
@@ -109,6 +123,11 @@ export function createProposal(opts: CreateOptions): ProposalMeta {
   }
   if (!isAbsolute(opts.path)) throw new ProposalError(`proposal path must be absolute: ${opts.path}`);
   if (existsSync(opts.path)) throw new ProposalError(`proposal path already exists: ${opts.path}`);
+  // review 1 MEDIUM: never nest a worktree inside the repository's git directory (prior-art.md safety rule)
+  // compare real paths: /var vs /private/var (macOS) or a symlinked parent must not slip past the check
+  const common = realpathSync(resolve(repo, git(repo, ['rev-parse', '--git-common-dir'])));
+  const target = realExisting(resolve(opts.path));
+  if (target === common || target.startsWith(common + sep)) throw new ProposalError(`proposal path is inside the repository git directory: ${opts.path}`);
   const branch = `mole/proposal/${opts.name}`;
   if (!gitOk(repo, ['check-ref-format', '--branch', branch])) throw new ProposalError(`invalid proposal name '${opts.name}' (git rejects branch ${branch})`);
   if (gitOk(repo, ['show-ref', '--verify', '--quiet', `refs/heads/${branch}`])) throw new ProposalError(`proposal branch already exists: ${branch}`);
@@ -169,7 +188,7 @@ function statementText(root: string, file: string, line: number): string {
 
 function decisionState(cited: string[], labels: Record<string, Label>): DecisionState {
   const ls = cited.map((id) => labels[id]).filter((l): l is Label => l !== undefined);
-  if (ls.length === 0) return 'absent';
+  if (ls.length === 0) return 'uncited'; // review 1 HIGH: 'absent' here hid deleting an uncited record
   if (ls.includes('out')) return 'defeated';
   if (ls.includes('undecided')) return 'contested';
   return 'holds';
@@ -189,6 +208,10 @@ function changedFiles(worktree: string, rev: string): string[] {
 export function evaluateProposal(path: string): ProposalReport {
   const meta = readMeta(path);
   const worktree = topLevel(path);
+  // review 1 LOW: a hand-edited or pruned baseline must fail as a clean error, not a git stack trace
+  if (!gitOk(worktree, ['cat-file', '-e', `${meta.baselineRevision}^{commit}`])) {
+    throw new ProposalError(`baseline commit not found: ${meta.baselineRevision} (proposal ${meta.name})`);
+  }
   const baseDir = baselineSnapshot(worktree, meta.baselineRevision);
   try {
     const before = evaluateRecords(baseDir);

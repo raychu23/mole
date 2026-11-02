@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -119,6 +119,39 @@ describe('mole-proposals CLI (T56)', () => {
     const plain = tmp('mole-not-git-');
     expect(cliFails(['create', '--repo', plain, '--name', 'x', '--path', join(tmp('w-'), 'x')])).toMatch(/git/i);
     expect(cliFails(['evaluate', '--path', plain])).toMatch(/proposal/i);
+  });
+
+  // review 1 (deleg_99bfc656) HIGH: a deleted decision with no cites went absent -> absent and was dropped
+  it('reports a deleted decision record even when it cites no arguments', () => {
+    const root = repo();
+    write(root, '.mole/decisions/d2.md', ['---', 'id: D2', 'title: Log every read', 'status: accepted', '---', ''].join('\n'));
+    git(root, ['add', '.']);
+    git(root, ['commit', '-qm', 'd2']);
+    const p = join(tmp('mole-proposal-wt-'), 'drop');
+    cli(['create', '--repo', root, '--name', 'drop', '--path', p]);
+    rmSync(join(p, '.mole/decisions/d2.md'));
+    const r = cli(['evaluate', '--path', p]);
+    expect(r.changes.decisions).toEqual([expect.objectContaining({ id: 'D2', before: 'uncited', after: 'absent', because: [] })]);
+  });
+
+  // review 1 MEDIUM: prior-art.md promised "outside Git's common directory"
+  it('refuses a proposal path inside the repository git directory', () => {
+    const root = repo();
+    expect(cliFails(['create', '--repo', root, '--name', 'evil', '--path', join(root, '.git', 'evil')])).toMatch(/git directory/i);
+    expect(git(root, ['branch', '--list', 'mole/proposal/*'])).toBe('');
+  });
+
+  // review 1 LOW: a hand-edited baseline hash gave a raw stack trace
+  it('reports a missing baseline commit cleanly', () => {
+    const root = repo();
+    const p = join(tmp('mole-proposal-wt-'), 'spoof');
+    cli(['create', '--repo', root, '--name', 'spoof', '--path', p]);
+    const meta = resolve(p, execFileSync('git', ['-C', p, 'rev-parse', '--git-path', 'mole-proposal.json'], { encoding: 'utf8' }).trim());
+    const m = JSON.parse(readFileSync(meta, 'utf8'));
+    writeFileSync(meta, JSON.stringify({ ...m, baselineRevision: 'f'.repeat(40) }));
+    const err = cliFails(['evaluate', '--path', p]);
+    expect(err).toMatch(/baseline commit not found/i);
+    expect(err).not.toMatch(/\n\s+at /);
   });
 
   it('compare refuses proposals made from different baselines', () => {

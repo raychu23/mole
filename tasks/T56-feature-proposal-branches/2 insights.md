@@ -23,3 +23,9 @@ smoke             real python-tuf clone, ADR 0002 as records + two proposals (su
 limits            supports edges are display-only (Dung engine) · decisions without `cites` to arguments never change
                   state · no value-order (audience) input yet · prose proposals not interpreted, only listed
 ```
+
+## 11-02 17:55 review 1 (deleg_99bfc656) FAIL → fixed tests-first (3 red → green, 8/8)
+- HIGH a deleted decision with no `cites` went absent → absent and vanished → new state `uncited` (record exists, engine can't judge it)
+- MEDIUM `--path` inside `.git` was allowed (prior-art.md said it wasn't) → refused, compared by real path (/var vs /private/var, symlinked parents)
+- LOW hand-edited baseline hash → raw stack trace → clean "baseline commit not found"
+- solid per reviewer: baseline never written · name injection rejected · deterministic · labels = @mole/reasoning direct · 3,000 records in ~2 s
