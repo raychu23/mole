@@ -49,7 +49,9 @@ function hasRuleRecords(root: string, head: string): boolean {
  *  never block the rest of prCheck. */
 async function ruleViolationsAtHead(root: string, head: string, mergeBase: string, recordPaths: string[]): Promise<Map<string, Array<{ file: string; line: number; rule: string }>>> {
   const byDecision = new Map<string, Array<{ file: string; line: number; rule: string }>>();
-  if (!hasRuleRecords(root, head)) {
+  // the gate must look at the MERGE BASE too: gating on head alone let a PR skip the whole rules run by deleting the
+  // record or stripping its rules: key in the same diff (T49 review FAIL, done-when 2)
+  if (!hasRuleRecords(root, mergeBase) && !hasRuleRecords(root, head)) {
     return byDecision;
   }
   const tmp = mkdtempSync(join(tmpdir(), 'mole-rules-head-'));

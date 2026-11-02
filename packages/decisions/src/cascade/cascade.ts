@@ -155,7 +155,7 @@ export async function cascadeCheck(opts: CascadeOptions): Promise<CascadeResult>
     // T49 batched escalation (FrugalGPT/PR-Agent): ONE call for every escalating decision on this check, instead
     // of one call per decision -- the fix for the M2 v2 cost regression (cascade > llm-reviewer per-check cost
     // because multi-decision checks paid for 1.6 calls on average).
-    const perDecisionBudget = Math.max(2_000, Math.floor(CHARS_PER_DECISION_BUDGET));
+    const perDecisionBudget = Math.max(2_000, Math.floor(CHARS_PER_DECISION_BUDGET / escalations.length)); // split one call's budget evenly (review: was N x the budget)
     const entries = escalations.map(({ g, paths, text }) => ({ id: g.id, text, diff: clipDiff(gitDiffFor(opts.root, pr.mergeBase, pr.head, paths), perDecisionBudget) }));
     const ids = entries.map((e) => e.id);
     const { text: resp, usage } = await opts.llm!.complete(MULTI_ESCALATE_PROMPT(entries));
