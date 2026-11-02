@@ -1,0 +1,133 @@
+{
+  "baselineRevision": "4c484def4ac16d76d434b9fe926d9b26d99c9414",
+  "proposals": [
+    {
+      "name": "lts-window",
+      "branch": "mole/proposal/lts-window",
+      "path": "/Users/a1/.hermes/cache/scratch/t56-smoke/lts-window",
+      "baselineRevision": "4c484def4ac16d76d434b9fe926d9b26d99c9414",
+      "changes": {
+        "arguments": [
+          {
+            "id": "abandon",
+            "text": "Abandon the old code once the refactored code is released.",
+            "before": "out",
+            "after": "in",
+            "source": {
+              "file": ".mole/arguments/0002.argdown",
+              "line": 3
+            }
+          },
+          {
+            "id": "best-effort",
+            "text": "Support the old code on a best-effort basis once the refactored code is released.",
+            "before": "in",
+            "after": "out",
+            "source": {
+              "file": ".mole/arguments/0002.argdown",
+              "line": 1
+            }
+          },
+          {
+            "id": "finite",
+            "text": "We only have finite resources and want to focus them on moving the project forward.",
+            "before": "in",
+            "after": "out",
+            "source": {
+              "file": ".mole/arguments/0002.argdown",
+              "line": 5
+            }
+          },
+          {
+            "id": "parallel",
+            "text": "Maintain the old code in parallel for a fixed period.",
+            "before": "out",
+            "after": "in",
+            "source": {
+              "file": ".mole/arguments/0002.argdown",
+              "line": 2
+            }
+          },
+          {
+            "id": "pip-users",
+            "text": "PyPI/pip integration ships the old client to most users for at least 12 more months.",
+            "before": "absent",
+            "after": "in",
+            "source": {
+              "file": ".mole/arguments/0002.argdown",
+              "line": 9
+            }
+          }
+        ],
+        "decisions": [
+          {
+            "id": "ADR-0002",
+            "title": "Support pre-1.0 code on a best-effort basis",
+            "source": "docs/adr/0002-pre-1-0-deprecation-strategy.md",
+            "record": {
+              "file": ".mole/decisions/adr-0002.md",
+              "line": 1
+            },
+            "before": "holds",
+            "after": "defeated",
+            "because": [
+              "best-effort"
+            ]
+          }
+        ]
+      },
+      "notEvaluated": [],
+      "problems": []
+    },
+    {
+      "name": "drop-old",
+      "branch": "mole/proposal/drop-old",
+      "path": "/Users/a1/.hermes/cache/scratch/t56-smoke/drop-old",
+      "baselineRevision": "4c484def4ac16d76d434b9fe926d9b26d99c9414",
+      "changes": {
+        "arguments": [
+          {
+            "id": "best-effort",
+            "text": "Support the old code on a best-effort basis once the refactored code is released.",
+            "before": "in",
+            "after": "out",
+            "source": {
+              "file": ".mole/arguments/0002.argdown",
+              "line": 1
+            }
+          },
+          {
+            "id": "no-users",
+            "text": "Download stats show no remaining users of the pre-1.0 client.",
+            "before": "absent",
+            "after": "in",
+            "source": {
+              "file": ".mole/arguments/0002.argdown",
+              "line": 9
+            }
+          }
+        ],
+        "decisions": [
+          {
+            "id": "ADR-0002",
+            "title": "Support pre-1.0 code on a best-effort basis",
+            "source": "docs/adr/0002-pre-1-0-deprecation-strategy.md",
+            "record": {
+              "file": ".mole/decisions/adr-0002.md",
+              "line": 1
+            },
+            "before": "holds",
+            "after": "defeated",
+            "because": [
+              "best-effort"
+            ]
+          }
+        ]
+      },
+      "notEvaluated": [
+        "IDEA.md"
+      ],
+      "problems": []
+    }
+  ]
+}

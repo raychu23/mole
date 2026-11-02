@@ -66,6 +66,9 @@
     },
     {
       "path": "packages/reviews"
+    },
+    {
+      "path": "packages/proposals"
     }
   ]
 }
