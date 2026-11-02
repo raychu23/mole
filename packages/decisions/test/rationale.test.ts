@@ -32,6 +32,13 @@ describe('sectionsOf: MADR / Nygard section extraction', () => {
     expect(s.context).toBeUndefined();
   });
 
+  it('also falls back to the whole body when headings exist but none match a recognized bucket (e.g. a spec-style ADR using Background/Format/Envelope instead of Context/Decision/Consequences)', () => {
+    const text = '## Background\n\nSome history.\n\n## Format\n\nThe actual shape chosen and why.\n';
+    const s = sectionsOf(text);
+    expect(s.decision).toContain('Some history');
+    expect(s.decision).toContain('The actual shape chosen and why');
+  });
+
   it('strips YAML front matter before scanning for headings', () => {
     const text = `---\nid: x\ntitle: "## Decision inside front matter, must be ignored"\n---\n\n## Decision\n\nReal decision text.\n`;
     const s = sectionsOf(text);

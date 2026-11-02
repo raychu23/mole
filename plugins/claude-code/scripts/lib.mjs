@@ -184,14 +184,100 @@ export function collisionsStopText(r, sessionId) {
 // agent's effect on them back to the person (Raymond 10-29 15:30). Parsed here with a plain regex, not @mole/decisions:
 // the plugin scripts stay dependency-free (see the file header), and this only needs id/title/status/approver/scope,
 // never the full citator graph. Flags (red/yellow/green/grey) still come from the real engine via `mole decisions --json`.
-const SCOPE_BUDGET = 1500; // M31a: the governing-decisions block fits in 1,500 characters
+const SCOPE_BUDGET = 1500; // M31a: the governing-decisions block's id/title/status/owner lines fit in 1,500 characters
+// T43: each decision's full rationale (Decision + Context/Rationale + Consequences, MADR/Nygard section
+// names -- the vocabulary graph.ts's loadAdrDir already recognizes for status) gets its own, separate,
+// documented budget per decision, added after the one-liner. Kept well under MAX_CHARS (9500, Claude Code's
+// additionalContext/systemMessage cap) even with several decisions in play; decisionsBlock's outer clip()
+// in the hook scripts is the absolute last-resort cutoff, this budget is what should make that rare.
+const RATIONALE_BUDGET_PER_DECISION = 1200;
 
 function parseFrontMatterField(text, key) {
   const m = new RegExp(`^${key}:\\s*'?([^'\\n]*)'?\\s*$`, 'm').exec(text);
   return m ? m[1].trim() : undefined;
 }
 
-/** .mole/decisions/*.md, parsed by hand: id, title, status, approver, scope file list (symbol/folder tail dropped). */
+/** Dependency-free MADR/Nygard/adr-tools section extraction (mirrors packages/decisions/src/rationale.ts's
+ * sectionsOf exactly in spirit -- kept as a separate, duplicated implementation here on purpose, since
+ * these hook scripts stay dependency-free, see the file header comment above). Returns {} with the whole
+ * stripped body as `decision` when no recognized '##'/'###' heading is found. */
+function stripFrontMatterBody(text) {
+  const lines = text.split(/\r?\n/);
+  if ((lines[0] ?? '').trim() !== '---') return text;
+  const end = lines.findIndex((l, i) => i > 0 && l.trim() === '---');
+  return end < 0 ? text : lines.slice(end + 1).join('\n');
+}
+
+function bucketOf(heading) {
+  const h = heading.toLowerCase();
+  if (/^decision\b/.test(h) || /^decision outcome\b/.test(h)) return 'decision';
+  if (/^consequences\b/.test(h)) return 'consequences';
+  if (/^context\b/.test(h) || /^rationale\b/.test(h) || /^decision drivers\b/.test(h) || /^considered options\b/.test(h)) return 'context';
+  return undefined;
+}
+
+function sectionsOfText(text) {
+  const body = stripFrontMatterBody(text);
+  const lines = body.split(/\r?\n/);
+  const idx = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = /^#{2,3}\s+(.+?)\s*$/.exec(lines[i] ?? '');
+    if (m) idx.push({ line: i, heading: m[1] });
+  }
+  if (idx.length === 0) {
+    const whole = body.trim();
+    return whole ? { decision: whole } : {};
+  }
+  const out = {};
+  for (let n = 0; n < idx.length; n++) {
+    const bucket = bucketOf(idx[n].heading);
+    if (!bucket) continue;
+    const end = idx[n + 1]?.line ?? lines.length;
+    const content = lines.slice(idx[n].line + 1, end).join('\n').trim();
+    if (!content) continue;
+    out[bucket] = out[bucket] ? `${out[bucket]}\n\n${content}` : content;
+  }
+  if (Object.keys(out).length === 0) {
+    const whole = body.trim();
+    return whole ? { decision: whole } : {};
+  }
+  return out;
+}
+
+function clipWords(s, n) {
+  if (s.length <= n) return s;
+  const cut = s.slice(0, Math.max(0, n - 1));
+  const space = cut.lastIndexOf(' ');
+  return `${(space > n * 0.6 ? cut.slice(0, space) : cut).trim()}\u2026`;
+}
+
+/** Named sections, Decision first (never truncated while Context/Consequences still have budget to give up
+ * -- "never mid-Decision"), within `budget` characters total. '' when there is nothing to say. */
+function formatSectionsText(s, budget) {
+  const order = [['Decision', s.decision], ['Context/Rationale', s.context], ['Consequences', s.consequences]].filter(([, v]) => v);
+  if (!order.length) return '';
+  const parts = [];
+  let remaining = budget;
+  for (const [label, text] of order) {
+    if (remaining <= 0) {
+      parts.push(`(${label} omitted: budget exhausted)`);
+      continue;
+    }
+    const line = `${label}: ${text}`;
+    if (line.length <= remaining) {
+      parts.push(line);
+      remaining -= line.length + 2;
+    } else {
+      const keep = Math.max(0, remaining - `${label}: `.length);
+      parts.push(`${label}: ${clipWords(text, keep)}`);
+      remaining = 0;
+    }
+  }
+  return parts.join('\n\n');
+}
+
+/** .mole/decisions/*.md, parsed by hand: id, title, status, approver, scope file list (symbol/folder tail dropped),
+ * plus (T43) its full rationale text, named by section and bounded by RATIONALE_BUDGET_PER_DECISION. */
 export function readDecisionRecords(root) {
   const dir = join(root, '.mole', 'decisions');
   const out = [];
@@ -226,6 +312,7 @@ export function readDecisionRecords(root) {
       approver: parseFrontMatterField(text, 'approver'),
       file: `.mole/decisions/${name}`,
       files, // repo-relative paths (folder targets keep their trailing '/')
+      rationale: formatSectionsText(sectionsOfText(text), RATIONALE_BUDGET_PER_DECISION), // T43, '' when none
     });
   }
   return out;
@@ -254,25 +341,32 @@ export function governingDecisions(mole, root, files, { liveFlags = false } = {}
   return records.map((d) => ({ ...d, flag: flags.get(d.id) })).sort((a, b) => a.id.localeCompare(b.id));
 }
 
-/** One rule line per decision (M31a: "each as a rule to follow with its flag and owner"), clipped to SCOPE_BUDGET chars. */
+/** One rule line per decision (M31a: "each as a rule to follow with its flag and owner"), clipped to SCOPE_BUDGET
+ * chars; then (T43) each decision that made the cut gets its own full-rationale block appended, named by section
+ * (Decision/Context-Rationale/Consequences) and bounded by RATIONALE_BUDGET_PER_DECISION each -- never mid-Decision,
+ * and never replacing the one-liner summary above it (done-when 2: the compact line still always comes through). */
 export function decisionsBlock(decisions, header = 'Mole decisions governing the files in play') {
   if (!decisions.length) return '';
   const lines = decisions.map((d) => `- ${d.id} [${d.flag ?? d.status}] ${d.status} \u2014 ${d.title} \u2014 owner: ${d.approver ?? 'unassigned'} (${d.file})`);
+  let kept = decisions;
   let out = `${header} (${decisions.length}):\n${lines.join('\n')}`;
   if (out.length > SCOPE_BUDGET) {
     // keep as many whole rule lines as fit, then say how many were cut (never truncate a line mid-decision)
     const head = `${header} (${decisions.length}):`;
-    const kept = [];
+    const keptLines = [];
+    kept = [];
     let len = head.length;
-    for (const l of lines) {
-      if (len + 1 + l.length > SCOPE_BUDGET - 24) break;
-      kept.push(l);
-      len += 1 + l.length;
+    for (let i = 0; i < lines.length; i++) {
+      if (len + 1 + lines[i].length > SCOPE_BUDGET - 24) break;
+      keptLines.push(lines[i]);
+      kept.push(decisions[i]);
+      len += 1 + lines[i].length;
     }
-    const cut = lines.length - kept.length;
-    out = `${head}\n${kept.join('\n')}${cut > 0 ? `\n(${cut} more: mole decisions --json)` : ''}`;
+    const cut = lines.length - keptLines.length;
+    out = `${head}\n${keptLines.join('\n')}${cut > 0 ? `\n(${cut} more: mole decisions --json)` : ''}`;
   }
-  return out;
+  const rationaleBlocks = kept.filter((d) => d.rationale).map((d) => `why ${d.id}:\n${d.rationale}`);
+  return rationaleBlocks.length ? `${out}\n\n${rationaleBlocks.join('\n\n')}` : out;
 }
 
 /** Decisions touched by a diff's files, with their CURRENT flag (Stop: "decisions the session's diff touched"). */
