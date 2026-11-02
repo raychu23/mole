@@ -1,21 +1,22 @@
 ---
-state: ready
+state: running
 owner: t49-builder
-repo:
-branch:
-worktree:
-base:
+repo: /Users/a1/Desktop/CS Code/Project/Mole
+branch: ledger/t49-verifier-wiring
+worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T49-verifier-wiring
+base: b9c2eda
 reviewer:
 updated: 2026-11-01 21:11
-status: ledger ready
-next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+status: ledger running
+next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+claimed: 2026-11-01 21:11
 ---
 ```notes
 T49-verifier-wiring      ledger task (rules.md §3 code features)      project tasks
     goal                    Borrow mature verifier mechanics: wire Mole's existing dependency-cruiser rules engine (rules/check.ts) into prCheck + cascade; paginate check-run annotations past 50 (reviewdog); baseline/shrink-only mode for new rules (dependency-cruiser --baseline); token budget + chunking + fallback for the cascade LLM tier (PR-Agent); Semgrep-style rule fixtures (semgrep --test discipline) for anchors. Source: Project/Mole/context/product-plan/systems/core-audit/verifier.md. Starts after T46 merges.
     done-when               1 failing tests first, 2 import/call rule violation reaches prCheck governed + cascadeCheck zero-llm tier, 3 cascade batches all escalating decisions for one change into ONE LLM call carrying only governing decisions' text + diff chunked to governed hunks, 4 cascade emits a routing output (decision ids that govern a change, zero-LLM: scope+anchors+rules, no LLM call), 5 re-run M2 v2 dev to tune, held-out run ONCE at the end with v2/run scripts, report Mole-routed check vs llm-reviewer vs RAG (recall/FA/cost/p95/routing accuracy), 6 npm run check
-    status                  2026-11-01 ready      owner t49-builder
-    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+    status                  2026-11-01 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T49-verifier-wiring · branch ledger/t49-verifier-wiring · base
+    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
     pinned
     mode                    one worker
     boundary                packages/decisions/src/{check,rules,cascade}/** + tests (not rationale.ts, not cli.ts decisions(), not packages/server)
