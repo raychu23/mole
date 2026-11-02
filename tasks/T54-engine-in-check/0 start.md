@@ -1,21 +1,22 @@
 ---
-state: ready
+state: running
 owner: t54-builder
-repo:
-branch:
-worktree:
-base:
+repo: /Users/a1/Desktop/CS Code/Project/Mole
+branch: ledger/t54-engine-in-check
+worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T54-engine-in-check
+base: f6d9af5
 reviewer:
-updated: 2026-11-02 10:49
-status: ledger ready
-next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+updated: 2026-11-02 10:50
+status: ledger running
+next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+claimed: 2026-11-02 10:50
 ---
 ```notes
 T54-engine-in-check      ledger task (rules.md §3 code features)      project tasks
     goal                    Put the reasoning engine (packages/reasoning, T42) and the argument links (T48: supports/attacks/undercuts, Argdown) into the change-check path, so a flagged change is judged against the decision's argument chain (objections answered/standing, team value order) rather than its text alone; makes resume B2's 're-runs the team's argument chain' true. Prior art first: Carneades proof standards (Gordon & Walton), ASPIC+ / abstract argumentation for requirements & design rationale (e.g. argumentation-based design rationale checking), ArgLLMs (arXiv 2405.02079).
     done-when               1 prior-art note · 2 failing tests first · 3 cascade verdict carries the engine's labels for the decision's arguments (which still stand) and uses them in the judge prompt or rules · 4 M2 v2 re-run (dev tuned, held-out once): recall and false alarms no worse than T53 (0.96 / 0.05 all-61), report any change · 5 npm run check
-    status                  2026-11-02 ready      owner t54-builder
-    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+    status                  2026-11-02 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T54-engine-in-check · branch ledger/t54-engine-in-check · base
+    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
     pinned
     mode                    one worker
     boundary                packages/decisions/src/cascade/** + packages/decisions/src/argdown/** (new derive module) + reasoning wiring + tests
