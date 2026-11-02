@@ -1,21 +1,22 @@
 ---
-state: ready
+state: running
 owner: t50-builder
-repo:
-branch:
-worktree:
-base:
+repo: /Users/a1/Desktop/CS Code/Project/Mole
+branch: ledger/t50-agent-surfaces
+worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T50-agent-surfaces
+base: c9f1f57
 reviewer:
 updated: 2026-11-02 05:30
-status: ledger ready
-next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+status: ledger running
+next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+claimed: 2026-11-02 05:30
 ---
 ```notes
 T50-agent-surfaces      ledger task (rules.md §3 code features)      project tasks
     goal                    Make agents use the decision at the right moment, borrowing from official MCP servers, Serena and Claude Code hook docs: PreToolUse carries the governing decision's line/test evidence (as Stop already does); max_answer_chars + pagination on mole_check/mole_decisions/mole_coverage; tool annotations + outputSchema/structuredContent on all tools; caller-tunable mole_map cap; description-matched fallback for decisions without a file scope (Cursor rules). Source: Project/Mole/context/product-plan/systems/core-audit/agent-surfaces.md. Starts after T43 merges.
     done-when               1 failing tests first · 2 PreToolUse text for B3 case names the guard test + decision rule · 3 every tool output bounded + paginated · 4 MCP SDK schema validation passes for all tools · 5 M-C v3 (>= 8 tasks, 3 epochs) run after merge · 6 npm run check
-    status                  2026-11-02 ready      owner t50-builder
-    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+    status                  2026-11-02 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T50-agent-surfaces · branch ledger/t50-agent-surfaces · base c
+    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
     pinned
     mode                    one worker
     boundary                packages/mcp/** plugins/claude-code/** + tests
