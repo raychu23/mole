@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-11-03 09:49      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T83-collaboration-spike → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
     2026-11-03 09:52      submitted → verified      reviewer hermes-subagent deleg_4aace94e PASS-narrowed, deleg_bcd93cfa PASS (fresh, claude-sonnet-5) · findings: R1: squash repos unmeasurable by merge commits, merge-base check uncommitted -> 818d3c3 PR-overlap via GitHu
     2026-11-03 09:52      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T83-collaboration-spike → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
+    2026-11-03 09:55      verified → integrated      merge 0585454 (main check green: Tests  1294 passed | 19 skipped (1313), mole-build/main-check-waveD1b.txt) · combined checks exit 0
+    2026-11-03 09:55      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
 ```
