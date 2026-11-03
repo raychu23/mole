@@ -1,0 +1,140 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T68-incident-under-phase/packages/decisions
+
+ ❯ test/incident-revive.test.ts (27 tests | 5 failed) 8844ms
+   ✓ T68: incident suggest respects the phase in force (done-when 1, 2) > plain Dung (no priorities file): the mutual attack is undecided on both sides -> no revival is found 46ms
+   × T68: incident suggest respects the phase in force (done-when 1, 2) > a phase that ranks tenet-focus first breaks the tie: parallel is 'out' -- a revival plain Dung never shows, plain-Dung label shown beside it 17ms
+     → expected [] to deeply equal [ 'parallel' ]
+   ✓ T68: incident suggest respects the phase in force (done-when 1, 2) > the opposite phase ranking flips which side is the dissent (tenet-users first -> best-effort is out, but it is the decision's own argument, excluded) 10ms
+   × T68: incident suggest respects the phase in force (done-when 1, 2) > done-when 3: default (no --phase/--at) uses the phase in force today, not plain Dung 4ms
+     → expected [] to deeply equal [ 'parallel' ]
+   × T68: incident suggest respects the phase in force (done-when 1, 2) > --at picks the phase in force on that date 12ms
+     → expected [] to deeply equal [ 'parallel' ]
+   × T68: incident suggest respects the phase in force (done-when 1, 2) > accept freezes the phase-resolved attacker as a plain Dung attack: it holds under every later phase (D93) 6ms
+     → parallel is not a candidate for inc-legacy-users (run: mole incident suggest inc-legacy-users)
+   × T68: incident suggest respects the phase in force (done-when 1, 2) > an unknown phase is refused, naming it 9ms
+     → expected [Function] to throw an error
+   ✓ mole incident suggest (done-when 2): read-only, deterministic, evidence on every candidate > lists the losing argument of a decision the incident names, with the evidence, and nothing unrelated 29ms
+   ✓ mole incident suggest (done-when 2): read-only, deterministic, evidence on every candidate > finds the same candidate through a shared scope path when the incident names no decision 6ms
+   ✓ mole incident suggest (done-when 2): read-only, deterministic, evidence on every candidate > text overlap alone never admits a candidate (Graphiti rule: must share a node) 3ms
+   ✓ mole incident suggest (done-when 2): read-only, deterministic, evidence on every candidate > an unknown incident is an error naming the id 13ms
+   ✓ mole incident accept / dismiss (done-when 3, 4) > accept reinstates the dissent: stale in, the decision's own argument out, incident is the reason; only 2 files written 26ms
+   ✓ mole incident accept / dismiss (done-when 3, 4) > a candidate shows every OTHER argument its accept would also bring back (dry run), so the person sees the knock-on 229ms
+   ✓ mole incident accept / dismiss (done-when 3, 4) > accept is idempotent 20ms
+   ✓ mole incident accept / dismiss (done-when 3, 4) > dismiss writes only the incident record, changes no label, and hides the candidate 21ms
+   ✓ mole incident accept / dismiss (done-when 3, 4) > refuses an argument that is not a current candidate, and one already accepted cannot be dismissed 132ms
+   ✓ mole incident CLI > is registered in the daemon CLI with one line (shared-file rule: toContain) 1ms
+   ✓ mole incident CLI > suggest exits 0, accept without --argument and an unknown incident exit 2 11ms
+   ✓ T58 review 1 (deleg_27342d20) findings > HIGH (review 3): a hand-added revives entry without attacks changes no label, and accept does not complete it 13ms
+   ✓ T58 review 1 (deleg_27342d20) findings > HIGH (review 3): attack targets are frozen at accept; an attacker added later is never attacked by a re-run 13ms
+   ✓ T58 review 1 (deleg_27342d20) findings > HIGH (review 2): never records an argument the person did not accept as a candidate 13ms
+   ✓ T58 review 1 (deleg_27342d20) findings > HIGH (review 2): a hand-written incident attack is not taken as a pending accept 7ms
+   ✓ T58 review 1 (deleg_27342d20) findings > HIGH (review 2): suggest on a 10,000-argument attack chain stays fast (adjacency BFS, was 71 s)  8096ms
+   ✓ T58 review 1 (deleg_27342d20) findings > MEDIUM: a dissent 5 attack steps from the decision is still found (no hop limit) 23ms
+   ✓ T58 review 1 (deleg_27342d20) findings > LOW (review 2): a blank line inside a block list does not break the duplicate check 58ms
+   ✓ T58 review 1 (deleg_27342d20) findings > LOW: appends to a block-style YAML list instead of refusing it 16ms
+   ✓ mole incident list (T62) > lists each incident with its top candidates and writes nothing 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/incident-revive.test.ts > T68: incident suggest respects the phase in force (done-when 1, 2) > a phase that ranks tenet-focus first breaks the tie: parallel is 'out' -- a revival plain Dung never shows, plain-Dung label shown beside it
+AssertionError: expected [] to deeply equal [ 'parallel' ]
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [[39m
+[32m-   "parallel",[39m
+[32m- ][39m
+[31m+ [][39m
+
+ ❯ test/incident-revive.test.ts:74:38
+     72|     const root = phaseRepo(['# Priorities', '', '## launch · from 2021…
+     73|     const s = suggestRevivals(root, 'inc-legacy-users', { phase: 'laun…
+     74|     expect(s.map((c) => c.argument)).toEqual(['parallel']);
+       |                                      ^
+     75|     expect(s[0]).toEqual(expect.objectContaining({ label: 'out', plain…
+     76|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  test/incident-revive.test.ts > T68: incident suggest respects the phase in force (done-when 1, 2) > done-when 3: default (no --phase/--at) uses the phase in force today, not plain Dung
+AssertionError: expected [] to deeply equal [ 'parallel' ]
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [[39m
+[32m-   "parallel",[39m
+[32m- ][39m
+[31m+ [][39m
+
+ ❯ test/incident-revive.test.ts:87:38
+     85|     const root = phaseRepo(['# Priorities', '', '## always · from 2000…
+     86|     const s = suggestRevivals(root, 'inc-legacy-users');
+     87|     expect(s.map((c) => c.argument)).toEqual(['parallel']);
+       |                                      ^
+     88|     expect(s[0]).toEqual(expect.objectContaining({ label: 'out', plain…
+     89|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  test/incident-revive.test.ts > T68: incident suggest respects the phase in force (done-when 1, 2) > --at picks the phase in force on that date
+AssertionError: expected [] to deeply equal [ 'parallel' ]
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [[39m
+[32m-   "parallel",[39m
+[32m- ][39m
+[31m+ [][39m
+
+ ❯ test/incident-revive.test.ts:94:100
+     92|     const root = phaseRepo(['# Priorities', '', '## launch · from 2021…
+     93|       '## scale · from 2024-01-01', '', '1. tenet-users', '2. tenet-fo…
+     94|     expect(suggestRevivals(root, 'inc-legacy-users', { at: '2022-06-01…
+       |                                                                                                    ^
+     95|     expect(suggestRevivals(root, 'inc-legacy-users', { at: '2025-06-01…
+     96|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  test/incident-revive.test.ts > T68: incident suggest respects the phase in force (done-when 1, 2) > accept freezes the phase-resolved attacker as a plain Dung attack: it holds under every later phase (D93)
+Error: parallel is not a candidate for inc-legacy-users (run: mole incident suggest inc-legacy-users)
+ ❯ acceptIncident src/incidents/revive.ts:273:17
+    271|   // the person's accept: only for a CURRENT candidate (review 2)
+    272|   const c = candidates(root, ev, inc).find((x) => x.argument === argum…
+    273|   if (!c) throw new IncidentError(`${argumentId} is not a candidate fo…
+       |                 ^
+    274|   const { alsoReinstates } = withKnockOn(ev, inc, c);
+    275|   // ONE atomic write (temp file + rename): `revives: [A]` and the fro…
+ ❯ test/incident-revive.test.ts:101:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  test/incident-revive.test.ts > T68: incident suggest respects the phase in force (done-when 1, 2) > an unknown phase is refused, naming it
+AssertionError: expected [Function] to throw an error
+
+[32m- Expected:[39m 
+null
+
+[31m+ Received:[39m 
+undefined
+
+ ❯ test/incident-revive.test.ts:111:82
+    109|   it('an unknown phase is refused, naming it', () => {
+    110|     const root = phaseRepo(['# Priorities', '', '## launch · from 2021…
+    111|     expect(() => suggestRevivals(root, 'inc-legacy-users', { phase: 'g…
+       |                                                                                  ^
+    112|   });
+    113| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 22 passed (27)
+   Start at  02:06:35
+   Duration  17.86s (transform 3.31s, setup 0ms, collect 7.87s, tests 8.84s, environment 0ms, prepare 81ms)
+

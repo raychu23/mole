@@ -1,0 +1,15 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T68-incident-under-phase/packages/mcp
+
+(node:19644) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/reasoning-tools.test.ts (11 tests) 7922ms
+   ✓ T61 mole_proposals_compare > finds this repo's proposal worktrees itself and compares them, equal to the library, writing nothing  3441ms
+   ✓ T61 mole_proposals_compare > T68: defaults to the phase in force today, and shows plainDung beside the phase-resolved changes  1614ms
+   ✓ T61 review 1: a proposal is a worktree on its own mole/proposal/<name> branch, nothing else > ignores an unrelated linked worktree carrying a forged proposal meta (by name or by its own branch)  1429ms
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  02:16:36
+   Duration  10.68s (transform 760ms, setup 0ms, collect 2.44s, tests 7.92s, environment 0ms, prepare 82ms)
+

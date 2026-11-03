@@ -116,7 +116,7 @@ async function main(): Promise<number> {
   if (cmd === 'priorities') return (await import('@mole/decisions')).prioritiesCli(pos, flags, root); // tenet order per phase, launch -> scale (T60)
   if (cmd === 'proposals') { // this repo's what-if proposals vs their baseline, same JSON as mole_proposals_compare (T62); read-only
     try {
-      console.log(JSON.stringify((await import('@mole/proposals')).summarizeProposals(root, pos.length ? pos : undefined), null, 2));
+      console.log(JSON.stringify((await import('@mole/proposals')).summarizeProposals(root, pos.length ? pos : undefined, { ...(typeof flags.phase === 'string' ? { phase: flags.phase } : {}), ...(typeof flags.at === 'string' ? { at: flags.at } : {}) }), null, 2)); // T68 review: forward --phase/--at
       return 0;
     } catch (e) {
       console.error(`mole proposals: ${(e as Error).message}`);

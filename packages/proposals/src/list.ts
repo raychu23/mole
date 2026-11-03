@@ -3,7 +3,7 @@
 // section. Moved from packages/mcp (T61 repoProposals) unchanged in behaviour.
 import { execFileSync } from 'node:child_process';
 import { realpathSync } from 'node:fs';
-import { compareProposals, evaluateProposal, ProposalError, readMeta, type Comparison, type ProposalMeta } from './proposals.js';
+import { compareProposals, evaluateProposal, ProposalError, readMeta, type Comparison, type PhaseSelector, type ProposalMeta } from './proposals.js';
 
 const real = (p: string): string => {
   try {
@@ -38,8 +38,9 @@ export function listProposals(root: string): Array<{ path: string; meta: Proposa
 }
 
 /** none -> { proposals: [] } · one -> its evaluation · two or more -> compareProposals (same baseline required).
- *  `names` picks some; an unknown name is refused. */
-export function summarizeProposals(root: string, names?: string[]): Comparison | { proposals: [] } {
+ *  `names` picks some; an unknown name is refused. T68: `sel` ({ phase, at }) is forwarded uniformly to every
+ *  picked proposal's evaluation (one audience for the whole comparison, same as T60's comparePhases(a, b)). */
+export function summarizeProposals(root: string, names?: string[], sel: PhaseSelector = {}): Comparison | { proposals: [] } {
   const all = listProposals(root);
   let picked = all;
   if (names) {
@@ -49,6 +50,6 @@ export function summarizeProposals(root: string, names?: string[]): Comparison |
     picked = [...new Set(names)].map((n) => byName.get(n)!);
   }
   if (picked.length === 0) return { proposals: [] };
-  if (picked.length === 1) return { baselineRevision: picked[0]!.meta.baselineRevision, proposals: [evaluateProposal(picked[0]!.path)] };
-  return compareProposals(picked.map((p) => p.path));
+  if (picked.length === 1) return { baselineRevision: picked[0]!.meta.baselineRevision, proposals: [evaluateProposal(picked[0]!.path, sel)] };
+  return compareProposals(picked.map((p) => p.path), sel);
 }

@@ -10,6 +10,7 @@ export {
   type CreateOptions,
   type DecisionChange,
   type DecisionState,
+  type PhaseSelector,
   type ProposalMeta,
   type ProposalReport,
 } from './proposals.js';

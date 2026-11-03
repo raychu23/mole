@@ -10,7 +10,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path';
-import { argumentDefinitions, argumentFramework, loadGraph, type DecisionGraph, type GraphNode } from '@mole/decisions';
+import { argumentDefinitions, argumentFramework, loadGraph, phaseInForce, tenetValues, type DecisionGraph, type GraphNode } from '@mole/decisions';
 import { evaluate, type Label } from '@mole/reasoning';
 
 export class ProposalError extends Error {}
@@ -53,7 +53,16 @@ export interface ProposalReport {
   branch: string;
   path: string;
   baselineRevision: string;
+  /** T68: the phase-resolved reading (same shape T56 always returned) -- the phase in force today, or `sel`'s
+   *  explicit `phase`/`at`, resolved independently against EACH side's own `.mole/priorities.md`; no file on a
+   *  side = no audience for that side (T60's existing fallback), so with neither side carrying one this equals
+   *  `plainDung` exactly. */
   changes: { arguments: ArgumentChange[]; decisions: DecisionChange[] };
+  /** T68: ALWAYS the plain-Dung reading (no audience), shown beside `changes` so a phase-driven reading is never
+   *  silently substituted for it (STOP clause: show both, never pick silently). */
+  plainDung: { arguments: ArgumentChange[]; decisions: DecisionChange[] };
+  /** T68: which phase (if any) `changes` was resolved under, per side; absent = no audience on that side. */
+  phase: { before?: string; after?: string };
   notEvaluated: string[];
   problems: Array<{ file: string; line: number; message: string }>;
 }
@@ -167,13 +176,27 @@ export function baselineSnapshot(worktree: string, rev: string): string {
 
 interface Evaluated {
   graph: DecisionGraph;
+  /** plain Dung (no audience) -- always computed, shown as `plainDung` */
+  plainLabels: Record<string, Label>;
+  /** T68: phase-resolved labels (identical to plainLabels when no phase applies to this side) */
   labels: Record<string, Label>;
+  /** T68: the phase name `labels` was resolved under on this side; undefined = no audience */
+  phase?: string;
 }
 
-function evaluateRecords(root: string): Evaluated {
+/** T68: `sel` ({ phase, at }) is resolved against THIS root's own `.mole/priorities.md` (phaseInForce,
+ *  @mole/decisions) -- absent both, the phase in force today, same selector incident suggest uses (D93); no
+ *  file on this side = no audience, T60's existing fallback. */
+function evaluateRecords(root: string, sel: { phase?: string; at?: string } = {}): Evaluated {
   const graph = loadGraph(root);
   const { framework } = argumentFramework(graph);
-  return { graph, labels: evaluate(framework).labels };
+  const plainLabels = evaluate(framework).labels;
+  const phase = phaseInForce(root, sel, graph);
+  if (!phase) return { graph, plainLabels, labels: plainLabels };
+  const values = tenetValues(graph);
+  const args = framework.args.map((a) => ({ ...a, ...(values.has(a.id) ? { value: values.get(a.id)! } : {}) }));
+  const labels = evaluate({ args, attacks: framework.attacks }, phase.order).labels;
+  return { graph, plainLabels, labels, phase: phase.name };
 }
 
 /** '<id>: text' / '[id]: text' on the record's own line -> 'text' (the Argdown parser keys items by title only). */
@@ -195,13 +218,60 @@ function citedArguments(graph: DecisionGraph, decisionId: string): string[] {
   return [...new Set(graph.edges.filter((e) => e.type === 'cites' && e.from === decisionId && args.has(e.to)).map((e) => e.to))].sort();
 }
 
+/** Diff two label sets (before/after, each already resolved under whichever audience the caller wants) into the
+ *  same `{ arguments, decisions }` shape, reused for both the phase-resolved `changes` and the always-plain
+ *  `plainDung` reading (T68: one diff implementation, called twice -- not a second copy of the diff rule). */
+function diffLabels(before: { graph: DecisionGraph; labels: Record<string, Label> }, after: { graph: DecisionGraph; labels: Record<string, Label> }): { arguments: ArgumentChange[]; decisions: DecisionChange[] } {
+  const nodeById = (g: DecisionGraph) => new Map(g.nodes.map((n) => [n.id, n] as [string, GraphNode]));
+  const bNodes = nodeById(before.graph);
+  const aNodes = nodeById(after.graph);
+
+  const argIds = new Set([...Object.keys(before.labels), ...Object.keys(after.labels)]);
+  const argumentsChanged: ArgumentChange[] = [];
+  for (const id of [...argIds].sort()) {
+    const b: ArgState = before.labels[id] ?? 'absent';
+    const a: ArgState = after.labels[id] ?? 'absent';
+    if (a === b) continue;
+    const inAfter = aNodes.has(id);
+    const n = (inAfter ? aNodes.get(id) : bNodes.get(id))!;
+    const text = statementText(inAfter ? after.graph : before.graph, id);
+    argumentsChanged.push({ id, text, before: b, after: a, source: { file: n.file, line: n.line } });
+  }
+  const changedArgs = new Set(argumentsChanged.map((c) => c.id));
+
+  const decIds = new Set([...before.graph.nodes, ...after.graph.nodes].filter((n) => n.kind === 'decision').map((n) => n.id));
+  const decisionsChanged: DecisionChange[] = [];
+  for (const id of [...decIds].sort()) {
+    const bn = bNodes.get(id);
+    const an = aNodes.get(id);
+    const bCited = bn ? citedArguments(before.graph, id) : [];
+    const aCited = an ? citedArguments(after.graph, id) : [];
+    const bs = bn ? decisionState(bCited, before.labels) : 'absent';
+    const as = an ? decisionState(aCited, after.labels) : 'absent';
+    if (bs === as) continue;
+    const n = (an ?? bn)!;
+    const because = [...new Set([...bCited, ...aCited])].filter((x) => changedArgs.has(x)).sort();
+    decisionsChanged.push({ id, title: n.title, ...(n.source ? { source: n.source } : {}), record: { file: n.file, line: n.line }, before: bs, after: as, because });
+  }
+  return { arguments: argumentsChanged, decisions: decisionsChanged };
+}
+
 function changedFiles(worktree: string, rev: string): string[] {
   const tracked = git(worktree, ['diff', '--name-only', rev, '--']).split('\n');
   const untracked = git(worktree, ['ls-files', '--others', '--exclude-standard']).split('\n');
   return [...new Set([...tracked, ...untracked].filter(Boolean))].sort();
 }
 
-export function evaluateProposal(path: string): ProposalReport {
+export interface PhaseSelector {
+  phase?: string;
+  at?: string;
+}
+
+/** `sel` picks the phase (T60) each side (baseline snapshot, worktree) is independently evaluated under; absent
+ *  both, the phase in force TODAY (D93). `changes` is that phase-resolved reading; `plainDung` is ALWAYS plain
+ *  Dung, so a proposal that "looks real" without an audience but changes nothing under the phase in force (the
+ *  T61 replay case: already defeated) is never silently reported as the same thing (STOP clause). */
+export function evaluateProposal(path: string, sel: PhaseSelector = {}): ProposalReport {
   const meta = readMeta(path);
   const worktree = topLevel(path);
   // review 1 LOW: a hand-edited or pruned baseline must fail as a clean error, not a git stack trace
@@ -210,39 +280,10 @@ export function evaluateProposal(path: string): ProposalReport {
   }
   const baseDir = baselineSnapshot(worktree, meta.baselineRevision);
   try {
-    const before = evaluateRecords(baseDir);
-    const after = evaluateRecords(worktree);
-    const nodeById = (g: DecisionGraph) => new Map(g.nodes.map((n) => [n.id, n] as [string, GraphNode]));
-    const bNodes = nodeById(before.graph);
-    const aNodes = nodeById(after.graph);
-
-    const argIds = new Set([...Object.keys(before.labels), ...Object.keys(after.labels)]);
-    const argumentsChanged: ArgumentChange[] = [];
-    for (const id of [...argIds].sort()) {
-      const b: ArgState = before.labels[id] ?? 'absent';
-      const a: ArgState = after.labels[id] ?? 'absent';
-      if (a === b) continue;
-      const inAfter = aNodes.has(id);
-      const n = (inAfter ? aNodes.get(id) : bNodes.get(id))!;
-      const text = statementText(inAfter ? after.graph : before.graph, id);
-      argumentsChanged.push({ id, text, before: b, after: a, source: { file: n.file, line: n.line } });
-    }
-    const changedArgs = new Set(argumentsChanged.map((c) => c.id));
-
-    const decIds = new Set([...before.graph.nodes, ...after.graph.nodes].filter((n) => n.kind === 'decision').map((n) => n.id));
-    const decisionsChanged: DecisionChange[] = [];
-    for (const id of [...decIds].sort()) {
-      const bn = bNodes.get(id);
-      const an = aNodes.get(id);
-      const bCited = bn ? citedArguments(before.graph, id) : [];
-      const aCited = an ? citedArguments(after.graph, id) : [];
-      const bs = bn ? decisionState(bCited, before.labels) : 'absent';
-      const as = an ? decisionState(aCited, after.labels) : 'absent';
-      if (bs === as) continue;
-      const n = (an ?? bn)!;
-      const because = [...new Set([...bCited, ...aCited])].filter((x) => changedArgs.has(x)).sort();
-      decisionsChanged.push({ id, title: n.title, ...(n.source ? { source: n.source } : {}), record: { file: n.file, line: n.line }, before: bs, after: as, because });
-    }
+    const before = evaluateRecords(baseDir, sel);
+    const after = evaluateRecords(worktree, sel);
+    const plainDung = diffLabels({ graph: before.graph, labels: before.plainLabels }, { graph: after.graph, labels: after.plainLabels });
+    const changes = diffLabels(before, after);
 
     const notEvaluated = changedFiles(worktree, meta.baselineRevision).filter((f) => !RECORD_DIRS.some((d) => f === d || f.startsWith(d)));
     return {
@@ -250,7 +291,9 @@ export function evaluateProposal(path: string): ProposalReport {
       branch: meta.branch,
       path: worktree,
       baselineRevision: meta.baselineRevision,
-      changes: { arguments: argumentsChanged, decisions: decisionsChanged },
+      changes,
+      plainDung,
+      phase: { ...(before.phase ? { before: before.phase } : {}), ...(after.phase ? { after: after.phase } : {}) },
       notEvaluated,
       problems: after.graph.problems.map((p) => ({ file: p.file, line: p.line, message: p.message })),
     };
@@ -264,12 +307,12 @@ export interface Comparison {
   proposals: ProposalReport[];
 }
 
-export function compareProposals(paths: string[]): Comparison {
+export function compareProposals(paths: string[], sel: PhaseSelector = {}): Comparison {
   if (paths.length < 2) throw new ProposalError('compare needs at least two proposal paths');
   const metas = paths.map(readMeta);
   const bases = new Set(metas.map((m) => m.baselineRevision));
   if (bases.size !== 1) {
     throw new ProposalError(`proposals were made from different baselines (${[...bases].map((b) => b.slice(0, 12)).join(', ')}); compare only proposals from the same baseline`);
   }
-  return { baselineRevision: metas[0]!.baselineRevision, proposals: paths.map(evaluateProposal) };
+  return { baselineRevision: metas[0]!.baselineRevision, proposals: paths.map((p) => evaluateProposal(p, sel)) };
 }

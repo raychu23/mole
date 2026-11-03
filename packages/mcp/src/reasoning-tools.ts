@@ -57,17 +57,21 @@ export function registerReasoningTools(server: McpServer, opts: Opts): void {
       description:
         'For an incident record (.mole/incidents/<id>.md), the recorded losing arguments it may revive: arguments that lost to what a named or ' +
         'scope-sharing decision rests on, ranked, each with its evidence and what else accepting it would reinstate. Suggestions only: accepting one is ' +
-        "a person's act (`mole incident accept`), not available over MCP. Same JSON as `mole incident suggest`. Deterministic, no LLM, read-only.",
+        "a person's act (`mole incident accept`), not available over MCP. Judged under the T60 phase in force (`phase`, or `at` a date, or today by " +
+        'default), with the plain-Dung (no phase) label shown beside each candidate so a phase-driven candidate is never silently substituted for it. ' +
+        'Same JSON as `mole incident suggest`. Deterministic, no LLM, read-only.',
       inputSchema: {
         incident: z.string().describe('incident id, e.g. inc-42'),
         limit: z.number().int().nonnegative().optional().describe('max candidates (default 20; 0 = none, as the library)'),
+        phase: z.string().optional().describe('phase name from .mole/priorities.md (default: the phase in force today)'),
+        at: z.string().optional().describe('YYYY-MM-DD: use the phase in force on that date instead of today'),
       },
       annotations: { ...READ_ONLY_ANNOTATIONS, title: 'Mole incident suggest' },
       outputSchema: z.object({ incident: z.string(), candidates: z.array(z.unknown()) }).passthrough(),
     },
-    async ({ incident, limit }) => {
+    async ({ incident, limit, phase, at }) => {
       try {
-        return ok({ incident, candidates: suggestRevivals(opts.root, incident, limit !== undefined ? { limit } : {}) });
+        return ok({ incident, candidates: suggestRevivals(opts.root, incident, { ...(limit !== undefined ? { limit } : {}), ...(phase ? { phase } : {}), ...(at ? { at } : {}) }) });
       } catch (e) {
         return fail('mole_incident_suggest', e);
       }
@@ -81,15 +85,22 @@ export function registerReasoningTools(server: McpServer, opts: Opts): void {
       description:
         "This repo's decision proposals (what-if branches made with `mole-proposals create`) judged against the approved baseline they were made from: " +
         'which arguments and decisions change state in each, and why. Proposals are found from this repo\'s git worktrees; pass `names` to pick some ' +
-        '(default: all). One proposal = its evaluation; two or more = side by side (must share a baseline). Same JSON as `mole-proposals compare`. Read-only.',
-      inputSchema: { names: z.array(z.string()).optional().describe('proposal names (default: every proposal of this repo)') },
+        '(default: all). One proposal = its evaluation; two or more = side by side (must share a baseline). `changes` is judged under the T60 phase in ' +
+        'force (`phase`, or `at` a date, or today by default, resolved against each side\'s own .mole/priorities.md); `plainDung` is always the ' +
+        'plain-Dung (no phase) reading, shown beside it so a phase-driven reading is never silently substituted for it. Same JSON as `mole-proposals ' +
+        'compare`. Read-only.',
+      inputSchema: {
+        names: z.array(z.string()).optional().describe('proposal names (default: every proposal of this repo)'),
+        phase: z.string().optional().describe('phase name from .mole/priorities.md (default: the phase in force today)'),
+        at: z.string().optional().describe('YYYY-MM-DD: use the phase in force on that date instead of today'),
+      },
       annotations: { ...READ_ONLY_ANNOTATIONS, title: 'Mole proposals compare' },
       outputSchema: z.object({ baselineRevision: z.string(), proposals: z.array(z.unknown()) }).passthrough(),
     },
-    async ({ names }) => {
+    async ({ names, phase, at }) => {
       try {
         // MCP keeps T61's contract: no proposals is an error result an agent can read, not an empty list
-        const r = summarizeProposals(opts.root, names);
+        const r = summarizeProposals(opts.root, names, { ...(phase ? { phase } : {}), ...(at ? { at } : {}) });
         if (r.proposals.length === 0) throw new Error('no proposals in this repo -- create one with: mole-proposals create');
         return ok(r);
       } catch (e) {

@@ -1,0 +1,18 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T68-incident-under-phase/packages/decisions
+
+ ✓ test/priorities.test.ts (18 tests) 87ms
+ ✓ test/incident-revive.test.ts (27 tests) 817ms
+   ✓ T58 review 1 (deleg_27342d20) findings > HIGH (review 2): suggest on a 10,000-argument attack chain stays fast (adjacency BFS, was 71 s)  610ms
+ ✓ test/cli.test.ts (6 tests) 4358ms
+   ✓ mole decisions (done-when 1) > --json lists every decision and tenet with flag + reasons + file:line  785ms
+   ✓ mole decisions (done-when 1) > text output: one line per decision with flag, id and file:line, reasons indented with file:line  698ms
+   ✓ mole decisions (done-when 1) > --test-report makes a decision with failing evidence yellow  584ms
+   ✓ mole decisions (done-when 1) > Mole's own .mole records load without problems and every scope anchor exists  760ms
+   ✓ MCP mole_decisions > is in the tool list (toContain) and returns the same JSON as the CLI  1526ms
+
+ Test Files  3 passed (3)
+      Tests  51 passed (51)
+   Start at  02:16:11
+   Duration  5.94s (transform 559ms, setup 0ms, collect 3.23s, tests 5.26s, environment 0ms, prepare 383ms)
+
