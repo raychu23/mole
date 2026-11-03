@@ -8,6 +8,7 @@ import { formatSections, sectionsOf } from './rationale.js';
 import type { DecisionsResult, FlagContext, FlagResult, LoadOptions } from './types.js';
 import { CaptureError, linkDecisions, newDecision, readDecisionRecords, recoverTransactions, supersedeDecision } from './capture/records.js';
 import { suggestDuplicates } from './capture/dedupe.js';
+import { comparePhases, evaluatePhase, PrioritiesError, readPriorities } from './priorities.js';
 import { acceptIncident, dismissIncident, IncidentError, suggestRevivals } from './incidents/revive.js';
 
 /** The JSON `mole decisions --json` prints and the MCP tool mole_decisions returns. Every decision/tenet
@@ -172,5 +173,32 @@ export function incidentCli(pos: string[], flags: Record<string, string | true>,
   } catch (error) {
     console.error(`mole incident ${sub}: ${error instanceof Error ? error.message : String(error)}`);
     return error instanceof IncidentError ? 2 : 1;
+  }
+}
+
+/** `mole priorities [--phase P | --at YYYY-MM-DD]` · `mole priorities list` · `mole priorities compare <A> <B>` (T60). Read-only, JSON. */
+export function prioritiesCli(pos: string[], flags: Record<string, string | true>, root: string): number {
+  const [sub, a, b] = pos;
+  try {
+    let out: unknown;
+    if (sub === 'compare') {
+      if (!a || !b) {
+        console.error('usage: mole priorities compare <phase> <phase>');
+        return 2;
+      }
+      out = comparePhases(root, a, b);
+    } else if (sub === 'list') {
+      out = readPriorities(root);
+    } else if (sub === undefined) {
+      out = evaluatePhase(root, { ...(str(flags.phase) ? { phase: str(flags.phase)! } : {}), ...(str(flags.at) ? { at: str(flags.at)! } : {}) });
+    } else {
+      console.error('usage: mole priorities [--phase P | --at YYYY-MM-DD] | list | compare <A> <B>');
+      return 2;
+    }
+    console.log(JSON.stringify(out, null, 2));
+    return 0;
+  } catch (error) {
+    console.error(`mole priorities: ${error instanceof Error ? error.message : String(error)}`);
+    return error instanceof PrioritiesError ? 2 : 1;
   }
 }
