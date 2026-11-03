@@ -1,5 +1,5 @@
 ---
-state: proposed
+state: ready
 owner: hermes-build
 repo:
 branch:
@@ -7,15 +7,15 @@ worktree:
 base:
 reviewer:
 updated: 2026-11-02 22:08
-status: ledger proposed
-next: fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+status: ledger ready
+next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
 ---
 ```notes
 T61-reasoning-mcp-tools      ledger task (rules.md §3 code features)      project tasks
     goal                    Expose the built reasoning features to agents as read-only MCP tools (backlog reasoning-surfaces, harness half): mole_priorities (evaluate a phase or compare two, T60), mole_incident_suggest (revival candidates for an incident, T58, no accept), mole_proposals_compare (compare proposal worktrees vs baseline, T56). Same JSON as the CLIs, annotations readOnlyHint true, outputSchema.
     done-when               1 tests first (red) · 2 each tool's structuredContent equals the matching library call on the same temp repo · 3 listed as read-only in tool-annotations-schema.test.ts and passes it · 4 invalid input (unknown phase / incident / path) returns isError with the library's message, never throws · 5 nothing written to the repo (git status + mtime of .mole unchanged) · 6 npm run check
-    status                  2026-11-02 proposed
-    next                    fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+    status                  2026-11-02 ready      owner hermes-build
+    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
     pinned
     mode                    one worker
     boundary                packages/mcp/src/reasoning-tools.ts (new), server.ts one register line, package.json/tsconfig dep on @mole/proposals, tests
