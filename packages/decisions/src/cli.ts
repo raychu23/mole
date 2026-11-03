@@ -10,6 +10,7 @@ import { CaptureError, linkDecisions, newDecision, readDecisionRecords, recoverT
 import { suggestDuplicates } from './capture/dedupe.js';
 import { comparePhases, evaluatePhase, PrioritiesError, readPriorities } from './priorities.js';
 import { acceptIncident, dismissIncident, IncidentError, incidentSummary, suggestRevivals } from './incidents/revive.js';
+import { recallSimilar, RecallError } from './recall/recall.js';
 
 /** The JSON `mole decisions --json` prints and the MCP tool mole_decisions returns. Every decision/tenet
  * node (T43) gets its full rationale text attached (bounded, section-aware -- see rationale.ts), read
@@ -219,5 +220,33 @@ export function prioritiesCli(pos: string[], flags: Record<string, string | true
   } catch (error) {
     console.error(`mole priorities: ${error instanceof Error ? error.message : String(error)}`);
     return error instanceof PrioritiesError ? 2 : 1;
+  }
+}
+
+/** `mole recall <text> | --record ID [--adr-dir DIR[,DIR]] [--limit N] [--root DIR] [--json]` (T71, done-when 4):
+ *  past decisions/incidents that resemble the given text or an existing record, nearest first (Klein RPD /
+ *  CBR Retrieve -- see recall/recall.ts's header). Always JSON, same shape mole_recall returns; `--json` is
+ *  accepted for the contract's own spelling but this CLI has no other output mode, same convention as
+ *  `mole incident suggest` / `mole priorities`. Read-only: never writes, never calls a model. */
+export function recallCli(pos: string[], flags: Record<string, string | true>, root: string): number {
+  const record = str(flags.record);
+  const text = pos.length ? pos.join(' ') : undefined;
+  if (record && text) {
+    console.error('usage: mole recall <text> | --record ID -- give one, not both');
+    return 2;
+  }
+  const adr = str(flags['adr-dir']);
+  const limitStr = str(flags.limit);
+  try {
+    const r = recallSimilar(
+      root,
+      record ? { record } : { text },
+      { adrDirs: adr ? adr.split(',').map((s) => s.trim()).filter(Boolean) : [], ...(limitStr ? { limit: Number(limitStr) } : {}) },
+    );
+    console.log(JSON.stringify(r, null, 2));
+    return 0;
+  } catch (error) {
+    console.error(`mole recall: ${error instanceof Error ? error.message : String(error)}`);
+    return error instanceof RecallError ? 2 : 1;
   }
 }

@@ -198,3 +198,41 @@ describe('T61 annotations', () => {
     }
   });
 });
+
+describe('T71 mole_recall', () => {
+  it('recalls a similar past decision/incident by text, equal to the library, writing nothing', async () => {
+    const root = repo();
+    const before = fingerprint(root);
+    const client = await connect(root);
+    const r = await call(client, 'mole_recall', { text: 'hand-roll a job queue instead of a managed broker' });
+    expect(r.isError).toBeFalsy();
+    const cases = (r.structuredContent as { cases: Array<{ id: string }> }).cases;
+    expect(cases.map((c) => c.id)).toContain('D1');
+    expect((r.structuredContent as { note: string }).note.toLowerCase()).toMatch(/similar case/);
+    expect((r.structuredContent as { note: string }).note.toLowerCase()).not.toMatch(/\bcaused?\b/);
+    expect(fingerprint(root)).toBe(before);
+  });
+  it('recalls by an existing record id, excluding that record from its own results', async () => {
+    const r = await call(await connect(repo()), 'mole_recall', { record: 'inc-1' });
+    expect(r.isError).toBeFalsy();
+    const cases = (r.structuredContent as { cases: Array<{ id: string }> }).cases;
+    expect(cases.map((c) => c.id)).not.toContain('inc-1');
+  });
+  it('neither text nor record, or both, is an isError result', async () => {
+    const client = await connect(repo());
+    expect((await call(client, 'mole_recall', {})).isError).toBe(true);
+    expect((await call(client, 'mole_recall', { text: 'x', record: 'D1' })).isError).toBe(true);
+  });
+  it('an unknown record id is an isError result with the library message', async () => {
+    const r = await call(await connect(repo()), 'mole_recall', { record: 'no-such-id' });
+    expect(r.isError).toBe(true);
+    expect((r.content as Array<{ text: string }>)[0]!.text).toMatch(/no-such-id/);
+  });
+  it('is read-only, closed-world, with an outputSchema', async () => {
+    const { tools } = await (await connect(repo())).listTools();
+    const t = tools.find((x) => x.name === 'mole_recall');
+    expect(t).toBeDefined();
+    expect(t!.annotations).toEqual(expect.objectContaining({ readOnlyHint: true, openWorldHint: false }));
+    expect(t!.outputSchema).toBeDefined();
+  });
+});
