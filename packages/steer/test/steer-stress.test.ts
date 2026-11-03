@@ -52,12 +52,12 @@ function senderScript(): string {
     `import { sendSignal } from ${JSON.stringify(distIndex)};`,
     'const [root, session, prefix, countStr, okFile] = process.argv.slice(2);',
     'const count = Number(countStr);',
-    'const ok = []; let timedOut = 0;',
+    'const ok = []; let timedOut = 0; const errors = [];',
     'for (let i = 0; i < count; i++) {',
     '  try { sendSignal(root, session, `${prefix}-${i}`); ok.push(`${prefix}-${i}`); }',
-    "  catch (e) { if (/lock timeout/i.test(String(e?.message ?? e))) timedOut++; else throw e; }",
+    "  catch (e) { const m = String(e?.stack ?? e?.message ?? e); if (/lock timeout/i.test(m)) timedOut++; else errors.push(m); }",
     '}',
-    "writeFileSync(okFile, JSON.stringify({ ok, timedOut }));",
+    "writeFileSync(okFile, JSON.stringify({ ok, timedOut, errors }));",
     '',
   ].join('\n');
 }
@@ -111,9 +111,11 @@ describe('Review 2 HIGH: senders and deliverers racing AT THE SAME TIME (not sen
       // expected = every send that was ACCEPTED (returned without throwing); a timed-out send was refused loudly
       const expected = new Set<string>();
       for (const f of okFiles) {
-        const r = JSON.parse(readFileSync(f, 'utf8')) as { ok: string[]; timedOut: number };
+        const r = JSON.parse(readFileSync(f, 'utf8')) as { ok: string[]; timedOut: number; errors: string[] };
         r.ok.forEach((t) => expected.add(t));
         totalRefused += r.timedOut;
+        // any non-timeout send error is a real failure: surface its message instead of a bare 'exited 1'
+        expect(r.errors, `sender errors in ${f}`).toEqual([]);
       }
       totalExpected += expected.size;
 
