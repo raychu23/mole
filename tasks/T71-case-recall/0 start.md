@@ -1,22 +1,22 @@
 ---
-state: verified
+state: integrated
 owner: hermes-build
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t71-case-recall
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T71-case-recall
 base:
 reviewer: hermes-subagent deleg_6b03cdb7 FAIL then deleg_42f30ebe PASS (fresh, claude-sonnet-5)
-updated: 2026-11-03 04:31
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+updated: 2026-11-03 04:33
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-11-03 02:53
 ---
 ```notes
 T71-case-recall      ledger task (rules.md §3 code features)      project tasks
     goal                    Given a new proposal or decision draft, recall similar past decisions/incidents as questions with evidence (Klein recognition-primed decision; resembles relation), via the retrieval method that wins on a frozen held-out set against a named stock baseline (BM25 from T53 route/bm25.ts; also try title+rationale fields, MMR) - build a custom matcher only if it beats the baseline.
     done-when               1 prior-art note (Klein RPD, case-based reasoning Aamodt & Plaza 1994, BM25/MMR, how ai-memory/Graphiti retrieve) · 2 frozen eval set built from real public ADR corpora already in the repo (metrics-proof corpora: superseded/related ADR pairs as relevance labels), dev/held-out split, sha256 before scoring · 3 tests first · 4 `mole recall <text|record> --json` + read-only MCP tool; output says 'similar case, check whether it applies', never asserts causation · 5 held-out recall@5/MRR vs baseline reported once, losses first
-    status                  2026-11-03 verified      reviewer hermes-subagent deleg_6b03cdb7 FAIL then deleg_42f30ebe PASS (fresh, claude-sonnet-5) · findings: R1: eval set
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-11-03 integrated      merge 65b48f7, main 2101b06 full check 1160 pass 0 fail (/Users/a1/.hermes/cache/scratch/mole-build/main-check-t71t72.tx
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    one worker
     boundary                packages/decisions (new recall/), daemon cli, mcp tool, tests, eval set under context/product-plan/systems/metrics-proof/case-recall/
