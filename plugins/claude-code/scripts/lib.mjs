@@ -217,7 +217,8 @@ function stripFrontMatterBody(text) {
 
 function bucketOf(heading) {
   const h = heading.toLowerCase();
-  if (/^decision\b/.test(h) || /^decision outcome\b/.test(h)) return 'decision';
+  // same rule as packages/decisions/src/rationale.ts: 'decision drivers' is context (T54 review 2)
+  if (/^decision\b(?!\s+drivers\b)/.test(h) || /^decision outcome\b/.test(h)) return 'decision';
   if (/^consequences\b/.test(h)) return 'consequences';
   if (/^context\b/.test(h) || /^rationale\b/.test(h) || /^decision drivers\b/.test(h) || /^considered options\b/.test(h) || /^links\b/.test(h)) return 'context';
   return undefined;

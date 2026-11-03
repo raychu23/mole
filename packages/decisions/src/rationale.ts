@@ -28,7 +28,8 @@ export interface DecisionSections {
 type Bucket = keyof DecisionSections;
 
 const BUCKET_OF: Array<{ bucket: Bucket; test: (h: string) => boolean }> = [
-  { bucket: 'decision', test: (h) => /^decision\b/.test(h) || /^decision outcome\b/.test(h) },
+  // '^decision\b' must not catch 'decision drivers' (a context heading, below): T54 review 2 P1
+  { bucket: 'decision', test: (h) => /^decision\b(?!\s+drivers\b)/.test(h) || /^decision outcome\b/.test(h) },
   { bucket: 'consequences', test: (h) => /^consequences\b/.test(h) },
   {
     bucket: 'context',

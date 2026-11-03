@@ -14,6 +14,13 @@ export interface CascadeVerdict {
   /** why the tier that decided, decided (anchor name(s), or the LLM's one-sentence reason) */
   reason: string;
   usage?: { inputTokens?: number; outputTokens?: number; costUsd?: number };
+  /** T54: packages/reasoning's grounded-semantics label for every argument derived from this decision's OWN
+   *  MADR/Nygard sections (deriveAdrArgumentFramework), keyed by its derived id (`<decision>::claim`,
+   *  `<decision>::option:N`, `<decision>::reason:N`) -- present only on an 'llm' tier verdict (the escalation
+   *  tier is where the judge prompt is built from these labels; the zero-llm tier never reads them). Absent
+   *  (not just empty) when the decision's own text had no Considered Options/Decision Outcome structure to
+   *  derive anything from -- same "nothing to add" fallback as argument-view.ts's plain-text degrade. */
+  argumentLabels?: Record<string, 'in' | 'out' | 'undecided'>;
   ms: number;
 }
 
