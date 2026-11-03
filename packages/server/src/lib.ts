@@ -12,6 +12,7 @@ export { writeOutboxInTx, relayOutboxOnce } from './outbox.js';
 export { startFakeGithubApi } from './fakeGithub.js';
 export { rebuildIndexFromGit, snapshotHash, parseMoleRecord, GitReadError } from './rebuild.js';
 export { recordDecisionRevision, currentDecision, decisionAsOf, type DecisionRevision } from './decisionStore.js';
+export { reconcileDecisions, type ReconcileResult } from './reconcile.js';
 export { getGoverningDecisions } from './graph.js';
 export { computeCheckRun } from './checkrun.js';
 export { routeQuestion } from './questions.js';

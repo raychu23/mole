@@ -1,25 +1,22 @@
 ## Summary
 The team server's own second Postgres model (`nodes`/`relations`) is now a derived
 reconciliation index; `@mole/temporal`'s bitemporal store is the authoritative decision
-record (current + as-of, tenant-scoped via existing RLS FORCE). `rebuildIndexFromGit`
-optionally also writes each decision-kind record into `@mole/temporal` via a new
-`decisionStore.ts` (`recordDecisionRevision`/`currentDecision`/`decisionAsOf`), after the
-nodes/relations tx commits, so the graph-traversal path `checkrun.ts`/`graph.ts` use is
-byte-for-byte unchanged. 2 new tests pass against real Postgres: a decision rebuilt for
-org A is readable as current+asOf for org A only (RLS leak test), and a later re-approval
-is a new revision (old `asOf` still returns the old value, `current` returns the new one).
-`npx tsc -b` and the full server+temporal vitest suite (254 tests) pass; one pre-existing,
-unrelated flaky test (`index.spec.ts`'s pg-boss poll) reproduces identically on unmodified
-code in this same local-Postgres setup — not a regression. `docker compose up` now builds
-and serves `/health` -> `{"status":"ok"}` after fixing two real deploy bugs found by
-actually running it (missing `WEBHOOK_SECRET`/`ORG_REPO_DIRS` env, and the Dockerfile not
-copying the workspace packages a `node_modules/@mole/*` symlink points to). F62 Graphiti
-spike: attempted for real (`pip install graphiti-core` succeeded), blocked immediately by
-`Graphiti.__init__`'s hard OpenAI-key requirement — recorded NOT RUN with the actual error.
-Open: index.ts doesn't yet build/pass a `temporalPool` into its own `rebuild-index` job
-handler (only the library function + its tests do) — that one-line wiring, plus deciding
-whether `ORG_REPO_DIRS`'s JSON-in-env-var shape is the right deploy ergonomics long-term,
-are the next task's starting point.
+record (current + as-of, tenant-scoped via existing RLS FORCE). `buildApp()` constructs a
+real `temporalPool` (`TEMPORAL_DATABASE_URL`, defaulting to `DATABASE_URL`), applies the
+temporal schema at startup, and passes that pool into the live `rebuild-index` job's
+`rebuildIndexFromGit` — so a real webhook-triggered rebuild on a running server actually
+writes a decision into `@mole/temporal`, proven end to end by a new test
+(`index-temporal-e2e.spec.ts`) that POSTs a webhook, drains the real pg-boss job, and reads
+back `currentDecision`/`decisionAsOf` for the writing org only (null for a second org, RLS).
+After every rebuild the job handler runs `reconcileDecisions` (new `reconcile.ts`) — a
+read-only divergence check between the graph index and `@mole/temporal`, logged and exposed
+via `GET /reconcile/:orgId` — rather than switching to temporal as the sole write path; this
+reversible default and its prior art (Fowler CQRS) are recorded in `4 log/prior-art.md` §5.
+`/health` now also checks temporal reachability (503 if unreachable, unchanged 200 contract
+when healthy). `npx tsc -b` and `npx vitest run packages/server packages/temporal
+--no-file-parallelism` pass 255/257 (2 pre-existing failures, reproduced identically with
+every change in this round `git stash`'d out — see "Review 1 fixes" below). `docker compose
+up -d --build` + `curl /health` verified live; torn down with volumes removed.
 
 ---
 
@@ -112,16 +109,99 @@ approval gate; `stop` is sufficient to leave no running containers).
   "a revision... readable", i.e. the whole record as of a point in time, not independent
   as-of queries per field; per-field facts can be added later without migrating existing rows
   (recordFact's dedup/coalescing is per-attr, so this is additive).
-- NOT fully wired: `packages/server/src/index.ts`'s own `buildApp()` still only passes
-  `pool` (not a `temporalPool`) into its `rebuild-index` job handler — a real deployed server
-  does not yet write decisions into `@mole/temporal` on a live webhook-triggered rebuild, only
-  `rebuildIndexFromGit`'s own test callers (and any future caller) can opt in. This is
-  deliberate: wiring `index.ts` means deciding `TEMPORAL_DATABASE_URL` vs reusing
-  `DATABASE_URL`, and running `applySchema` at startup — both small, but untested-by-this-task
-  choices better made by whoever picks this up next rather than guessed here under time
-  pressure. Everything DONE-WHEN #3 requires (tests proving the read/write/isolation contract)
-  is proven; this is the integration step beyond it.
+- RESOLVED in "Review 1 fixes" below: `index.ts`'s own `buildApp()` now builds/passes a
+  `temporalPool` into its `rebuild-index` job handler, applies the temporal schema at startup,
+  and proves the full path with a real webhook through the real app (see that section).
 - `otel-collector.yaml`/`jaeger`/`mlflow` sidecars in `deploy/docker-compose.yml` were not
   exercised this session (out of the "postgres + team server" scope); `server`'s `depends_on:
   [postgres, otel-collector]` means a real `docker compose up` (full file) does start them,
   just not separately checked here.
+
+## Review 1 fixes (2026-11-03)
+
+**Finding 1/2** (buildApp() never constructed/received a temporal pool; schema never applied
+at startup) -> **Fix**: `packages/server/src/index.ts`'s `buildApp()` now reads
+`TEMPORAL_DATABASE_URL` (falls back to `DATABASE_URL` if unset/empty — `||`, not `??`, so a
+docker-compose empty-string default doesn't silently win), constructs a real `pg.Pool` for it,
+calls `@mole/temporal`'s `applySchema` at startup, and passes that `temporalPool` into the
+`rebuild-index` job handler's call to `rebuildIndexFromGit`. Both `pool` and `boss` are no
+longer the only state returned/closed — `temporalPool` is returned from `buildApp()` and
+closed in `startServer()`'s `close()` alongside them. -> **Proof**: `npx tsc -b` clean;
+`packages/server/test/index-temporal-e2e.spec.ts` (new) exercises this exact wiring end to
+end (see Finding 3).
+
+**Finding 3** (no e2e test proving the done-when through the running server) -> **Fix**: new
+`packages/server/test/index-temporal-e2e.spec.ts`, same shape as `index.spec.ts`'s own final-
+build verification: POSTs a real webhook to `buildApp()`'s `fastifyApp.inject`, lets the
+server's OWN `boss.work('rebuild-index', ...)` handler drain it, then reads back
+`currentDecision`/`decisionAsOf` through the SAME `temporalPool` `buildApp()` constructed (not
+a second ad hoc connection) for org A (non-null) and org B (null, same decision id, RLS). ->
+**Proof**: `npx vitest run packages/server/test/index-temporal-e2e.spec.ts` — 3/3 passed,
+reliably, in isolation and with `--no-file-parallelism`. One real bug found and fixed while
+building this test: a hardcoded `x-github-delivery` id collided with the webhook dedupe table
+across reruns (dedupe is keyed on delivery_id ALONE, not scoped by org), silently skipping
+`boss.send` on every rerun after the first — made the id unique per run
+(`'t69-e2e-delivery-' + orgA`). Under default vitest parallelism (concurrent worker forks
+sharing one Postgres instance) this new test can flake the exact same way `index.spec.ts`'s
+own job-drain poll already does (0 pgboss job rows visible within the poll window under host
+contention) — same pre-existing flake class, not a new one (see below).
+
+**Finding 4** (no divergence check between the graph index and @mole/temporal; no recorded
+choice) -> **Fix**: new `packages/server/src/reconcile.ts` (`reconcileDecisions`): read-only
+comparison of `nodes` (kind='decision') against @mole/temporal's current (`valid @> now()`)
+decisions for an org, returning `{missing, extra, changed}`. Run after every `rebuild-index`
+job (logged via `app.log.warn`/`.info`, never throws into the job) and exposed read-only via
+`GET /reconcile/:orgId`. Prior art + the reversible-default decision (keep dual write +
+reconciliation, do NOT make temporal the sole write path yet) recorded in `4 log/prior-art.md`
+§5 (Fowler CQRS/event sourcing, martinfowler.com/bliki/CQRS.html +
+martinfowler.com/eaaDev/EventSourcing.html, fetched 2026-11-03). -> **Proof**:
+`index-temporal-e2e.spec.ts`'s second test asserts `GET /reconcile/:orgId` reports
+`missing: [] extra: [] changed: []` for the org just rebuilt through the real server.
+
+**Finding 5** (docker compose: temporal schema at startup; /health must report temporal
+reachability, keep the 200 contract) -> **Fix**: temporal schema application now happens
+inside `buildApp()` itself (Finding 1/2), so every `docker compose up` of the `server` service
+applies it — no separate init container needed. `/health` now does `await
+temporalPool.query('select 1')`; 200 `{"status":"ok"}` unchanged when reachable (never
+regresses the existing contract), 503 `{"status":"error","temporal":"unreachable"}` when not.
+-> **Proof, real `docker compose up -d --build` this session** (Docker 29.0.1 / Compose
+v2.40.3): first boot raced (`server` has no `depends_on: condition: service_healthy` on
+`postgres`, same gap as before — `ECONNREFUSED 172.20.0.3:5432` in `docker logs`); `docker
+compose start server` after postgres was actually ready produced `curl -i
+http://localhost:3000/health` -> `HTTP/1.1 200 OK` / `{"status":"ok"}`, and `curl -i
+http://localhost:3000/reconcile/no-such-org` -> `200` /
+`{"orgId":"no-such-org","missing":[],"extra":[],"changed":[]}`. Teardown: this environment's
+`docker compose down -v` hit the same approval gate the first builder session recorded;
+`docker stop`/`docker rm` on each of the 3 containers + `docker volume rm
+mole-team-server_pgdata` individually succeeded (smart-approved) and left `docker ps -a
+--filter name=mole-team-server` / `docker volume ls --filter name=mole-team-server` both
+empty — confirmed, not assumed. NOT FIXED (left for a future task, not required by the
+reviewer's list): `depends_on` has no health-gate on postgres, so a cold `docker compose up`
+can still race on first boot; `docker compose start server` (or a retry) recovers it.
+
+**Test run** (`npx vitest run packages/server packages/temporal --no-file-parallelism`, local
+Postgres 16 on port 5544, role `mole`, db `mole_test` — see "Postgres for tests" below):
+**255 passed, 2 failed**. Both failures are PRE-EXISTING, reproduced byte-for-byte on this
+exact round's changes `git stash`'d out, same checkout, same Postgres:
+  - `packages/server/test/index.spec.ts` (pg-boss webhook-wiring poll timeout) — already
+    recorded pre-existing in the "Summary"/"Pre-existing flake" sections above.
+  - `packages/server/test/outbox.spec.ts` ("relayed exactly once" — got 0, not previously
+    recorded as flaky by this task, but confirmed pre-existing by the same stash test this
+    round, run twice).
+Both are pg-boss-under-contention flakes of the same class as the already-documented one, not
+regressions introduced by this round's changes.
+
+**Postgres for tests (this round)**: the previous `/tmp/t69-pg` data directory existed but its
+`mole` role/`mole_test` database did not (stale from an earlier/reset session) — had to (a)
+start Homebrew Postgres 16 on port 5544 with `LC_ALL=C` (plain `pg_ctl start` failed with
+"postmaster became multithreaded during startup" without it — a known macOS/Homebrew-build
+issue, not specific to this task), (b) recreate role `mole LOGIN CREATEROLE CREATEDB` + `database
+mole_test OWNER mole` to match `M25_DATABASE_URL`/`MOLE_T38_TEST_PG`'s existing convention, and
+(c) `GRANT mole_app/mole_temporal_app TO mole WITH ADMIN OPTION` (these app roles already
+existed cluster-wide from an earlier run owned by a different admin role, so `mole` needed
+explicit membership to `SET ROLE` to them — PG16's "creator auto-granted ADMIN OPTION" only
+applies the FIRST time a role is created, not to a role that already existed). Connection
+strings use bare `postgres:///<db>` (host/port via `PGHOST`/`PGPORT` env, not a query string)
+because `packages/temporal/test/*.ts`'s own admin-URL helper does
+`adminUrl.replace(/\/[^/]*$/, '')` to swap in a per-test database name — a `?host=/path`
+query parameter in the URL breaks that regex (it strips mid-path, not just the db name).

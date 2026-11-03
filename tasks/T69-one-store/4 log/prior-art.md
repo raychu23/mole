@@ -85,6 +85,39 @@ invalidation/supersession is a separate, gated step").
   transaction that records a decision revision, which is a tighter integration ai-memory's own
   architecture doesn't need (it has no multi-tenant RLS boundary to preserve per write).
 
+## 5. Fowler — event sourcing / CQRS read models (review-1 #4: the dual-write divergence choice)
+Source: martinfowler.com/bliki/CQRS.html and martinfowler.com/eaaDev/EventSourcing.html
+(fetched 2026-11-03), read specifically for whether a server-side graph index that is a
+*derived projection* of a decision store should ever be allowed to disagree with it, and if so
+how that disagreement should be caught.
+
+- CQRS's core claim: separating the write model from a read-optimized model is normal and the
+  read side is EXPECTED to lag/diverge briefly from the write side — the pattern's own standard
+  answer to that is a reconciliation/consistency check on the read side, not collapsing the two
+  models back into one. Event sourcing's replay property (a read model can always be rebuilt by
+  replaying the event log from scratch) is exactly what `rebuild.ts`'s git-driven rebuild already
+  is: nodes/relations is a deterministic replace FROM `.mole/` files in git (the real source of
+  truth), the same relationship a CQRS read model has to its event store.
+- What we borrow: this task's own pre-existing STOP rule ("PR-check latency regresses -> keep
+  separate + reconciliation job, documented") is independently the same shape CQRS prescribes —
+  confirmed, not re-derived, by this reading. `reconcileDecisions` (reconcile.ts) is that
+  reconciliation job: a read-only comparison of the graph index (checkrun.ts/graph.ts's
+  latency-critical projection) against @mole/temporal (the authoritative decision store), run
+  after every rebuild and exposed via a GET endpoint for inspection.
+- Decision recorded (REVERSIBLE DEFAULT): keep DUAL WRITE (rebuild.ts writes both stores,
+  unchanged) + the reconciliation check, rather than making @mole/temporal the SOLE write path
+  for checkrun.ts/graph.ts's read side. Rejected alternative: route checkrun.ts/graph.ts's reads
+  through @mole/temporal directly (Graphiti's own model: one graph IS the authoritative store,
+  no separate read index) — rejected for now because checkrun.ts sits on the PR-check latency
+  path this task's STOP rule explicitly protects, and @mole/temporal's bitemporal EXCLUDE/gist
+  queries are not yet benchmarked against that budget. Reversible: nothing added by this task
+  (reconcileDecisions, the temporalPool wiring) forecloses flipping the default later; a future
+  task can measure @mole/temporal's read latency and switch checkrun.ts/graph.ts over if the
+  divergence rate this reconciliation check surfaces (or the latency budget) ever justifies it.
+- What does NOT fit: CQRS commonly pairs with eventual-consistency UI patterns (stale reads
+  shown to a user, a retry/refresh loop) — Mole's reconciliation check is read-only diagnostics
+  for an operator/CLI, not a user-facing consistency guarantee; no such UI exists here.
+
 ## Spike (F62): real Graphiti over the T69 small corpus — NOT RUN
 Attempted directly in this session (2026-11-03), not simulated:
 

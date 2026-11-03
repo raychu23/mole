@@ -8,3 +8,13 @@ FAIL packages/server/test/decisionStore.spec.ts
 Error: Cannot find module '../src/decisionStore.js' imported from decisionStore.spec.ts
 Test Files  1 failed (1)
 Tests  no tests
+
+--- Review 1 fixes: red (2026-11-03) ---
+New test packages/server/test/index-temporal-e2e.spec.ts added (end-to-end through buildApp():
+webhook -> pg-boss rebuild-index -> currentDecision/decisionAsOf + /reconcile endpoint + /health).
+
+$ npx tsc -b
+packages/server/test/index-temporal-e2e.spec.ts(49,26): error TS2339: Property 'temporalPool' does
+not exist on type '{ app: FastifyInstance<...>; pool: Pool; boss: PgBoss; telemetry: Telemetry }'.
+(buildApp() does not yet construct/return a temporalPool; /reconcile and /health-with-temporal-check
+do not exist yet either.)

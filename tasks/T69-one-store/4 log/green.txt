@@ -60,3 +60,27 @@ AssertionError: expected undefined to be defined
    Start at  02:16:30
    Duration  32.88s (transform 924ms, setup 0ms, collect 5.14s, tests 54.60s, environment 3ms, prepare 1.28s)
 
+
+--- Review 1 fixes: green (2026-11-03) ---
+$ npx tsc -b
+(clean, exit 0)
+
+$ npx vitest run packages/server packages/temporal --no-file-parallelism
+Test Files  2 failed | 19 passed (21)
+     Tests  2 failed | 255 passed (257)
+New: packages/server/test/index-temporal-e2e.spec.ts (3/3 passed) -- end-to-end through
+buildApp(): POST /webhook -> real pg-boss rebuild-index drain -> currentDecision/decisionAsOf
+non-null for orgA, null for orgB (RLS) -> GET /reconcile/:orgId clean -> GET /health 200.
+
+Both failures are PRE-EXISTING, reproduced identically with this round's changes `git stash`'d
+out, same unmodified checkout, same local Postgres (port 5544, role `mole`, db `mole_test`):
+  - packages/server/test/index.spec.ts: the pg-boss webhook-wiring flake already recorded in
+    2 insights.md (30s poll timeout, "expected undefined to be defined"). NOT a regression.
+  - packages/server/test/outbox.spec.ts: "a written notification is eventually relayed exactly
+    once" -- also reproduces unmodified. NOT a regression, newly observed this round (not
+    previously recorded) but confirmed pre-existing by the same stash test.
+Under default parallelism (concurrent vitest worker forks contending for the same shared
+Postgres instance), the new e2e test also flakes the same way index.spec.ts's own job-drain
+poll does (0 pgboss job rows visible within 30s under contention) -- this is the SAME
+pre-existing pg-boss-under-contention flake class, not a new one; --no-file-parallelism (or
+running packages/server/test/index-temporal-e2e.spec.ts alone) is reliably green.

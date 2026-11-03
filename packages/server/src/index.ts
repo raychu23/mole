@@ -8,12 +8,15 @@
 // (./webhook.js, ./db.js, ...), as they already do — or import everything from ./lib.js.
 import { pathToFileURL } from 'node:url';
 import Fastify from 'fastify';
+import { Pool as TemporalPgPool } from 'pg';
+import { applySchema as applyTemporalSchema } from '@mole/temporal';
 import { createPool, runMigrations } from './db.js';
 import { createQueue } from './queue.js';
 import { createWebhookHandler } from './webhook.js';
 import { initTelemetry } from './telemetry.js';
 import { rebuildIndexFromGit } from './rebuild.js';
 import { computeCheckRun } from './checkrun.js';
+import { reconcileDecisions } from './reconcile.js';
 
 export interface ServerHandle {
   close(): Promise<void>;
@@ -29,10 +32,20 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env) {
   // org id -> local git repo dir standing in for "the repo GitHub would push from" (no real
   // GitHub App registration in Mole, per the task's non-goals); configured per deploy.
   const orgRepoDirs: Record<string, string> = env.ORG_REPO_DIRS ? JSON.parse(env.ORG_REPO_DIRS) : {};
+  // T69 review-1 #1/#2: @mole/temporal is now the authoritative decision store (see
+  // decisionStore.ts/rebuild.ts), but buildApp() itself never constructed a pool for it or
+  // applied its schema -- a real deployed server never actually wrote a decision into
+  // temporal on a live webhook-triggered rebuild. TEMPORAL_DATABASE_URL defaults to
+  // DATABASE_URL (one Postgres instance by default, same convention every server/temporal test
+  // in this repo already uses -- see decisionStore.spec.ts's single M25_DATABASE_URL), while
+  // still letting a deploy point temporal at a separate database if it ever needs to.
+  const temporalDbUrl = env.TEMPORAL_DATABASE_URL || dbUrl;
 
   const telemetry = initTelemetry('mole-team-server');
   const pool = createPool(dbUrl);
   await runMigrations(pool);
+  const temporalPool = new TemporalPgPool({ connectionString: temporalDbUrl, max: 10 });
+  await applyTemporalSchema(temporalPool);
   const boss = await createQueue(dbUrl);
   const handler = createWebhookHandler({ secret, pool, boss, orgRepoDirs, telemetry });
 
@@ -47,7 +60,21 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env) {
       const { orgId, ref } = job.data as { orgId: string; ref: string };
       const repoDir = orgRepoDirs[orgId];
       if (!repoDir) throw new Error(`no repo dir configured for org ${orgId}`);
-      await rebuildIndexFromGit(pool, orgId, repoDir, ref, telemetry);
+      await rebuildIndexFromGit(pool, orgId, repoDir, ref, telemetry, { temporalPool });
+      // T69 review-1 #4: run the divergence check after every rebuild (the reconciliation
+      // job the task's own STOP rule calls for) and log it. Never throws / never blocks the
+      // index: a logging failure here must not turn a successful rebuild into a failed job.
+      try {
+        const result = await reconcileDecisions(pool, temporalPool, orgId);
+        const divergent = result.missing.length > 0 || result.extra.length > 0 || result.changed.length > 0;
+        if (divergent) {
+          app.log.warn({ orgId, result }, '[mole-server] decision reconciliation divergence');
+        } else {
+          app.log.info({ orgId }, '[mole-server] decision reconciliation clean');
+        }
+      } catch (e) {
+        app.log.error({ orgId, err: e }, '[mole-server] decision reconciliation check failed');
+      }
     }
   });
   await boss.work('compute-check-run', { batchSize: 10 }, async (jobs) => {
@@ -61,7 +88,27 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env) {
 
   const app = Fastify({ logger: true });
 
-  app.get('/health', async () => ({ status: 'ok' }));
+  // T69 review-1 #5: /health must report temporal reachability, not just liveness. Keep the
+  // existing 200 contract when BOTH stores are reachable (never regress the common case this
+  // route already serves) -- a real failure to reach temporal is reported as 503 instead of a
+  // silent/lying 200.
+  app.get('/health', async (_req, reply) => {
+    try {
+      await temporalPool.query('select 1');
+      return { status: 'ok' };
+    } catch (e) {
+      reply.code(503);
+      return { status: 'error', temporal: 'unreachable' };
+    }
+  });
+
+  // T69 review-1 #4: read-only divergence check, exposed so an operator (or a future CLI) can
+  // inspect reconciliation state without a direct DB connection. Never writes.
+  app.get('/reconcile/:orgId', async (req) => {
+    const { orgId } = req.params as { orgId: string };
+    return reconcileDecisions(pool, temporalPool, orgId);
+  });
+
 
   // Fastify's default JSON parser consumes and re-serializes the body; HMAC verification
   // needs the exact raw bytes GitHub signed (R0 prior-art.md §1), so capture the raw string
@@ -76,11 +123,11 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env) {
     reply.code(result.status).send(result.body);
   });
 
-  return { app, pool, boss, telemetry };
+  return { app, pool, boss, telemetry, temporalPool };
 }
 
 export async function startServer(env: NodeJS.ProcessEnv = process.env): Promise<ServerHandle> {
-  const { app, pool, boss, telemetry } = await buildApp(env);
+  const { app, pool, boss, telemetry, temporalPool } = await buildApp(env);
   const port = Number(env.PORT ?? 3000);
   await app.listen({ port, host: '0.0.0.0' });
   return {
@@ -88,6 +135,7 @@ export async function startServer(env: NodeJS.ProcessEnv = process.env): Promise
       await app.close();
       await boss.stop({ graceful: false, wait: false });
       await pool.end();
+      await temporalPool.end();
       await telemetry.shutdown().catch(() => undefined);
     },
   };

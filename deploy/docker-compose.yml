@@ -33,6 +33,11 @@ services:
       dockerfile: deploy/Dockerfile
     environment:
       DATABASE_URL: postgresql://mole:mole@postgres:5432/mole
+      # T69 review-1 #2/#5: @mole/temporal (the authoritative decision store) applies its own
+      # schema at server startup now (buildApp(), src/index.ts) -- no separate init step or
+      # container needed here. TEMPORAL_DATABASE_URL defaults to DATABASE_URL (one Postgres
+      # instance) if unset; override it to point temporal at a separate database/instance.
+      TEMPORAL_DATABASE_URL: ${MOLE_TEMPORAL_DATABASE_URL:-}
       # T69: this compose previously omitted WEBHOOK_SECRET/ORG_REPO_DIRS, which buildApp()
       # requires at startup (src/index.ts) -- `docker compose up` crash-looped the server
       # container before this fix (see 2 insights.md for the actual `docker compose up`
