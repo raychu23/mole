@@ -39,3 +39,6 @@ export type { ArgumentDefinition } from './argdown/definitions.js';
 export { buildOkfBundle, OKF_VERSION } from './export/okf.js';
 export type { OkfBundle, OkfFile } from './export/okf.js';
 export { exportCli } from './export/cli.js';
+// T78 (D65): per-link assurance on door: one-way decisions, never inferred -- see assurance/report.ts header.
+export { assuranceCli, assuranceReport, parseAssurance } from './assurance/report.js';
+export type { AssuranceOptions } from './assurance/report.js';

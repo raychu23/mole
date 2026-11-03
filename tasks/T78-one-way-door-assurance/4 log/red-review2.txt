@@ -1,0 +1,7 @@
+RED (src fix stashed):
+   × T78 review 2: assurance written as a mapping > is reported as malformed, not treated as "no entries" 9ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 14 passed (15)
+
+GREEN:
+      Tests  15 passed (15)
