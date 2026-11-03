@@ -1,0 +1,99 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T70-investment-map
+
+ ❯ packages/hotspots/test/hotspots.test.ts (6 tests | 6 failed) 3832ms
+   × indentComplexity (T70: Tornhill indentation-based complexity) > sums logical-indent depth over non-blank lines, ignoring blank lines 132ms
+     → not implemented
+   × indentComplexity (T70: Tornhill indentation-based complexity) > flat code has near-zero complexity 286ms
+     → not implemented
+   × computeHotspots (T70 done-when: ranking, each rank explained by its four inputs) > ranks the file with high churn+complexity+volatility+incidents above a flat untouched-by-decisions file 710ms
+     → not implemented
+   × computeHotspots (T70 done-when: ranking, each rank explained by its four inputs) > every rank carries its own four raw inputs and their normalized [0,1] scores (never a bare score) 1030ms
+     → not implemented
+   × computeHotspots (T70 done-when: ranking, each rank explained by its four inputs) > respects --top / top option 1084ms
+     → not implemented
+   × computeHotspots (T70 done-when: ranking, each rank explained by its four inputs) > a repo with no fix commits and no decisions ranks nothing (STOP: no ranking without all four inputs) 507ms
+     → not implemented
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/hotspots/test/hotspots.test.ts > indentComplexity (T70: Tornhill indentation-based complexity) > sums logical-indent depth over non-blank lines, ignoring blank lines
+Error: not implemented
+ ❯ indentComplexity packages/hotspots/src/index.ts:5:9
+      3| }
+      4| export function indentComplexity(): never {
+      5|   throw new Error('not implemented');
+       |         ^
+      6| }
+      7| 
+ ❯ packages/hotspots/test/hotspots.test.ts:74:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  packages/hotspots/test/hotspots.test.ts > indentComplexity (T70: Tornhill indentation-based complexity) > flat code has near-zero complexity
+Error: not implemented
+ ❯ indentComplexity packages/hotspots/src/index.ts:5:9
+      3| }
+      4| export function indentComplexity(): never {
+      5|   throw new Error('not implemented');
+       |         ^
+      6| }
+      7| 
+ ❯ packages/hotspots/test/hotspots.test.ts:83:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  packages/hotspots/test/hotspots.test.ts > computeHotspots (T70 done-when: ranking, each rank explained by its four inputs) > ranks the file with high churn+complexity+volatility+incidents above a flat untouched-by-decisions file
+Error: not implemented
+ ❯ computeHotspots packages/hotspots/src/index.ts:2:9
+      1| export function computeHotspots(): never {
+      2|   throw new Error('not implemented');
+       |         ^
+      3| }
+      4| export function indentComplexity(): never {
+ ❯ packages/hotspots/test/hotspots.test.ts:90:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  packages/hotspots/test/hotspots.test.ts > computeHotspots (T70 done-when: ranking, each rank explained by its four inputs) > every rank carries its own four raw inputs and their normalized [0,1] scores (never a bare score)
+Error: not implemented
+ ❯ computeHotspots packages/hotspots/src/index.ts:2:9
+      1| export function computeHotspots(): never {
+      2|   throw new Error('not implemented');
+       |         ^
+      3| }
+      4| export function indentComplexity(): never {
+ ❯ packages/hotspots/test/hotspots.test.ts:101:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  packages/hotspots/test/hotspots.test.ts > computeHotspots (T70 done-when: ranking, each rank explained by its four inputs) > respects --top / top option
+Error: not implemented
+ ❯ computeHotspots packages/hotspots/src/index.ts:2:9
+      1| export function computeHotspots(): never {
+      2|   throw new Error('not implemented');
+       |         ^
+      3| }
+      4| export function indentComplexity(): never {
+ ❯ packages/hotspots/test/hotspots.test.ts:116:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  packages/hotspots/test/hotspots.test.ts > computeHotspots (T70 done-when: ranking, each rank explained by its four inputs) > a repo with no fix commits and no decisions ranks nothing (STOP: no ranking without all four inputs)
+Error: not implemented
+ ❯ computeHotspots packages/hotspots/src/index.ts:2:9
+      1| export function computeHotspots(): never {
+      2|   throw new Error('not implemented');
+       |         ^
+      3| }
+      4| export function indentComplexity(): never {
+ ❯ packages/hotspots/test/hotspots.test.ts:124:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+   Start at  02:05:02
+   Duration  7.03s (transform 509ms, setup 0ms, collect 818ms, tests 3.83s, environment 0ms, prepare 222ms)
+

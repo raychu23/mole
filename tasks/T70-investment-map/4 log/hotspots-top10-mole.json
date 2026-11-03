@@ -1,0 +1,147 @@
+{
+  "ranked": [
+    {
+      "file": "packages/daemon/src/cli.ts",
+      "churn": 29,
+      "complexity": 483,
+      "volatility": 2,
+      "incidents": 1,
+      "normalized": {
+        "churn": 0.6041666666666666,
+        "complexity": 0.019355614330367876,
+        "volatility": 0.4,
+        "incidents": 0.3333333333333333
+      },
+      "score": 0.0015592022655018566
+    },
+    {
+      "file": "packages/daemon/src/server.ts",
+      "churn": 5,
+      "complexity": 530,
+      "volatility": 5,
+      "incidents": 2,
+      "normalized": {
+        "churn": 0.10416666666666667,
+        "complexity": 0.021239079907028932,
+        "volatility": 1,
+        "incidents": 0.6666666666666666
+      },
+      "score": 0.001474936104654787
+    },
+    {
+      "file": "packages/indexer/src/ts-engine.ts",
+      "churn": 4,
+      "complexity": 754,
+      "volatility": 1,
+      "incidents": 3,
+      "normalized": {
+        "churn": 0.08333333333333333,
+        "complexity": 0.03021559669792418,
+        "volatility": 0.2,
+        "incidents": 1
+      },
+      "score": 0.0005035932782987364
+    },
+    {
+      "file": "packages/memory/src/notes.ts",
+      "churn": 3,
+      "complexity": 289,
+      "volatility": 1,
+      "incidents": 1,
+      "normalized": {
+        "churn": 0.0625,
+        "complexity": 0.011581309609681815,
+        "volatility": 0.2,
+        "incidents": 0.3333333333333333
+      },
+      "score": 0.000048255456707007564
+    },
+    {
+      "file": "packages/layout/src/layout.ts",
+      "churn": 3,
+      "complexity": 163,
+      "volatility": 1,
+      "incidents": 1,
+      "normalized": {
+        "churn": 0.0625,
+        "complexity": 0.006532018914803238,
+        "volatility": 0.2,
+        "incidents": 0.3333333333333333
+      },
+      "score": 0.000027216745478346827
+    },
+    {
+      "file": "packages/indexer/src/db.ts",
+      "churn": 2,
+      "complexity": 43,
+      "volatility": 1,
+      "incidents": 1,
+      "normalized": {
+        "churn": 0.041666666666666664,
+        "complexity": 0.0017231706339664984,
+        "volatility": 0.2,
+        "incidents": 0.3333333333333333
+      },
+      "score": 0.000004786585094351384
+    },
+    {
+      "file": "package-lock.json",
+      "churn": 48,
+      "complexity": 24954,
+      "volatility": 0,
+      "incidents": 1,
+      "normalized": {
+        "churn": 1,
+        "complexity": 1,
+        "volatility": 0,
+        "incidents": 0.3333333333333333
+      },
+      "score": 0
+    },
+    {
+      "file": "tasks/loop-report.md",
+      "churn": 40,
+      "complexity": 366,
+      "volatility": 0,
+      "incidents": 0,
+      "normalized": {
+        "churn": 0.8333333333333334,
+        "complexity": 0.014666987256552055,
+        "volatility": 0,
+        "incidents": 0
+      },
+      "score": 0
+    },
+    {
+      "file": "tsconfig.json",
+      "churn": 24,
+      "complexity": 164,
+      "volatility": 0,
+      "incidents": 1,
+      "normalized": {
+        "churn": 0.5,
+        "complexity": 0.006572092650476877,
+        "volatility": 0,
+        "incidents": 0.3333333333333333
+      },
+      "score": 0
+    },
+    {
+      "file": "packages/mcp/src/server.ts",
+      "churn": 19,
+      "complexity": 1348,
+      "volatility": 0,
+      "incidents": 1,
+      "normalized": {
+        "churn": 0.3958333333333333,
+        "complexity": 0.05401939568806604,
+        "volatility": 0,
+        "incidents": 0.3333333333333333
+      },
+      "score": 0
+    }
+  ],
+  "filesConsidered": 2275,
+  "fixRule": "^(fix|revert)\\b|regression|review fixes",
+  "ms": 57470
+}
