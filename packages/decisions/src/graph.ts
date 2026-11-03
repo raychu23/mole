@@ -273,6 +273,15 @@ function loadIncidents(b: Builder): void {
     for (const [k, v] of f) lines[k] = v.line;
     b.node({ id, kind: 'incident', title: id, status: 'recorded', format: 'mole', file, line: 1, scope: [], evidence: [], fields: lines });
     for (const d of f.get('decisions')?.items ?? []) b.edge({ from: id, to: d.value, type: 'evidence_for', file, line: d.line });
+    // T58: an accepted incident is an argument attacking the targets frozen in its own `attacks:` list (written by
+    // `mole incident accept` together with `revives:`, one atomic write). No `attacks:` -> no argument.
+    const attacks = (f.get('attacks')?.items ?? []).filter((t) => t.value);
+    if (attacks.length) {
+      const argId = `incident-${id}`;
+      const at = f.get('attacks')!.line;
+      b.node({ id: argId, kind: 'argument', title: str(f.get('title')) || id, status: 'recorded', format: 'mole', file, line: f.get('title')?.line ?? at, scope: [], evidence: [], fields: { attacks: at } });
+      for (const t of attacks) b.edge({ from: argId, to: t.value, type: 'attacks', file, line: t.line });
+    }
   }
 }
 
