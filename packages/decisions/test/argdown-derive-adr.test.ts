@@ -85,4 +85,31 @@ describe('deriveAdrArgumentFramework: MADR Considered Options / Decision Outcome
     const result = evaluate(derived.framework);
     expect(result.labels[derived.claimId]).toBe('in');
   });
+
+  // T80 review HIGH 2: sameName() used to strip double/curly quotes but not single quotes, so a chosen
+  // option phrased "Include 'Consulted' and 'Informed' of RACI" (single quotes nested inside the outer
+  // double quotes, real m29-madr 0015/0016 phrasing) never matched its own Considered Options bullet
+  // "Include "Consulted" and "Informed" of RACI" -- chosenIdx stayed -1 and the chosen option came out as
+  // a considered-option ATTACKING ITS OWN CLAIM.
+  const NESTED_SINGLE_QUOTE_ADR = [
+    '## Considered Options',
+    '',
+    '* Include "Consulted" and "Informed" of RACI',
+    '* Include all fields of RACI',
+    '',
+    '## Decision Outcome',
+    '',
+    `Chosen option: "Include 'Consulted' and 'Informed' of RACI", because comes out best (see below).`,
+    '',
+  ].join('\n');
+
+  it('the chosen option is excluded even when its Decision Outcome phrasing nests single quotes inside double quotes', () => {
+    const derived = deriveAdrArgumentFramework('D-quotes', NESTED_SINGLE_QUOTE_ADR);
+    const optionTexts = derived.arguments.filter((a) => a.role === 'considered-option').map((a) => a.text);
+    expect(optionTexts).toEqual(['Include all fields of RACI']); // the chosen one is NOT a considered-option
+    const claimId = derived.claimId;
+    const optionId = derived.arguments.find((a) => a.role === 'considered-option')!.id;
+    expect(derived.framework.attacks).toContainEqual([optionId, claimId]); // the genuinely-rejected option still attacks
+    expect(derived.framework.attacks.filter(([, to]) => to === claimId)).toHaveLength(1); // exactly ONE attacker on the claim
+  });
 });

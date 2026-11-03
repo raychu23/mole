@@ -3,3 +3,46 @@ packages/decisions/src/index.ts(17,37): error TS2307: Cannot find module './capt
 packages/decisions/src/index.ts(18,104): error TS2307: Cannot find module './capture/arguments.js' or its corresponding type declarations.
 packages/decisions/src/index.ts(19,183): error TS2307: Cannot find module './capture/captured-store.js' or its corresponding type declarations.
 packages/decisions/src/index.ts(20,30): error TS2307: Cannot find module './capture/arguments-cli.js' or its corresponding type declarations.
+
+--- T80-argument-capture review-fix red (HIGH 1, HIGH 2, MEDIUM 3) ---
+`npx vitest run test/argument-capture.test.ts test/argdown-derive-adr.test.ts test/captured-arguments-lock.test.ts`
+against the PRE-FIX src (captured-store.ts merges by id only, derive-adr.ts's sameName() doesn't strip
+single quotes, no capture-level chosen-option guard, no lock): 9 failed, 14 passed.
+
+FAIL test/argdown-derive-adr.test.ts > deriveAdrArgumentFramework: MADR Considered Options / Decision Outcome -> Dung framework > the chosen option is excluded even when its Decision Outcome phrasing nests single quotes inside double quotes
+  AssertionError: expected [ 'Include "Consulted" and "Informed" of RACI', 'Include all fields of RACI' ] to equal [ 'Include all fields of RACI' ]
+  -- sameName() left the single-quoted chosen name unmatched, so chosenIdx stayed -1 and the chosen option
+     was NOT excluded: it appeared as a considered-option attacking its own claim.
+
+FAIL test/argument-capture.test.ts > T80 stop condition... > approving an unknown argument id is a named error, never a silent no-op
+  (pre-existing test updated to await+rejects.toThrow for the now-async approveCapturedArgument -- passes
+   once the store's locking change lands; listed here only because it ran red against the stashed src,
+   which still has the OLD sync signature.)
+
+FAIL test/argument-capture.test.ts > review HIGH 1: approval binds to CONTENT... > INSERT above an approved row...
+  AssertionError: expected 'draft' to be 'approved' -- the SAME content ("Use badge"), now at a NEW id
+  (option:2, after a bullet was inserted above it), did not carry its approval: merge-by-id handed the old
+  id's 'approved' status to the UNRELATED new bullet's text instead.
+
+FAIL test/argument-capture.test.ts > review HIGH 1... > EDIT-IN-PLACE: changing an approved row's own text reverts it to draft, noting previouslyApproved
+  AssertionError: expected 'approved' to be 'draft' -- editing an approved row's own text in place kept the
+  stale 'approved' status on text nobody has reviewed; no previouslyApproved note at all.
+
+FAIL test/argument-capture.test.ts > review HIGH 1... > REORDER: two considered options swapping source order keep their OWN approval status, not each other's
+  AssertionError: expected 'draft' to be 'approved' -- swapping two bullets' source order swapped their ids;
+  merge-by-id handed each one the OTHER bullet's stored status.
+
+FAIL test/argument-capture.test.ts > review HIGH 2: the record's own chosen option never attacks its own claim > sameName() normalizes single quotes too, not just double/curly quotes
+  AssertionError: expected "include 'consulted' and 'informed' of raci" to be "include consulted and informed of raci"
+
+FAIL test/argument-capture.test.ts > review HIGH 2... > real record 0015 (m29-madr): the chosen option is excluded, never a considered-option attacking the claim
+  AssertionError: expected true to be false -- 0015's chosen option 'Include "Consulted" and "Informed" of
+  RACI' appeared as a considered-option (self-attacking the claim), confirming the real-record bug.
+
+FAIL test/argument-capture.test.ts > review HIGH 2... > real record 0016 (m29-madr): same guard holds for a chosen option phrased with nested single quotes
+  AssertionError: expected true to be false -- same bug, real record 0016.
+
+FAIL test/captured-arguments-lock.test.ts > T80 review MEDIUM 3: concurrent CLI approves... > 12 concurrent approves x 10 rounds: every row ends approved by its LAST round's approver, none lost
+  AssertionError: expected [ Array(13) ] to have a length of 12 but got 13 -- unlocked concurrent
+  read-modify-write corrupted the stored array (a lost update manifested as a DUPLICATED row here), proving
+  the race without a lock.

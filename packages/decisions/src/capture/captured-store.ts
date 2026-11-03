@@ -1,11 +1,30 @@
 // T80: persistent storage for captured arguments, one JSON array per decision id under
 // `<root>/.mole/arguments/captured/<id>.json` -- same convention as T46's compile-at-capture store
 // (`compile/store.ts`): append-only, nothing is ever deleted. Re-capturing a decision MERGES newly found
-// rows in by id (updates text/span/provenance on an existing row, NEVER touches its status) and adds any
-// new ids; it never removes a row that disappeared from the source text, so an approved argument's
-// approval is never silently undone by a later re-run.
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+// rows in and adds any new ids; it never removes a row that disappeared from the source text, so an
+// approved argument's approval is never silently undone by a later re-run.
+//
+// review HIGH 1: a captured argument's id is POSITIONAL (`::pro:N`/`::con:N`/`::option:N`, derive-adr.ts /
+// arguments.ts number bullets in source order). Merging by id alone meant inserting a new bullet ABOVE an
+// already-approved one shifted every id after it down by one -- the id that used to mean the approved
+// bullet now means the NEW, unreviewed bullet (which silently inherited 'approved'), while the approved
+// text moved to a new id that looked never-reviewed. Fixed by binding an approval/rejection to the row's
+// CONTENT (`contentHash` below: sha256 of `role::text`) first, falling back to id only when no row's
+// content matches (an honest edit-in-place) -- see `mergeByContent`'s own comment for the four cases
+// (insert, edit, reorder, delete) this resolves.
+//
+// review MEDIUM 3: every read-modify-write here (merge-and-save, approve, reject) is now guarded by a
+// cross-process file lock (proper-lockfile) and writes go through a temp-file + rename, same pattern as
+// priorities.ts's setPriorities (see that file's own comment above `lockStaleMs` for why proper-lockfile
+// replaces a hand-rolled mutex). Without it, N concurrent `mole arguments approve` calls on the same
+// decision raced: each read the whole array, patched its own row in memory, and wrote the whole array back
+// -- a second writer's read (taken before the first writer's write landed) clobbered the first writer's
+// change when it saved. The lock serializes the whole read-modify-write per decision id.
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import process from 'node:process';
+import { lock as lockFile } from 'proper-lockfile';
 import type { CapturedArgument } from './arguments.js';
 
 export const capturedDir = (root: string): string => join(root, '.mole', 'arguments', 'captured');
@@ -19,49 +38,219 @@ export function listCapturedArguments(root: string, decisionId: string): Capture
   return JSON.parse(readFileSync(p, 'utf8')) as CapturedArgument[];
 }
 
-function writeCapturedArguments(root: string, decisionId: string, rows: CapturedArgument[]): void {
-  mkdirSync(capturedDir(root), { recursive: true });
-  writeFileSync(capturedPath(root, decisionId), `${JSON.stringify(rows, null, 2)}\n`);
+/** review HIGH 1: a row's content identity -- its OWN role + text, never its positional id. `role` is
+ *  included so a pro and a con that happen to quote identical text are never treated as the same row. */
+function contentHashOf(row: { role: string; text: string }): string {
+  return createHash('sha256').update(`${row.role}::${row.text}`).digest('hex');
 }
 
-/** Merge freshly-captured rows (always `status: 'draft'` coming in) into the stored set: an id already on
- *  disk keeps its stored status/approvedBy/approvedAt/rejectedReason (an approval or rejection a person
- *  already made is never reverted by re-running capture) but takes the freshly-extracted text/span/
- *  provenance/attacks/supports, so a later edit to the source ADR is reflected without losing the
- *  decision already made about it. Returns the full merged set. */
-export function saveCapturedArguments(root: string, decisionId: string, fresh: CapturedArgument[]): CapturedArgument[] {
-  const existing = new Map(listCapturedArguments(root, decisionId).map((r) => [r.id, r]));
-  const merged = fresh.map((row) => {
-    const prior = existing.get(row.id);
-    return prior ? { ...row, status: prior.status, approvedBy: prior.approvedBy, approvedAt: prior.approvedAt, rejectedReason: prior.rejectedReason, rejectedAt: prior.rejectedAt } : row;
+/** Write-then-rename (same directory, same filesystem, review MEDIUM 3): a reader never observes a
+ *  half-written file, and a process crashing mid-write leaves only an orphaned `.tmp` file, never a
+ *  corrupt captured-arguments file. */
+function writeFileAtomic(path: string, content: string): void {
+  const tmp = `${path}.${process.pid}.${Date.now()}.tmp`;
+  writeFileSync(tmp, content);
+  renameSync(tmp, path);
+}
+
+function writeCapturedArguments(root: string, decisionId: string, rows: CapturedArgument[]): void {
+  mkdirSync(capturedDir(root), { recursive: true });
+  writeFileAtomic(capturedPath(root, decisionId), `${JSON.stringify(rows, null, 2)}\n`);
+}
+
+// review MEDIUM 3: same lock knobs as priorities.ts's setPriorities -- see that file's own comment above
+// its `lockStaleMs` for the full rationale (mkdir-based mutex, mtime refresh while held, onCompromised
+// instead of silent reclaim). MOLE_CAPTURED_ARGUMENTS_TEST_STALE_MS is a test-only seam, unset in production.
+function lockStaleMs(): number {
+  return Number(process.env.MOLE_CAPTURED_ARGUMENTS_TEST_STALE_MS) || 10_000;
+}
+function lockRetries(staleMs: number): { retries: number; factor: number; minTimeout: number; maxTimeout: number } {
+  const minTimeout = Math.max(20, Math.round(staleMs / 50));
+  const maxTimeout = Math.max(300, Math.round(staleMs / 2));
+  return { retries: 25, factor: 1.4, minTimeout, maxTimeout };
+}
+
+/** review MEDIUM 3: a crash-orphaned `<file>.lock` must never show up as an untracked file in a REPO THIS
+ *  RUNS AGAINST. Same convention priorities.ts already writes for `.mole/priorities.md.lock` -- shared
+ *  `.mole/.gitignore`, written once, never duplicated. */
+function ensureLockIgnored(root: string): void {
+  const dir = join(root, '.mole');
+  try {
+    mkdirSync(dir, { recursive: true });
+  } catch {
+    /* already exists */
+  }
+  const ignorePath = join(dir, '.gitignore');
+  let text = '';
+  try {
+    text = readFileSync(ignorePath, 'utf8');
+  } catch {
+    /* no .mole/.gitignore yet */
+  }
+  if (text.split(/\r?\n/).some((l) => l.trim() === '*.lock')) return;
+  const prefix = text && !text.endsWith('\n') ? `${text}\n` : text;
+  writeFileSync(ignorePath, `${prefix}${prefix ? '' : '# Mole: process lock files, never committed\n'}*.lock\n`);
+}
+
+async function acquireLock(path: string): Promise<() => Promise<void>> {
+  const stale = lockStaleMs();
+  const { retries, factor, minTimeout, maxTimeout } = lockRetries(stale);
+  try {
+    return await lockFile(path, {
+      stale,
+      update: Math.round(stale / 4), // proper-lockfile clamps this into [1000, stale/2] itself
+      retries: { retries, factor, minTimeout, maxTimeout },
+      realpath: false, // the locked file may not exist yet (a decision's first capture creates it)
+      onCompromised: (err) => {
+        throw new CapturedArgumentError(`lock on ${path} was compromised (its mtime could no longer be refreshed): ${err.message}`);
+      },
+    });
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ELOCKED') {
+      throw new CapturedArgumentError(`timed out waiting for the lock on ${path} (another capture/approve/reject is running or crashed holding it)`);
+    }
+    throw err;
+  }
+}
+
+/** review MEDIUM 3: serialize one decision id's whole read-modify-write under its own lock. `mkdirSync`
+ *  before locking (same as `ensureLockIgnored`'s own mkdir) so proper-lockfile's internal mkdir-based mutex
+ *  always has a directory to be created in, even on a brand-new repo's very first capture. */
+async function withLock<T>(root: string, decisionId: string, fn: () => T): Promise<T> {
+  ensureLockIgnored(root);
+  mkdirSync(capturedDir(root), { recursive: true });
+  const path = capturedPath(root, decisionId);
+  const release = await acquireLock(path);
+  try {
+    return fn();
+  } finally {
+    await release();
+  }
+}
+
+/** review HIGH 1: merge freshly-captured rows (always `status: 'draft'` coming in) against the stored set,
+ *  BY CONTENT first, never by positional id alone:
+ *   1. same content (role+text), anywhere in the stored set, unused so far -- the common "nothing changed"
+ *      case (fast-pathed via the same id when it also matches) AND the "a bullet was inserted/removed above
+ *      this one, so its id shifted but its text didn't" case (review's own reorder/insert reproducers):
+ *      carries status/approvedBy/approvedAt/rejectedReason/rejectedAt/previouslyApproved* forward intact.
+ *   2. no content match anywhere, but THIS id existed before with DIFFERENT text (an honest edit-in-place):
+ *      an approved row reverts to `draft` with `previouslyApproved` (+by/at) noted -- the OLD approval no
+ *      longer vouches for NEW text nobody has reviewed; a rejected or still-draft row just takes the fresh
+ *      text as a plain draft (no stale reason attached to text that no longer exists).
+ *   3. no match at all: a genuinely new row, draft as it came in.
+ *  Any stored row no row in `fresh` claims (case 4: the bullet was deleted from the source) is kept,
+ *  unchanged, at the end -- never silently dropped (append-only). */
+function mergeByContent(existing: CapturedArgument[], fresh: CapturedArgument[]): CapturedArgument[] {
+  const existingByHash = new Map<string, CapturedArgument[]>();
+  for (const r of existing) {
+    const h = contentHashOf(r);
+    const bucket = existingByHash.get(h);
+    if (bucket) bucket.push(r);
+    else existingByHash.set(h, [r]);
+  }
+  const existingById = new Map(existing.map((r) => [r.id, r]));
+  const used = new Set<string>();
+  const hashes = fresh.map((row) => contentHashOf(row));
+  const resolved: Array<CapturedArgument | undefined> = fresh.map(() => undefined);
+
+  // PASS 1: resolve every fresh row's CONTENT match first, across the whole batch, before any row falls
+  // back to an id match. Order matters here (review HIGH 1's own insertion reproducer): a genuinely-new row
+  // processed earlier must never be allowed to steal, via its id, the stored row that a LATER row's content
+  // still needs -- doing content matches for the whole batch first, then id matches only for what's left,
+  // is what keeps that from happening (a single combined pass processed fresh rows in document order and
+  // let an earlier no-content-match row's id fallback consume the wrong stored row first).
+  fresh.forEach((row, i) => {
+    const h = hashes[i]!;
+    const sameContent = (existingByHash.get(h) ?? []).filter((c) => !used.has(c.id));
+    // prefer the row at the SAME id among content matches (the common no-op re-capture), else the first
+    // unused one (the row whose content moved to a different id -- insert/reorder).
+    const prior = sameContent.find((c) => c.id === row.id) ?? sameContent[0];
+    if (!prior) return;
+    used.add(prior.id);
+    resolved[i] = {
+      ...row,
+      contentHash: h,
+      status: prior.status,
+      approvedBy: prior.approvedBy,
+      approvedAt: prior.approvedAt,
+      rejectedReason: prior.rejectedReason,
+      rejectedAt: prior.rejectedAt,
+      previouslyApproved: prior.previouslyApproved,
+      previouslyApprovedBy: prior.previouslyApprovedBy,
+      previouslyApprovedAt: prior.previouslyApprovedAt,
+    };
   });
-  // keep any stored row capture no longer finds (source text changed/removed) -- never silently dropped
-  for (const [id, row] of existing) if (!merged.some((r) => r.id === id)) merged.push(row);
-  writeCapturedArguments(root, decisionId, merged);
+
+  // PASS 2: anything left without a content match either shares an id with a stored row whose content
+  // differs (an honest edit-in-place) or is genuinely new.
+  fresh.forEach((row, i) => {
+    if (resolved[i]) return;
+    const h = hashes[i]!;
+    const byId = existingById.get(row.id);
+    if (byId && !used.has(byId.id)) {
+      used.add(byId.id);
+      if (byId.status === 'approved') {
+        resolved[i] = { ...row, contentHash: h, status: 'draft', previouslyApproved: true, previouslyApprovedBy: byId.approvedBy, previouslyApprovedAt: byId.approvedAt };
+        return;
+      }
+      resolved[i] = { ...row, contentHash: h, status: 'draft' };
+      return;
+    }
+    resolved[i] = { ...row, contentHash: h };
+  });
+
+  const merged = resolved as CapturedArgument[];
+  // deleted-from-source row: kept, never dropped -- also back-fills contentHash for any row persisted
+  // before this field existed, so every row on disk has one after its first merge through this code.
+  for (const r of existing) if (!used.has(r.id)) merged.push({ ...r, contentHash: r.contentHash ?? contentHashOf(r) });
   return merged;
 }
 
-function setRow(root: string, decisionId: string, argumentId: string, patch: Partial<CapturedArgument>, verb: string): CapturedArgument {
-  const rows = listCapturedArguments(root, decisionId);
-  const idx = rows.findIndex((r) => r.id === argumentId);
-  if (idx < 0) throw new CapturedArgumentError(`mole arguments ${verb}: ${decisionId} has no captured argument ${argumentId}`);
-  const next = { ...rows[idx]!, ...patch };
-  rows[idx] = next;
-  writeCapturedArguments(root, decisionId, rows);
-  return next;
+/** Merge freshly-captured rows into the stored set and persist (review HIGH 1 + MEDIUM 3: content-bound
+ *  merge, under this decision's own lock, written atomically). Returns the full merged set. */
+export async function saveCapturedArguments(root: string, decisionId: string, fresh: CapturedArgument[]): Promise<CapturedArgument[]> {
+  return withLock(root, decisionId, () => {
+    // re-read AFTER the lock is held, never before -- a read taken before acquiring the lock could already
+    // be stale by the time this process gets its turn to write (review MEDIUM 3, same as priorities.ts).
+    const existing = listCapturedArguments(root, decisionId);
+    const merged = mergeByContent(existing, fresh);
+    writeCapturedArguments(root, decisionId, merged);
+    return merged;
+  });
+}
+
+async function setRow(root: string, decisionId: string, argumentId: string, patch: Partial<CapturedArgument>, verb: string): Promise<CapturedArgument> {
+  return withLock(root, decisionId, () => {
+    const rows = listCapturedArguments(root, decisionId); // re-read AFTER the lock is held
+    const idx = rows.findIndex((r) => r.id === argumentId);
+    if (idx < 0) throw new CapturedArgumentError(`mole arguments ${verb}: ${decisionId} has no captured argument ${argumentId}`);
+    const next = { ...rows[idx]!, ...patch };
+    rows[idx] = next;
+    writeCapturedArguments(root, decisionId, rows);
+    return next;
+  });
 }
 
 /** A person approves one captured argument: ONLY this call moves a row from `draft` to `approved`, and
  *  only an approved row is ever turned into a graph node by captured-loader.ts -- see prior-art.md's
  *  design choice #1 for why this is the sole path to effect. Approving twice re-stamps approvedBy/At
- *  (same re-run-after-an-unrelated-edit convenience T46's compileCli documents), never an error. */
-export function approveCapturedArgument(root: string, decisionId: string, argumentId: string, approver: string): CapturedArgument {
-  return setRow(root, decisionId, argumentId, { status: 'approved', approvedBy: approver, approvedAt: new Date().toISOString(), rejectedReason: undefined, rejectedAt: undefined }, 'approve');
+ *  (same re-run-after-an-unrelated-edit convenience T46's compileCli documents), never an error. Clears
+ *  any `previouslyApproved` note from an earlier edit-in-place revert -- a fresh approval of the CURRENT
+ *  text supersedes it. */
+export async function approveCapturedArgument(root: string, decisionId: string, argumentId: string, approver: string): Promise<CapturedArgument> {
+  return setRow(
+    root,
+    decisionId,
+    argumentId,
+    { status: 'approved', approvedBy: approver, approvedAt: new Date().toISOString(), rejectedReason: undefined, rejectedAt: undefined, previouslyApproved: undefined, previouslyApprovedBy: undefined, previouslyApprovedAt: undefined },
+    'approve',
+  );
 }
 
 /** A person rejects one captured argument: marks it `rejected` with a reason. Never deletes the row
  *  (append-only) and never affects the graph either way -- rejected is simply never approved. */
-export function rejectCapturedArgument(root: string, decisionId: string, argumentId: string, reason: string): CapturedArgument {
+export async function rejectCapturedArgument(root: string, decisionId: string, argumentId: string, reason: string): Promise<CapturedArgument> {
   return setRow(root, decisionId, argumentId, { status: 'rejected', rejectedReason: reason, rejectedAt: new Date().toISOString() }, 'reject');
 }
 

@@ -1,10 +1,18 @@
 // T80 tests: contestable AI-drafted arguments captured from a MADR record's own structure, with an exact
 // source span (file + line/char + quoted text) and provenance, held `draft` until a person approves --
 // and never affecting packages/reasoning's evaluate() until that approval (the task's own stop condition).
+//
+// Review fixes covered here:
+//   HIGH 1 -- approval binds to CONTENT, never a captured argument's positional id (insertion/edit/reorder/
+//             delete reproducers below, see captured-store.ts's `mergeByContent` for the mechanism).
+//   HIGH 2 -- derive-adr.ts's sameName() now normalizes every quote kind, so a record's own chosen option
+//             (m29-madr's real 0015/0016) is excluded instead of attacking its own claim; plus arguments.ts's
+//             own defensive guard, tested independently of the sameName fix.
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { evaluate } from '@mole/reasoning';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
@@ -17,6 +25,9 @@ import {
   rejectCapturedArgument,
   saveCapturedArguments,
 } from '../src/index.js';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const madrCorpusDir = resolve(here, '../bench/corpora/m29-madr/docs/decisions');
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -56,6 +67,36 @@ const MADR_WITH_PROS_CONS = [
   '### Use YAML front matter',
   '',
   '* Good, because YAML front matter is supported by most Markdown parsers',
+  '',
+  '### Use badge',
+  '',
+  '* Good, because plain markdown',
+  '* Bad, because hard to read in markdown source',
+  '',
+].join('\n');
+
+// review HIGH 1 reproducers: the SAME record, with one more bullet inserted ABOVE "Use badge" so every
+// considered-option id after it shifts (option:1 used to be "Use badge"; now option:2 is).
+const MADR_WITH_INSERTED_BULLET = [
+  '## Considered Options',
+  '',
+  '* Use YAML front matter',
+  '* Use a database',
+  '* Use badge',
+  '',
+  '## Decision Outcome',
+  '',
+  'Chosen option: "Use YAML front matter", because comes out best (see below).',
+  '',
+  '## Pros and Cons of the Options',
+  '',
+  '### Use YAML front matter',
+  '',
+  '* Good, because YAML front matter is supported by most Markdown parsers',
+  '',
+  '### Use a database',
+  '',
+  '* Bad, because adds an operational dependency',
   '',
   '### Use badge',
   '',
@@ -111,11 +152,11 @@ describe('captureAdrArguments: deterministic extraction (no model) from MADR str
 });
 
 describe('T80 stop condition: a DRAFT captured argument never changes a verdict in evaluate()', () => {
-  it('a drafted attacker is not in the graph at all, so the claim keeps its unattacked verdict', () => {
+  it('a drafted attacker is not in the graph at all, so the claim keeps its unattacked verdict', async () => {
     const root = repo();
     const file = writeDecision(root, 'D-stop', MADR_WITH_PROS_CONS);
     const rows = captureAdrArguments('D-stop', file, MADR_WITH_PROS_CONS);
-    saveCapturedArguments(root, 'D-stop', rows);
+    await saveCapturedArguments(root, 'D-stop', rows);
 
     const graph = loadGraph(root);
     // none of the captured rows (all still draft) became graph nodes
@@ -128,24 +169,24 @@ describe('T80 stop condition: a DRAFT captured argument never changes a verdict 
     expect(result.labels).toEqual({});
   });
 
-  it('after approving the option-attacking con, the option becomes a graph node and evaluate() labels it defeated', () => {
+  it('after approving the option-attacking con, the option becomes a graph node and evaluate() labels it defeated', async () => {
     const root = repo();
     const file = writeDecision(root, 'D-approve', MADR_WITH_PROS_CONS);
     const rows = captureAdrArguments('D-approve', file, MADR_WITH_PROS_CONS);
-    saveCapturedArguments(root, 'D-approve', rows);
+    await saveCapturedArguments(root, 'D-approve', rows);
 
     const option = rows.find((r) => r.role === 'considered-option')!;
     const con = rows.find((r) => r.role === 'con')!;
 
     // approve ONLY the option (not yet the con) -- verdict for the option is 'in' (no attacker is approved)
-    approveCapturedArgument(root, 'D-approve', option.id, 'alice');
+    await approveCapturedArgument(root, 'D-approve', option.id, 'alice');
     let graph = loadGraph(root);
     let { framework } = argumentFramework(graph);
     expect(framework.args.map((a) => a.id)).toEqual([option.id]);
     expect(evaluate(framework).labels[option.id]).toBe('in');
 
     // now approve the con that attacks it -- SAME option id's verdict flips to 'out', only after approval
-    approveCapturedArgument(root, 'D-approve', con.id, 'alice');
+    await approveCapturedArgument(root, 'D-approve', con.id, 'alice');
     graph = loadGraph(root);
     ({ framework } = argumentFramework(graph));
     expect(framework.attacks).toEqual([[con.id, option.id]]);
@@ -155,50 +196,166 @@ describe('T80 stop condition: a DRAFT captured argument never changes a verdict 
     expect(result.why[option.id]?.defeatedBy).toBe(con.id);
   });
 
-  it('rejecting a captured argument also keeps it out of the graph (same as an unreviewed draft)', () => {
+  it('rejecting a captured argument also keeps it out of the graph (same as an unreviewed draft)', async () => {
     const root = repo();
     const file = writeDecision(root, 'D-reject', MADR_WITH_PROS_CONS);
     const rows = captureAdrArguments('D-reject', file, MADR_WITH_PROS_CONS);
-    saveCapturedArguments(root, 'D-reject', rows);
+    await saveCapturedArguments(root, 'D-reject', rows);
     const con = rows.find((r) => r.role === 'con')!;
-    rejectCapturedArgument(root, 'D-reject', con.id, 'not a real drawback, option was dropped for other reasons');
+    await rejectCapturedArgument(root, 'D-reject', con.id, 'not a real drawback, option was dropped for other reasons');
 
     const graph = loadGraph(root);
     expect(graph.nodes.some((n) => n.id === con.id)).toBe(false);
   });
 
-  it('approving an unknown argument id is a named error, never a silent no-op', () => {
+  it('approving an unknown argument id is a named error, never a silent no-op', async () => {
     const root = repo();
     writeDecision(root, 'D-err', MADR_WITH_PROS_CONS);
-    expect(() => approveCapturedArgument(root, 'D-err', 'D-err::con:999', 'alice')).toThrow(CapturedArgumentError);
+    await expect(approveCapturedArgument(root, 'D-err', 'D-err::con:999', 'alice')).rejects.toThrow(CapturedArgumentError);
   });
 });
 
 describe('re-capture merges fresh text/spans without reverting a stored approval', () => {
-  it('a second saveCapturedArguments call keeps an already-approved row approved', () => {
+  it('a second saveCapturedArguments call keeps an already-approved row approved', async () => {
     const root = repo();
     const file = writeDecision(root, 'D-merge', MADR_WITH_PROS_CONS);
     const rows = captureAdrArguments('D-merge', file, MADR_WITH_PROS_CONS);
-    saveCapturedArguments(root, 'D-merge', rows);
+    await saveCapturedArguments(root, 'D-merge', rows);
     const option = rows.find((r) => r.role === 'considered-option')!;
-    approveCapturedArgument(root, 'D-merge', option.id, 'alice');
+    await approveCapturedArgument(root, 'D-merge', option.id, 'alice');
 
     // re-run capture on the identical text (simulating a re-scan after an unrelated edit elsewhere)
     const again = captureAdrArguments('D-merge', file, MADR_WITH_PROS_CONS);
-    const merged = saveCapturedArguments(root, 'D-merge', again);
+    const merged = await saveCapturedArguments(root, 'D-merge', again);
     const stillApproved = merged.find((r) => r.id === option.id)!;
     expect(stillApproved.status).toBe('approved');
     expect(stillApproved.approvedBy).toBe('alice');
   });
 
-  it('allCapturedArguments lists every decision id that has captured rows, drafts and approved together but tagged', () => {
+  it('allCapturedArguments lists every decision id that has captured rows, drafts and approved together but tagged', async () => {
     const root = repo();
     const file = writeDecision(root, 'D-list', MADR_WITH_PROS_CONS);
     const rows = captureAdrArguments('D-list', file, MADR_WITH_PROS_CONS);
-    saveCapturedArguments(root, 'D-list', rows);
+    await saveCapturedArguments(root, 'D-list', rows);
     const all = allCapturedArguments(root);
     expect(Object.keys(all)).toEqual(['D-list']);
     const statuses = new Set(all['D-list']!.map((r) => r.status));
     expect(statuses).toEqual(new Set(['draft'])); // nothing approved/rejected yet -- all visibly draft
+  });
+});
+
+describe('review HIGH 1: approval binds to CONTENT, never a captured argument\'s positional id', () => {
+  it('INSERT above an approved row: the new bullet is draft, the approved text keeps its status at its NEW id', async () => {
+    const root = repo();
+    const file = writeDecision(root, 'D-insert', MADR_WITH_PROS_CONS);
+    const rows = captureAdrArguments('D-insert', file, MADR_WITH_PROS_CONS);
+    await saveCapturedArguments(root, 'D-insert', rows);
+    const badgeOption = rows.find((r) => r.role === 'considered-option' && r.text === 'Use badge')!;
+    expect(badgeOption.id).toBe('D-insert::option:1'); // the only considered-option before the insertion
+    await approveCapturedArgument(root, 'D-insert', badgeOption.id, 'alice');
+
+    // re-capture text with ONE MORE considered-option bullet inserted ABOVE "Use badge" -- its id shifts
+    // from option:1 to option:2; a bug that merges by id alone hands option:1's NEW text (the database
+    // bullet) 'approved', and leaves option:2 (the ACTUAL "Use badge" text, now unreviewed) as 'draft'.
+    const inserted = captureAdrArguments('D-insert', file, MADR_WITH_INSERTED_BULLET);
+    const merged = await saveCapturedArguments(root, 'D-insert', inserted);
+
+    const newBadgeRow = merged.find((r) => r.role === 'considered-option' && r.text === 'Use badge')!;
+    const newDbRow = merged.find((r) => r.role === 'considered-option' && r.text.includes('database'))!;
+    expect(newBadgeRow.id).toBe('D-insert::option:2'); // shifted, but still carries the approval
+    expect(newBadgeRow.status).toBe('approved');
+    expect(newBadgeRow.approvedBy).toBe('alice');
+    expect(newDbRow.id).toBe('D-insert::option:1'); // the NEW, never-reviewed bullet landed at the old id
+    expect(newDbRow.status).toBe('draft'); // must NOT have inherited the old id's approval
+  });
+
+  it('EDIT-IN-PLACE: changing an approved row\'s own text reverts it to draft, noting previouslyApproved', async () => {
+    const root = repo();
+    const file = writeDecision(root, 'D-edit', MADR_WITH_PROS_CONS);
+    const rows = captureAdrArguments('D-edit', file, MADR_WITH_PROS_CONS);
+    await saveCapturedArguments(root, 'D-edit', rows);
+    const badgeOption = rows.find((r) => r.role === 'considered-option' && r.text === 'Use badge')!;
+    await approveCapturedArgument(root, 'D-edit', badgeOption.id, 'alice');
+
+    const edited = MADR_WITH_PROS_CONS.replace('* Use badge', '* Use a sticker');
+    const fresh = captureAdrArguments('D-edit', file, edited);
+    const merged = await saveCapturedArguments(root, 'D-edit', fresh);
+
+    const editedRow = merged.find((r) => r.id === badgeOption.id)!;
+    expect(editedRow.text).toBe('Use a sticker');
+    expect(editedRow.status).toBe('draft'); // the OLD approval does not vouch for new, unreviewed text
+    expect(editedRow.previouslyApproved).toBe(true);
+    expect(editedRow.previouslyApprovedBy).toBe('alice');
+  });
+
+  it('REORDER: two considered options swapping source order keep their OWN approval status, not each other\'s', async () => {
+    const root = repo();
+    const file = writeDecision(root, 'D-reorder', MADR_WITH_INSERTED_BULLET);
+    const rows = captureAdrArguments('D-reorder', file, MADR_WITH_INSERTED_BULLET);
+    await saveCapturedArguments(root, 'D-reorder', rows);
+    const dbOption = rows.find((r) => r.role === 'considered-option' && r.text.includes('database'))!;
+    const badgeOption = rows.find((r) => r.role === 'considered-option' && r.text === 'Use badge')!;
+    await approveCapturedArgument(root, 'D-reorder', dbOption.id, 'alice'); // approve ONLY "Use a database"
+
+    // swap the two bullets' source order -- their ids swap too (positional), text unchanged
+    const swapped = MADR_WITH_INSERTED_BULLET.replace('* Use a database\n* Use badge', '* Use badge\n* Use a database');
+    const fresh = captureAdrArguments('D-reorder', file, swapped);
+    const merged = await saveCapturedArguments(root, 'D-reorder', fresh);
+
+    const mergedDb = merged.find((r) => r.role === 'considered-option' && r.text.includes('database'))!;
+    const mergedBadge = merged.find((r) => r.role === 'considered-option' && r.text === 'Use badge')!;
+    expect(mergedDb.id).not.toBe(dbOption.id); // the id DID shift with the reorder
+    expect(mergedDb.status).toBe('approved'); // but its OWN content stays approved
+    expect(mergedDb.approvedBy).toBe('alice');
+    expect(mergedBadge.status).toBe('draft'); // "Use badge" was never approved, reorder must not change that
+  });
+
+  it('DELETE: removing an approved bullet from the source keeps the approved row (append-only), never dropped', async () => {
+    const root = repo();
+    const file = writeDecision(root, 'D-delete', MADR_WITH_PROS_CONS);
+    const rows = captureAdrArguments('D-delete', file, MADR_WITH_PROS_CONS);
+    await saveCapturedArguments(root, 'D-delete', rows);
+    const badgeOption = rows.find((r) => r.role === 'considered-option' && r.text === 'Use badge')!;
+    await approveCapturedArgument(root, 'D-delete', badgeOption.id, 'alice');
+
+    const withoutBadge = MADR_WITH_PROS_CONS.replace('* Use badge\n', '').replace(/### Use badge[\s\S]*?\n\n/, '');
+    const fresh = captureAdrArguments('D-delete', file, withoutBadge);
+    const merged = await saveCapturedArguments(root, 'D-delete', fresh);
+
+    const kept = merged.find((r) => r.id === badgeOption.id)!;
+    expect(kept).toBeDefined();
+    expect(kept.status).toBe('approved'); // never silently reverted or dropped
+  });
+});
+
+describe('review HIGH 2: the record\'s own chosen option never attacks its own claim', () => {
+  it('sameName() normalizes single quotes too, not just double/curly quotes', async () => {
+    const { sameName } = await import('../src/argdown/derive-adr.js');
+    expect(sameName(`Include 'Consulted' and 'Informed' of RACI`)).toBe(sameName(`Include "Consulted" and "Informed" of RACI`));
+  });
+
+  it('real record 0015 (m29-madr): the chosen option is excluded, never a considered-option attacking the claim', () => {
+    const file = join(madrCorpusDir, '0015-include-consulting-informed-of-raci.md');
+    const text = readFileSync(file, 'utf8');
+    const rows = captureAdrArguments('0015', 'docs/decisions/0015.md', text);
+    const options = rows.filter((r) => r.role === 'considered-option');
+    // the chosen option ('Include "Consulted" and "Informed" of RACI') is NOT one of the 2 rejected options
+    expect(options).toHaveLength(2); // 3 Considered Options minus the 1 chosen
+    expect(options.some((o) => o.text === `Include "Consulted" and "Informed" of RACI`)).toBe(false);
+    // the genuinely-rejected options still legitimately attack the claim -- only the CHOSEN one must not
+    const claim = rows.find((r) => r.role === 'claim')!;
+    for (const o of options) expect(o.attacks).toContain(claim.id);
+  });
+
+  it('real record 0016 (m29-madr): same guard holds for a chosen option phrased with nested single quotes', () => {
+    const file = join(madrCorpusDir, '0016-outcome-before-detailed-pros-cons.md');
+    const text = readFileSync(file, 'utf8');
+    const rows = captureAdrArguments('0016', 'docs/decisions/0016.md', text);
+    const options = rows.filter((r) => r.role === 'considered-option');
+    // the chosen option (Section "..." AFTER "Decision Outcome") is NOT one of the 1 rejected option
+    expect(options).toHaveLength(1); // 2 Considered Options minus the 1 chosen
+    expect(options.some((o) => o.text.startsWith('Section "Pros and Cons of the Options" after'))).toBe(false);
+    const claim = rows.find((r) => r.role === 'claim')!;
+    for (const o of options) expect(o.attacks).toContain(claim.id);
   });
 });

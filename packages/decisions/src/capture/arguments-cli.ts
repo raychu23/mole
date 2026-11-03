@@ -35,7 +35,7 @@ export async function argumentsCli(pos: string[], flags: Record<string, string |
     const from = str(flags.from);
     const adrText = from ? readFileSync(resolve(from), 'utf8') : readFileSync(resolve(recordsRoot, node.file), 'utf8');
     const fresh = captureAdrArguments(id, node.file, adrText);
-    const saved = saveCapturedArguments(recordsRoot, id, fresh);
+    const saved = await saveCapturedArguments(recordsRoot, id, fresh);
     console.log(flags.json ? JSON.stringify(saved, null, 2) : saved.map(formatRow).join('\n') || `mole arguments capture: no arguments found in ${node.file}`);
     return 0;
   }
@@ -52,7 +52,7 @@ export async function argumentsCli(pos: string[], flags: Record<string, string |
           console.error('mole arguments approve: --approver NAME is required');
           return 2;
         }
-        const row = approveCapturedArgument(recordsRoot, id, argumentId, approver);
+        const row = await approveCapturedArgument(recordsRoot, id, argumentId, approver);
         console.log(flags.json ? JSON.stringify(row, null, 2) : `approved ${formatRow(row)}`);
       } else {
         const reason = str(flags.reason);
@@ -60,7 +60,7 @@ export async function argumentsCli(pos: string[], flags: Record<string, string |
           console.error('mole arguments reject: --reason TEXT is required');
           return 2;
         }
-        const row = rejectCapturedArgument(recordsRoot, id, argumentId, reason);
+        const row = await rejectCapturedArgument(recordsRoot, id, argumentId, reason);
         console.log(flags.json ? JSON.stringify(row, null, 2) : formatRow(row));
       }
     } catch (e) {

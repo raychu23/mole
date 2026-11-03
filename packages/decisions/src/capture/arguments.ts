@@ -12,7 +12,7 @@
 // ONE new deterministic parse (Pros and Cons of the Options -- T54 never read that section, prior-art.md
 // #3) in the same file, rather than re-deriving the Considered-Options/Decision-Outcome structure a second
 // time.
-import { deriveAdrArgumentFramework, sameName } from '../argdown/derive-adr.js';
+import { deriveAdrArgumentFramework, findChosenOptionName, optionNameOf, sameName } from '../argdown/derive-adr.js';
 import type { Provenance } from '../types.js';
 
 export type ArgumentRole = 'claim' | 'considered-option' | 'reason' | 'pro' | 'con';
@@ -58,6 +58,18 @@ export interface CapturedArgument {
   approvedAt?: string;
   rejectedReason?: string;
   rejectedAt?: string;
+  /** review HIGH 1: content identity (sha256 of `role::text`), set by captured-store.ts on every save --
+   *  what an approval/rejection actually binds to, never this row's positional id (`::pro:N`), which shifts
+   *  whenever a bullet is inserted/removed/reordered above it. Optional here because a freshly-extracted
+   *  row (captureAdrArguments' own output, never yet saved) does not have one until the store computes it. */
+  contentHash?: string;
+  /** review HIGH 1: set by captured-store.ts when a re-capture finds this id's text has changed since it
+   *  was approved -- the row goes back to `draft` (a person must re-review the NEW text) but this flag (plus
+   *  previouslyApprovedBy/At below) keeps a visible record that it once was approved, rather than silently
+   *  looking like a row nobody has ever reviewed. */
+  previouslyApproved?: boolean;
+  previouslyApprovedBy?: string;
+  previouslyApprovedAt?: string;
 }
 
 const BULLET_LINE = /^(\s*[-*]\s+)(.*)$/;
@@ -182,17 +194,25 @@ export function captureAdrArguments(decisionId: string, file: string, adrText: s
   const rawLines = adrText.split(/\r?\n/);
   const out: CapturedArgument[] = [];
   const optionIdByName = new Map<string, string>();
+  // review HIGH 2: an independent, defensive re-check -- the record's own chosen option is never emitted as
+  // an attacker of the claim, even if deriveAdrArgumentFramework's own chosenIdx exclusion (derive-adr.ts)
+  // ever regresses. Computed once per adrText; undefined (no "Chosen option:" line) disables the guard.
+  const chosenName = findChosenOptionName(adrText);
   for (const a of derived.arguments) {
     if (a.role === 'considered-option') optionIdByName.set(sameName(a.text), a.id);
     const span = a.role === 'claim' ? locateChosenLine(rawLines, file) : locateBulletLine(rawLines, file, a.text);
     if (!span) continue; // never fabricate a span for text we cannot find verbatim (prior-art.md #2)
+    const isChosen = a.role === 'considered-option' && chosenName !== undefined && sameName(optionNameOf(a.text)) === chosenName;
+    const attacks = isChosen
+      ? derived.framework.attacks.filter(([from]) => from === a.id).map(([, to]) => to).filter((to) => to !== derived.claimId)
+      : derived.framework.attacks.filter(([from]) => from === a.id).map(([, to]) => to);
     out.push({
       id: a.id,
       decisionId,
       role: a.role,
       text: a.text,
       span,
-      attacks: derived.framework.attacks.filter(([from]) => from === a.id).map(([, to]) => to),
+      attacks,
       supports: [],
       provenance: { source: 'compiler', detail: 'mole-derive-adr' },
       status: 'draft',
