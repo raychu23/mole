@@ -22,3 +22,18 @@ found        export-convention-trap (backlog): any decision title with a word st
 behaviour    CLI default changed: cascade-check now routes by meaning unless --no-route (INFERENCE: no caller relied on
              the old default; grep found only daemon + this hook)
 ```
+
+## Review 1 (deleg_6ddeb28d) FAIL → fixed tests-first
+```notes
+HIGH      nested pkg/.mole entered the snapshot (pathspec only excluded root .mole)      fix: ':(exclude,glob)**/.mole/**' too · test red first
+LOW       repo with no commit: cascade-check --worktree exited 1      fix: snapshot {base:'',head:''} → "no commit yet, nothing to check", exit 0
+LOW       done-when 3 asked for file:line per violation      NOT met by design: cascade verdicts are decision-level (CascadeVerdict has no
+          file/line); message names decision id + title + judge reason. Contract amended here, not faked
+verified  snapshot leaves index/refs/HEAD/status/files identical (tracked, untracked, staged, symlinks, unicode, gitignored, mid-merge) ·
+          NO_JUDGE classifies only the 2 no-judge reasons; crisp match:/rule: stay violations · hang → moleJson 100 s cut, hook quiet ·
+          semantic docs + defaults == run_t53_semantic_route_v3.mjs · MCP cascade tool unaffected (calls library, no semanticRoute)
+env       reviewer's full npm run check in this worktree, run while main's check ran, had 44 files fail with "invalid object …
+          .mole/tenets.md"; files pass alone. INFERENCE: concurrent checks on worktrees sharing one object store (intake throwaway
+          worktrees) — never run two full checks at once
+after     decisions + plugin 382 pass
+```

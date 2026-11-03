@@ -34,6 +34,10 @@ export async function cascadeCheckCli(_pos: string[], flags: Record<string, stri
   let head = str(flags.head);
   if (flags.worktree) {
     const snap = snapshotWorktree(root);
+    if (!snap.base) {
+      console.log(flags.json ? JSON.stringify({ base: '', head: '', verdicts: [], files: [], routing: [], ms: 0 }, null, 2) : 'mole cascade-check: no commit yet, nothing to check');
+      return 0;
+    }
     base = base ?? snap.base;
     head = snap.head;
     if (head === snap.base && base === snap.base) {

@@ -82,6 +82,20 @@ describe('T65 snapshotWorktree', () => {
     const snap = snapshotWorktree(root);
     expect(git(root, 'diff', '--name-only', snap.base, snap.head)).not.toContain('.mole/');
   });
+  it('review 1: a nested pkg/.mole is left out too', () => {
+    const root = repo();
+    agentWork(root);
+    write(root, 'pkg/.mole/decisions/d9.md', '---\nid: D9\ntitle: nested\nstatus: accepted\n---\n');
+    const snap = snapshotWorktree(root);
+    expect(git(root, 'diff', '--name-only', snap.base, snap.head)).not.toContain('.mole/');
+  });
+  it('review 1: a repo with no commit yet has nothing to check (no throw)', () => {
+    const root = mkdtempSync(join(tmpdir(), 'mole-t65-empty-'));
+    dirs.push(root);
+    git(root, 'init', '-q', '-b', 'main');
+    write(root, 'a.ts', 'export const a = 1;\n');
+    expect(snapshotWorktree(root)).toEqual({ base: '', head: '' });
+  });
   it('a clean worktree gives head === base (nothing to check)', () => {
     const root = repo();
     const snap = snapshotWorktree(root);

@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 export interface WorktreeSnapshot {
-  /** HEAD at snapshot time */
+  /** HEAD at snapshot time ('' when the repo has no commit yet: nothing to check) */
   base: string;
   /** a commit whose tree is the working tree (minus .mole/); === base when nothing changed */
   head: string;
@@ -17,12 +17,17 @@ export interface WorktreeSnapshot {
 
 export function snapshotWorktree(root: string): WorktreeSnapshot {
   const run = (args: string[], env: NodeJS.ProcessEnv = process.env) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', env, stdio: ['ignore', 'pipe', 'pipe'] }).trim();
-  const base = run(['rev-parse', '--verify', 'HEAD']);
+  let base: string;
+  try {
+    base = run(['rev-parse', '--verify', '--quiet', 'HEAD']);
+  } catch {
+    return { base: '', head: '' }; // review 1: no commit yet -> nothing to diff against
+  }
   const dir = mkdtempSync(join(tmpdir(), 'mole-snap-'));
   try {
     const env = { ...process.env, GIT_INDEX_FILE: join(dir, 'index') };
     run(['read-tree', base], env);
-    run(['add', '-A', '--', '.', ':(exclude).mole'], env);
+    run(['add', '-A', '--', '.', ':(exclude,glob)**/.mole/**', ':(exclude).mole'], env); // review 1: nested .mole too
     const tree = run(['write-tree'], env);
     const baseTree = run(['rev-parse', `${base}^{tree}`]);
     if (tree === baseTree) return { base, head: base };
