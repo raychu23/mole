@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-11-02 23:03      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T62-vscode-reasoning-section → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-11-02 23:05      submitted → verified      reviewer hermes-subagent deleg_b945a465 PASS (fresh, claude-sonnet-5) · findings: PASS first round: real CLI JSON traced to every rendered line (3 phases, via-only, two because args, escaping, unreadable incident, differ
     2026-11-02 23:05      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T62-vscode-reasoning-section → exit 0 (at new Promise (<anonymous>))
+    2026-11-02 23:07      verified → integrated      merge f7af621 + lock (main check 1031 pass, /Users/a1/.hermes/cache/scratch/mole-build/main-check-t62.txt) · combined checks exit 0
+    2026-11-02 23:07      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (at new Promise (<anonymous>))
 ```
