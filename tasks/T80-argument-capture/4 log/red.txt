@@ -46,3 +46,43 @@ FAIL test/captured-arguments-lock.test.ts > T80 review MEDIUM 3: concurrent CLI 
   AssertionError: expected [ Array(13) ] to have a length of 12 but got 13 -- unlocked concurrent
   read-modify-write corrupted the stored array (a lost update manifested as a DUPLICATED row here), proving
   the race without a lock.
+
+--- T80-argument-capture review-2-fix red (NEW HIGH D-attack, COMPOUNDING duplicate-id) ---
+`npx vitest run packages/decisions/test/argument-capture.test.ts` against the PRE-review-2-fix src
+(contentHashOf = sha256(role::text), no approvedHash field, mergeByContent's backfill keeps a leftover
+row's OWN id unconditionally, setRow's findIndex with no ambiguity check -- verified by `git stash push --
+captured-store.ts arguments.ts` then re-running the (already-written) new tests against the stashed src):
+4 failed, 16 passed.
+
+FAIL test/argument-capture.test.ts > review 2 NEW HIGH (D-attack)... > moving an approved con from Option A to Option B reverts it to draft -- labels do NOT change until re-approved
+  AssertionError: expected 'approved' to be 'draft' -- the SAME con text ("Bad, because shared drawback"),
+  moved from Option A's Pros-and-Cons subsection to Option B's, hashed identically under the OLD
+  role::text-only contentHashOf and so silently carried alice's approval (and A's defeat) onto B.
+
+FAIL test/argument-capture.test.ts > review 2 NEW HIGH (D-attack)... > re-capturing identical text under the SAME option keeps the approval (no false revert)
+  AssertionError: expected undefined to be '7435bc3f2dd9960042631d58d67ca97db3a42...' -- approvedHash did
+  not exist on the pre-fix row shape at all, confirming the invariant this field exists to make checkable
+  was previously unobservable.
+
+FAIL test/argument-capture.test.ts > review 2 COMPOUNDING... > a reshaped document that reissues a stale id never produces two rows sharing that id
+  AssertionError: expected 5 to be 7 -- a reshaped re-capture (shrinking MADR_WITH_INSERTED_BULLET down to
+  MADR_WITH_PROS_CONS) produced 7 rows but only 5 DISTINCT ids: two rows shared one id
+  (`new Set(ids).size !== ids.length`), proving the collision the reviewer's own `D-move::pro:1` example
+  describes (`mergeByContent`'s backfill had no disambiguation).
+
+FAIL test/argument-capture.test.ts > review 2: property-style re-capture... > 30 random sequences across 2-3 options: no duplicate ids, approvedHash matches, evaluate() labels match recomputation
+  AssertionError: expected undefined to be '559274cad5f6cb552a01feae72a50c05384e4...' -- same approvedHash
+  gap as above, hit by at least one of the 30 random insert/move/edit/delete sequences (the loop fails on
+  its first `approvedHash` assertion before ever reaching a duplicate-id case, since the field doesn't
+  exist pre-fix at all).
+
+After the fix (contentHashOf hashes role + normalized text + sorted target NAMES; approvedHash stamped at
+approval time and asserted equal to contentHash for every approved row; mergeByContent's backfill
+disambiguates a colliding leftover id and asserts the whole merged set is duplicate-free; setRow refuses
+an ambiguous id): `npx vitest run packages/decisions/test/argument-capture.test.ts` -- 20 passed, 0 failed.
+Full target scope `npx vitest run packages/decisions packages/reasoning packages/daemon packages/verify
+packages/mcp/test/tool-annotations-schema.test.ts` -- 553 passed (captured-arguments-lock.test.ts and
+daemon.test.ts each re-verified green in isolation, 47s/27s resp.; their one failure each in the combined
+run was a 60s-timeout from CPU contention running everything concurrently, not a regression -- both are
+untouched by this change and pass standalone with no code difference). `npx tsc -b` clean;
+`mole rules --root .` -- 0 violations.

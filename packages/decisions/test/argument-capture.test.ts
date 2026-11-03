@@ -21,6 +21,7 @@ import {
   argumentFramework,
   captureAdrArguments,
   CapturedArgumentError,
+  listCapturedArguments,
   loadGraph,
   rejectCapturedArgument,
   saveCapturedArguments,
@@ -325,6 +326,252 @@ describe('review HIGH 1: approval binds to CONTENT, never a captured argument\'s
     const kept = merged.find((r) => r.id === badgeOption.id)!;
     expect(kept).toBeDefined();
     expect(kept.status).toBe('approved'); // never silently reverted or dropped
+  });
+});
+
+// review 2 NEW HIGH (D-attack) fixtures: a chosen option plus TWO rejected options, each with a
+// Pros-and-Cons subsection, so a 'con' bullet with IDENTICAL text can be moved between Option A's and
+// Option B's subsections without touching its own wording at all -- isolating the target-move bug from
+// any text-edit path.
+const MADR_CON_UNDER_A = [
+  '## Considered Options',
+  '',
+  '* Use YAML front matter',
+  '* Option A',
+  '* Option B',
+  '',
+  '## Decision Outcome',
+  '',
+  'Chosen option: "Use YAML front matter", because comes out best (see below).',
+  '',
+  '## Pros and Cons of the Options',
+  '',
+  '### Use YAML front matter',
+  '',
+  '* Good, because simple',
+  '',
+  '### Option A',
+  '',
+  '* Bad, because shared drawback',
+  '',
+  '### Option B',
+  '',
+  '* Good, because fine',
+  '',
+].join('\n');
+
+// SAME con text ("Bad, because shared drawback"), moved from Option A's subsection to Option B's --
+// nothing else in the document changed.
+const MADR_CON_MOVED_TO_B = [
+  '## Considered Options',
+  '',
+  '* Use YAML front matter',
+  '* Option A',
+  '* Option B',
+  '',
+  '## Decision Outcome',
+  '',
+  'Chosen option: "Use YAML front matter", because comes out best (see below).',
+  '',
+  '## Pros and Cons of the Options',
+  '',
+  '### Use YAML front matter',
+  '',
+  '* Good, because simple',
+  '',
+  '### Option A',
+  '',
+  '* Good, because fine',
+  '',
+  '### Option B',
+  '',
+  '* Bad, because shared drawback',
+  '',
+].join('\n');
+
+describe('review 2 NEW HIGH (D-attack): a captured argument\'s target is part of its content identity', () => {
+  it('moving an approved con from Option A to Option B reverts it to draft -- labels do NOT change until re-approved', async () => {
+    const root = repo();
+    const file = writeDecision(root, 'D-attack', MADR_CON_UNDER_A);
+    const rows = captureAdrArguments('D-attack', file, MADR_CON_UNDER_A);
+    await saveCapturedArguments(root, 'D-attack', rows);
+
+    const optionA = rows.find((r) => r.role === 'considered-option' && r.text === 'Option A')!;
+    const optionB = rows.find((r) => r.role === 'considered-option' && r.text === 'Option B')!;
+    const con = rows.find((r) => r.role === 'con')!;
+    expect(con.attacks).toEqual([optionA.id]);
+
+    await approveCapturedArgument(root, 'D-attack', optionA.id, 'alice');
+    await approveCapturedArgument(root, 'D-attack', optionB.id, 'alice');
+    await approveCapturedArgument(root, 'D-attack', con.id, 'alice');
+
+    // before the move: option A is defeated by the con, option B stands unattacked
+    let graph = loadGraph(root);
+    let { framework } = argumentFramework(graph);
+    let result = evaluate(framework);
+    expect(result.labels[optionA.id]).toBe('out');
+    expect(result.labels[optionB.id]).toBe('in');
+
+    // re-capture the SAME document with the con's text UNCHANGED but moved to Option B's subsection
+    const moved = captureAdrArguments('D-attack', file, MADR_CON_MOVED_TO_B);
+    const merged = await saveCapturedArguments(root, 'D-attack', moved);
+
+    const movedCon = merged.find((r) => r.role === 'con' && r.text.includes('shared drawback'))!;
+    // the SAME text, now attacking Option B instead of Option A, must NOT still read as approved
+    expect(movedCon.status).toBe('draft');
+    expect(movedCon.previouslyApproved).toBe(true);
+    expect(movedCon.previouslyApprovedBy).toBe('alice');
+    expect(movedCon.attacks).toEqual([optionB.id]); // now targets B
+    expect(movedCon.attacks.some((id) => id === optionA.id)).toBe(false);
+
+    // labels must NOT have changed yet: the draft con is invisible to evaluate() either way
+    graph = loadGraph(root);
+    ({ framework } = argumentFramework(graph));
+    result = evaluate(framework);
+    expect(result.labels[optionA.id]).toBe('in'); // no longer defeated -- its attacker reverted to draft
+    expect(result.labels[optionB.id]).toBe('in'); // NOT silently defeated by the moved-but-unreviewed con
+
+    // only once a human re-approves the moved con does Option B flip to defeated
+    await approveCapturedArgument(root, 'D-attack', movedCon.id, 'bob');
+    graph = loadGraph(root);
+    ({ framework } = argumentFramework(graph));
+    result = evaluate(framework);
+    expect(result.labels[optionA.id]).toBe('in');
+    expect(result.labels[optionB.id]).toBe('out');
+    expect(result.why[optionB.id]?.defeatedBy).toBe(movedCon.id);
+  });
+
+  it('re-capturing identical text under the SAME option keeps the approval (no false revert)', async () => {
+    const root = repo();
+    const file = writeDecision(root, 'D-attack-noop', MADR_CON_UNDER_A);
+    const rows = captureAdrArguments('D-attack-noop', file, MADR_CON_UNDER_A);
+    await saveCapturedArguments(root, 'D-attack-noop', rows);
+    const con = rows.find((r) => r.role === 'con')!;
+    await approveCapturedArgument(root, 'D-attack-noop', con.id, 'alice');
+
+    const again = captureAdrArguments('D-attack-noop', file, MADR_CON_UNDER_A);
+    const merged = await saveCapturedArguments(root, 'D-attack-noop', again);
+    const stillCon = merged.find((r) => r.id === con.id)!;
+    expect(stillCon.status).toBe('approved');
+    expect(stillCon.approvedHash).toBe(stillCon.contentHash);
+  });
+});
+
+describe('review 2 COMPOUNDING: captured argument ids stay unique within a decision after every merge', () => {
+  it('a reshaped document that reissues a stale id never produces two rows sharing that id', async () => {
+    const root = repo();
+    const file = writeDecision(root, 'D-move', MADR_WITH_INSERTED_BULLET);
+    const rows = captureAdrArguments('D-move', file, MADR_WITH_INSERTED_BULLET);
+    let merged = await saveCapturedArguments(root, 'D-move', rows);
+
+    // shrink the document (drop the middle considered-option + its subsection) so the extractor's own
+    // per-role counters reissue low ids that used to belong to a DIFFERENT bullet -- the exact shape the
+    // reviewer's own id-collision reproducer needs, without relying on any one specific internal path.
+    const shrunk = captureAdrArguments('D-move', file, MADR_WITH_PROS_CONS);
+    merged = await saveCapturedArguments(root, 'D-move', shrunk);
+
+    const ids = merged.map((r) => r.id);
+    expect(new Set(ids).size).toBe(ids.length); // no duplicate id, however the content moved around
+
+    // approve/reject must still resolve every id to exactly one row -- no ambiguous-id error expected here
+    for (const r of merged) {
+      await expect(rejectCapturedArgument(root, 'D-move', r.id, 'audit')).resolves.toBeDefined();
+    }
+  });
+});
+
+describe('review 2: property-style re-capture -- random insert/move/edit/delete sequences never corrupt invariants', () => {
+  // Deterministic PRNG (no external dependency): mulberry32.
+  function rng(seed: number): () => number {
+    let a = seed;
+    return () => {
+      a |= 0;
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // Builds a MADR document with `optionTexts[0]` as the CHOSEN option and the rest rejected, placing the
+  // given con/pro bullets (each `{ optionIdx, kind, label }`) under the matching option's Pros-and-Cons
+  // subsection, in list order -- the moving part a sequence step can relocate between options.
+  function buildMadr(optionTexts: string[], bullets: Array<{ optionIdx: number; kind: 'Good' | 'Bad'; label: string }>): string {
+    const lines = ['## Considered Options', '', ...optionTexts.map((t) => `* ${t}`), '', '## Decision Outcome', '', `Chosen option: "${optionTexts[0]}", because comes out best.`, '', '## Pros and Cons of the Options', ''];
+    for (let i = 0; i < optionTexts.length; i++) {
+      lines.push(`### ${optionTexts[i]}`, '');
+      for (const b of bullets.filter((x) => x.optionIdx === i)) lines.push(`* ${b.kind}, because ${b.label}`);
+      lines.push('');
+    }
+    return lines.join('\n');
+  }
+
+  it('30 random sequences across 2-3 options: no duplicate ids, approvedHash matches, evaluate() labels match recomputation', async () => {
+    const optionTexts = ['Use YAML front matter', 'Option A', 'Option B']; // index 0 is always chosen
+
+    for (let seed = 0; seed < 30; seed++) {
+      const root = repo(); // fresh repo per seed: loadGraph aggregates EVERY decision under root, so a
+      // shared root across seeds would mix an earlier seed's approved rows into this seed's framework.
+      const rand = rng(seed * 7919 + 13);
+      const decisionId = `D-prop-${seed}`;
+      const file = writeDecision(root, decisionId, buildMadr(optionTexts, []));
+
+      // a small pool of bullet labels that steps insert/move/edit/delete across 1-3 options (indices 1/2
+      // only -- option 0 is chosen, never graph-eligible, same as production: nothing to attack there).
+      let bullets: Array<{ optionIdx: number; kind: 'Good' | 'Bad'; label: string }> = [{ optionIdx: 1, kind: 'Bad', label: 'drawback-1' }];
+
+      const steps = 1 + Math.floor(rand() * 6);
+      for (let step = 0; step < steps; step++) {
+        const action = Math.floor(rand() * 4);
+        if (action === 0 && bullets.length < 4) {
+          bullets = [...bullets, { optionIdx: 1 + Math.floor(rand() * 2), kind: rand() < 0.5 ? 'Bad' : 'Good', label: `label-${step}-${seed}` }];
+        } else if (action === 1 && bullets.length > 0) {
+          // MOVE: relocate an existing bullet to the other rejected option, text unchanged
+          const idx = Math.floor(rand() * bullets.length);
+          const moved = { ...bullets[idx]!, optionIdx: bullets[idx]!.optionIdx === 1 ? 2 : 1 };
+          bullets = bullets.map((b, i) => (i === idx ? moved : b));
+        } else if (action === 2 && bullets.length > 0) {
+          // EDIT: change an existing bullet's text in place
+          const idx = Math.floor(rand() * bullets.length);
+          bullets = bullets.map((b, i) => (i === idx ? { ...b, label: `${b.label}-edited-${step}` } : b));
+        } else if (action === 3 && bullets.length > 1) {
+          // DELETE
+          const idx = Math.floor(rand() * bullets.length);
+          bullets = bullets.filter((_, i) => i !== idx);
+        }
+
+        const text = buildMadr(optionTexts, bullets);
+        const fresh = captureAdrArguments(decisionId, file, text);
+        const merged = await saveCapturedArguments(root, decisionId, fresh);
+
+        // (a) no duplicate ids after this re-capture
+        const ids = merged.map((r) => r.id);
+        expect(new Set(ids).size).toBe(ids.length);
+
+        // randomly approve a still-draft row, simulating a human reviewing after each re-capture
+        const draft = merged.filter((r) => r.status === 'draft' && (r.role === 'con' || r.role === 'pro' || r.role === 'considered-option'));
+        if (draft.length > 0 && rand() < 0.7) {
+          const pick = draft[Math.floor(rand() * draft.length)]!;
+          await approveCapturedArgument(root, decisionId, pick.id, `reviewer-${step}`);
+        }
+
+        const current = listCapturedArguments(root, decisionId);
+
+        // (b) every approved row's approvedHash equals its current content hash
+        for (const r of current) {
+          if (r.status === 'approved') expect(r.approvedHash).toBe(r.contentHash);
+        }
+
+        // (c) evaluate() labels equal those computed from ONLY the approved rows whose approval hash
+        // still matches their current content hash (the same set captured-loader.ts turns into nodes)
+        const graph = loadGraph(root);
+        const { framework } = argumentFramework(graph);
+        const result = evaluate(framework);
+        const expectedNodeIds = new Set(current.filter((r) => r.status === 'approved' && r.approvedHash === r.contentHash).map((r) => r.id));
+        expect(new Set(framework.args.map((a) => a.id))).toEqual(expectedNodeIds);
+        for (const id of expectedNodeIds) expect(result.labels[id]).toBeDefined();
+      }
+    }
   });
 });
 

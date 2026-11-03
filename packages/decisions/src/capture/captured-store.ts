@@ -25,6 +25,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFile
 import { join } from 'node:path';
 import process from 'node:process';
 import { lock as lockFile } from 'proper-lockfile';
+import { optionNameOf, sameName } from '../argdown/derive-adr.js';
 import type { CapturedArgument } from './arguments.js';
 
 export const capturedDir = (root: string): string => join(root, '.mole', 'arguments', 'captured');
@@ -38,10 +39,37 @@ export function listCapturedArguments(root: string, decisionId: string): Capture
   return JSON.parse(readFileSync(p, 'utf8')) as CapturedArgument[];
 }
 
-/** review HIGH 1: a row's content identity -- its OWN role + text, never its positional id. `role` is
- *  included so a pro and a con that happen to quote identical text are never treated as the same row. */
-function contentHashOf(row: { role: string; text: string }): string {
-  return createHash('sha256').update(`${row.role}::${row.text}`).digest('hex');
+/** review 2 NEW HIGH (D-attack): the NAME an attack/support id resolves to -- the claim's own fixed label,
+ *  or (considered-option) the option's OWN name text (never its positional id, which is exactly what
+ *  changes when a con is moved from one option's Pros-and-Cons subsection to another's -- the option that
+ *  USED TO sit at that positional id may now be a different option entirely). `byId` must be the id->row
+ *  lookup of the SAME capture batch `row` came from: an id is only meaningful within the one capture (old
+ *  stored set, or freshly-extracted set) that produced it, never mixed across the two. Falls back to the
+ *  target's own normalized text for a role that is neither claim nor considered-option (nothing currently
+ *  attacks/supports a pro/con, but never silently treat an unresolvable target as equal to its raw id). */
+function targetNameOf(id: string, decisionId: string, byId: Map<string, { role: string; text: string }>): string {
+  if (id === `${decisionId}::claim`) return 'claim';
+  const target = byId.get(id);
+  if (!target) return id; // unresolvable (should not happen within one batch) -- fall back, never throw
+  return sameName(target.role === 'considered-option' ? optionNameOf(target.text) : target.text);
+}
+
+/** review HIGH 1 + review 2 NEW HIGH (D-attack): a row's content identity -- role + its OWN normalized
+ *  text + the SORTED NAMES (never positional ids) of everything it attacks/supports. Before this fix the
+ *  hash was `role::text` alone: a con quoting IDENTICAL text under a DIFFERENT option's Pros-and-Cons
+ *  subsection hashed identically to its old self, so `mergeByContent` read it as "nothing changed" and
+ *  silently carried the old approval (and the OLD option's defeat) onto the NEW option -- the same con
+ *  text that used to defeat Option A would, after being moved under Option B, defeat Option B too, with
+ *  nobody re-reviewing it. Hashing the sorted target NAMES (not the positional `::option:N` ids, which
+ *  shift independently of what they point to) means a row whose text is untouched but whose target moved
+ *  gets a DIFFERENT hash -- `mergeByContent` then treats it exactly like an edit-in-place: back to `draft`
+ *  with `previouslyApproved` noted, never silently still-approved. `byId` is the id->row lookup of the
+ *  SAME batch (existing or fresh) this row's own `attacks`/`supports` ids were assigned in. */
+function contentHashOf(row: { decisionId: string; role: string; text: string; attacks: string[]; supports: string[] }, byId: Map<string, { role: string; text: string }>): string {
+  const targetNames = Array.from(new Set([...row.attacks, ...row.supports]))
+    .map((id) => targetNameOf(id, row.decisionId, byId))
+    .sort();
+  return createHash('sha256').update(`${row.role}::${sameName(row.text)}::${targetNames.join('|')}`).digest('hex');
 }
 
 /** Write-then-rename (same directory, same filesystem, review MEDIUM 3): a reader never observes a
@@ -141,17 +169,20 @@ async function withLock<T>(root: string, decisionId: string, fn: () => T): Promi
  *   3. no match at all: a genuinely new row, draft as it came in.
  *  Any stored row no row in `fresh` claims (case 4: the bullet was deleted from the source) is kept,
  *  unchanged, at the end -- never silently dropped (append-only). */
-function mergeByContent(existing: CapturedArgument[], fresh: CapturedArgument[]): CapturedArgument[] {
+function mergeByContent(decisionId: string, existing: CapturedArgument[], fresh: CapturedArgument[]): CapturedArgument[] {
+  // review 2 NEW HIGH (D-attack): hash lookups for a row's attacks/supports TARGETS must stay within the
+  // one batch (existing or fresh) that assigned that row's ids -- never a map mixing the two.
+  const existingById = new Map(existing.map((r) => [r.id, r]));
+  const freshById = new Map(fresh.map((r) => [r.id, r]));
   const existingByHash = new Map<string, CapturedArgument[]>();
   for (const r of existing) {
-    const h = contentHashOf(r);
+    const h = contentHashOf(r, existingById);
     const bucket = existingByHash.get(h);
     if (bucket) bucket.push(r);
     else existingByHash.set(h, [r]);
   }
-  const existingById = new Map(existing.map((r) => [r.id, r]));
   const used = new Set<string>();
-  const hashes = fresh.map((row) => contentHashOf(row));
+  const hashes = fresh.map((row) => contentHashOf(row, freshById));
   const resolved: Array<CapturedArgument | undefined> = fresh.map(() => undefined);
 
   // PASS 1: resolve every fresh row's CONTENT match first, across the whole batch, before any row falls
@@ -174,6 +205,7 @@ function mergeByContent(existing: CapturedArgument[], fresh: CapturedArgument[])
       status: prior.status,
       approvedBy: prior.approvedBy,
       approvedAt: prior.approvedAt,
+      approvedHash: prior.approvedHash,
       rejectedReason: prior.rejectedReason,
       rejectedAt: prior.rejectedAt,
       previouslyApproved: prior.previouslyApproved,
@@ -201,9 +233,34 @@ function mergeByContent(existing: CapturedArgument[], fresh: CapturedArgument[])
   });
 
   const merged = resolved as CapturedArgument[];
-  // deleted-from-source row: kept, never dropped -- also back-fills contentHash for any row persisted
-  // before this field existed, so every row on disk has one after its first merge through this code.
-  for (const r of existing) if (!used.has(r.id)) merged.push({ ...r, contentHash: r.contentHash ?? contentHashOf(r) });
+  // review 2 COMPOUNDING: every id in `merged` so far comes from `fresh` (pass 1 and pass 2 both spread
+  // `row`, i.e. a fresh row, so its final id is always SOME fresh[i].id -- unique within `fresh` by
+  // construction of the extractor's own per-role counters). A leftover, never-claimed EXISTING row (case
+  // 4: deleted from source, kept append-only below) carries its OWN old id forward -- and that old id can
+  // coincide with an unrelated id this run's `fresh` batch happens to reuse (ids are positional, so a
+  // smaller/reshaped document reissues low numbers). Without this check two rows could share one id in the
+  // same decision file (`setRow`'s `findIndex` would then silently patch whichever came first). Disambiguate
+  // instead of colliding -- the row's content and history are still there, just findable under a distinct id.
+  const claimedIds = new Set(merged.map((r) => r.id));
+  for (const r of existing) {
+    if (used.has(r.id)) continue;
+    let id = r.id;
+    if (claimedIds.has(id)) {
+      let n = 2;
+      while (claimedIds.has(`${r.id}::stale${n}`)) n++;
+      id = `${r.id}::stale${n}`;
+    }
+    claimedIds.add(id);
+    // deleted-from-source row: kept, never dropped -- also back-fills contentHash for any row persisted
+    // before this field existed, so every row on disk has one after its first merge through this code.
+    merged.push({ ...r, id, contentHash: r.contentHash ?? contentHashOf(r, existingById) });
+  }
+  // review 2 COMPOUNDING: assert the invariant this function exists to guarantee, rather than trust the
+  // disambiguation above silently did its job -- a regression here must be loud, never a quiet data bug.
+  const finalIds = merged.map((r) => r.id);
+  if (new Set(finalIds).size !== finalIds.length) {
+    throw new CapturedArgumentError(`mergeByContent: internal invariant violated -- ${decisionId} would have duplicate captured-argument ids after merge`);
+  }
   return merged;
 }
 
@@ -214,18 +271,35 @@ export async function saveCapturedArguments(root: string, decisionId: string, fr
     // re-read AFTER the lock is held, never before -- a read taken before acquiring the lock could already
     // be stale by the time this process gets its turn to write (review MEDIUM 3, same as priorities.ts).
     const existing = listCapturedArguments(root, decisionId);
-    const merged = mergeByContent(existing, fresh);
+    const merged = mergeByContent(decisionId, existing, fresh);
     writeCapturedArguments(root, decisionId, merged);
     return merged;
   });
 }
 
-async function setRow(root: string, decisionId: string, argumentId: string, patch: Partial<CapturedArgument>, verb: string): Promise<CapturedArgument> {
+/** review 2 COMPOUNDING: refuse an AMBIGUOUS id loudly rather than silently patching whichever row
+ *  `findIndex` happens to see first -- this should never fire given `mergeByContent`'s own invariant
+ *  above, but approve/reject must never trust that invariant blindly from the outside; a stored file
+ *  edited by hand, or written by a future bug, gets a named error here instead of a wrong row mutated. */
+async function setRow(
+  root: string,
+  decisionId: string,
+  argumentId: string,
+  patch: Partial<CapturedArgument> | ((row: CapturedArgument) => Partial<CapturedArgument>),
+  verb: string,
+): Promise<CapturedArgument> {
   return withLock(root, decisionId, () => {
     const rows = listCapturedArguments(root, decisionId); // re-read AFTER the lock is held
+    const matchCount = rows.filter((r) => r.id === argumentId).length;
+    if (matchCount > 1) {
+      throw new CapturedArgumentError(
+        `mole arguments ${verb}: ${decisionId} has an AMBIGUOUS captured argument id ${argumentId} (${matchCount} rows share it) -- refusing to guess which one; the stored file needs manual repair`,
+      );
+    }
     const idx = rows.findIndex((r) => r.id === argumentId);
     if (idx < 0) throw new CapturedArgumentError(`mole arguments ${verb}: ${decisionId} has no captured argument ${argumentId}`);
-    const next = { ...rows[idx]!, ...patch };
+    const resolvedPatch = typeof patch === 'function' ? patch(rows[idx]!) : patch;
+    const next = { ...rows[idx]!, ...resolvedPatch };
     rows[idx] = next;
     writeCapturedArguments(root, decisionId, rows);
     return next;
@@ -243,15 +317,30 @@ export async function approveCapturedArgument(root: string, decisionId: string, 
     root,
     decisionId,
     argumentId,
-    { status: 'approved', approvedBy: approver, approvedAt: new Date().toISOString(), rejectedReason: undefined, rejectedAt: undefined, previouslyApproved: undefined, previouslyApprovedBy: undefined, previouslyApprovedAt: undefined },
+    // review 2 NEW HIGH (D-attack): stamp the hash of what was ACTUALLY approved (role+text+target names,
+    // computed by contentHashOf) so a later audit can assert `approvedHash === contentHash` for every
+    // approved row -- if `mergeByContent` ever carries a status of 'approved' forward onto a row whose
+    // hash changed, that assertion (and the property test below) catches it immediately.
+    (row) => ({
+      status: 'approved',
+      approvedBy: approver,
+      approvedAt: new Date().toISOString(),
+      approvedHash: row.contentHash,
+      rejectedReason: undefined,
+      rejectedAt: undefined,
+      previouslyApproved: undefined,
+      previouslyApprovedBy: undefined,
+      previouslyApprovedAt: undefined,
+    }),
     'approve',
   );
 }
 
 /** A person rejects one captured argument: marks it `rejected` with a reason. Never deletes the row
- *  (append-only) and never affects the graph either way -- rejected is simply never approved. */
+ *  (append-only) and never affects the graph either way -- rejected is simply never approved. Clears
+ *  `approvedHash` too: a rejected row is, by definition, no longer vouched for by any past approval. */
 export async function rejectCapturedArgument(root: string, decisionId: string, argumentId: string, reason: string): Promise<CapturedArgument> {
-  return setRow(root, decisionId, argumentId, { status: 'rejected', rejectedReason: reason, rejectedAt: new Date().toISOString() }, 'reject');
+  return setRow(root, decisionId, argumentId, { status: 'rejected', rejectedReason: reason, rejectedAt: new Date().toISOString(), approvedHash: undefined }, 'reject');
 }
 
 /** Every decision id with at least one captured-argument file, for `mole arguments list` with no --id. */

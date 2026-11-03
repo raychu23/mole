@@ -38,12 +38,47 @@ faked out the section-end scan). All existing tests + `mole rules` (0013/0014/00
   (`captured-arguments-lock.test.ts`, real child processes via vite-node, same convention as
   `priorities-lock-worker.ts`).
 
+**Review 2 fixes (NEW HIGH D-attack, COMPOUNDING):**
+- **NEW HIGH (D-attack -- a row's TARGET wasn't part of its content identity):** `contentHashOf` hashed
+  only `role::text`, so a `con` with IDENTICAL wording, moved from Option A's Pros-and-Cons subsection to
+  Option B's, hashed the same as before the move -- `mergeByContent` read it as "nothing changed" and
+  silently carried alice's old approval (and Option A's defeat) onto Option B, with nobody ever reviewing
+  "this con attacks B". Fixed: `contentHashOf` now hashes role + normalized text + the SORTED NAMES
+  (never positional `::option:N` ids, which shift independently of what they point to) of everything the
+  row attacks/supports, via a new `targetNameOf` resolving each id against the SAME capture batch (never
+  mixing an existing-batch id with a fresh-batch one). A moved-but-textually-unchanged row now reverts to
+  `draft` with `previouslyApproved` noted, exactly like an edit-in-place -- tested with the reviewer's own
+  D-attack reproducer (two rejected options, a con moved between their subsections: labels do NOT change
+  until a human re-approves the moved con) plus a no-op-move regression (same option, re-captured, keeps
+  its approval). Added `approvedHash` (the contentHash stamped AT approval time) so the invariant
+  `approvedHash === contentHash` for every approved row is independently checkable, never just inferred.
+- **COMPOUNDING (two rows sharing one id after merge):** `mergeByContent`'s pass-1/pass-2 resolved rows all
+  keep the FRESH row's own positional id (by design -- ids are allowed to shift); the never-claimed
+  leftover EXISTING rows (case 4, deleted-from-source, kept append-only) used to carry their OWN old id
+  forward unconditionally. Because ids are positional, a reshaped document can reissue a low id that an
+  unrelated leftover row still holds -- two rows then shared one id in the same decision file, and
+  `setRow`'s `findIndex` would silently patch whichever came first. Fixed: the backfill step now
+  disambiguates a colliding leftover id (`<id>::staleN`) before pushing it, and `mergeByContent` asserts
+  the final merged set has zero duplicate ids (never trust the disambiguation silently worked);
+  `approveCapturedArgument`/`rejectCapturedArgument` now also refuse an AMBIGUOUS id loudly rather than
+  mutating whichever row `findIndex` happens to see first. Tested: a direct reshape reproducer (shrinking a
+  3-option document back to 2 reissues `::option:1`/`::con:1`, confirmed 7 rows / 5 distinct ids pre-fix)
+  plus a 30-seed property test (deterministic PRNG, no external dependency) running random
+  insert/move/edit/delete sequences across 2-3 options and asserting, after every re-capture: no duplicate
+  ids, every approved row's `approvedHash` equals its current `contentHash`, and `evaluate()`'s labels
+  equal those recomputed from exactly the approved-and-hash-matching rows (the same set
+  `captured-loader.ts` turns into graph nodes).
+
 ## Files
 - `packages/decisions/src/capture/arguments.ts` -- deterministic extraction + `TextQuoteSpan`; review HIGH
-  2 added a defensive chosen-option guard and the `contentHash`/`previouslyApproved*` fields.
+  2 added a defensive chosen-option guard and the `contentHash`/`previouslyApproved*` fields; review 2
+  added `approvedHash`.
 - `packages/decisions/src/capture/captured-store.ts` -- append-only store, approve/reject (T46 pattern);
   review HIGH 1 content-bound merge (`mergeByContent`) + review MEDIUM 3 proper-lockfile locking + atomic
-  writes (same pattern as `priorities.ts`'s `setPriorities`); approve/reject/save are now async.
+  writes (same pattern as `priorities.ts`'s `setPriorities`); approve/reject/save are now async. Review 2:
+  `contentHashOf`/`targetNameOf` bind a row's identity to its attack/support TARGET NAMES, not positional
+  ids; `mergeByContent`'s backfill disambiguates a colliding leftover id and asserts the merged set is
+  duplicate-free; `setRow` refuses an ambiguous id; `approveCapturedArgument` stamps `approvedHash`.
 - `packages/decisions/src/argdown/captured-loader.ts` -- approved-only rows -> graph nodes/edges.
 - `packages/decisions/src/capture/arguments-cli.ts` -- `mole arguments capture|approve|reject|list`; now
   awaits the async store calls.
@@ -53,7 +88,8 @@ faked out the section-end scan). All existing tests + `mole rules` (0013/0014/00
 - `packages/decisions/src/index.ts`, `packages/daemon/src/cli.ts` -- exports + one lazy-import CLI line.
 - `packages/decisions/test/argument-capture.test.ts` -- extraction/draft-isolation tests (original 9) plus
   review-fix tests: HIGH 1's insert/edit-in-place/reorder/delete reproducers, HIGH 2's real-record (0015,
-  0016) + sameName tests.
+  0016) + sameName tests, and review 2's D-attack move reproducer + no-op-move regression, a direct
+  duplicate-id reshape reproducer, and a 30-seed property test (random insert/move/edit/delete sequences).
 - `packages/decisions/test/argdown-derive-adr.test.ts` -- +1 regression test for the quote-normalization fix.
 - `packages/decisions/test/captured-arguments-lock.test.ts` + `captured-arguments-lock-worker.ts` -- review
   MEDIUM 3's 12-concurrent-processes-x-10-rounds stress test (real child processes, vite-node, same

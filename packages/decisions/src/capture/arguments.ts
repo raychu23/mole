@@ -70,6 +70,12 @@ export interface CapturedArgument {
   previouslyApproved?: boolean;
   previouslyApprovedBy?: string;
   previouslyApprovedAt?: string;
+  /** review 2 NEW HIGH (D-attack): the contentHash captured AT THE MOMENT of approval -- set only by
+   *  approveCapturedArgument, carried forward by mergeByContent only when a re-capture's fresh hash still
+   *  matches (case 1, nothing changed). A status of 'approved' whose approvedHash no longer equals the
+   *  row's current contentHash is exactly the bug this field exists to make detectable: it means some path
+   *  carried an approval forward onto content (text OR attack/support targets) nobody actually reviewed. */
+  approvedHash?: string;
 }
 
 const BULLET_LINE = /^(\s*[-*]\s+)(.*)$/;
