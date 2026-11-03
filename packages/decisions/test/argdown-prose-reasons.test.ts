@@ -90,10 +90,19 @@ describe('ADR prose reasons remain evidence for the chosen option', () => {
   it.each([
     'Chosen option: "Modern Python". The team almost chose Legacy Python because it was familiar, but picked Modern Python since it is maintained.',
     'Chosen option: "Modern Python". We kept it because it was there, but this is under review.',
+    // review 4 P1: "i.e." used to split the sentence away from the rejected option's name
+    'Chosen option: "Modern Python". The team found Legacy Python familiar, i.e. easy to adopt, because it had vendor support. We chose Modern Python since it is maintained long-term.',
   ])('does not take a because-clause about another option or a turned sentence: %s', (outcome) => {
     const text = ['## Considered Options', '- Modern Python', '- Legacy Python', '## Decision Outcome', outcome].join('\n');
     const derived = deriveAdrArgumentFramework('py', text);
     expect(derived.arguments.filter((a) => a.role === 'reason')).toEqual([]);
+  });
+
+  // review 4 P1: the prose names the rejected option only by a shortened form ("Legacy")
+  it('does not take a because-clause that names a rejected option by one distinctive word', () => {
+    const text = ['## Considered Options', '- Modern Python', '- Legacy Python 2.7 Runtime', '## Decision Outcome',
+      'Chosen option: "Modern Python". Legacy was favored initially because teams knew it well. We then picked Modern Python since it is maintained.'].join('\n');
+    expect(deriveAdrArgumentFramework('py', text).arguments.filter((a) => a.role === 'reason')).toEqual([]);
   });
 
   it('keeps the stated reason paragraph without absorbing later commentary', () => {

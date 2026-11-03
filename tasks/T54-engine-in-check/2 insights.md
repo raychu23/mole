@@ -29,3 +29,13 @@ Decisions package: 32 files, 291 tests pass.
   doesn't turn (but/however/although/though); unsure → no reason (claim undefended), never a guess
 - limit: when the ADR lists no Considered Options, a sentence about an unlisted option can't be detected by name
 - real ADRs still 16/20 defended · decisions + plugin 41 files, 319 tests
+
+## 11-02 18:10 review 4 (deleg_e03f57e3) FAIL → fixed (2 new tests red → green)
+- round-3 P1 fixed for its trigger · real ADRs 16/20 unchanged · as/given-that/not-because = conservative misses (P2), no misattribution
+- P1 siblings: "i.e." split the sentence away from the rejected name · rejected option named by one word ("Legacy" for
+  "Legacy Python 2.7 Runtime") → guard rewritten: the text BEFORE the first "because" (no sentence split) may not hold any
+  word only a rejected option's name has; the because-clause's sentence may not turn; unsure → no reason
+- INFERENCE: 3 rounds of siblings = the prose fallback is a heuristic with a ceiling; rule kept deliberately one-sided
+  (a missed reason → claim shown undefended to the judge, visible; a misattributed one → silently wrong). Stop
+  extending it after round 5; anything subtler goes to the LLM judge, which sees the full outcome text anyway
+- 41 files, 321 tests · all round-3/4 reproducers now give reasons []

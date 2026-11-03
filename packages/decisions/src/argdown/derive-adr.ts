@@ -92,6 +92,12 @@ function optionNameOf(bullet: string): string {
   return (m?.[1] ?? cleaned).trim();
 }
 
+const STOP_WORDS = new Set(['the', 'and', 'for', 'with', 'use', 'using', 'our', 'all', 'new', 'old', 'one', 'via', 'per', 'not', 'any', 'option', 'keep', 'from', 'into']);
+/** lower-case alphabetic words of 3+ letters, stop words removed -- for "does this text name that option?" */
+function wordsOf(s: string): string[] {
+  return (s.toLowerCase().match(/[a-z][a-z-]{2,}/g) ?? []).filter((w) => !STOP_WORDS.has(w));
+}
+
 /** Build the Dung framework + display arguments for one decision's ADR text. `decisionId` namespaces the
  *  derived argument ids so two decisions' frameworks never collide when a caller merges several. */
 export function deriveAdrArgumentFramework(decisionId: string, adrText: string): AdrArgumentFramework {
@@ -133,6 +139,10 @@ export function deriveAdrArgumentFramework(decisionId: string, adrText: string):
     }
   }
 
+  // words that appear in some rejected option's name and not in the chosen one (stop words and numbers left out)
+  const chosenWords = new Set(wordsOf(chosenName ?? ''));
+  const rejectedWords = [...new Set(rejectedNames.flatMap(wordsOf))].filter((w) => !chosenWords.has(w));
+
   if (outcomeBlock) {
     // reasons live after the "Chosen option: X, because" line when present, else the whole outcome block
     const reasonSource = chosenMatch ? outcomeBlock.slice(chosenMatch.index + chosenMatch[0].length) : outcomeBlock;
@@ -146,15 +156,22 @@ export function deriveAdrArgumentFramework(decisionId: string, adrText: string):
       // (review 2 P0: "to be revisited after the audit"); python-tuf 0004's purpose clause stays unread.
       const first = reasonSource.split(/\r?\n\s*\r?\n/, 1)[0] ?? '';
       const opening = /^\s*[,.]?\s*(?:because|since)\b([\s\S]*)/i.exec(first)?.[1];
-      // otherwise: the first SENTENCE holding "because", and only if that sentence names no rejected option and
-      // does not turn ("but", "however") -- review 3 P1: "The team almost chose Y because it was popular, but
-      // finally selected X since …" handed Y's praise to X. Unsure -> no reason (claim undefended), never a guess.
+      // otherwise the first "because" in that paragraph -- but only when nothing ties it to a rejected option:
+      // the text BEFORE it (no sentence splitting: "i.e." used to split a rejected name away, review 4) may not
+      // hold any word that only a rejected option's name has ("Legacy" for "Legacy Python 2.7 Runtime", review 4),
+      // and the because-clause's own sentence may not turn (but/however/although/though, review 3).
+      // Unsure -> no reason (claim undefended), never a guess.
       let inner: string | undefined;
       if (opening === undefined) {
-        const sentence = first.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+/).find((s) => /\bbecause\b/i.test(s));
-        const low = sentence ? sameName(sentence) : '';
-        const namesOther = rejectedNames.some((nm) => nm.length > 0 && low.includes(nm));
-        if (sentence && !namesOther && !/\b(?:but|however|although|though)\b/i.test(sentence)) inner = /\bbecause\b([\s\S]*)/i.exec(sentence)?.[1];
+        const flat = first.replace(/\s+/g, ' ');
+        const at = /\bbecause\b/i.exec(flat);
+        if (at) {
+          const before = new Set(wordsOf(flat.slice(0, at.index)));
+          const clause = flat.slice(at.index + at[0].length);
+          const clauseSentence = clause.split(/(?<=[.!?])\s+(?=[A-Z])/, 1)[0] ?? clause;
+          const tiedToRejected = rejectedWords.some((w) => before.has(w));
+          if (!tiedToRejected && !/\b(?:but|however|although|though)\b/i.test(clauseSentence)) inner = clause;
+        }
       }
       const paragraph = (opening ?? inner)?.replace(/\s+/g, ' ').trim();
       if (paragraph) reasons.push(paragraph);
