@@ -53,10 +53,16 @@ export interface CouplingPair {
   sharedRevs: number;
   revsA: number;
   revsB: number;
-  /** ceil(average(revsA, revsB)), code-maat's own rounding */
+  /** ceil(average(revsA, revsB)), code-maat's own rounding -- the emitted column, NOT what degree
+   * is computed from (code-maat computes degree from the raw, un-ceiled average). */
   averageRevs: number;
-  /** percent, 100 * sharedRevs / averageRevs */
+  /** percent, 100 * sharedRevs / (raw, un-ceiled average(revsA, revsB)), truncated toward zero --
+   * code-maat's own `(int coupling)` emitted value (logical_coupling.clj `as-logical-coupling-measure`).
+   * e.g. revsA=17 revsB=24 shared=12 -> raw 58.54%, emitted/stored here as 58, not ceil-average's 57. */
   degree: number;
+  /** the untruncated raw percentage `degree` was truncated from (kept for callers that want the
+   * exact value; code-maat itself never emits this, only the truncated int above). */
+  degreeExact: number;
   /** up to `sampleShas` commit shas that touched both files, newest first -- the pair's evidence */
   sampleShas: string[];
   ownersA: string[];
@@ -133,11 +139,15 @@ export async function computeCoupling(root: string, opts: CouplingOptions = {}):
   const revs = new Map<string, number>();
   for (const c of good) for (const f of c.files) revs.set(f, (revs.get(f) ?? 0) + 1);
 
-  const eligible = new Set([...revs.entries()].filter(([, n]) => n >= minRevs).map(([f]) => f));
-
+  // code-maat's `module-by-revs`/`coupling-frequencies` pair EVERY co-changing file in a (good)
+  // commit, with no per-file min-revs pre-filter -- `min-revs` is checked only after pairing,
+  // against the PAIR's own average-revs (`within-threshold?`'s `revs` arg is `average-revs`, not a
+  // per-file count). Filtering files out before pairing (the old `eligible` set) silently dropped
+  // pairs code-maat would keep, e.g. revsA=6/revsB=20/shared=6 at --min-revs 10: average-revs=13 >=
+  // 10 passes code-maat's filter even though file A alone has only 6 revisions.
   const shared = new Map<string, { count: number; shas: string[] }>();
   for (const c of good) {
-    const files = c.files.filter((f) => eligible.has(f));
+    const files = [...new Set(c.files)];
     if (files.length < 2) continue;
     for (let i = 0; i < files.length; i++) {
       for (let j = i + 1; j < files.length; j++) {
@@ -161,9 +171,17 @@ export async function computeCoupling(root: string, opts: CouplingOptions = {}):
     const [fileA, fileB] = key.split('\u0000') as [string, string];
     const revsA = revs.get(fileA)!;
     const revsB = revs.get(fileB)!;
-    const averageRevs = Math.ceil((revsA + revsB) / 2);
-    const degree = (100 * e.count) / averageRevs;
-    if (degree < minCoupling || degree > maxCoupling) continue;
+    // code-maat's `average-revs` inside `as-logical-coupling-measure` is the RAW average -- the
+    // `-min-revs` threshold and the degree calculation both use this raw value; `(math/ceil
+    // average-revs)` happens only when assembling the emitted `:average-revs` column (below).
+    const averageRevsRaw = (revsA + revsB) / 2;
+    if (averageRevsRaw < minRevs) continue;
+    const averageRevs = Math.ceil(averageRevsRaw);
+    const degreeExact = (100 * e.count) / averageRevsRaw;
+    // code-maat's `within-threshold?`: `(>= coupling min-coupling)` against the RAW percentage, but
+    // `(<= (math/floor coupling) max-coupling)` -- floored, not raw -- against max-coupling.
+    if (degreeExact < minCoupling || Math.floor(degreeExact) > maxCoupling) continue;
+    const degree = Math.trunc(degreeExact); // code-maat's own emitted `(int coupling)`
     const ownersA = owners ? owners.ownersOf(fileA) : [];
     const ownersB = owners ? owners.ownersOf(fileB) : [];
     const crossTeam = ownersA.length > 0 && ownersB.length > 0 && !ownersA.some((o) => ownersB.includes(o));
@@ -175,6 +193,7 @@ export async function computeCoupling(root: string, opts: CouplingOptions = {}):
       revsB,
       averageRevs,
       degree,
+      degreeExact,
       sampleShas: e.shas,
       ownersA,
       ownersB,
@@ -184,14 +203,15 @@ export async function computeCoupling(root: string, opts: CouplingOptions = {}):
   }
 
   // Cross-team pairs first (Cataldo & Herbsleb: a technical coupling crossing a team boundary is the
-  // one most likely under-coordinated), each group by degree desc, ties by shared commits desc then
-  // path for a deterministic order.
-  pairs.sort((a, b) => Number(b.crossTeam) - Number(a.crossTeam) || b.degree - a.degree || b.sharedRevs - a.sharedRevs || a.fileA.localeCompare(b.fileA) || a.fileB.localeCompare(b.fileB));
+  // one most likely under-coordinated), each group by degree desc (exact, pre-truncation, for a
+  // finer-grained order than the truncated int column gives), ties by shared commits desc then path
+  // for a deterministic order.
+  pairs.sort((a, b) => Number(b.crossTeam) - Number(a.crossTeam) || b.degreeExact - a.degreeExact || b.sharedRevs - a.sharedRevs || a.fileA.localeCompare(b.fileA) || a.fileB.localeCompare(b.fileB));
 
   return {
     pairs: pairs.slice(0, opts.top ?? 10),
     commitsConsidered: commits.length,
-    filesConsidered: eligible.size,
+    filesConsidered: revs.size,
     codeownersPath: co?.path ?? null,
     minRevs,
     minSharedRevs,
@@ -207,7 +227,7 @@ export function formatCoupling(r: CouplingResult): string {
   if (r.pairs.length === 0) return `mole coupling: no pair meets min-shared-revs=${r.minSharedRevs}/min-coupling=${r.minCoupling}% (${r.filesConsidered} file(s) considered, ${r.commitsConsidered} commit(s) read)${r.codeownersPath ? '' : ' -- no CODEOWNERS file found'}`;
   const out = [`mole coupling (min-revs=${r.minRevs} min-shared-revs=${r.minSharedRevs} min-coupling=${r.minCoupling}% max-coupling=${r.maxCoupling}% max-changeset-size=${r.maxChangesetSize}, ${r.filesConsidered} file(s) considered)${r.codeownersPath ? ` -- CODEOWNERS: ${r.codeownersPath}` : ' -- no CODEOWNERS file found'}`];
   r.pairs.forEach((p, i) => {
-    out.push(`${i + 1}. ${p.fileA} <-> ${p.fileB}  degree=${p.degree.toFixed(0)}%  shared=${p.sharedRevs} (avg-revs=${p.averageRevs})${p.crossTeam ? '  [cross-team]' : ''}`);
+    out.push(`${i + 1}. ${p.fileA} <-> ${p.fileB}  degree=${p.degree}%  shared=${p.sharedRevs} (avg-revs=${p.averageRevs})${p.crossTeam ? '  [cross-team]' : ''}`);
     out.push(`   owners: ${p.ownersA.join(',') || '(none)'} / ${p.ownersB.join(',') || '(none)'}  sample shas: ${p.sampleShas.map((s) => s.slice(0, 7)).join(', ')}`);
     if (p.decisions.length) out.push(`   decisions: ${p.decisions.map((d) => `${d.id} ${d.title}`).join('; ')}`);
   });

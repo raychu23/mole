@@ -17,9 +17,12 @@ export function registerCouplingTool(server: McpServer, opts: Opts): void {
       title: 'Mole coupling',
       description:
         'Logical coupling from git co-change (code-maat\'s `coupling` analysis, D69): pairs of files that tend to change in the same commit. ' +
-        'degree = 100 x shared commits / ceil(average(revisions of A, revisions of B)) (code-maat defaults: min-revs=5, min-shared-revs=5, ' +
-        'min-coupling=30%, max-coupling=100%, max-changeset-size=30 -- a commit touching more files than that is dropped from every count, so one ' +
-        'mass-reformat commit cannot manufacture coupling). Owners come from CODEOWNERS (GitHub syntax, last matching pattern wins) at HEAD. ' +
+        'degree = truncated int(100 x shared commits / average(revisions of A, revisions of B)) -- code-maat\'s own `(int coupling)`, computed from ' +
+        'the RAW average, not the ceiled one (ceiling is only applied to the separately-reported average-revs column). min-revs is checked against ' +
+        'that same raw average AFTER pairing (a file alone under min-revs can still appear in a kept pair); max-coupling is checked against ' +
+        'floor(degree), not the raw percentage. code-maat defaults: min-revs=5, min-shared-revs=5, min-coupling=30%, max-coupling=100%, ' +
+        'max-changeset-size=30 -- a commit touching more files than that is dropped from every count, so one mass-reformat commit cannot manufacture ' +
+        'coupling. Owners come from CODEOWNERS (GitHub syntax, last matching pattern wins) at HEAD. ' +
         'Cross-team pairs (both sides owned, owner sets disjoint) are always sorted first -- Cataldo & Herbsleb\'s socio-technical congruence: a ' +
         'technical coupling crossing a team boundary is the pair most likely nobody is actually coordinating across. Every pair carries its own ' +
         'evidence (shared commit count + up to 5 sample shas, both sides\' owners, and any Mole decisions whose scope covers both files) -- a pair ' +

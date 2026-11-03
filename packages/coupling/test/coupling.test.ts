@@ -167,3 +167,98 @@ describe('computeCoupling (T77 done-when: co-change pairs, each explained by sha
     expect(r.ms).toBeLessThan(10_000);
   });
 });
+
+/** touch `file` alone `n` times (n separate commits), each writing a distinct content so the commit
+ * is non-empty. */
+function touchAlone(root: string, file: string, n: number, label: string): void {
+  for (let i = 0; i < n; i++) {
+    write(root, file, `export const v = '${label}-${i}';\n`);
+    commit(root, `feat: touch ${file} alone ${label}-${i}`);
+  }
+}
+/** touch both files together, `n` times. */
+function touchBoth(root: string, fileA: string, fileB: string, n: number, label: string): void {
+  for (let i = 0; i < n; i++) {
+    write(root, fileA, `export const v = '${label}-${i}';\n`);
+    write(root, fileB, `export const v = '${label}-${i}';\n`);
+    commit(root, `feat: touch ${fileA}+${fileB} ${label}-${i}`);
+  }
+}
+
+describe('T77 review-1 HIGH: degree from the RAW average, not the ceiled one (code-maat logical_coupling.clj)', () => {
+  it('revsA=17 revsB=24 shared=12 -> degree 58 (58.54% raw truncated), not 57 (ceil-average would give 57.14 -> 57)', async () => {
+    const root = tmpRepo();
+    // 12 shared commits: revsA += 12, revsB += 12, shared = 12.
+    touchBoth(root, 'a.ts', 'b.ts', 12, 'shared');
+    // 5 more commits touching a.ts alone: revsA = 17.
+    touchAlone(root, 'a.ts', 5, 'a-alone');
+    // 12 more commits touching b.ts alone: revsB = 24.
+    touchAlone(root, 'b.ts', 12, 'b-alone');
+    const r = await computeCoupling(root, { top: 10, minRevs: 1, minSharedRevs: 1, minCoupling: 0 });
+    const ab = r.pairs.find((p) => [p.fileA, p.fileB].sort().join() === ['a.ts', 'b.ts'].sort().join())!;
+    expect(ab).toBeDefined();
+    expect(ab.revsA).toBe(17);
+    expect(ab.revsB).toBe(24);
+    expect(ab.sharedRevs).toBe(12);
+    expect(ab.averageRevs).toBe(21); // ceil(20.5) -- the emitted column, NOT what degree is based on
+    expect(ab.degreeExact).toBeCloseTo(58.536585, 4);
+    expect(ab.degree).toBe(58); // code-maat's own (int coupling); NOT 57 (100*12/ceil(20.5))
+  });
+});
+
+describe('T77 review-1 HIGH: max-coupling filters floor(coupling) <= max (code-maat coupling_algos.clj within-threshold?)', () => {
+  it('raw coupling 52.63% (floor 52): kept at --max-coupling 52, dropped at --max-coupling 51', async () => {
+    const root = tmpRepo();
+    // 5 shared commits: revsA += 5, revsB += 5, shared = 5.
+    touchBoth(root, 'a.ts', 'b.ts', 5, 'shared');
+    // 4 more alone for a.ts (revsA = 9), 5 more alone for b.ts (revsB = 10).
+    touchAlone(root, 'a.ts', 4, 'a-alone');
+    touchAlone(root, 'b.ts', 5, 'b-alone');
+    // average-revs raw = (9+10)/2 = 9.5; coupling = 100*5/9.5 = 52.6315...%; floor = 52.
+    const findAB = (r: Awaited<ReturnType<typeof computeCoupling>>) =>
+      r.pairs.find((p) => [p.fileA, p.fileB].sort().join() === ['a.ts', 'b.ts'].sort().join());
+
+    const kept = await computeCoupling(root, { top: 10, minRevs: 1, minSharedRevs: 1, minCoupling: 0, maxCoupling: 52 });
+    const ab = findAB(kept);
+    expect(ab).toBeDefined();
+    expect(ab!.degreeExact).toBeCloseTo(52.631578, 4);
+    expect(ab!.degree).toBe(52);
+
+    const dropped = await computeCoupling(root, { top: 10, minRevs: 1, minSharedRevs: 1, minCoupling: 0, maxCoupling: 51 });
+    expect(findAB(dropped)).toBeUndefined(); // naive `degree > max` (52.63 > 51) would ALSO drop at
+    // max-coupling=52, which is the bug this test guards against: code-maat only drops here, at 51.
+  });
+});
+
+describe('T77 review-1 MED: min-revs filters the PAIR\'s average-revs after pairing, not per-file before (code-maat coupling_algos.clj within-threshold?)', () => {
+  it('--min-revs 10 --min-shared-revs 5: pair revsA=6 revsB=20 shared=6 is KEPT (average-revs=13 >= 10) even though file A alone has only 6 revisions', async () => {
+    const root = tmpRepo();
+    // 6 shared commits: revsA = 6, revsB += 6, shared = 6 (every revision of a.ts is shared with b.ts).
+    touchBoth(root, 'a.ts', 'b.ts', 6, 'shared');
+    // 14 more commits touching b.ts alone: revsB = 20.
+    touchAlone(root, 'b.ts', 14, 'b-alone');
+    const r = await computeCoupling(root, { top: 10, minRevs: 10, minSharedRevs: 5 });
+    const ab = r.pairs.find((p) => [p.fileA, p.fileB].sort().join() === ['a.ts', 'b.ts'].sort().join());
+    expect(ab).toBeDefined(); // a per-file --min-revs pre-filter (old behaviour) would have dropped
+    // a.ts (6 revs < 10) before pairing and this pair would never have formed.
+    expect(ab!.revsA).toBe(6);
+    expect(ab!.revsB).toBe(20);
+    expect(ab!.sharedRevs).toBe(6);
+  });
+});
+
+describe('T77 review-1 MED: max-changeset-size drops an oversized commit entirely, not only from pairing', () => {
+  it('a 31-file commit (> default max-changeset-size=30) must not manufacture coupling between any of its files', async () => {
+    const root = tmpRepo();
+    const bigFiles = Array.from({ length: 31 }, (_, i) => `g${i}.ts`);
+    // Repeat the all-31-files commit 6 times: without the filter every pair among g0..g30 would have
+    // revsA=revsB=sharedRevs=6, degree=100% -- comfortably past every default threshold.
+    for (let i = 0; i < 6; i++) {
+      for (const f of bigFiles) write(root, f, `export const v = ${i};\n`);
+      commit(root, `feat: touch all ${bigFiles.length} files together ${i}`);
+    }
+    const r = await computeCoupling(root); // default max-changeset-size=30
+    expect(r.pairs.every((p) => !p.fileA.startsWith('g') && !p.fileB.startsWith('g'))).toBe(true);
+    expect(r.pairs.some((p) => bigFiles.includes(p.fileA) || bigFiles.includes(p.fileB))).toBe(false);
+  });
+});

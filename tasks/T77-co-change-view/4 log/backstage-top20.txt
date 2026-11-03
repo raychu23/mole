@@ -1,123 +1,41 @@
-mole coupling -- real run on backstage/backstage (public repo, shallow-since=2025-05-03, 12034 commits, .github/CODEOWNERS)
-commits read: 12034  files considered: 1061  codeownersPath: .github/CODEOWNERS  timing: 1447ms
-thresholds: min-revs=5 min-shared-revs=5 min-coupling=30% max-coupling=100% max-changeset-size=30
-
-1. packages/backend-app-api/src/wiring/withDeclaredConnections.test.ts <-> plugins/connections-example-backend-module-gitlab/src/module.test.ts
-   degree=88.9%  sharedRevs=8  revsA=9 revsB=9 averageRevs=9  crossTeam=True
-   ownersA=['@backstage/framework-maintainers']  ownersB=['@backstage/maintainers']
-   sampleShas=['98371d157f3123bd14c7735b8fc690efa5e3b913', 'f6054acc2bf25c86cff74a1ae7ec99fab3644197', '4271005ac3d1bdec2c853561d9b72c12e0691698', 'd2955a5f6860ea52a2438e259de4d2ce6400972a', 'e5755a2d3e1f780020d44d0ffd40fb98350a9b51']
-   decisions=[]
-
-2. packages/backend-app-api/src/wiring/withDeclaredConnections.test.ts <-> plugins/connections-example-backend-module-gitlab/src/module.ts
-   degree=88.9%  sharedRevs=8  revsA=9 revsB=8 averageRevs=9  crossTeam=True
-   ownersA=['@backstage/framework-maintainers']  ownersB=['@backstage/maintainers']
-   sampleShas=['98371d157f3123bd14c7735b8fc690efa5e3b913', 'f6054acc2bf25c86cff74a1ae7ec99fab3644197', '4271005ac3d1bdec2c853561d9b72c12e0691698', 'd2955a5f6860ea52a2438e259de4d2ce6400972a', 'e5755a2d3e1f780020d44d0ffd40fb98350a9b51']
-   decisions=[]
-
-3. packages/cli-module-test-jest/config/jest.js <-> plugins/catalog-backend/src/processors/FileReaderProcessor.ts
-   degree=85.7%  sharedRevs=6  revsA=8 revsB=6 averageRevs=7  crossTeam=True
-   ownersA=['@backstage/framework-maintainers']  ownersB=['@backstage/maintainers']
-   sampleShas=['b6c0ef5d5da814359f91d487d41978e0537256fa', '2e5c5f85b2b36f9062adc624e2a90a9445f1be73', '0419acede2161aee565576c2a6182f423d69991a', '6d76b1729bf8f2337a6e04c871f3c6cc040dc66d', 'd06ba3a58ec93f854c3ad01a1e80215a379bfe35']
-   decisions=[]
-
-4. packages/backend-app-api/src/wiring/withDeclaredConnections.test.ts <-> plugins/connections-example-backend/src/plugin.ts
-   degree=75.0%  sharedRevs=6  revsA=9 revsB=7 averageRevs=8  crossTeam=True
-   ownersA=['@backstage/framework-maintainers']  ownersB=['@backstage/maintainers']
-   sampleShas=['98371d157f3123bd14c7735b8fc690efa5e3b913', 'f6054acc2bf25c86cff74a1ae7ec99fab3644197', 'e5755a2d3e1f780020d44d0ffd40fb98350a9b51', '64cea291c6d49af1c008619d6f1b596806ff869b', '6ece71fd4d2931f4b4a9a63d6d22b09fe454af41']
-   decisions=[]
-
-5. packages/cli-node/src/cli-module/index.ts <-> packages/cli/src/wiring/types.ts
-   degree=75.0%  sharedRevs=6  revsA=8 revsB=8 averageRevs=8  crossTeam=True
-   ownersA=['@backstage/framework-maintainers']  ownersB=['@backstage/tooling-maintainers']
-   sampleShas=['18012b5802e36527960537ffbb2d0c35217c1f67', '7d055ef0c47afe4a6fed43f4a6bb633456a36a5e', '28a438a9f2b4e3c866b82373ad26ba2d65d42962', '7e6ad01a21a9a369459c5c147a83e3b007955196', 'd6caf7f13bebd4d90028104446d7f97b62ed5078']
-   decisions=[]
-
-6. packages/cli-module-auth/src/commands/login.ts <-> plugins/catalog-backend/src/processors/FileReaderProcessor.ts
-   degree=71.4%  sharedRevs=5  revsA=8 revsB=6 averageRevs=7  crossTeam=True
-   ownersA=['@backstage/framework-maintainers']  ownersB=['@backstage/maintainers']
-   sampleShas=['2e5c5f85b2b36f9062adc624e2a90a9445f1be73', '0419acede2161aee565576c2a6182f423d69991a', '6d76b1729bf8f2337a6e04c871f3c6cc040dc66d', 'd06ba3a58ec93f854c3ad01a1e80215a379bfe35', '91b359ee5fb2fb0a9183639e695eb6fed8160565']
-   decisions=[]
-
-7. packages/cli-node/src/cli-module/types.ts <-> packages/cli/src/wiring/types.ts
-   degree=71.4%  sharedRevs=5  revsA=6 revsB=8 averageRevs=7  crossTeam=True
-   ownersA=['@backstage/framework-maintainers']  ownersB=['@backstage/tooling-maintainers']
-   sampleShas=['18012b5802e36527960537ffbb2d0c35217c1f67', '7d055ef0c47afe4a6fed43f4a6bb633456a36a5e', '28a438a9f2b4e3c866b82373ad26ba2d65d42962', '7e6ad01a21a9a369459c5c147a83e3b007955196', '0be3eab18b6375b3b458c539bdd5b2d7ce23d187']
-   decisions=[]
-
-8. plugins/catalog-unprocessed-entities/src/alpha/plugin.tsx <-> plugins/search/src/alpha.tsx
-   degree=64.3%  sharedRevs=9  revsA=11 revsB=17 averageRevs=14  crossTeam=True
-   ownersA=['@backstage/maintainers']  ownersB=['@backstage/search-maintainers']
-   sampleShas=['d421187ef33fa47c15b19427441ce9772dda5a25', '10e5d6f8aa7a04d86f723bdb3f09773ef734cf5f', 'ed8d9ce67cbd95ccea4ad19386b549f6380c0f36', '018ca876d0b6c775d6f063ca30375e2abc471a15', '1c7ea4a3e800eb9608f77a4f8d67aa4eada8518a']
-   decisions=[]
-
-9. packages/cli-module-migrate/src/index.ts <-> packages/cli/src/wiring/types.ts
-   degree=62.5%  sharedRevs=5  revsA=8 revsB=8 averageRevs=8  crossTeam=True
-   ownersA=['@backstage/framework-maintainers']  ownersB=['@backstage/tooling-maintainers']
-   sampleShas=['18012b5802e36527960537ffbb2d0c35217c1f67', '7d055ef0c47afe4a6fed43f4a6bb633456a36a5e', '7e6ad01a21a9a369459c5c147a83e3b007955196', '0be3eab18b6375b3b458c539bdd5b2d7ce23d187', '0d2d0f2e07ac4096e37793a95018a26976145128']
-   decisions=[]
-
-10. packages/cli-node/src/cli-module/createCliModule.ts <-> packages/cli/src/wiring/types.ts
-   degree=62.5%  sharedRevs=5  revsA=8 revsB=8 averageRevs=8  crossTeam=True
-   ownersA=['@backstage/framework-maintainers']  ownersB=['@backstage/tooling-maintainers']
-   sampleShas=['18012b5802e36527960537ffbb2d0c35217c1f67', '7d055ef0c47afe4a6fed43f4a6bb633456a36a5e', '28a438a9f2b4e3c866b82373ad26ba2d65d42962', '7e6ad01a21a9a369459c5c147a83e3b007955196', '0be3eab18b6375b3b458c539bdd5b2d7ce23d187']
-   decisions=[]
-
-11. packages/connections-node/src/service.ts <-> plugins/connections-example-backend/src/plugin.ts
-   degree=62.5%  sharedRevs=5  revsA=8 revsB=7 averageRevs=8  crossTeam=True
-   ownersA=['@backstage/framework-maintainers']  ownersB=['@backstage/maintainers']
-   sampleShas=['f6054acc2bf25c86cff74a1ae7ec99fab3644197', 'e5755a2d3e1f780020d44d0ffd40fb98350a9b51', '64cea291c6d49af1c008619d6f1b596806ff869b', 'd5eb6c7def2abc8f7f89aefc9f241432af739151', 'f32fd8f32023dfc1155508dd94ed1ebd931934de']
-   decisions=[]
-
-12. packages/cli-node/src/cli-module/createCliModule.ts <-> packages/cli/src/wiring/CliInitializer.ts
-   degree=61.5%  sharedRevs=8  revsA=8 revsB=17 averageRevs=13  crossTeam=True
-   ownersA=['@backstage/framework-maintainers']  ownersB=['@backstage/tooling-maintainers']
-   sampleShas=['4d081452b14eb297ef1c1c78576ee47ecc2784b6', '7879215cca3e0a2d9a6ac34c43929c467b113a89', '18012b5802e36527960537ffbb2d0c35217c1f67', '7d055ef0c47afe4a6fed43f4a6bb633456a36a5e', '28a438a9f2b4e3c866b82373ad26ba2d65d42962']
-   decisions=[]
-
-13. packages/catalog-client/src/schema/openapi/generated/apis/Api.client.ts <-> plugins/catalog-backend/src/schema/openapi/generated/router.ts
-   degree=60.0%  sharedRevs=6  revsA=6 revsB=14 averageRevs=10  crossTeam=True
-   ownersA=['@backstage/catalog-maintainers']  ownersB=['@backstage/maintainers']
-   sampleShas=['9c76a81e5cdaf05bd787f06ff1a77d2b3d9919cf', '8f20cc2f5265ce36016b72ef07a4326cbc0ed575', 'c384fff709b3764e3df0dfa7e762199fde37b014', '32e9499caf6870cb9b536cadc745799ad2eafdb9', 'e0fc8ddaec79e823fe27a35e3414347c4f6cd578']
-   decisions=[]
-
-14. plugins/search/src/alpha.tsx <-> plugins/techdocs/src/alpha/index.tsx
-   degree=57.1%  sharedRevs=12  revsA=17 revsB=24 averageRevs=21  crossTeam=True
-   ownersA=['@backstage/search-maintainers']  ownersB=['@backstage/techdocs-maintainers']
-   sampleShas=['d421187ef33fa47c15b19427441ce9772dda5a25', 'b8db4fe2fe0d94cae6d4a2d8281ff270a06cab16', '10e5d6f8aa7a04d86f723bdb3f09773ef734cf5f', 'cad156e797b022d4d244fb54d848ea835fec9fe3', 'f6a5144861a87e63b5e91d47b92940f53da25ef6']
-   decisions=[]
-
-15. plugins/search/src/alpha.tsx <-> plugins/user-settings/src/alpha.tsx
-   degree=57.1%  sharedRevs=8  revsA=17 revsB=11 averageRevs=14  crossTeam=True
-   ownersA=['@backstage/search-maintainers']  ownersB=['@backstage/maintainers', '@backstage/sda-se-reviewers']
-   sampleShas=['d421187ef33fa47c15b19427441ce9772dda5a25', '10e5d6f8aa7a04d86f723bdb3f09773ef734cf5f', '717bbaf075233eba5d452639c1fafc28f4a68d04', 'ed8d9ce67cbd95ccea4ad19386b549f6380c0f36', '018ca876d0b6c775d6f063ca30375e2abc471a15']
-   decisions=[]
-
-16. packages/cli-module-config/src/index.ts <-> packages/cli/src/wiring/types.ts
-   degree=55.6%  sharedRevs=5  revsA=10 revsB=8 averageRevs=9  crossTeam=True
-   ownersA=['@backstage/framework-maintainers']  ownersB=['@backstage/tooling-maintainers']
-   sampleShas=['18012b5802e36527960537ffbb2d0c35217c1f67', '7d055ef0c47afe4a6fed43f4a6bb633456a36a5e', '7e6ad01a21a9a369459c5c147a83e3b007955196', '0be3eab18b6375b3b458c539bdd5b2d7ce23d187', '0d2d0f2e07ac4096e37793a95018a26976145128']
-   decisions=[]
-
-17. packages/cli-module-translations/src/index.ts <-> packages/cli/src/wiring/types.ts
-   degree=55.6%  sharedRevs=5  revsA=10 revsB=8 averageRevs=9  crossTeam=True
-   ownersA=['@backstage/framework-maintainers']  ownersB=['@backstage/tooling-maintainers']
-   sampleShas=['18012b5802e36527960537ffbb2d0c35217c1f67', '7d055ef0c47afe4a6fed43f4a6bb633456a36a5e', '7e6ad01a21a9a369459c5c147a83e3b007955196', '0be3eab18b6375b3b458c539bdd5b2d7ce23d187', '0d2d0f2e07ac4096e37793a95018a26976145128']
-   decisions=[]
-
-18. packages/connections-node/src/service.ts <-> plugins/connections-example-backend-module-gitlab/src/module.test.ts
-   degree=55.6%  sharedRevs=5  revsA=8 revsB=9 averageRevs=9  crossTeam=True
-   ownersA=['@backstage/framework-maintainers']  ownersB=['@backstage/maintainers']
-   sampleShas=['f6054acc2bf25c86cff74a1ae7ec99fab3644197', 'e5755a2d3e1f780020d44d0ffd40fb98350a9b51', '64cea291c6d49af1c008619d6f1b596806ff869b', 'ec9676114ea44304ed928d5500808761f7ca4589', 'd5eb6c7def2abc8f7f89aefc9f241432af739151']
-   decisions=[]
-
-19. packages/frontend-plugin-api/src/components/createSwappableComponent.tsx <-> plugins/app-react/src/blueprints/SwappableComponentBlueprint.ts
-   degree=55.6%  sharedRevs=5  revsA=8 revsB=10 averageRevs=9  crossTeam=True
-   ownersA=['@backstage/framework-maintainers']  ownersB=['@backstage/maintainers']
-   sampleShas=['20f1d88971a3a38176ba24ca04442a67d43b2f37', '4b3ba2b0488aef09857fbfa5bfc62ab5b19287af', 'd996f05ae57d60d6d56806425040288d6c588c4c', '233a4eddf16f662678c4593440a8835d8d654fdc', '71510fb81244bad75fd7c9b438cbdd4420de6342']
-   decisions=[]
-
-20. packages/cli-node/src/cli-module/index.ts <-> packages/cli/src/wiring/CliInitializer.ts
-   degree=53.8%  sharedRevs=7  revsA=8 revsB=17 averageRevs=13  crossTeam=True
-   ownersA=['@backstage/framework-maintainers']  ownersB=['@backstage/tooling-maintainers']
-   sampleShas=['b5215715ca2dd6744835ae4b83f446d283cf7836', '18012b5802e36527960537ffbb2d0c35217c1f67', '7d055ef0c47afe4a6fed43f4a6bb633456a36a5e', '28a438a9f2b4e3c866b82373ad26ba2d65d42962', '7e6ad01a21a9a369459c5c147a83e3b007955196']
-   decisions=[]
+mole coupling (min-revs=5 min-shared-revs=5 min-coupling=30% max-coupling=100% max-changeset-size=30, 4798 file(s) considered) -- CODEOWNERS: .github/CODEOWNERS
+1. packages/backend-app-api/src/wiring/withDeclaredConnections.test.ts <-> plugins/connections-example-backend-module-gitlab/src/module.ts  degree=94%  shared=8 (avg-revs=9)  [cross-team]
+   owners: @backstage/framework-maintainers / @backstage/maintainers  sample shas: 98371d1, f6054ac, 4271005, d2955a5, e5755a2
+2. packages/backend-app-api/src/wiring/withDeclaredConnections.test.ts <-> plugins/connections-example-backend-module-gitlab/src/module.test.ts  degree=88%  shared=8 (avg-revs=9)  [cross-team]
+   owners: @backstage/framework-maintainers / @backstage/maintainers  sample shas: 98371d1, f6054ac, 4271005, d2955a5, e5755a2
+3. packages/cli-module-test-jest/config/jest.js <-> plugins/catalog-backend/src/processors/FileReaderProcessor.ts  degree=85%  shared=6 (avg-revs=7)  [cross-team]
+   owners: @backstage/framework-maintainers / @backstage/maintainers  sample shas: b6c0ef5, 2e5c5f8, 0419ace, 6d76b17, d06ba3a
+4. packages/backend-app-api/src/wiring/withDeclaredConnections.test.ts <-> plugins/connections-example-backend/src/plugin.ts  degree=75%  shared=6 (avg-revs=8)  [cross-team]
+   owners: @backstage/framework-maintainers / @backstage/maintainers  sample shas: 98371d1, f6054ac, e5755a2, 64cea29, 6ece71f
+5. packages/cli-node/src/cli-module/index.ts <-> packages/cli/src/wiring/types.ts  degree=75%  shared=6 (avg-revs=8)  [cross-team]
+   owners: @backstage/framework-maintainers / @backstage/tooling-maintainers  sample shas: 18012b5, 7d055ef, 28a438a, 7e6ad01, d6caf7f
+6. packages/cli-module-auth/src/commands/login.ts <-> plugins/catalog-backend/src/processors/FileReaderProcessor.ts  degree=71%  shared=5 (avg-revs=7)  [cross-team]
+   owners: @backstage/framework-maintainers / @backstage/maintainers  sample shas: 2e5c5f8, 0419ace, 6d76b17, d06ba3a, 91b359e
+7. packages/cli-node/src/cli-module/types.ts <-> packages/cli/src/wiring/types.ts  degree=71%  shared=5 (avg-revs=7)  [cross-team]
+   owners: @backstage/framework-maintainers / @backstage/tooling-maintainers  sample shas: 18012b5, 7d055ef, 28a438a, 7e6ad01, 0be3eab
+8. packages/connections-node/src/service.ts <-> plugins/connections-example-backend/src/plugin.ts  degree=66%  shared=5 (avg-revs=8)  [cross-team]
+   owners: @backstage/framework-maintainers / @backstage/maintainers  sample shas: f6054ac, e5755a2, 64cea29, d5eb6c7, f32fd8f
+9. plugins/catalog-unprocessed-entities/src/alpha/plugin.tsx <-> plugins/search/src/alpha.tsx  degree=64%  shared=9 (avg-revs=14)  [cross-team]
+   owners: @backstage/maintainers / @backstage/search-maintainers  sample shas: d421187, 10e5d6f, ed8d9ce, 018ca87, 1c7ea4a
+10. packages/cli-node/src/cli-module/createCliModule.ts <-> packages/cli/src/wiring/CliInitializer.ts  degree=64%  shared=8 (avg-revs=13)  [cross-team]
+   owners: @backstage/framework-maintainers / @backstage/tooling-maintainers  sample shas: 4d08145, 7879215, 18012b5, 7d055ef, 28a438a
+11. packages/cli-module-migrate/src/index.ts <-> packages/cli/src/wiring/types.ts  degree=62%  shared=5 (avg-revs=8)  [cross-team]
+   owners: @backstage/framework-maintainers / @backstage/tooling-maintainers  sample shas: 18012b5, 7d055ef, 7e6ad01, 0be3eab, 0d2d0f2
+12. packages/cli-node/src/cli-module/createCliModule.ts <-> packages/cli/src/wiring/types.ts  degree=62%  shared=5 (avg-revs=8)  [cross-team]
+   owners: @backstage/framework-maintainers / @backstage/tooling-maintainers  sample shas: 18012b5, 7d055ef, 28a438a, 7e6ad01, 0be3eab
+13. packages/catalog-client/src/schema/openapi/generated/apis/Api.client.ts <-> plugins/catalog-backend/src/schema/openapi/generated/router.ts  degree=60%  shared=6 (avg-revs=10)  [cross-team]
+   owners: @backstage/catalog-maintainers / @backstage/maintainers  sample shas: 9c76a81, 8f20cc2, c384fff, 32e9499, e0fc8dd
+14. packages/connections-node/src/service.ts <-> plugins/connections-example-backend-module-gitlab/src/module.test.ts  degree=58%  shared=5 (avg-revs=9)  [cross-team]
+   owners: @backstage/framework-maintainers / @backstage/maintainers  sample shas: f6054ac, e5755a2, 64cea29, ec96761, d5eb6c7
+15. plugins/search/src/alpha.tsx <-> plugins/techdocs/src/alpha/index.tsx  degree=58%  shared=12 (avg-revs=21)  [cross-team]
+   owners: @backstage/search-maintainers / @backstage/techdocs-maintainers  sample shas: d421187, b8db4fe, 10e5d6f, cad156e, f6a5144
+16. plugins/search/src/alpha.tsx <-> plugins/user-settings/src/alpha.tsx  degree=57%  shared=8 (avg-revs=14)  [cross-team]
+   owners: @backstage/search-maintainers / @backstage/maintainers,@backstage/sda-se-reviewers  sample shas: d421187, 10e5d6f, 717bbaf, ed8d9ce, 018ca87
+17. packages/cli-node/src/cli-module/index.ts <-> packages/cli/src/wiring/CliInitializer.ts  degree=56%  shared=7 (avg-revs=13)  [cross-team]
+   owners: @backstage/framework-maintainers / @backstage/tooling-maintainers  sample shas: b521571, 18012b5, 7d055ef, 28a438a, 7e6ad01
+18. plugins/app-react/src/blueprints/NavContentBlueprint.tsx <-> plugins/app/src/extensions/AppNav.tsx  degree=56%  shared=7 (avg-revs=13)  [cross-team]
+   owners: @backstage/maintainers / @backstage/framework-maintainers  sample shas: 4448b2f, 118d84a, 24bde66, 5f3f5d2, 5920062
+19. packages/cli-module-config/src/index.ts <-> packages/cli/src/wiring/types.ts  degree=55%  shared=5 (avg-revs=9)  [cross-team]
+   owners: @backstage/framework-maintainers / @backstage/tooling-maintainers  sample shas: 18012b5, 7d055ef, 7e6ad01, 0be3eab, 0d2d0f2
+20. packages/cli-module-translations/src/index.ts <-> packages/cli/src/wiring/types.ts  degree=55%  shared=5 (avg-revs=9)  [cross-team]
+   owners: @backstage/framework-maintainers / @backstage/tooling-maintainers  sample shas: 18012b5, 7d055ef, 7e6ad01, 0be3eab, 0d2d0f2

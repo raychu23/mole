@@ -2,12 +2,13 @@
   "pairs": [
     {
       "fileA": "packages/backend-app-api/src/wiring/withDeclaredConnections.test.ts",
-      "fileB": "plugins/connections-example-backend-module-gitlab/src/module.test.ts",
+      "fileB": "plugins/connections-example-backend-module-gitlab/src/module.ts",
       "sharedRevs": 8,
       "revsA": 9,
-      "revsB": 9,
+      "revsB": 8,
       "averageRevs": 9,
-      "degree": 88.88888888888889,
+      "degree": 94,
+      "degreeExact": 94.11764705882354,
       "sampleShas": [
         "98371d157f3123bd14c7735b8fc690efa5e3b913",
         "f6054acc2bf25c86cff74a1ae7ec99fab3644197",
@@ -26,12 +27,13 @@
     },
     {
       "fileA": "packages/backend-app-api/src/wiring/withDeclaredConnections.test.ts",
-      "fileB": "plugins/connections-example-backend-module-gitlab/src/module.ts",
+      "fileB": "plugins/connections-example-backend-module-gitlab/src/module.test.ts",
       "sharedRevs": 8,
       "revsA": 9,
-      "revsB": 8,
+      "revsB": 9,
       "averageRevs": 9,
-      "degree": 88.88888888888889,
+      "degree": 88,
+      "degreeExact": 88.88888888888889,
       "sampleShas": [
         "98371d157f3123bd14c7735b8fc690efa5e3b913",
         "f6054acc2bf25c86cff74a1ae7ec99fab3644197",
@@ -55,7 +57,8 @@
       "revsA": 8,
       "revsB": 6,
       "averageRevs": 7,
-      "degree": 85.71428571428571,
+      "degree": 85,
+      "degreeExact": 85.71428571428571,
       "sampleShas": [
         "b6c0ef5d5da814359f91d487d41978e0537256fa",
         "2e5c5f85b2b36f9062adc624e2a90a9445f1be73",
@@ -80,6 +83,7 @@
       "revsB": 7,
       "averageRevs": 8,
       "degree": 75,
+      "degreeExact": 75,
       "sampleShas": [
         "98371d157f3123bd14c7735b8fc690efa5e3b913",
         "f6054acc2bf25c86cff74a1ae7ec99fab3644197",
@@ -104,6 +108,7 @@
       "revsB": 8,
       "averageRevs": 8,
       "degree": 75,
+      "degreeExact": 75,
       "sampleShas": [
         "18012b5802e36527960537ffbb2d0c35217c1f67",
         "7d055ef0c47afe4a6fed43f4a6bb633456a36a5e",
@@ -127,7 +132,8 @@
       "revsA": 8,
       "revsB": 6,
       "averageRevs": 7,
-      "degree": 71.42857142857143,
+      "degree": 71,
+      "degreeExact": 71.42857142857143,
       "sampleShas": [
         "2e5c5f85b2b36f9062adc624e2a90a9445f1be73",
         "0419acede2161aee565576c2a6182f423d69991a",
@@ -151,79 +157,8 @@
       "revsA": 6,
       "revsB": 8,
       "averageRevs": 7,
-      "degree": 71.42857142857143,
-      "sampleShas": [
-        "18012b5802e36527960537ffbb2d0c35217c1f67",
-        "7d055ef0c47afe4a6fed43f4a6bb633456a36a5e",
-        "28a438a9f2b4e3c866b82373ad26ba2d65d42962",
-        "7e6ad01a21a9a369459c5c147a83e3b007955196",
-        "0be3eab18b6375b3b458c539bdd5b2d7ce23d187"
-      ],
-      "ownersA": [
-        "@backstage/framework-maintainers"
-      ],
-      "ownersB": [
-        "@backstage/tooling-maintainers"
-      ],
-      "crossTeam": true,
-      "decisions": []
-    },
-    {
-      "fileA": "plugins/catalog-unprocessed-entities/src/alpha/plugin.tsx",
-      "fileB": "plugins/search/src/alpha.tsx",
-      "sharedRevs": 9,
-      "revsA": 11,
-      "revsB": 17,
-      "averageRevs": 14,
-      "degree": 64.28571428571429,
-      "sampleShas": [
-        "d421187ef33fa47c15b19427441ce9772dda5a25",
-        "10e5d6f8aa7a04d86f723bdb3f09773ef734cf5f",
-        "ed8d9ce67cbd95ccea4ad19386b549f6380c0f36",
-        "018ca876d0b6c775d6f063ca30375e2abc471a15",
-        "1c7ea4a3e800eb9608f77a4f8d67aa4eada8518a"
-      ],
-      "ownersA": [
-        "@backstage/maintainers"
-      ],
-      "ownersB": [
-        "@backstage/search-maintainers"
-      ],
-      "crossTeam": true,
-      "decisions": []
-    },
-    {
-      "fileA": "packages/cli-module-migrate/src/index.ts",
-      "fileB": "packages/cli/src/wiring/types.ts",
-      "sharedRevs": 5,
-      "revsA": 8,
-      "revsB": 8,
-      "averageRevs": 8,
-      "degree": 62.5,
-      "sampleShas": [
-        "18012b5802e36527960537ffbb2d0c35217c1f67",
-        "7d055ef0c47afe4a6fed43f4a6bb633456a36a5e",
-        "7e6ad01a21a9a369459c5c147a83e3b007955196",
-        "0be3eab18b6375b3b458c539bdd5b2d7ce23d187",
-        "0d2d0f2e07ac4096e37793a95018a26976145128"
-      ],
-      "ownersA": [
-        "@backstage/framework-maintainers"
-      ],
-      "ownersB": [
-        "@backstage/tooling-maintainers"
-      ],
-      "crossTeam": true,
-      "decisions": []
-    },
-    {
-      "fileA": "packages/cli-node/src/cli-module/createCliModule.ts",
-      "fileB": "packages/cli/src/wiring/types.ts",
-      "sharedRevs": 5,
-      "revsA": 8,
-      "revsB": 8,
-      "averageRevs": 8,
-      "degree": 62.5,
+      "degree": 71,
+      "degreeExact": 71.42857142857143,
       "sampleShas": [
         "18012b5802e36527960537ffbb2d0c35217c1f67",
         "7d055ef0c47afe4a6fed43f4a6bb633456a36a5e",
@@ -247,7 +182,8 @@
       "revsA": 8,
       "revsB": 7,
       "averageRevs": 8,
-      "degree": 62.5,
+      "degree": 66,
+      "degreeExact": 66.66666666666667,
       "sampleShas": [
         "f6054acc2bf25c86cff74a1ae7ec99fab3644197",
         "e5755a2d3e1f780020d44d0ffd40fb98350a9b51",
@@ -265,19 +201,95 @@
       "decisions": []
     },
     {
+      "fileA": "plugins/catalog-unprocessed-entities/src/alpha/plugin.tsx",
+      "fileB": "plugins/search/src/alpha.tsx",
+      "sharedRevs": 9,
+      "revsA": 11,
+      "revsB": 17,
+      "averageRevs": 14,
+      "degree": 64,
+      "degreeExact": 64.28571428571429,
+      "sampleShas": [
+        "d421187ef33fa47c15b19427441ce9772dda5a25",
+        "10e5d6f8aa7a04d86f723bdb3f09773ef734cf5f",
+        "ed8d9ce67cbd95ccea4ad19386b549f6380c0f36",
+        "018ca876d0b6c775d6f063ca30375e2abc471a15",
+        "1c7ea4a3e800eb9608f77a4f8d67aa4eada8518a"
+      ],
+      "ownersA": [
+        "@backstage/maintainers"
+      ],
+      "ownersB": [
+        "@backstage/search-maintainers"
+      ],
+      "crossTeam": true,
+      "decisions": []
+    },
+    {
       "fileA": "packages/cli-node/src/cli-module/createCliModule.ts",
       "fileB": "packages/cli/src/wiring/CliInitializer.ts",
       "sharedRevs": 8,
       "revsA": 8,
       "revsB": 17,
       "averageRevs": 13,
-      "degree": 61.53846153846154,
+      "degree": 64,
+      "degreeExact": 64,
       "sampleShas": [
         "4d081452b14eb297ef1c1c78576ee47ecc2784b6",
         "7879215cca3e0a2d9a6ac34c43929c467b113a89",
         "18012b5802e36527960537ffbb2d0c35217c1f67",
         "7d055ef0c47afe4a6fed43f4a6bb633456a36a5e",
         "28a438a9f2b4e3c866b82373ad26ba2d65d42962"
+      ],
+      "ownersA": [
+        "@backstage/framework-maintainers"
+      ],
+      "ownersB": [
+        "@backstage/tooling-maintainers"
+      ],
+      "crossTeam": true,
+      "decisions": []
+    },
+    {
+      "fileA": "packages/cli-module-migrate/src/index.ts",
+      "fileB": "packages/cli/src/wiring/types.ts",
+      "sharedRevs": 5,
+      "revsA": 8,
+      "revsB": 8,
+      "averageRevs": 8,
+      "degree": 62,
+      "degreeExact": 62.5,
+      "sampleShas": [
+        "18012b5802e36527960537ffbb2d0c35217c1f67",
+        "7d055ef0c47afe4a6fed43f4a6bb633456a36a5e",
+        "7e6ad01a21a9a369459c5c147a83e3b007955196",
+        "0be3eab18b6375b3b458c539bdd5b2d7ce23d187",
+        "0d2d0f2e07ac4096e37793a95018a26976145128"
+      ],
+      "ownersA": [
+        "@backstage/framework-maintainers"
+      ],
+      "ownersB": [
+        "@backstage/tooling-maintainers"
+      ],
+      "crossTeam": true,
+      "decisions": []
+    },
+    {
+      "fileA": "packages/cli-node/src/cli-module/createCliModule.ts",
+      "fileB": "packages/cli/src/wiring/types.ts",
+      "sharedRevs": 5,
+      "revsA": 8,
+      "revsB": 8,
+      "averageRevs": 8,
+      "degree": 62,
+      "degreeExact": 62.5,
+      "sampleShas": [
+        "18012b5802e36527960537ffbb2d0c35217c1f67",
+        "7d055ef0c47afe4a6fed43f4a6bb633456a36a5e",
+        "28a438a9f2b4e3c866b82373ad26ba2d65d42962",
+        "7e6ad01a21a9a369459c5c147a83e3b007955196",
+        "0be3eab18b6375b3b458c539bdd5b2d7ce23d187"
       ],
       "ownersA": [
         "@backstage/framework-maintainers"
@@ -296,6 +308,7 @@
       "revsB": 14,
       "averageRevs": 10,
       "degree": 60,
+      "degreeExact": 60,
       "sampleShas": [
         "9c76a81e5cdaf05bd787f06ff1a77d2b3d9919cf",
         "8f20cc2f5265ce36016b72ef07a4326cbc0ed575",
@@ -313,13 +326,39 @@
       "decisions": []
     },
     {
+      "fileA": "packages/connections-node/src/service.ts",
+      "fileB": "plugins/connections-example-backend-module-gitlab/src/module.test.ts",
+      "sharedRevs": 5,
+      "revsA": 8,
+      "revsB": 9,
+      "averageRevs": 9,
+      "degree": 58,
+      "degreeExact": 58.8235294117647,
+      "sampleShas": [
+        "f6054acc2bf25c86cff74a1ae7ec99fab3644197",
+        "e5755a2d3e1f780020d44d0ffd40fb98350a9b51",
+        "64cea291c6d49af1c008619d6f1b596806ff869b",
+        "ec9676114ea44304ed928d5500808761f7ca4589",
+        "d5eb6c7def2abc8f7f89aefc9f241432af739151"
+      ],
+      "ownersA": [
+        "@backstage/framework-maintainers"
+      ],
+      "ownersB": [
+        "@backstage/maintainers"
+      ],
+      "crossTeam": true,
+      "decisions": []
+    },
+    {
       "fileA": "plugins/search/src/alpha.tsx",
       "fileB": "plugins/techdocs/src/alpha/index.tsx",
       "sharedRevs": 12,
       "revsA": 17,
       "revsB": 24,
       "averageRevs": 21,
-      "degree": 57.142857142857146,
+      "degree": 58,
+      "degreeExact": 58.53658536585366,
       "sampleShas": [
         "d421187ef33fa47c15b19427441ce9772dda5a25",
         "b8db4fe2fe0d94cae6d4a2d8281ff270a06cab16",
@@ -343,7 +382,8 @@
       "revsA": 17,
       "revsB": 11,
       "averageRevs": 14,
-      "degree": 57.142857142857146,
+      "degree": 57,
+      "degreeExact": 57.142857142857146,
       "sampleShas": [
         "d421187ef33fa47c15b19427441ce9772dda5a25",
         "10e5d6f8aa7a04d86f723bdb3f09773ef734cf5f",
@@ -362,13 +402,64 @@
       "decisions": []
     },
     {
+      "fileA": "packages/cli-node/src/cli-module/index.ts",
+      "fileB": "packages/cli/src/wiring/CliInitializer.ts",
+      "sharedRevs": 7,
+      "revsA": 8,
+      "revsB": 17,
+      "averageRevs": 13,
+      "degree": 56,
+      "degreeExact": 56,
+      "sampleShas": [
+        "b5215715ca2dd6744835ae4b83f446d283cf7836",
+        "18012b5802e36527960537ffbb2d0c35217c1f67",
+        "7d055ef0c47afe4a6fed43f4a6bb633456a36a5e",
+        "28a438a9f2b4e3c866b82373ad26ba2d65d42962",
+        "7e6ad01a21a9a369459c5c147a83e3b007955196"
+      ],
+      "ownersA": [
+        "@backstage/framework-maintainers"
+      ],
+      "ownersB": [
+        "@backstage/tooling-maintainers"
+      ],
+      "crossTeam": true,
+      "decisions": []
+    },
+    {
+      "fileA": "plugins/app-react/src/blueprints/NavContentBlueprint.tsx",
+      "fileB": "plugins/app/src/extensions/AppNav.tsx",
+      "sharedRevs": 7,
+      "revsA": 11,
+      "revsB": 14,
+      "averageRevs": 13,
+      "degree": 56,
+      "degreeExact": 56,
+      "sampleShas": [
+        "4448b2f021436e0f6a0ec56dd48c84ccbff0f517",
+        "118d84a7c9c08dd409fdf24deb474db224d3d70b",
+        "24bde6639e6f022b88e2aebf87dbaded32881df9",
+        "5f3f5d298bea465d644f94405deffb6939451ed7",
+        "5920062fcc36f62a77c216734ca6a570d4e34957"
+      ],
+      "ownersA": [
+        "@backstage/maintainers"
+      ],
+      "ownersB": [
+        "@backstage/framework-maintainers"
+      ],
+      "crossTeam": true,
+      "decisions": []
+    },
+    {
       "fileA": "packages/cli-module-config/src/index.ts",
       "fileB": "packages/cli/src/wiring/types.ts",
       "sharedRevs": 5,
       "revsA": 10,
       "revsB": 8,
       "averageRevs": 9,
-      "degree": 55.55555555555556,
+      "degree": 55,
+      "degreeExact": 55.55555555555556,
       "sampleShas": [
         "18012b5802e36527960537ffbb2d0c35217c1f67",
         "7d055ef0c47afe4a6fed43f4a6bb633456a36a5e",
@@ -392,7 +483,8 @@
       "revsA": 10,
       "revsB": 8,
       "averageRevs": 9,
-      "degree": 55.55555555555556,
+      "degree": 55,
+      "degreeExact": 55.55555555555556,
       "sampleShas": [
         "18012b5802e36527960537ffbb2d0c35217c1f67",
         "7d055ef0c47afe4a6fed43f4a6bb633456a36a5e",
@@ -408,82 +500,10 @@
       ],
       "crossTeam": true,
       "decisions": []
-    },
-    {
-      "fileA": "packages/connections-node/src/service.ts",
-      "fileB": "plugins/connections-example-backend-module-gitlab/src/module.test.ts",
-      "sharedRevs": 5,
-      "revsA": 8,
-      "revsB": 9,
-      "averageRevs": 9,
-      "degree": 55.55555555555556,
-      "sampleShas": [
-        "f6054acc2bf25c86cff74a1ae7ec99fab3644197",
-        "e5755a2d3e1f780020d44d0ffd40fb98350a9b51",
-        "64cea291c6d49af1c008619d6f1b596806ff869b",
-        "ec9676114ea44304ed928d5500808761f7ca4589",
-        "d5eb6c7def2abc8f7f89aefc9f241432af739151"
-      ],
-      "ownersA": [
-        "@backstage/framework-maintainers"
-      ],
-      "ownersB": [
-        "@backstage/maintainers"
-      ],
-      "crossTeam": true,
-      "decisions": []
-    },
-    {
-      "fileA": "packages/frontend-plugin-api/src/components/createSwappableComponent.tsx",
-      "fileB": "plugins/app-react/src/blueprints/SwappableComponentBlueprint.ts",
-      "sharedRevs": 5,
-      "revsA": 8,
-      "revsB": 10,
-      "averageRevs": 9,
-      "degree": 55.55555555555556,
-      "sampleShas": [
-        "20f1d88971a3a38176ba24ca04442a67d43b2f37",
-        "4b3ba2b0488aef09857fbfa5bfc62ab5b19287af",
-        "d996f05ae57d60d6d56806425040288d6c588c4c",
-        "233a4eddf16f662678c4593440a8835d8d654fdc",
-        "71510fb81244bad75fd7c9b438cbdd4420de6342"
-      ],
-      "ownersA": [
-        "@backstage/framework-maintainers"
-      ],
-      "ownersB": [
-        "@backstage/maintainers"
-      ],
-      "crossTeam": true,
-      "decisions": []
-    },
-    {
-      "fileA": "packages/cli-node/src/cli-module/index.ts",
-      "fileB": "packages/cli/src/wiring/CliInitializer.ts",
-      "sharedRevs": 7,
-      "revsA": 8,
-      "revsB": 17,
-      "averageRevs": 13,
-      "degree": 53.84615384615385,
-      "sampleShas": [
-        "b5215715ca2dd6744835ae4b83f446d283cf7836",
-        "18012b5802e36527960537ffbb2d0c35217c1f67",
-        "7d055ef0c47afe4a6fed43f4a6bb633456a36a5e",
-        "28a438a9f2b4e3c866b82373ad26ba2d65d42962",
-        "7e6ad01a21a9a369459c5c147a83e3b007955196"
-      ],
-      "ownersA": [
-        "@backstage/framework-maintainers"
-      ],
-      "ownersB": [
-        "@backstage/tooling-maintainers"
-      ],
-      "crossTeam": true,
-      "decisions": []
     }
   ],
   "commitsConsidered": 12034,
-  "filesConsidered": 1061,
+  "filesConsidered": 4798,
   "codeownersPath": ".github/CODEOWNERS",
   "minRevs": 5,
   "minSharedRevs": 5,
@@ -491,5 +511,5 @@
   "maxCoupling": 100,
   "maxChangesetSize": 30,
   "all": false,
-  "ms": 1447
+  "ms": 2502
 }
