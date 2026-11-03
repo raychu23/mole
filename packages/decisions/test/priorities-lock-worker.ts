@@ -7,4 +7,4 @@ import { setPriorities } from '../src/index.js';
 
 const [, , root, phase, orderCsv, delayMs] = process.argv;
 if (delayMs) await new Promise((resolve) => setTimeout(resolve, Number(delayMs)));
-setPriorities(root!, phase!, orderCsv!.split(','));
+await setPriorities(root!, phase!, orderCsv!.split(','));

@@ -199,7 +199,7 @@ export function incidentCli(pos: string[], flags: Record<string, string | true>,
  *  `mole priorities set --phase P --order a,b,c` (T73: writes .mole/priorities.md, a person's act) ·
  *  `mole priorities whatif --order a,b,c [--phase P | --at D]` (T73: compares the phase in force against an
  *  arbitrary order, never writes -- the panel's/CLI's "compare with order X"). */
-export function prioritiesCli(pos: string[], flags: Record<string, string | true>, root: string): number {
+export async function prioritiesCli(pos: string[], flags: Record<string, string | true>, root: string): Promise<number> {
   const [sub, a, b] = pos;
   try {
     let out: unknown;
@@ -218,7 +218,7 @@ export function prioritiesCli(pos: string[], flags: Record<string, string | true
         console.error('usage: mole priorities set --phase P --order a,b,c');
         return 2;
       }
-      out = setPriorities(root, phase, orderStr.split(',').map((s) => s.trim()).filter(Boolean));
+      out = await setPriorities(root, phase, orderStr.split(',').map((s) => s.trim()).filter(Boolean));
     } else if (sub === 'whatif') {
       const orderStr = str(flags.order);
       if (!orderStr) {

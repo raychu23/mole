@@ -157,3 +157,24 @@ node-proper-lockfile)               default `stale` option is 10000ms (10s), "an
 - **Write via temp file + rename (git's own index.lock-to-index step), not an in-place `writeFileSync`.** A
   reader (`readPriorities`, any other `priorities` invocation) can never observe a half-written file; a process
   that crashes mid-write leaves only an orphaned `.NNN.tmp` file next to `priorities.md`, never a corrupt one.
+
+## Review 2 (deleg) HIGH fix — `proper-lockfile` actually adopted, not just cited (2026-11-03)
+Review 1's own prior art (above) cited `proper-lockfile`'s README for its STALENESS CONVENTION only, while
+still hand-rolling the mutex itself with `O_EXCL` + a one-shot mtime check -- the part of the library that
+review 1 explicitly declined (periodic mtime refresh while held) turned out to be exactly what review 2 found
+missing: a hand-rolled check-once-on-acquire staleness test cannot tell a live slow holder from a crashed one,
+because nothing ever updates the mtime in between. `moxystudio/node-proper-lockfile` README (re-fetched
+2026-11-03): "lockfile's `mtime` is periodically updated... If the update of the mtime fails several times, the
+lock might be compromised" (Design) -- this is the actual mechanism now used (`lockfile.lock(file, { stale,
+update, retries, realpath: false })`), not merely its documented convention. The retry/backoff shape (`retries`
+as a `{ retries, factor, minTimeout, maxTimeout }` object) is the library's own `retry` package passthrough,
+documented in the same README ("`retries`: The number of retries or a retry options object, defaults to `0`");
+Mole's own addition is sizing that budget so its WORST-CASE total wait exceeds the stale bound (the library
+itself takes no position on that relationship, and review 1's hand-rolled version got it backwards: 5s wait <
+10s stale).
+- **The mutex is now `mkdir`, not `O_EXCL` on a file.** Review 1 kept `O_EXCL` deliberately (NFS is not a
+  concern here). Adopting the library wholesale also adopts its `mkdir`-based mutex; this is a harmless
+  superset for a local git checkout (an exclusive directory create is atomic there too), not a correctness
+  requirement Mole's own situation demanded -- recorded here because the LOW-level lock ARTIFACT changed (a
+  lock DIRECTORY, not a file), which is why the `.gitignore` pattern added for it (`.mole/*.lock`) has to match
+  both shapes (a trailing-slash-free glob matches either).

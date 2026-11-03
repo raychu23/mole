@@ -7,9 +7,10 @@
 //   comparePhases          every argument whose label differs, with the attacks whose success flipped (both tenets,
 //                          both ranks) or the changed attackers it moved through, plus decisions resting on them
 // Read-only. Records are never written except by setPriorities (T73: a person's CLI act, never MCP).
-import { closeSync, existsSync, openSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
+import { lock as lockFile } from 'proper-lockfile';
 import { evaluate, type Label } from '@mole/reasoning';
 import { argumentDefinitions } from './argdown/definitions.js';
 import { argumentFramework } from './argdown/framework.js';
@@ -236,43 +237,70 @@ function diffPhases(l: Loaded, pa: { name: string; order: string[] }, pb: { name
   return { from: pa.name, to: pb.name, arguments: argumentsChanged, decisions };
 }
 
-const LOCK_SUFFIX = '.lock';
-const LOCK_STALE_MS = 10_000; // review 1 HIGH 2: proper-lockfile's own default stale bound (mtime-based)
-const LOCK_RETRY_INITIAL_MS = 10;
-const LOCK_RETRY_MAX_MS = 200;
-const LOCK_TIMEOUT_MS = 5_000;
-
-/** Synchronous sleep: Node (unlike browsers) permits Atomics.wait on the main thread, so a sync function like
- *  setPriorities can back off between lock attempts without an async/await rewrite of its whole call chain. */
-function sleepMs(ms: number): void {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+// review 2 HIGH: the hand-rolled O_EXCL mutex never refreshed its own mtime while held (a live holder doing
+// slow work, e.g. MOLE_PRIORITIES_TEST_DELAY_MS, looked "abandoned" after LOCK_STALE_MS and got its lock
+// reclaimed out from under it -- mutual exclusion lost), its wait bound (5s) was SHORTER than its own stale
+// bound (10s, spurious "crashed holder" timeouts for a holder that was merely slow), and its release had no
+// ownership token (unlinkSync by PATH, not by holder identity) so a confused old holder's `finally` could
+// delete a DIFFERENT process's current lock. `proper-lockfile` (moxystudio, npm) fixes exactly these: it
+// creates the mutex with `mkdir` (a lock DIRECTORY, atomic on any filesystem), periodically refreshes the
+// directory's mtime via a background timer while the lock is held (`update`), and detects a lock whose mtime
+// it can no longer refresh (`onCompromised`) instead of silently letting a second holder in. T73 review 1's
+// stale bound (10s) is kept as the production default; `MOLE_PRIORITIES_TEST_STALE_MS` is a test-only seam
+// stale bound (unset in production). proper-lockfile itself enforces floors (`stale` >= 2000ms, `update` >=
+// 1000ms), so a test override still has to clear those floors. Read fresh on every `acquireLock` call (never
+// cached at module load) so a single test process can flip the env var between calls, same as
+// MOLE_PRIORITIES_TEST_DELAY_MS already does.
+function lockStaleMs(): number {
+  return Number(process.env.MOLE_PRIORITIES_TEST_STALE_MS) || 10_000;
 }
 
-/** review 1 HIGH 2: git's `index.lock` / npm's `proper-lockfile` pattern -- an exclusive `O_EXCL` create of
- *  `<file>.lock` is the mutex (atomic on a local filesystem; two processes racing to `open(..., 'wx')` can only
- *  have one winner). Retries with exponential backoff up to LOCK_TIMEOUT_MS; a lock whose mtime is older than
- *  LOCK_STALE_MS is assumed abandoned (crashed holder) and reclaimed, same staleness convention proper-lockfile
- *  documents (its own default `stale` option is also 10s). Returns a release function (always call in `finally`). */
-function acquireLock(lockPath: string): () => void {
-  const deadline = Date.now() + LOCK_TIMEOUT_MS;
-  let backoff = LOCK_RETRY_INITIAL_MS;
-  for (;;) {
-    try {
-      closeSync(openSync(lockPath, 'wx'));
-      return () => { try { unlinkSync(lockPath); } catch { /* already gone: nothing to release */ } };
-    } catch (err) {
-      if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
-      try {
-        if (Date.now() - statSync(lockPath).mtimeMs > LOCK_STALE_MS) {
-          unlinkSync(lockPath); // stale: reclaim immediately, no backoff
-          continue;
-        }
-      } catch { /* lock vanished between EEXIST and stat (another process just released it): retry now */ }
-      if (Date.now() >= deadline) throw new PrioritiesError(`timed out waiting for the lock on ${lockPath} (another 'priorities set' is running or crashed holding it)`);
-      sleepMs(Math.min(backoff, deadline - Date.now()));
-      backoff = Math.min(backoff * 2, LOCK_RETRY_MAX_MS);
+/** Retry budget whose WORST-CASE total wait exceeds `staleMs` (review 2 HIGH: the old 5s wait bound was
+ *  shorter than the 10s stale bound, so a holder merely slow -- not crashed -- could trigger a spurious
+ *  "crashed holder" timeout in a waiting process before the real holder even reached its own stale bound).
+ *  Scaled off `staleMs` so the test-only stale override above still gets a wait bound longer than itself. */
+function lockRetries(staleMs: number): { retries: number; factor: number; minTimeout: number; maxTimeout: number } {
+  const minTimeout = Math.max(20, Math.round(staleMs / 50));
+  const maxTimeout = Math.max(300, Math.round(staleMs / 2));
+  return { retries: 25, factor: 1.4, minTimeout, maxTimeout };
+}
+
+/** review 2 HIGH: acquire the lock via proper-lockfile instead of a hand-rolled O_EXCL loop (see the comment
+ *  above `LOCK_STALE_MS`). `realpath: false` because the locked file (`.mole/priorities.md`) may not exist yet
+ *  (a brand-new repo's first `priorities set` creates it) -- proper-lockfile's own `realpath` resolution
+ *  requires the target to already exist. Returns an async release function (always call in `finally`). */
+async function acquireLock(path: string): Promise<() => Promise<void>> {
+  const stale = lockStaleMs();
+  const { retries, factor, minTimeout, maxTimeout } = lockRetries(stale);
+  try {
+    return await lockFile(path, {
+      stale,
+      update: Math.round(stale / 4), // proper-lockfile clamps this into [1000, stale/2] itself
+      retries: { retries, factor, minTimeout, maxTimeout },
+      realpath: false,
+      onCompromised: (err) => { throw new PrioritiesError(`lock on ${path} was compromised (its mtime could no longer be refreshed): ${err.message}`); },
+    });
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ELOCKED') {
+      throw new PrioritiesError(`timed out waiting for the lock on ${path} (another 'priorities set' is running or crashed holding it)`);
     }
+    throw err;
   }
+}
+
+/** review 2 MED: a crash-orphaned `<file>.lock` must never show up as an untracked file in a REPO THIS RUNS
+ *  AGAINST (Mole's own .gitignore only protects Mole's own checkout). Mirrors the per-folder .gitignore
+ *  @mole/memory already writes for `.mole/local` (T13, appendSeen): written once, the first time setPriorities
+ *  runs in a repo that doesn't already ignore it; never overwritten or duplicated after. */
+function ensureLockIgnored(root: string): void {
+  const dir = join(root, '.mole');
+  try { mkdirSync(dir, { recursive: true }); } catch { /* already exists */ }
+  const ignorePath = join(dir, '.gitignore');
+  let text = '';
+  try { text = readFileSync(ignorePath, 'utf8'); } catch { /* no .mole/.gitignore yet */ }
+  if (text.split(/\r?\n/).some((l) => l.trim() === '*.lock')) return;
+  const prefix = text && !text.endsWith('\n') ? `${text}\n` : text;
+  writeFileSync(ignorePath, `${prefix}${prefix ? '' : '# Mole: process lock files, never committed\n'}*.lock\n`);
 }
 
 /** Write-then-rename (same directory, same filesystem): a reader never observes a half-written file, and a
@@ -312,7 +340,7 @@ function rewritePhaseList(body: string[], items: string[]): string[] {
  *  a temp-file + rename so a reader never sees a half-written file. Re-reads the written file through
  *  readPriorities before returning, so a malformed write is caught HERE (round trip, T73 done-when 3), not by
  *  the next CLI call. */
-export function setPriorities(root: string, phase: string, order: string[], graph: DecisionGraph = loadGraph(root)): Phase[] {
+export async function setPriorities(root: string, phase: string, order: string[], graph: DecisionGraph = loadGraph(root)): Promise<Phase[]> {
   if (order.length === 0) throw new PrioritiesError('order must list at least one tenet');
   const tenets = tenetIds(graph);
   const seen = new Set<string>();
@@ -322,15 +350,24 @@ export function setPriorities(root: string, phase: string, order: string[], grap
     seen.add(t);
   }
   const path = join(root, FILE);
-  const release = acquireLock(`${path}${LOCK_SUFFIX}`);
+  ensureLockIgnored(root); // review 2 MED: arrange the ignore rule before the lock dir can ever exist
+  const release = await acquireLock(path);
   try {
+    // review 2 LOW: validate the EXISTING file with readPriorities' own rules -- unconditionally, not just on
+    // the new-phase branch below -- before splicing ANY phase. A malformed OTHER phase (unknown tenet,
+    // duplicate rank, bad date, two stray tenet lists) used to be silently collapsed by the rewrite instead of
+    // refused with file:line, same as every other setPriorities/readPriorities validation failure.
+    const existing = readPriorities(root, graph);
     // review 1 HIGH 2: re-read AFTER the lock is held, never before -- a read taken before acquiring the lock
     // could already be stale by the time this process gets its turn to write.
     const text = existsSync(path) ? readFileSync(path, 'utf8') : '# Priorities\n';
     // review 1 HIGH 2 test seam: widen the critical section on demand so a concurrency test can force a real
     // interleave deterministically. Inert unless MOLE_PRIORITIES_TEST_DELAY_MS is set (test/priorities-lock-worker.ts).
+    // review 2 HIGH: this MUST be a non-blocking await, never a synchronous/Atomics.wait sleep -- proper-lockfile
+    // refreshes the lock's mtime on a background timer (`update`) while the lock is held, and a blocked event
+    // loop would starve that timer, reintroducing the exact "live holder looks abandoned" bug being fixed here.
     const testDelayMs = Number(process.env.MOLE_PRIORITIES_TEST_DELAY_MS ?? 0);
-    if (testDelayMs > 0) sleepMs(testDelayMs);
+    if (testDelayMs > 0) await new Promise((resolve) => setTimeout(resolve, testDelayMs));
     const eol = text.includes('\r\n') ? '\r\n' : '\n'; // review 1 HIGH 1: preserve the file's own line ending
     const lines = text.split(/\r?\n/);
     const items = order.map((t, i) => `${i + 1}. ${t}`);
@@ -344,7 +381,6 @@ export function setPriorities(root: string, phase: string, order: string[], grap
       const out = [...lines.slice(0, headingIdx + 1), ...body, ...lines.slice(nextHeadingIdx)];
       writeFileAtomic(path, out.join(eol));
     } else {
-      const existing = readPriorities(root, graph); // validates the EXISTING file first (file:line errors as usual)
       const last = existing[existing.length - 1];
       const from = today();
       if (last && from <= last.from) throw new PrioritiesError(`a new phase must start after ${last.name} (${last.from}); today (${from}) is not after it`);
@@ -352,7 +388,7 @@ export function setPriorities(root: string, phase: string, order: string[], grap
       writeFileAtomic(path, out.join(eol));
     }
   } finally {
-    release();
+    await release();
   }
   return readPriorities(root, graph); // round trip: the write this function just made, re-parsed
 }

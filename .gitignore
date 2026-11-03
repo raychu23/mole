@@ -15,3 +15,5 @@ dist/
 dist-tsc/
 # Mole personal seen log (T13): never leaves the machine
 .mole/local/
+# review 2 (T73): a crash-orphaned priorities.md.lock (proper-lockfile's own lock directory) must never land here
+.mole/*.lock

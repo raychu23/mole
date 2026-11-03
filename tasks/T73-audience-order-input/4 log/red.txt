@@ -230,3 +230,55 @@ $ npx tsc -b   (clean)
 $ npx vitest run packages/decisions packages/proposals packages/mcp apps/vscode
  Test Files  59 passed (59)
       Tests  510 passed (510)   (includes apps/vscode/test/render.test.ts, no debounce flake this run)
+
+## Review 2 fixes — RED before the fix (deleg review 2, 2026-11-03)
+HIGH (hand-rolled lock never refreshes mtime while held -> a live slow holder's lock is reclaimed as stale,
+mutual exclusion lost; wait bound 5s < stale bound 10s -> spurious "crashed holder" timeouts), MED (lock not
+gitignored), LOW (update-existing-phase branch never validates the EXISTING file) all red against the review-1
+code, captured by reverting ONLY packages/decisions/src/priorities.ts to its review-1 state (`git diff` /
+`git apply -R` round trip; test file, cli.ts, daemon/cli.ts kept at their review-2 shape) and rerunning the new
+tests:
+
+$ npx vitest run packages/decisions/test/priorities.test.ts -t "T73 review 2"
+ × T73 review 2 fixes > a crash-orphaned lock (kill -9 mid-hold) is reclaimed once stale, not left dead forever
+   → timed out waiting for the lock on .../.mole/priorities.md.lock (another 'priorities set' is running or
+     crashed holding it) -- the review-1 lock is a FILE (not proper-lockfile's directory), so a held lock the
+     main test process's OWN setPriorities call waits on past the review-1 hardcoded 5s timeout, even though
+     the review-2 test only waits past the test-shrunk 2200ms stale bound
+ × T73 review 2: the lock directory is never committed > setPriorities writes .mole/.gitignore ignoring the
+   lock in a repo that does not already ignore it
+   → ENOENT .mole/.gitignore -- review-1's setPriorities never wrote one (MED, not fixed yet)
+ × T73 review 2: the lock directory is never committed > ensureLockIgnored does not duplicate the line on
+   repeated calls
+   → ENOENT .mole/.gitignore, same cause
+ × T73 review 2: an existing phase's body is validated before splicing, like readPriorities > refuses to
+   update a phase when ANOTHER phase in the same file is malformed, same error readPriorities throws, nothing
+   written
+   → setPriorities did NOT throw at all (writing scale's corruption away silently); the malformed-file error
+     only surfaced on a LATER unrelated readPriorities call, not refused up front (LOW, not fixed yet)
+ × T73 review 2: an existing phase's body is validated before splicing, like readPriorities > refuses when the
+   OTHER phase has an unknown tenet, same file:line readPriorities gives
+   → same cause, unknown tenet silently collapsed instead of refused
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 2 passed | 34 skipped (41)
+
+(the mutual-exclusion timing test and the "Mole's own .gitignore has .mole/*.lock" test happened to pass under
+this particular capture: the review-1 code ignores MOLE_PRIORITIES_TEST_STALE_MS entirely and uses its own
+hardcoded 10s stale / 5s wait bounds, which tolerate this test's 3s hold without ever reclaiming -- the HIGH
+mutual-exclusion loss itself only manifests once a live holder's own hold exceeds review-1's HARDCODED 10s
+stale bound while the process is also blocked on Atomics.wait the whole time, which the fix's non-blocking
+await + proper-lockfile mtime refresh replaces; not re-captured at the full 10s+ scale here (would need a 10s+
+in-process sleep per repro run) -- traced instead by code reading: review-1's `acquireLock` reclaims on
+`Date.now() - statSync(lockPath).mtimeMs > LOCK_STALE_MS` with NOTHING ever touching that mtime after creation,
+so ANY hold longer than 10s is reclaimed regardless of liveness, and its `finally` releases by `unlinkSync(the
+current path)` with no ownership check, deleting whatever the reclaimer most recently wrote there)
+
+## Review 2 fixes — GREEN after the fix
+$ npx vitest run packages/decisions/test/priorities.test.ts
+ Test Files  1 passed (1)
+      Tests  41 passed (41)
+$ npx tsc -b   (clean)
+$ npx vitest run packages/decisions packages/proposals packages/mcp apps/vscode
+ Test Files  59 passed (59)
+      Tests  517 passed (517)   (includes apps/vscode/test/render.test.ts and packages/mcp mole_map, no flake)
