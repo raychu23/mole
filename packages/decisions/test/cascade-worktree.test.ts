@@ -86,8 +86,12 @@ describe('T65 snapshotWorktree', () => {
     const root = repo();
     agentWork(root);
     write(root, 'pkg/.mole/decisions/d9.md', '---\nid: D9\ntitle: nested\nstatus: accepted\n---\n');
+    write(root, 'c/d/.mole', 'a file named .mole\n'); // review 2: nested leaf named .mole
+    write(root, 'c/.molefoo', 'kept\n');
     const snap = snapshotWorktree(root);
-    expect(git(root, 'diff', '--name-only', snap.base, snap.head)).not.toContain('.mole/');
+    const names = git(root, 'diff', '--name-only', snap.base, snap.head).split('\n');
+    expect(names.filter((n) => /(^|\/)\.mole(\/|$)/.test(n))).toEqual([]);
+    expect(names).toContain('c/.molefoo');
   });
   it('review 1: a repo with no commit yet has nothing to check (no throw)', () => {
     const root = mkdtempSync(join(tmpdir(), 'mole-t65-empty-'));

@@ -37,3 +37,12 @@ env       reviewer's full npm run check in this worktree, run while main's check
           worktrees) — never run two full checks at once
 after     decisions + plugin 382 pass
 ```
+
+## Review 2 (deleg_32aa337d) FAIL (1 MED) → fixed
+```notes
+MED       a nested FILE named .mole (c/d/.mole) entered the snapshot: '**/.mole/**' needs a path under it      fix: '**/.mole' glob (any depth,
+          dir or file; root included) · test now also checks c/d/.mole out and c/.molefoo kept · red first · 382 pass
+verified  no-commit repo exit 0 via CLI + Stop hook · state byte-identical (tracked/untracked/staged/gitignored/symlink) · file:line
+          amendment honest
+pre-existing  stop.mjs T15 `mole check --worktree` logs one stderr line on a no-commit repo (not T65; exit code + output unaffected)
+```

@@ -27,7 +27,7 @@ export function snapshotWorktree(root: string): WorktreeSnapshot {
   try {
     const env = { ...process.env, GIT_INDEX_FILE: join(dir, 'index') };
     run(['read-tree', base], env);
-    run(['add', '-A', '--', '.', ':(exclude,glob)**/.mole/**', ':(exclude).mole'], env); // review 1: nested .mole too
+    run(['add', '-A', '--', '.', ':(exclude,glob)**/.mole/**', ':(exclude,glob)**/.mole'], env); // reviews 1-2: .mole at any depth, dir or file
     const tree = run(['write-tree'], env);
     const baseTree = run(['rev-parse', `${base}^{tree}`]);
     if (tree === baseTree) return { base, head: base };
