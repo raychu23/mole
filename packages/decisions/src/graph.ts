@@ -61,6 +61,59 @@ export function frontMatter(text: string, file: string): FrontMatter {
     const e = doc.errors[0]!;
     return { error: { file, line: lineAt(e.pos[0]), message: `YAML: ${e.message.split('\n')[0]}` } };
   }
+  // T82 (backlog incident-loader-indent, T58 review 2): a block list whose items INCREASE indentation partway
+  // through (e.g. `- d1` at 2 spaces, then `- d2` at 4) is not a `yaml` parse error -- YAML's own plain-scalar
+  // folding rule treats the more-indented '- d2' line as a CONTINUATION of the previous item's text, silently
+  // merging two or more list items into one scalar ('d1 - d2'). That loses list members with no error at all,
+  // the same silent-data-loss failure as dropping the record. Walk the tree for a plain scalar that is ITSELF
+  // a sequence item (directly, isSeq(parent)) whose text has a continuation line that itself looks like another
+  // list item ('- ' at the start, once trimmed) and report it as an error instead of accepting the folded value
+  // -- every existing caller already turns a frontMatter() error into a Problem with file:line (loadIncidents,
+  // loadMoleDecisions, loadIntent, loadAdrDir), never a silent drop.
+  // Review fix (HIGH false positive): only a scalar that IS a seq item can have lost a sibling list item this
+  // way. A plain scalar map VALUE (e.g. `description: text\n  - looks like a list item`) is ordinary prose, not
+  // a list at all, and a map value nested inside a seq item (`- key: value\n      - continuation`) folds into
+  // that map value, not a sibling seq item -- neither loses anything, so only `isSeqItem === true` may flag.
+  const foldedListItem = (n: YNode | null | undefined, isSeqItem: boolean): { line: number; text: string } | undefined => {
+    if (!n) return undefined;
+    if (isScalar(n)) {
+      if (!isSeqItem || n.type !== 'PLAIN' || !n.range) return undefined;
+      const text = src.slice(n.range[0], n.range[1]);
+      const rows = text.split('\n');
+      for (let i = 1; i < rows.length; i++) {
+        const t = rows[i]!.trim();
+        if (/^-(\s|$)/.test(t)) return { line: lineAt(n.range[0]), text: t };
+      }
+      return undefined;
+    }
+    if (isSeq(n)) {
+      for (const it of n.items) {
+        const r = foldedListItem(it as YNode, true);
+        if (r) return r;
+      }
+      return undefined;
+    }
+    if (isMap(n)) {
+      for (const p of n.items) {
+        const r = foldedListItem(p.key as YNode, false) ?? foldedListItem(p.value as YNode | null, false);
+        if (r) return r;
+      }
+      return undefined;
+    }
+    return undefined;
+  };
+  if (doc.contents && isMap(doc.contents)) {
+    const folded = foldedListItem(doc.contents as YNode, false);
+    if (folded) {
+      return {
+        error: {
+          file,
+          line: folded.line,
+          message: `YAML: a line here ('${folded.text}') looks like another list item but is indented past the one before it, so it was folded into that item's text instead of staying a separate item -- fix the indentation`,
+        },
+      };
+    }
+  }
   const raw = (n: YNode | null | undefined): string => {
     if (!n) return '';
     if (isScalar(n)) {
