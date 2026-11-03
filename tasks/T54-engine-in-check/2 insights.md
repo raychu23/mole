@@ -39,3 +39,16 @@ Decisions package: 32 files, 291 tests pass.
   (a missed reason → claim shown undefended to the judge, visible; a misattributed one → silently wrong). Stop
   extending it after round 5; anything subtler goes to the LLM judge, which sees the full outcome text anyway
 - 41 files, 321 tests · all round-3/4 reproducers now give reasons []
+
+## 11-02 18:15 review 5 (deleg_48978bd8) FAIL → rule cut back to the MADR template slot (decision, not another guard)
+- the 8 reproducers in /Users/a1/.hermes/cache/scratch/t54-review5/ hit two different things:
+    mid-prose "because"     guard rounds 3-5 kept finding new wordings ("the former", "i.e.", shortened names)
+                            measured: it rescued 0 of 20 real ADRs (16/20 with and without) → REMOVED
+    template slot           all 8 repros actually use "Chosen option: X, because <praise of rejected Y>"
+                            DISPUTED, not fixed: MADR defines that slot as the justification
+                            (adr/madr template/adr-template.md:32 `Chosen option: "{title of option 1}", because {justification…}`,
+                            same line log4brains docs/adr/template.md:29). A record that says "chose X because Y was
+                            faster" contradicts itself; Mole reports what the record states and the LLM judge sees the full text
+- test changed: "Chosen option: Modern Python. We picked it because …" now → no reason (was review-2 P0 "use it");
+  superseded by the one-sided rule (missed reason visible, misattributed reason silent)
+- 41 files, 323 tests · real ADRs 16/20

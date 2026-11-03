@@ -92,12 +92,6 @@ function optionNameOf(bullet: string): string {
   return (m?.[1] ?? cleaned).trim();
 }
 
-const STOP_WORDS = new Set(['the', 'and', 'for', 'with', 'use', 'using', 'our', 'all', 'new', 'old', 'one', 'via', 'per', 'not', 'any', 'option', 'keep', 'from', 'into']);
-/** lower-case alphabetic words of 3+ letters, stop words removed -- for "does this text name that option?" */
-function wordsOf(s: string): string[] {
-  return (s.toLowerCase().match(/[a-z][a-z-]{2,}/g) ?? []).filter((w) => !STOP_WORDS.has(w));
-}
-
 /** Build the Dung framework + display arguments for one decision's ADR text. `decisionId` namespaces the
  *  derived argument ids so two decisions' frameworks never collide when a caller merges several. */
 export function deriveAdrArgumentFramework(decisionId: string, adrText: string): AdrArgumentFramework {
@@ -114,7 +108,6 @@ export function deriveAdrArgumentFramework(decisionId: string, adrText: string):
   const chosenName = chosenRaw ? sameName(chosenRaw) : undefined;
 
   const optionIds: string[] = [];
-  const rejectedNames: string[] = [];
   if (consideredBlock) {
     const bullets = bulletsOf(consideredBlock);
     const names = bullets.map((b) => sameName(optionNameOf(b)));
@@ -130,7 +123,6 @@ export function deriveAdrArgumentFramework(decisionId: string, adrText: string):
     let n = 0;
     for (const [i, bullet] of bullets.entries()) {
       if (i === chosenIdx) continue;
-      if (names[i]) rejectedNames.push(names[i]!);
       n += 1;
       const optId = `${decisionId}::option:${n}`;
       args.push({ id: optId, role: 'considered-option', text: bullet });
@@ -139,10 +131,6 @@ export function deriveAdrArgumentFramework(decisionId: string, adrText: string):
     }
   }
 
-  // words that appear in some rejected option's name and not in the chosen one (stop words and numbers left out)
-  const chosenWords = new Set(wordsOf(chosenName ?? ''));
-  const rejectedWords = [...new Set(rejectedNames.flatMap(wordsOf))].filter((w) => !chosenWords.has(w));
-
   if (outcomeBlock) {
     // reasons live after the "Chosen option: X, because" line when present, else the whole outcome block
     const reasonSource = chosenMatch ? outcomeBlock.slice(chosenMatch.index + chosenMatch[0].length) : outcomeBlock;
@@ -150,30 +138,17 @@ export function deriveAdrArgumentFramework(decisionId: string, adrText: string):
     // MADR also permits a plain-prose "because ..." paragraph. Without it,
     // an explicitly defended decision was incorrectly labelled undefended.
     if (reasons.length === 0) {
-      // only the paragraph right after the chosen option: split BEFORE trimming, so a bare "because" + blank line
-      // never adopts the next paragraph (review 1). Reason = text after ", because" / ", since" opening it, or after
-      // the first "because" inside it (". Because …", "… We picked it because …"). A leading "to" is NOT a reason
-      // (review 2 P0: "to be revisited after the audit"); python-tuf 0004's purpose clause stays unread.
+      // MADR's own slot only: "Chosen option: X, because …" / ". Because …" / ", since …" right after the choice, in
+      // the paragraph that holds it (split BEFORE trimming, so a bare "because" + blank line never adopts the next
+      // paragraph, review 1). By the template, that slot IS the justification of the chosen option.
+      // NOT read (removed after reviews 3-5, 11-02): a "because" anywhere later in free prose. Each guard round found
+      // new wordings ("the former", links, "i.e.", shortened names) where it handed a REJECTED option's praise to
+      // the chosen one, and it rescued 0 of 20 real ADRs. Missing a reason leaves the claim undefended (visible to
+      // the judge, who reads the full outcome text); a misattributed reason is silently wrong. A leading "to" is not
+      // a reason either (review 2 P0); python-tuf 0004's purpose clause stays unread.
       const first = reasonSource.split(/\r?\n\s*\r?\n/, 1)[0] ?? '';
       const opening = /^\s*[,.]?\s*(?:because|since)\b([\s\S]*)/i.exec(first)?.[1];
-      // otherwise the first "because" in that paragraph -- but only when nothing ties it to a rejected option:
-      // the text BEFORE it (no sentence splitting: "i.e." used to split a rejected name away, review 4) may not
-      // hold any word that only a rejected option's name has ("Legacy" for "Legacy Python 2.7 Runtime", review 4),
-      // and the because-clause's own sentence may not turn (but/however/although/though, review 3).
-      // Unsure -> no reason (claim undefended), never a guess.
-      let inner: string | undefined;
-      if (opening === undefined) {
-        const flat = first.replace(/\s+/g, ' ');
-        const at = /\bbecause\b/i.exec(flat);
-        if (at) {
-          const before = new Set(wordsOf(flat.slice(0, at.index)));
-          const clause = flat.slice(at.index + at[0].length);
-          const clauseSentence = clause.split(/(?<=[.!?])\s+(?=[A-Z])/, 1)[0] ?? clause;
-          const tiedToRejected = rejectedWords.some((w) => before.has(w));
-          if (!tiedToRejected && !/\b(?:but|however|although|though)\b/i.test(clauseSentence)) inner = clause;
-        }
-      }
-      const paragraph = (opening ?? inner)?.replace(/\s+/g, ' ').trim();
+      const paragraph = opening?.replace(/\s+/g, ' ').trim();
       if (paragraph) reasons.push(paragraph);
     }
     let n = 0;

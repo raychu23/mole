@@ -9,7 +9,6 @@ describe('ADR prose reasons remain evidence for the chosen option', () => {
     // log4brains 20201026: the reason is the next sentence, opening with "Because"
     ['next-sentence', 'Chosen option: "Modern Python".\nBecause we need maintained dependencies.'],
     // review 2 P0: unquoted name ending at a period, reason later in the same paragraph (Nygard style)
-    ['unquoted-then-because', 'Chosen option: Modern Python. We picked it because we need maintained dependencies.'],
   ])('uses explicitly stated %s prose instead of labelling the decision undefended', (_shape, outcome) => {
     const text = [
       '## Considered Options', '- Modern Python', '- Legacy Python',
@@ -28,6 +27,11 @@ describe('ADR prose reasons remain evidence for the chosen option', () => {
     'Chosen option: "Modern Python", because',
     // review 2 P0: a leading "to" is not a stated reason ("to" purpose clauses were dropped as too ambiguous)
     'Chosen option: "Modern Python", to be revisited after the Q3 audit.',
+    // review 5 (11-02): a "because" later in free prose is no longer read -- it misattributed rejected options'
+    // praise in every guard round; template slot only. Unquoted name parsing is still tested below.
+    'Chosen option: Modern Python. We picked it because we need maintained dependencies.',
+    'Chosen option: "Modern Python". We kept it as the former had far better community support because it was older.',
+    'Chosen option: "Modern Python". The alternative was clearly superior because it was faster.',
   ])('does not invent a reason for %s', (outcome) => {
     const text = [
       '## Considered Options', '- Modern Python', '- Legacy Python',
