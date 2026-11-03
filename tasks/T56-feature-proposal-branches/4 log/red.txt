@@ -1,0 +1,13 @@
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed (5)
+   Start at  17:39:05
+   Duration  804ms (transform 37ms, setup 0ms, collect 30ms, tests 556ms, environment 0ms, prepare 47ms)
+
+   × mole-proposals CLI (T56) > reports a deleted decision record even when it cites no arguments 1355ms
+   × mole-proposals CLI (T56) > refuses a proposal path inside the repository git directory 770ms
+   × mole-proposals CLI (T56) > reports a missing baseline commit cleanly 774ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  3 failed | 5 passed (8)
