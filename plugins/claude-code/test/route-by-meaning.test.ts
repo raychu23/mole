@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Bm25Index } from '../../../packages/decisions/src/route/bm25.js';
-import { bm25Rank, governingDecisions, REPO_WIDE_CAP } from '../scripts/lib.mjs';
+import { bm25Rank, decisionsBlock, governingDecisions, REPO_WIDE_CAP } from '../scripts/lib.mjs';
 
 const plugin = join(dirname(fileURLToPath(import.meta.url)), '..');
 const cli = join(plugin, '../../packages/daemon/dist/cli.js');
@@ -114,5 +114,28 @@ describe('T64 PreToolUse ranks unscoped decisions by the edited path + new text'
     const data = tmp('mole-t64-data-');
     const r = hook('pre-tool-use', { session_id: 'p1', transcript_path: join(data, 'p1.jsonl'), cwd: root, permission_mode: 'default', hook_event_name: 'PreToolUse', tool_name: 'Write', tool_input: { file_path: join(root, 'src/app/api/export/route.ts'), content: 'export async function GET() { return streamCsvExport(rows) }' } }, data);
     expect(r.json.hookSpecificOutput.additionalContext).toContain('D-01');
+  });
+});
+
+// review 1 (deleg_48a30a8b) fixes, tests first
+describe('T64 review 1', () => {
+  it('F1: a literal repo-wide decision is still listed when the edit text shares no word with it (T50 unchanged)', () => {
+    const root = repo();
+    writeFileSync(join(root, '.mole/decisions/d-rw.md'), ['---', 'id: D-RW', 'title: Squash merges only', 'status: accepted', 'scope:', '  - repo-wide', '---', '', '## Decision', '', 'Merge with squash.', ''].join('\n'));
+    const got = governingDecisions(undefined, root, new Set(['src/charts/bar.ts']), { text: 'src/charts/bar.ts\nhelloExport' });
+    expect(got.find((d: { id: string }) => d.id === 'D-RW')?.matchedTargets).toEqual(['repo-wide']);
+    expect(got.map((d: { id: string }) => d.id)).toContain('D-08');
+  });
+  it('F2: nested brackets in inline scope keep the files (never silently unscoped)', () => {
+    const root = repo();
+    writeFileSync(join(root, '.mole/decisions/d-n.md'), ['---', 'id: D-N', 'title: Nested', 'status: accepted', 'scope: [src/a.ts, [src/b.ts, src/c.ts]]', '---', ''].join('\n'));
+    const got = governingDecisions(undefined, root, new Set(['src/c.ts']));
+    expect(got.map((d: { id: string }) => d.id)).toContain('D-N');
+  });
+  it('F3: a by-meaning decision is labelled as a word match to check, not as governing', () => {
+    const root = repo();
+    const got = governingDecisions(undefined, root, new Set(), { text: 'add a csv data export endpoint' });
+    const block = decisionsBlock(got);
+    expect(block).toMatch(/D-01.*matched by words, not by file/);
   });
 });

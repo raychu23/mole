@@ -19,7 +19,7 @@ function main() {
   if (!fresh.length) return;
   for (const d of fresh) already.add(d.id);
   saveAddedDecisions(input.session_id, already);
-  emit({ hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: clip(decisionsBlock(fresh, 'Mole: team decisions this task is about (ranked by meaning; follow them)')) } });
+  emit({ hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: clip(decisionsBlock(fresh, 'Mole: team decisions that may bear on this task (word matches, ranked; follow the ones that apply)')) } });
 }
 
 try {

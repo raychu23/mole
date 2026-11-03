@@ -391,11 +391,11 @@ export function readDecisionRecords(root) {
     if (!id) continue;
     const scopeBlock = /^scope:\n((?:\s+-.*\n)+)/m.exec(text);
     // T64: the inline form `scope: [a, b]` (accepted by the graph loader) was ignored here; read it as the same list
-    const inlineScope = /^scope:[ \t]*\[([^\]\n]*)\][ \t]*$/m.exec(text);
+    const inlineScope = /^scope:[ \t]*\[(.*)\][ \t]*$/m.exec(text); // review 1 F2: nested [..] flattened below
     const files = new Set();
     const scopeTargets = []; // T50: full raw anchor (file#Symbol or folder/), for display -- `files` above keeps only the file part for matching
     let repoWide = false; // T50
-    const scopeItems = scopeBlock ? scopeBlock[1].split('\n') : inlineScope ? inlineScope[1].split(',') : [];
+    const scopeItems = scopeBlock ? scopeBlock[1].split('\n') : inlineScope ? inlineScope[1].replace(/[[\]]/g, '').split(',') : [];
     if (scopeItems.length) {
       for (const line of scopeItems) {
         const item = line.trim().replace(/^-\s*/, '').replace(/^['"]|['"]$/g, '');
@@ -448,24 +448,24 @@ export function governingDecisions(mole, root, files, { liveFlags = false, text 
     .filter((d) => [...d.files].some((f) => [...files].some((c) => scopeMatches(f, c))))
     .map((d) => ({ ...d, matchedTargets: d.scopeTargets.filter((t) => [...files].some((c) => scopeMatches(t.split('#')[0], c))) }));
   const fileMatchedIds = new Set(fileMatched.map((d) => d.id));
-  let repoWide;
+  // T50 rank 5: literal repo-wide fallback, capped independently of the file-scoped matches -- unchanged by T64
+  // (review 1 F1: ranking these by meaning dropped a repo-wide rule whose words the edit did not share)
+  const repoWide = all
+    .filter((d) => d.repoWide && !fileMatchedIds.has(d.id))
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .slice(0, REPO_WIDE_CAP)
+    .map((d) => ({ ...d, matchedTargets: ['repo-wide'] }));
+  // T64: decisions with NO scope at all, ranked by meaning against the text of the moment (prompt, or the edited path +
+  // new text): BM25 over title + rationale, score > 0, best REPO_WIDE_CAP. Zero model calls. A guess, labelled as one.
+  let byMeaning = [];
   if (text && String(text).trim()) {
-    // T64: repo-wide AND unscoped decisions ranked by meaning against the text of the moment (prompt, or the edited
-    // path + new text): BM25 over each record's title + rationale, score > 0, best REPO_WIDE_CAP. Zero model calls.
-    const pool = all.filter((d) => (d.repoWide || d.unscoped) && !fileMatchedIds.has(d.id));
+    const pool = all.filter((d) => d.unscoped && !fileMatchedIds.has(d.id));
     const byId = new Map(pool.map((d) => [d.id, d]));
-    repoWide = bm25Rank(pool.map((d) => ({ id: d.id, text: `${d.title}\n${d.rationale}` })), text)
+    byMeaning = bm25Rank(pool.map((d) => ({ id: d.id, text: `${d.title}\n${d.rationale}` })), text)
       .slice(0, REPO_WIDE_CAP)
       .map((h) => ({ ...byId.get(h.id), matchedTargets: ['by meaning'], score: h.score }));
-  } else {
-    // T50 rank 5: repo-wide fallback, capped independently of how many file-scoped decisions already matched
-    repoWide = all
-      .filter((d) => d.repoWide && !fileMatchedIds.has(d.id))
-      .sort((a, b) => a.id.localeCompare(b.id))
-      .slice(0, REPO_WIDE_CAP)
-      .map((d) => ({ ...d, matchedTargets: ['repo-wide'] }));
   }
-  const records = [...fileMatched, ...repoWide];
+  const records = [...fileMatched, ...byMeaning, ...repoWide];
   if (records.length === 0) return [];
   let flags = new Map();
   if (liveFlags && mole) {
@@ -495,7 +495,9 @@ export function decisionsBlock(decisions, header = 'Mole decisions governing the
     const coversPart = covers.length ? ` \u2014 covers: ${covers.join(', ')}` : '';
     const tests = (d.evidence ?? []).filter((e) => e.kind === 'test').map((e) => e.value);
     const guardPart = tests.length ? ` \u2014 guard test: ${tests.join('; ')}` : '';
-    return `- ${d.id} [${d.flag ?? d.status}] ${d.status} \u2014 ${d.title} \u2014 owner: ${d.approver ?? 'unassigned'} (${d.file})${coversPart}${guardPart}`;
+    // review 1 F3: a BM25 guess must not read as a governing rule
+    const guessPart = (d.matchedTargets ?? []).includes('by meaning') ? ' \u2014 matched by words, not by file: check it applies' : '';
+    return `- ${d.id} [${d.flag ?? d.status}] ${d.status} \u2014 ${d.title} \u2014 owner: ${d.approver ?? 'unassigned'} (${d.file})${coversPart}${guardPart}${guessPart}`;
   });
   let kept = decisions;
   let out = `${header} (${decisions.length}):\n${lines.join('\n')}`;
