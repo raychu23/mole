@@ -46,7 +46,7 @@ async function connect(root: string) {
 
 // every tool whose real-world behaviour is a pure read (no writes, no deletes) -- the audit's own list (rank 3) plus
 // the collisions/agent-intent tools added since, which are equally read-only and never call an external service
-const READ_ONLY_TOOLS = ['mole_map', 'mole_tried', 'mole_claims', 'mole_collisions', 'mole_agent_intent', 'mole_check', 'mole_decisions', 'mole_coverage', 'mole_interrogate', 'mole_decisions_asof', 'mole_priorities', 'mole_incident_suggest', 'mole_proposals_compare', 'mole_hotspots', 'mole_recall', 'mole_coupling'];
+const READ_ONLY_TOOLS = ['mole_map', 'mole_tried', 'mole_claims', 'mole_collisions', 'mole_agent_intent', 'mole_check', 'mole_decisions', 'mole_coverage', 'mole_interrogate', 'mole_decisions_asof', 'mole_priorities', 'mole_incident_suggest', 'mole_proposals_compare', 'mole_hotspots', 'mole_recall', 'mole_coupling', 'mole_outcomes'];
 // read-only but may escalate to an LLM call (openWorldHint: true) -- T46's cascade tier, not one of the audit's
 // original 8, so it is checked separately rather than forced into the closed-world assumption those 8 share
 const READ_ONLY_OPEN_WORLD_TOOLS = ['mole_cascade_check'];
