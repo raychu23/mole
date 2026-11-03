@@ -30,6 +30,10 @@ export class MolePanelView implements vscode.WebviewViewProvider {
   private pendingTriggerAt = new Map<number, number>();
   refreshMsSamples: number[] = [];
   lastModel?: PanelModel;
+  /** T62 screenshot proof: scroll the webview to one section (m26 check mode only) */
+  scrollTo(sectionId: string): void {
+    void this.view?.webview.postMessage({ type: 'scrollTo', id: sectionId });
+  }
   readonly diagnostics = vscode.languages.createDiagnosticCollection('mole-rules');
 
   constructor(
@@ -65,6 +69,7 @@ body{font-family:var(--vscode-font-family);font-size:12px;color:var(--vscode-for
 .sec-error .msg{color:var(--vscode-errorForeground)}
 .sec-unavailable .msg,.sec-empty .msg{opacity:.7}
 textarea{width:100%;min-height:40px}
+.reasoning ul{margin:2px 0;padding-left:16px}.reasoning h4{margin:6px 0 2px;font-size:12px}.rs-from,.rs-order,.rs-none,.rs-args,.rs-text{opacity:.75}.rs-order{margin:0}.arg{font-family:var(--vscode-editor-font-family)}.reasoning code{display:block;font-family:var(--vscode-editor-font-family);background:var(--vscode-textCodeBlock-background);padding:1px 4px;margin:2px 0;user-select:all}
 </style></head><body><div id="app">loading…</div><script nonce="${nonce}" src="${script}"></script></body></html>`;
   }
 

@@ -40,6 +40,9 @@
     },
     {
       "path": "../intake"
+    },
+    {
+      "path": "../proposals"
     }
   ]
 }

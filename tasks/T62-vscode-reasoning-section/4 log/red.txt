@@ -1,0 +1,14 @@
+   × T62 listProposals / summarizeProposals (one source for MCP, CLI and panel) > lists only worktrees createProposal made for this repo, on their own branch, sorted by name 450ms
+   × T62 listProposals / summarizeProposals (one source for MCP, CLI and panel) > summarize: none -> no proposals; one -> its evaluation; two+ -> compareProposals; unknown name refused 79ms
+   × mole incident list (T62) > lists each incident with its top candidates and writes nothing 7ms
+ FAIL  apps/vscode/test/reasoning-section.test.ts [ apps/vscode/test/reasoning-section.test.ts ]
+Error: Cannot find module '../webview/reasoning.js' imported from '/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T62-vscode-reasoning-section/apps/vscode/test/reasoning-section.test.ts'
+Caused by: Error: Failed to load url ../webview/reasoning.js (resolved id: ../webview/reasoning.js) in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T62-vscode-reasoning-section/apps/vscode/test/reasoning-section.test.ts. Does the file exist?
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  packages/decisions/test/incident-revive.test.ts > mole incident list (T62) > lists each incident with its top candidates and writes nothing
+AssertionError: expected 2 to be +0 // Object.is equality
+ FAIL  packages/proposals/test/list.test.ts > T62 listProposals / summarizeProposals (one source for MCP, CLI and panel) > lists only worktrees createProposal made for this repo, on their own branch, sorted by name
+TypeError: (0 , listProposals) is not a function
+ FAIL  packages/proposals/test/list.test.ts > T62 listProposals / summarizeProposals (one source for MCP, CLI and panel) > summarize: none -> no proposals; one -> its evaluation; two+ -> compareProposals; unknown name refused
+TypeError: (0 , summarizeProposals) is not a function
+      Tests  3 failed | 19 passed (22)

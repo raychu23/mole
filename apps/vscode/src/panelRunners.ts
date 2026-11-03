@@ -172,5 +172,25 @@ export function makeRunners(h: CliHandle, client: () => MoleClient | undefined):
       const diagramSvg = graph.nodes.length ? renderSvg(graph, { changed: '#2b7de9', unchanged: '#8a8a8a' }) : undefined;
       return { drafts, diagramSvg, meetingFiles: files };
     },
+    // T62 Reasoning section: the same daemon CLI JSON the MCP tools return (T60 priorities, T58 incidents, T56 proposals)
+    async prioritiesList() {
+      return run(h, ['priorities', 'list']) as never;
+    },
+    async priorities() {
+      // `mole priorities` with no flag is the plain engine (no phase, T60 design); the panel wants the phase in force
+      // today, so it asks with the local date
+      const d = new Date();
+      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return run(h, ['priorities', '--at', today]) as never;
+    },
+    async prioritiesCompare(a, b) {
+      return run(h, ['priorities', 'compare', a, b]) as never;
+    },
+    async incidents() {
+      return run(h, ['incident', 'list']) as never;
+    },
+    async proposals() {
+      return run(h, ['proposals']) as never;
+    },
   };
 }

@@ -9,7 +9,7 @@ import type { DecisionsResult, FlagContext, FlagResult, LoadOptions } from './ty
 import { CaptureError, linkDecisions, newDecision, readDecisionRecords, recoverTransactions, supersedeDecision } from './capture/records.js';
 import { suggestDuplicates } from './capture/dedupe.js';
 import { comparePhases, evaluatePhase, PrioritiesError, readPriorities } from './priorities.js';
-import { acceptIncident, dismissIncident, IncidentError, suggestRevivals } from './incidents/revive.js';
+import { acceptIncident, dismissIncident, IncidentError, incidentSummary, suggestRevivals } from './incidents/revive.js';
 
 /** The JSON `mole decisions --json` prints and the MCP tool mole_decisions returns. Every decision/tenet
  * node (T43) gets its full rationale text attached (bounded, section-aware -- see rationale.ts), read
@@ -152,7 +152,24 @@ export function decisionCli(pos: string[], flags: Record<string, string | true>,
  *  T58, plan update 11-01 §6: an incident never changes a decision's status by itself. */
 export function incidentCli(pos: string[], flags: Record<string, string | true>, root: string): number {
   const [sub, id] = pos;
-  const usage = 'usage: mole incident suggest <incident-id> | mole incident accept|dismiss <incident-id> --argument <argument-id>';
+  const usage = 'usage: mole incident list | mole incident suggest <incident-id> | mole incident accept|dismiss <incident-id> --argument <argument-id>';
+  if (sub === 'list') {
+    // T62: every incident with its top 3 suggestions (the VS Code panel's Reasoning section); read-only
+    try {
+      const incidents = loadGraph(root).nodes.filter((n) => n.kind === 'incident');
+      console.log(JSON.stringify(incidents.map((n) => {
+        try {
+          return incidentSummary(root, n.id, 3);
+        } catch (error) {
+          return { id: n.id, title: n.title, error: error instanceof Error ? error.message.split('\n')[0] : String(error) };
+        }
+      }), null, 2));
+      return 0;
+    } catch (error) {
+      console.error(`mole incident list: ${error instanceof Error ? error.message : String(error)}`);
+      return 1;
+    }
+  }
   if (!sub || !id || !['suggest', 'accept', 'dismiss'].includes(sub)) {
     console.error(usage);
     return 2;

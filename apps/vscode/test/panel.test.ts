@@ -27,6 +27,12 @@ const okRunners = (): Runners => ({
   agentIntent: async () => ({ statuses: [] }) as never,
   oneonone: async () => ({ groups: [], readback: {} }) as never,
   reviewNotes: async () => ({ drafts: [], diagramSvg: undefined }) as never,
+  // T62 reasoning section: nothing recorded
+  prioritiesList: async () => [],
+  priorities: async () => ({ labels: {}, decisions: [] }) as never,
+  prioritiesCompare: async () => ({ from: '', to: '', arguments: [], decisions: [] }) as never,
+  incidents: async () => [],
+  proposals: async () => ({ proposals: [] }) as never,
 });
 
 describe('buildPanelModel (M26a: 8 sections cover 14 CLI read features)', () => {

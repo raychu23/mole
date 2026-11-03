@@ -233,7 +233,7 @@ async function m26Check(mole: MolePanel, panelView: MolePanelView | undefined, r
     }
     if (!raw) await new Promise((r) => setTimeout(r, 250));
   }
-  const cfg = JSON.parse(raw || '{}') as { out?: string; files?: string[]; shot?: string };
+  const cfg = JSON.parse(raw || '{}') as { out?: string; files?: string[]; shot?: string; scrollTo?: string };
   if (!cfg.out) {
     output.appendLine(`m26 check: could not read config at ${cfgPath}`);
     return;
@@ -277,6 +277,7 @@ async function m26Check(mole: MolePanel, panelView: MolePanelView | undefined, r
       // is the frontmost app with no AppleScript needed (scripts/selftest.mjs's osascript activate call is
       // the only thing this screenshot deliberately avoids — it needs a macOS Automation grant this sandboxed
       // run does not have; see tasks/T34-one-panel/2 insights.md).
+      if (cfg.scrollTo) panelView?.scrollTo(cfg.scrollTo); // T62: bring one section into view for its screenshot
       await new Promise((r) => setTimeout(r, 1500));
       writeFileSync(`${cfg.shot}.ready`, 'ok');
       await new Promise((r) => setTimeout(r, 4000));

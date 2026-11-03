@@ -1,0 +1,142 @@
+(node:66037) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+# reasoning section status: ok 
+{
+ "phase": {
+  "current": {
+   "name": "scale",
+   "from": "2024-01-01",
+   "order": [
+    "tenet-users",
+    "tenet-focus"
+   ],
+   "file": ".mole/priorities.md",
+   "line": 8
+  },
+  "adjacent": {
+   "name": "launch",
+   "from": "2021-01-01",
+   "order": [
+    "tenet-focus",
+    "tenet-users"
+   ],
+   "file": ".mole/priorities.md",
+   "line": 3
+  },
+  "direction": "previous",
+  "evaluation": {
+   "phase": "scale",
+   "audience": [
+    "tenet-users",
+    "tenet-focus"
+   ],
+   "labels": {
+    "best-effort": "out",
+    "parallel": "in"
+   },
+   "decisions": [
+    {
+     "id": "ADR-0002",
+     "title": "Pre-1.0 deprecation strategy (python-tuf docs/adr/0002)",
+     "state": "defeated",
+     "cites": [
+      "best-effort"
+     ],
+     "file": ".mole/decisions/adr-0002.md",
+     "line": 1
+    }
+   ]
+  },
+  "comparison": {
+   "from": "launch",
+   "to": "scale",
+   "arguments": [
+    {
+     "id": "best-effort",
+     "before": "in",
+     "after": "out",
+     "flipped": [
+      {
+       "from": "parallel",
+       "to": "best-effort",
+       "fromValue": "tenet-users",
+       "toValue": "tenet-focus",
+       "before": {
+        "succeeds": false,
+        "ranks": [
+         2,
+         1
+        ]
+       },
+       "after": {
+        "succeeds": true,
+        "ranks": [
+         1,
+         2
+        ]
+       }
+      }
+     ],
+     "via": []
+    },
+    {
+     "id": "parallel",
+     "before": "out",
+     "after": "in",
+     "flipped": [
+      {
+       "from": "best-effort",
+       "to": "parallel",
+       "fromValue": "tenet-focus",
+       "toValue": "tenet-users",
+       "before": {
+        "succeeds": true,
+        "ranks": [
+         1,
+         2
+        ]
+       },
+       "after": {
+        "succeeds": false,
+        "ranks": [
+         2,
+         1
+        ]
+       }
+      }
+     ],
+     "via": []
+    }
+   ],
+   "decisions": [
+    {
+     "id": "ADR-0002",
+     "title": "Pre-1.0 deprecation strategy (python-tuf docs/adr/0002)",
+     "before": "holds",
+     "after": "defeated",
+     "because": [
+      "best-effort"
+     ],
+     "file": ".mole/decisions/adr-0002.md",
+     "line": 1
+    }
+   ]
+  }
+ },
+ "incidents": [
+  {
+   "id": "inc-legacy-users",
+   "title": "Downstream users stuck on the legacy client hit an unpatched security bug for weeks after the release",
+   "candidates": []
+  }
+ ],
+ "proposals": {
+  "baselineRevision": "7b6ff985d6fd4a49bd62f8f4844c8e871799d597",
+  "proposals": [
+   {
+    "name": "drop-old",
+    "branch": "mole/proposal/drop-old",
+    "p
+
+# rendered HTML
+<div class="rs-part"><h4>Phase in force: scale <span class="rs-from">from 2024-01-01</span></h4><p class="rs-order">1. tenet-users &nbsp; 2. tenet-focus</p><p class="rs-sub">What changed when <b>scale</b> started (2024-01-01), against <b>launch</b>:</p><ul><li class="rs-dec"><b>ADR-0002</b> Pre-1.0 deprecation strategy (python-tuf docs/adr/0002): holds → defeated (launch → scale)<ul><li><span class="arg">parallel</span> (tenet-users #1) now beats <span class="arg">best-effort</span> (tenet-focus #2); was #2 vs #1</li></ul></li><li class="rs-args">1 more argument(s) change: parallel out → in</li></ul></div><div class="rs-part"><h4>Incidents: dissent they may revive</h4><ul><li><b>inc-legacy-users</b> Downstream users stuck on the legacy client hit an unpatched security bug for weeks after the release<ul><li class="rs-none">no losing argument to revive</li></ul></li></ul></div><div class="rs-part"><h4>Proposals vs baseline 7b6ff98</h4><ul><li><b>drop-old</b><ul><li class="rs-none">no decision changes</li></ul></li><li><b>lts-window</b><ul><li><b>ADR-0002</b> Pre-1.0 deprecation strategy (python-tuf docs/adr/0002): contested → defeated (because best-effort)</li><li class="rs-args">3 argument(s) change</li></ul></li></ul></div>

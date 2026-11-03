@@ -114,6 +114,15 @@ async function main(): Promise<number> {
   if (cmd === 'decision') return (await import('@mole/decisions')).decisionCli(pos, flags, root); // write records: new / supersede / link / suggest / recover (T51)
   if (cmd === 'incident') return (await import('@mole/decisions')).incidentCli(pos, flags, root); // incident revives dissent: suggest / accept / dismiss (T58)
   if (cmd === 'priorities') return (await import('@mole/decisions')).prioritiesCli(pos, flags, root); // tenet order per phase, launch -> scale (T60)
+  if (cmd === 'proposals') { // this repo's what-if proposals vs their baseline, same JSON as mole_proposals_compare (T62); read-only
+    try {
+      console.log(JSON.stringify((await import('@mole/proposals')).summarizeProposals(root, pos.length ? pos : undefined), null, 2));
+      return 0;
+    } catch (e) {
+      console.error(`mole proposals: ${(e as Error).message}`);
+      return 2;
+    }
+  }
   if (cmd === 'pr-check') return (await import('@mole/decisions')).prCheckCli(pos, flags, root);
   if (cmd === 'flows') return (await import('@mole/flows')).flowsCli(pos, flags, root); // runtime call flows recorded from tests (T28), no daemon needed
   if (cmd === 'rules') return (await import('@mole/decisions')).rulesCli(pos, flags, root);

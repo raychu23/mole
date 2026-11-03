@@ -5,12 +5,10 @@
 // Prior art (tasks/T61-reasoning-mcp-tools/4 log/prior-art.md): MCP 2025-06-18 tools (structuredContent + the same
 // JSON as text; bad input / business errors = isError result), ToolAnnotations readOnlyHint, github-mcp-server
 // --read-only (write tools left out). Writes are a person's act in Mole (T58/T59), so none are exposed here.
-import { execFileSync } from 'node:child_process';
-import { realpathSync } from 'node:fs';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { comparePhases, evaluatePhase, suggestRevivals } from '@mole/decisions';
-import { compareProposals, evaluateProposal, readMeta, type ProposalMeta } from '@mole/proposals';
+import { listProposals, summarizeProposals } from '@mole/proposals';
 import { READ_ONLY_ANNOTATIONS, sc } from './annotations.js';
 
 interface Opts {
@@ -20,37 +18,8 @@ interface Opts {
 const ok = (o: object) => ({ content: [{ type: 'text' as const, text: JSON.stringify(o, null, 2) }], structuredContent: sc(JSON.parse(JSON.stringify(o)) as object) });
 const fail = (tool: string, e: unknown) => ({ content: [{ type: 'text' as const, text: `${tool}: ${e instanceof Error ? e.message : String(e)}` }], isError: true });
 
-const real = (p: string): string => {
-  try {
-    return realpathSync(p);
-  } catch {
-    return p;
-  }
-};
-
-/** proposal worktrees of this repo, sorted by name. Never takes a path from the caller. A worktree counts only if its
- *  metadata names this repo AND it has the branch createProposal gives it, `mole/proposal/<name>`, checked out (review 1:
- *  a hand-written meta file in an unrelated linked worktree was trusted). One branch per worktree, so names are unique.
- *  Known limit (review 2): mole-proposal.json is trusted data, not a signature; someone with write access to a worktree
- *  can still forge a complete one on a mole/proposal/<name> branch -- the same trust boundary as hand-editing .mole/. */
-export function repoProposals(root: string): Array<{ path: string; meta: ProposalMeta }> {
-  const top = real(execFileSync('git', ['-C', root, 'rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim());
-  const listing = execFileSync('git', ['-C', root, 'worktree', 'list', '--porcelain'], { encoding: 'utf8' });
-  const out: Array<{ path: string; meta: ProposalMeta }> = [];
-  for (const block of listing.split('\n\n')) {
-    const path = /^worktree (.+)$/m.exec(block)?.[1];
-    const branch = /^branch (.+)$/m.exec(block)?.[1];
-    if (!path || !branch || real(path) === top) continue;
-    try {
-      const meta = readMeta(path);
-      const own = `mole/proposal/${meta.name}`;
-      if (real(meta.repo) === top && meta.branch === own && branch === `refs/heads/${own}`) out.push({ path, meta });
-    } catch {
-      // not a Mole proposal worktree (another linked worktree): skip
-    }
-  }
-  return out.sort((a, b) => a.meta.name.localeCompare(b.meta.name));
-}
+/** T62: moved to @mole/proposals (one source for MCP, CLI and panel); kept as an export for callers of T61's name */
+export const repoProposals = listProposals;
 
 export function registerReasoningTools(server: McpServer, opts: Opts): void {
   server.registerTool(
@@ -119,17 +88,10 @@ export function registerReasoningTools(server: McpServer, opts: Opts): void {
     },
     async ({ names }) => {
       try {
-        const all = repoProposals(opts.root);
-        let picked = all;
-        if (names) {
-          const byName = new Map(all.map((p) => [p.meta.name, p]));
-          const unknown = names.filter((n) => !byName.has(n));
-          if (unknown.length) throw new Error(`unknown proposal ${unknown.join(', ')} (this repo has: ${all.map((p) => p.meta.name).join(', ') || 'none'})`);
-          picked = [...new Set(names)].map((n) => byName.get(n)!);
-        }
-        if (picked.length === 0) throw new Error('no proposals in this repo -- create one with: mole-proposals create');
-        if (picked.length === 1) return ok({ baselineRevision: picked[0]!.meta.baselineRevision, proposals: [evaluateProposal(picked[0]!.path)] });
-        return ok(compareProposals(picked.map((p) => p.path)));
+        // MCP keeps T61's contract: no proposals is an error result an agent can read, not an empty list
+        const r = summarizeProposals(opts.root, names);
+        if (r.proposals.length === 0) throw new Error('no proposals in this repo -- create one with: mole-proposals create');
+        return ok(r);
       } catch (e) {
         return fail('mole_proposals_compare', e);
       }
