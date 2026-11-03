@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-11-03 04:06      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T69-one-store → exit 0 (at new Promise (<anonymous>))
     2026-11-03 04:09      submitted → verified      reviewer hermes-subagent deleg_34eee310 FAIL, deleg_f93d50cf FAIL HIGH, deleg_81365281 PASS (fresh, claude-sonnet-5) · findings: R1: live server never wrote temporal, no reconciliation -> fixed b64951c, R2 HIGH /reconcil
     2026-11-03 04:09      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T69-one-store → exit 0 (at new Promise (<anonymous>))
+    2026-11-03 04:11      verified → integrated      merge a1ee3c1, main 91aec47 full check 1133 pass 0 fail (/Users/a1/.hermes/cache/scratch/mole-build/main-check-waveA.txt) · combined checks exit 0
+    2026-11-03 04:11      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (at new Promise (<anonymous>))
 ```
