@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-11-02 19:23      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T59-lesson-revises-tenet → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-11-02 19:25      submitted → verified      reviewer hermes-subagents deleg_6e3ca1c0, deleg_06b5fca1, deleg_359c3a22 (fresh, claude-sonnet-5), round-3 message-only fixes parent-verified · findings: r1 gitignored .mole left branch+worktree (cleanup + committed chec
     2026-11-02 19:25      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T59-lesson-revises-tenet → exit 0 (at new Promise (<anonymous>))
+    2026-11-02 19:26      verified → integrated      merge b8f075f (main check 989 pass, /Users/a1/.hermes/cache/scratch/mole-build/main-check-t59.txt) · combined checks exit 0
+    2026-11-02 19:26      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (at new Promise (<anonymous>))
 ```
