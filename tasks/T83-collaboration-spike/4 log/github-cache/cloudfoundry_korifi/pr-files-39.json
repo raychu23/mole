@@ -1,0 +1,14 @@
+[
+  {
+    "sha": "043b79450989f81988ba7ee3fed267d9446f84f2",
+    "filename": "docs/architecture-decisions/0003-structuring-kubernetes-resource-labels.md",
+    "status": "added",
+    "additions": 36,
+    "deletions": 0,
+    "changes": 36,
+    "blob_url": "https://github.com/cloudfoundry/korifi/blob/5a4f95d6a75dfa9012fcd9164454a428a1165233/docs%2Farchitecture-decisions%2F0003-structuring-kubernetes-resource-labels.md",
+    "raw_url": "https://github.com/cloudfoundry/korifi/raw/5a4f95d6a75dfa9012fcd9164454a428a1165233/docs%2Farchitecture-decisions%2F0003-structuring-kubernetes-resource-labels.md",
+    "contents_url": "https://api.github.com/repos/cloudfoundry/korifi/contents/docs%2Farchitecture-decisions%2F0003-structuring-kubernetes-resource-labels.md?ref=5a4f95d6a75dfa9012fcd9164454a428a1165233",
+    "patch": "@@ -0,0 +1,36 @@\n+# Structuring Kubernetes Resource Labels\n+\n+Date: 2021-09-13\n+\n+## Status\n+\n+Draft\n+\n+## Context\n+\n+Apart from serving as identifying attributes for objects, Labels enable us to map relationships onto system objects in a loosely coupled fashion.\n+i.e., it doesn't imply semantics to the underlying core system. As the CR controllers add and modify the labels,  we want to ensure the correct domain and label structure. \n+We would like to see the labels conform to [kubernetes label recommendations](https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/).\n+\n+The kubernetes recommended labels are tailored more towards describing (name, version, instance, created-by...) the current object. \n+`app.kubernetes.io/part-of` is available to describe relationship with other objects, but it cannot be used in its raw form.\n+We have CRs that have more than one label describing its relationship with objects within the `*.cloudfoundry.org`. \n+Since a set of labels needs to be unique for an object, we will try to come up with our own set of well-defined labels.\n+\n+Referring to the [syntax documentation about labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/), some options to consider\n+\n+- AppGUID: \n+    - workloads.cloudfoundry.org/CFAppGUID\n+    - workloads.cloudfoundry.org/cfappguid\n+    - workloads.cloudfoundry.org/cf-app-guid\n+    \n+## Decision\n+\n+We have decided to use lower-case-kebabs for label-names and API Group as the prefix \n+\n+- AppGUID     : workloads.cloudfoundry.org/app-guid\n+- Build GUID  : workloads.cloudfoundry.org/build-guid\n+- Package GUID: workloads.cloudfoundry.org/package-guid\n+- Process GUID: workloads.cloudfoundry.org/process-guid\n+- Process Type: workloads.cloudfoundry.org/process-type\n+"
+  }
+]
