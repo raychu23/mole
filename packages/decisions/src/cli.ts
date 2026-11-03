@@ -152,7 +152,9 @@ export function decisionCli(pos: string[], flags: Record<string, string | true>,
  *  T58, plan update 11-01 §6: an incident never changes a decision's status by itself. */
 export function incidentCli(pos: string[], flags: Record<string, string | true>, root: string): number {
   const [sub, id] = pos;
-  const usage = 'usage: mole incident list | mole incident suggest <incident-id> | mole incident accept|dismiss <incident-id> --argument <argument-id>';
+  const usage = 'usage: mole incident list | mole incident suggest <incident-id> [--phase P | --at YYYY-MM-DD] | mole incident accept|dismiss <incident-id> --argument <argument-id> [--phase P | --at YYYY-MM-DD]';
+  // T68: default (neither flag) = the phase in force today (D93), same selector suggest/accept/MCP all share
+  const sel = { ...(str(flags.phase) ? { phase: str(flags.phase)! } : {}), ...(str(flags.at) ? { at: str(flags.at)! } : {}) };
   if (sub === 'list') {
     // T62: every incident with its top 3 suggestions (the VS Code panel's Reasoning section); read-only
     try {
@@ -176,7 +178,7 @@ export function incidentCli(pos: string[], flags: Record<string, string | true>,
   }
   try {
     if (sub === 'suggest') {
-      console.log(JSON.stringify({ incident: id, candidates: suggestRevivals(root, id) }, null, 2));
+      console.log(JSON.stringify({ incident: id, candidates: suggestRevivals(root, id, sel) }, null, 2));
       return 0;
     }
     const arg = str(flags.argument);
@@ -184,7 +186,7 @@ export function incidentCli(pos: string[], flags: Record<string, string | true>,
       console.error(usage);
       return 2;
     }
-    const r = sub === 'accept' ? acceptIncident(root, id, arg) : dismissIncident(root, id, arg);
+    const r = sub === 'accept' ? acceptIncident(root, id, arg, sel) : dismissIncident(root, id, arg);
     console.log(JSON.stringify(r, null, 2));
     return 0;
   } catch (error) {

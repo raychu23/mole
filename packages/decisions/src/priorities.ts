@@ -76,8 +76,10 @@ export function phaseAt(phases: Phase[], date: string): Phase {
 }
 
 /** argument id -> the tenet its DEFINITION line tags (#tenet-x; review 1: not node.line, which may be an earlier bare
- *  reference). Unknown tenet, or two definitions with different tenet tags, refused with file:line. */
-function valuesOf(graph: DecisionGraph): Map<string, string> {
+ *  reference). Unknown tenet, or two definitions with different tenet tags, refused with file:line.
+ *  T68: exported so packages/decisions/src/incidents/revive.ts and @mole/proposals can apply the same phase's
+ *  audience to their own evaluations (one source of truth, AGENTS.md #5), instead of a second tag reader. */
+export function tenetValues(graph: DecisionGraph): Map<string, string> {
   const tenets = tenetIds(graph);
   const out = new Map<string, string>();
   for (const [id, defs] of argumentDefinitions(graph)) {
@@ -125,7 +127,7 @@ interface Loaded {
 function load(root: string): Loaded {
   const graph = loadGraph(root);
   const phases = readPriorities(root, graph);
-  const values = valuesOf(graph);
+  const values = tenetValues(graph);
   const { framework } = argumentFramework(graph);
   return { graph, phases, values, attacks: framework.attacks, args: framework.args.map((a) => a.id) };
 }
@@ -135,20 +137,42 @@ function run(l: Loaded, phase?: Phase): PhaseEvaluation {
   return { ...(phase ? { phase: phase.name, audience: phase.order } : {}), labels, decisions: decisionStates(l.graph, labels) };
 }
 
-function pick(l: Loaded, sel: { phase?: string; at?: string }): Phase | undefined {
+/** Resolve a `{ phase, at }` selector against an explicit phase list (no graph/file I/O): `phase` by name,
+ *  `at` = the phase in force on that date, neither = no audience. T68: exported so incident/proposals callers
+ *  that already loaded their own `Phase[]` do not re-implement this resolution rule. */
+export function selectPhase(phases: Phase[], sel: { phase?: string; at?: string }): Phase | undefined {
   if (sel.phase !== undefined) {
-    const p = l.phases.find((x) => x.name === sel.phase);
-    if (!p) throw new PrioritiesError(`no phase '${sel.phase}' in ${FILE} (have: ${l.phases.map((x) => x.name).join(', ') || 'none'})`);
+    const p = phases.find((x) => x.name === sel.phase);
+    if (!p) throw new PrioritiesError(`no phase '${sel.phase}' in ${FILE} (have: ${phases.map((x) => x.name).join(', ') || 'none'})`);
     return p;
   }
-  if (sel.at !== undefined) return phaseAt(l.phases, sel.at);
+  if (sel.at !== undefined) return phaseAt(phases, sel.at);
   return undefined;
 }
 
-/** Labels + decision states under one phase's tenet order (`phase` name or the phase in force `at` a date); neither = no audience. */
+function pick(l: Loaded, sel: { phase?: string; at?: string }): Phase | undefined {
+  return selectPhase(l.phases, sel);
+}
+
+/** Labels + decision states under one phase's tenet order (`phase` name or the phase in force `at` a date); neither = no audience.
+ *  Unchanged T60 behaviour: with neither `phase` nor `at`, this is plain Dung (no audience) -- `mole priorities`'s own default.
+ *  T68's incident/proposals tools use `phaseInForce` below instead, whose default is the phase in force today. */
 export function evaluatePhase(root: string, sel: { phase?: string; at?: string } = {}): PhaseEvaluation {
   const l = load(root);
   return run(l, pick(l, sel));
+}
+
+export const today = (): string => new Date().toISOString().slice(0, 10);
+
+/** T68 D93: the phase selector for incident suggest / proposals compare and their MCP tools. Explicit `phase` or
+ *  `at` wins; absent both, the phase in force TODAY (matching mole_priorities's own pre-existing doc comment,
+ *  reasoning-tools.ts, which `evaluatePhase`'s own default never implemented); no `.mole/priorities.md` = no
+ *  audience, same fallback T60 already uses. Each caller resolves against its OWN root's phases (its own file),
+ *  so a proposal/baseline pair with different priorities.md files is still compared fairly, one side at a time. */
+export function phaseInForce(root: string, sel: { phase?: string; at?: string } = {}, graph?: DecisionGraph): Phase | undefined {
+  const phases = readPriorities(root, graph);
+  if (sel.phase !== undefined || sel.at !== undefined) return selectPhase(phases, sel);
+  return phases.length ? phaseAt(phases, today()) : undefined;
 }
 
 export interface FlippedAttack {

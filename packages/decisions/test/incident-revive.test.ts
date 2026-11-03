@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { evaluate } from '@mole/reasoning';
 import { afterEach, describe, expect, it } from 'vitest';
-import { acceptIncident, argumentFramework, dismissIncident, incidentCli, loadGraph, suggestRevivals } from '../src/index.js';
+import { acceptIncident, argumentFramework, dismissIncident, evaluatePhase, incidentCli, loadGraph, suggestRevivals } from '../src/index.js';
 
 const roots: string[] = [];
 afterEach(() => roots.splice(0).forEach((r) => rmSync(r, { recursive: true, force: true })));
@@ -36,6 +36,80 @@ function repo(incident: string[] = ['decisions: [D1]']): string {
 const labels = (root: string) => evaluate(argumentFramework(loadGraph(root)).framework).labels;
 const snapshot = (root: string) => readdirSync(join(root, '.mole'), { recursive: true }).map(String).sort().map((f) => {
   try { return [f, readFileSync(join(root, '.mole', f), 'utf8')]; } catch { return [f, '<dir>']; }
+});
+
+// T68: best-effort (#tenet-focus) <-> parallel (#tenet-users) mutual attack, modelled on the T61 replay fixture
+// (python-tuf ADR-0002-style trade-off, ILLUSTRATIVE). Under plain Dung the cycle is undecided on both sides (no
+// 'out' candidate at all); under a phase that ranks one tenet first, the loser is 'out' -- a real candidate.
+function phaseRepo(priorities: string): string {
+  const root = mkdtempSync(join(tmpdir(), 'mole-t68-'));
+  roots.push(root);
+  write(root, '.mole/tenets.md', ['# Tenets', '', '## tenet-focus · Spend finite maintainer time moving forward', '', '## tenet-users · Do not strand downstream users', ''].join('\n'));
+  write(root, '.mole/decisions/adr-0002.md', ['---', 'id: ADR-0002', 'title: Pre-1.0 deprecation strategy', 'status: accepted', 'scope: [tuf/]', 'cites: [best-effort]', '---', ''].join('\n'));
+  write(root, '.mole/arguments/0002.argdown', [
+    '<best-effort>: Support the legacy code on a best-effort basis. #tenet-focus',
+    '  -> <parallel>: Maintain the legacy code in parallel for a fixed period. #tenet-users',
+    '',
+    '<parallel>',
+    '  -> <best-effort>',
+    '',
+  ].join('\n'));
+  write(root, '.mole/incidents/inc-legacy-users.md', ['---', 'id: inc-legacy-users', 'title: Downstream users hit an unpatched bug', 'decisions: [ADR-0002]', '---', '',
+    'Users who could not migrate yet needed a maintained legacy client in parallel.', ''].join('\n'));
+  write(root, '.mole/priorities.md', priorities);
+  return root;
+}
+
+describe('T68: incident suggest respects the phase in force (done-when 1, 2)', () => {
+  it('plain Dung (no priorities file): the mutual attack is undecided on both sides -> no revival is found', () => {
+    const root = phaseRepo('');
+    rmSync(join(root, '.mole/priorities.md'));
+    expect(labels(root)).toEqual(expect.objectContaining({ 'best-effort': 'undecided', parallel: 'undecided' }));
+    expect(suggestRevivals(root, 'inc-legacy-users')).toEqual([]);
+  });
+
+  it("a phase that ranks tenet-focus first breaks the tie: parallel is 'out' -- a revival plain Dung never shows, plain-Dung label shown beside it", () => {
+    const root = phaseRepo(['# Priorities', '', '## launch · from 2021-01-01', '', '1. tenet-focus', '2. tenet-users', ''].join('\n'));
+    const s = suggestRevivals(root, 'inc-legacy-users', { phase: 'launch' });
+    expect(s.map((c) => c.argument)).toEqual(['parallel']);
+    expect(s[0]).toEqual(expect.objectContaining({ label: 'out', plainLabel: 'undecided', phase: 'launch', attackers: ['best-effort'] }));
+  });
+
+  it('the opposite phase ranking flips which side is the dissent (tenet-users first -> best-effort is out, but it is the decision\'s own argument, excluded)', () => {
+    const root = phaseRepo(['# Priorities', '', '## scale · from 2021-01-01', '', '1. tenet-users', '2. tenet-focus', ''].join('\n'));
+    expect(suggestRevivals(root, 'inc-legacy-users', { phase: 'scale' })).toEqual([]);
+  });
+
+  it('done-when 3: default (no --phase/--at) uses the phase in force today, not plain Dung', () => {
+    // a single phase 'from' far in the past is in force on any real "today" the test runs on
+    const root = phaseRepo(['# Priorities', '', '## always · from 2000-01-01', '', '1. tenet-focus', '2. tenet-users', ''].join('\n'));
+    const s = suggestRevivals(root, 'inc-legacy-users');
+    expect(s.map((c) => c.argument)).toEqual(['parallel']);
+    expect(s[0]).toEqual(expect.objectContaining({ label: 'out', plainLabel: 'undecided', phase: 'always' }));
+  });
+
+  it('--at picks the phase in force on that date', () => {
+    const root = phaseRepo(['# Priorities', '', '## launch · from 2021-01-01', '', '1. tenet-focus', '2. tenet-users', '',
+      '## scale · from 2024-01-01', '', '1. tenet-users', '2. tenet-focus', ''].join('\n'));
+    expect(suggestRevivals(root, 'inc-legacy-users', { at: '2022-06-01' }).map((c) => c.argument)).toEqual(['parallel']);
+    expect(suggestRevivals(root, 'inc-legacy-users', { at: '2025-06-01' })).toEqual([]);
+  });
+
+  it('accept freezes the phase-resolved attacker as a plain Dung attack: it holds under every later phase (D93)', () => {
+    const root = phaseRepo(['# Priorities', '', '## launch · from 2021-01-01', '', '1. tenet-focus', '2. tenet-users', '',
+      '## scale · from 2024-01-01', '', '1. tenet-users', '2. tenet-focus', ''].join('\n'));
+    const r = acceptIncident(root, 'inc-legacy-users', 'parallel', { phase: 'launch' });
+    expect(r.written).toEqual(['.mole/incidents/inc-legacy-users.md']);
+    expect(readFileSync(join(root, '.mole/incidents/inc-legacy-users.md'), 'utf8')).toMatch(/^attacks: \[best-effort\]$/m);
+    // once accepted, the incident's attack is unvalued -> succeeds in EVERY phase (Dung/Bench-Capon: no value on
+    // either side = unfiltered), so 'parallel' stays 'in' even under 'scale', where it would otherwise lose
+    expect(evaluatePhase(root, { phase: 'scale' }).labels).toEqual(expect.objectContaining({ parallel: 'in', 'best-effort': 'out' }));
+  });
+
+  it('an unknown phase is refused, naming it', () => {
+    const root = phaseRepo(['# Priorities', '', '## launch · from 2021-01-01', '', '1. tenet-focus', '2. tenet-users', ''].join('\n'));
+    expect(() => suggestRevivals(root, 'inc-legacy-users', { phase: 'growth' })).toThrow(/growth/);
+  });
 });
 
 describe('mole incident suggest (done-when 2): read-only, deterministic, evidence on every candidate', () => {

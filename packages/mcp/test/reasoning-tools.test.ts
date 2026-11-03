@@ -88,9 +88,9 @@ describe('T61 mole_incident_suggest', () => {
     const root = repo();
     const before = fingerprint(root);
     const client = await connect(root);
-    const r = await call(client, 'mole_incident_suggest', { incident: 'inc-1' });
+    const r = await call(client, 'mole_incident_suggest', { incident: 'inc-1', phase: 'launch' });
     expect(r.isError).toBeFalsy();
-    expect(r.structuredContent).toEqual({ incident: 'inc-1', candidates: JSON.parse(JSON.stringify(suggestRevivals(root, 'inc-1'))) });
+    expect(r.structuredContent).toEqual({ incident: 'inc-1', candidates: JSON.parse(JSON.stringify(suggestRevivals(root, 'inc-1', { phase: 'launch' }))) });
     expect((r.structuredContent as { candidates: unknown[] }).candidates.length).toBeGreaterThan(0);
     expect(fingerprint(root)).toBe(before);
     const { tools } = await client.listTools();
@@ -100,6 +100,19 @@ describe('T61 mole_incident_suggest', () => {
     const r = await call(await connect(repo()), 'mole_incident_suggest', { incident: 'inc-404' });
     expect(r.isError).toBe(true);
     expect((r.content as Array<{ text: string }>)[0]!.text).toMatch(/inc-404/);
+  });
+  // T68: --at/--phase and the default (phase in force today, not plain Dung)
+  it('T68: takes phase/at, defaulting to the phase in force today', async () => {
+    const root = repo();
+    const client = await connect(root);
+    const at = await call(client, 'mole_incident_suggest', { incident: 'inc-1', at: '2026-10-01' });
+    expect(at.isError).toBeFalsy();
+    expect(at.structuredContent).toEqual({ incident: 'inc-1', candidates: JSON.parse(JSON.stringify(suggestRevivals(root, 'inc-1', { at: '2026-10-01' }))) });
+    const bare = await call(client, 'mole_incident_suggest', { incident: 'inc-1' });
+    expect(bare.structuredContent).toEqual({ incident: 'inc-1', candidates: JSON.parse(JSON.stringify(suggestRevivals(root, 'inc-1'))) });
+    const { tools } = await client.listTools();
+    const t = tools.find((x) => x.name === 'mole_incident_suggest')!;
+    expect(Object.keys((t.inputSchema as { properties: object }).properties).sort()).toEqual(['at', 'incident', 'limit', 'phase']);
   });
 });
 
@@ -112,14 +125,28 @@ describe('T61 mole_proposals_compare', () => {
     write(join(base, 'a'), '.mole/arguments/queue.argdown', ['<use-kafka>: A managed queue is cheaper per message at scale. #tenet-cost', '  -> <ship-fast>', ''].join('\n'));
     const before = [fingerprint(root), fingerprint(join(base, 'a')), fingerprint(join(base, 'b'))];
     const client = await connect(root);
+    const r = await call(client, 'mole_proposals_compare', { phase: 'launch' });
+    expect(r.isError).toBeFalsy();
+    const paths = [join(base, 'a'), join(base, 'b')];
+    expect(r.structuredContent).toEqual(JSON.parse(JSON.stringify(compareProposals(paths, { phase: 'launch' }))));
+    expect([a.name, b.name]).toEqual(['kafka-now', 'keep-queue']);
+    const one = await call(client, 'mole_proposals_compare', { names: ['kafka-now'], phase: 'launch' });
+    expect(one.structuredContent).toEqual({ baselineRevision: a.baselineRevision, proposals: [JSON.parse(JSON.stringify(evaluateProposal(paths[0]!, { phase: 'launch' })))] });
+    expect([fingerprint(root), fingerprint(join(base, 'a')), fingerprint(join(base, 'b'))]).toEqual(before);
+  });
+  // T68: default (no phase/at) uses the phase in force today, not plain Dung; result carries plainDung beside it
+  it('T68: defaults to the phase in force today, and shows plainDung beside the phase-resolved changes', async () => {
+    const root = repo();
+    const base = tmp('mole-t61-props-at-');
+    createProposal({ repo: root, name: 'kafka-now', path: join(base, 'a') });
+    createProposal({ repo: root, name: 'keep-queue', path: join(base, 'b') });
+    const client = await connect(root);
     const r = await call(client, 'mole_proposals_compare', {});
     expect(r.isError).toBeFalsy();
     const paths = [join(base, 'a'), join(base, 'b')];
     expect(r.structuredContent).toEqual(JSON.parse(JSON.stringify(compareProposals(paths))));
-    expect([a.name, b.name]).toEqual(['kafka-now', 'keep-queue']);
-    const one = await call(client, 'mole_proposals_compare', { names: ['kafka-now'] });
-    expect(one.structuredContent).toEqual({ baselineRevision: a.baselineRevision, proposals: [JSON.parse(JSON.stringify(evaluateProposal(paths[0]!)))] });
-    expect([fingerprint(root), fingerprint(join(base, 'a')), fingerprint(join(base, 'b'))]).toEqual(before);
+    const proposals = (r.structuredContent as { proposals: Array<{ plainDung: unknown; phase: unknown }> }).proposals;
+    expect(proposals.every((p) => 'plainDung' in p && 'phase' in p)).toBe(true);
   });
   it('no proposals, or an unknown name, is an isError result; it takes names, never filesystem paths', async () => {
     const root = repo();
@@ -131,7 +158,7 @@ describe('T61 mole_proposals_compare', () => {
     expect(bad.isError).toBe(true);
     const { tools } = await client.listTools();
     const t = tools.find((x) => x.name === 'mole_proposals_compare')!;
-    expect(Object.keys((t.inputSchema as { properties: object }).properties)).toEqual(['names']);
+    expect(Object.keys((t.inputSchema as { properties: object }).properties).sort()).toEqual(['at', 'names', 'phase']);
   });
 });
 

@@ -1,0 +1,38 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T68-incident-under-phase/packages/proposals
+
+ ✓ test/lesson.test.ts (10 tests) 7111ms
+   ✓ mole-proposals lesson (T59) > drafts the tenet on a proposal branch, lists decisions to re-review, leaves the approved checkout untouched  1197ms
+   ✓ mole-proposals lesson (T59) > refuses a lesson with no owner, writing nothing  863ms
+   ✓ mole-proposals lesson (T59) > refuses a lesson with no learned_from incident, writing nothing  1062ms
+   ✓ mole-proposals lesson (T59) > refuses a lesson with an unknown incident, writing nothing  772ms
+   ✓ mole-proposals lesson (T59) > refuses a lesson with an unknown tenet, writing nothing  809ms
+   ✓ mole-proposals lesson (T59) > refuses records that are not committed at the baseline (.mole gitignored), leaving no branch or worktree  615ms
+   ✓ mole-proposals lesson (T59) > validates against the baseline commit, not the working tree (skip-worktree edit to a retired tenet)  633ms
+   ✓ mole-proposals lesson (T59) > refuses an uncommitted lesson (the draft must come from the pinned baseline)  302ms
+   ✓ mole-proposals lesson (T59) > refuses a lesson with no Proposed tenet section, and an unknown lesson id  722ms
+ ✓ test/phase.test.ts (6 tests) 7186ms
+   ✓ T68: evaluateProposal under the phase in force (done-when 1, 2, STOP) > plain Dung always shows the change (the cycle breaks because security-window is unranked and unattacked)  882ms
+   ✓ T68: evaluateProposal under the phase in force (done-when 1, 2, STOP) > under 'launch' (tenet-focus wins at baseline) the phase-resolved change is REAL: best-effort holds, then the untagged attacker defeats it in every phase  1214ms
+   ✓ T68: evaluateProposal under the phase in force (done-when 1, 2, STOP) > under 'scale' (tenet-users already wins at baseline) ADR-0002 is ALREADY defeated: the proposal's phase-resolved change is a NO-OP, unlike plain Dung's contested->defeated (the T61 replay case)  1534ms
+   ✓ T68: evaluateProposal under the phase in force (done-when 1, 2, STOP) > done-when 3: default (no --phase/--at) uses the phase in force today, not plain Dung  1185ms
+   ✓ T68: evaluateProposal under the phase in force (done-when 1, 2, STOP) > --at resolves each side against its own priorities.md  1555ms
+   ✓ T68: evaluateProposal under the phase in force (done-when 1, 2, STOP) > no priorities file: changes equals plainDung (T60 no-audience fallback, unchanged)  816ms
+ ✓ test/list.test.ts (2 tests) 7528ms
+   ✓ T62 listProposals / summarizeProposals (one source for MCP, CLI and panel) > lists only worktrees createProposal made for this repo, on their own branch, sorted by name  1430ms
+   ✓ T62 listProposals / summarizeProposals (one source for MCP, CLI and panel) > summarize: none -> no proposals; one -> its evaluation; two+ -> compareProposals; unknown name refused  6098ms
+ ✓ test/cli.test.ts (8 tests) 16143ms
+   ✓ mole-proposals CLI (T56) > two proposals from one pinned baseline: compare shows which arguments and decisions each one changes, baseline untouched  3660ms
+   ✓ mole-proposals CLI (T56) > evaluate reports one proposal against its baseline  3147ms
+   ✓ mole-proposals CLI (T56) > rejects unsafe names, existing paths and existing branches without writing anything  2980ms
+   ✓ mole-proposals CLI (T56) > refuses a non-git folder and a proposal path that is not a Mole proposal  647ms
+   ✓ mole-proposals CLI (T56) > reports a deleted decision record even when it cites no arguments  1102ms
+   ✓ mole-proposals CLI (T56) > refuses a proposal path inside the repository git directory  513ms
+   ✓ mole-proposals CLI (T56) > reports a missing baseline commit cleanly  1805ms
+   ✓ mole-proposals CLI (T56) > compare refuses proposals made from different baselines  2289ms
+
+ Test Files  4 passed (4)
+      Tests  26 passed (26)
+   Start at  02:16:18
+   Duration  16.50s (transform 466ms, setup 0ms, collect 6.42s, tests 37.97s, environment 0ms, prepare 385ms)
+

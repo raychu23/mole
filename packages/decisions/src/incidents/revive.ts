@@ -18,6 +18,7 @@ import { evaluate, type Label } from '@mole/reasoning';
 import { argumentDefinitions, type ArgumentDefinition } from '../argdown/definitions.js';
 import { argumentFramework } from '../argdown/framework.js';
 import { frontMatter, loadGraph } from '../graph.js';
+import { phaseInForce, tenetValues, type Phase } from '../priorities.js';
 import type { DecisionGraph, GraphNode } from '../types.js';
 
 export class IncidentError extends Error {}
@@ -35,7 +36,13 @@ export interface RevivalCandidate {
   /** the losing argument the incident may vindicate */
   argument: string;
   text: string;
+  /** label under the resolved phase (or plain Dung when none applies); this is what admits a candidate */
   label: Label;
+  /** T68: always the plain-Dung label (no audience), shown beside `label` so a phase-driven candidate is never
+   *  silently substituted for the plain-Dung reading (STOP clause: show both, never pick silently) */
+  plainLabel: Label;
+  /** T68: the phase name `label` was resolved under; undefined = no audience (no priorities file, or none in force) */
+  phase?: string;
   /** the decision whose reasoning it lost in */
   decision: string;
   /** its current IN attackers -- what accept would attack */
@@ -114,14 +121,28 @@ function overlaps(a: string, b: string): boolean {
 
 interface Evaluated {
   graph: DecisionGraph;
+  /** phase-resolved labels (or plain Dung, when no phase applies) -- what admits/shows a candidate */
   labels: Record<string, Label>;
+  /** T68: always the plain-Dung reading, shown beside `labels` on every candidate */
+  plainLabels: Record<string, Label>;
   attacks: [string, string][];
+  phase?: Phase;
 }
 
-function evaluated(root: string): Evaluated {
+/** T68: `sel` ({ phase, at }) picks the audience the same way `@mole/decisions`' T60 priorities does; absent both,
+ *  the phase in force TODAY is used (D93), not plain Dung -- `phaseInForce` (priorities.ts) is the one place that
+ *  rule lives. An argument with no #tenet- tag, or a phase with no priorities file, is unaffected (unfiltered
+ *  attack / no audience), identical to plain Dung -- so every existing (no-priorities-file) caller is unchanged. */
+function evaluated(root: string, sel: { phase?: string; at?: string } = {}): Evaluated {
   const graph = loadGraph(root);
   const { framework } = argumentFramework(graph);
-  return { graph, labels: evaluate(framework).labels, attacks: framework.attacks };
+  const plainLabels = evaluate(framework).labels;
+  const phase = phaseInForce(root, sel, graph);
+  if (!phase) return { graph, labels: plainLabels, plainLabels, attacks: framework.attacks };
+  const values = tenetValues(graph);
+  const args = framework.args.map((a) => ({ ...a, ...(values.has(a.id) ? { value: values.get(a.id)! } : {}) }));
+  const labels = evaluate({ args, attacks: framework.attacks }, phase.order).labels;
+  return { graph, labels, plainLabels, attacks: framework.attacks, phase };
 }
 
 /** Every argument attack-connected (either direction, any distance) to the decision's cited arguments.
@@ -176,6 +197,8 @@ function candidates(root: string, ev: Evaluated, inc: IncidentRecord): RevivalCa
         argument: arg,
         text,
         label: ev.labels[arg]!,
+        plainLabel: ev.plainLabels[arg]!,
+        ...(ev.phase ? { phase: ev.phase.name } : {}),
         decision: d.id,
         attackers,
         alsoReinstates,
@@ -194,17 +217,22 @@ function withKnockOn(ev: Evaluated, inc: IncidentRecord, c: RevivalCandidate): R
 
 export const DEFAULT_SUGGEST_LIMIT = 20;
 
+export interface PhaseSelector {
+  phase?: string;
+  at?: string;
+}
+
 /** Top `limit` candidates by score (default 20), each with its dry-run knock-on. Read-only. */
 /** T62 `mole incident list`: the incident's own title (from its record, not the graph node, whose title is the id)
  *  and its top suggestions. Read-only. */
-export function incidentSummary(root: string, incidentId: string, limit = 3): { id: string; title: string; candidates: RevivalCandidate[] } {
-  const ev = evaluated(root);
+export function incidentSummary(root: string, incidentId: string, limit = 3, sel: PhaseSelector = {}): { id: string; title: string; candidates: RevivalCandidate[] } {
+  const ev = evaluated(root, sel);
   const inc = readIncident(root, ev.graph, incidentId);
   return { id: incidentId, title: inc.title, candidates: candidates(root, ev, inc).slice(0, limit).map((c) => withKnockOn(ev, inc, c)) };
 }
 
-export function suggestRevivals(root: string, incidentId: string, opts: { limit?: number } = {}): RevivalCandidate[] {
-  const ev = evaluated(root);
+export function suggestRevivals(root: string, incidentId: string, opts: { limit?: number } & PhaseSelector = {}): RevivalCandidate[] {
+  const ev = evaluated(root, { phase: opts.phase, at: opts.at });
   const inc = readIncident(root, ev.graph, incidentId);
   return candidates(root, ev, inc).slice(0, opts.limit ?? DEFAULT_SUGGEST_LIMIT).map((c) => withKnockOn(ev, inc, c));
 }
@@ -261,8 +289,8 @@ export interface IncidentWrite {
   alsoReinstates?: string[];
 }
 
-export function acceptIncident(root: string, incidentId: string, argumentId: string): IncidentWrite {
-  const ev = evaluated(root);
+export function acceptIncident(root: string, incidentId: string, argumentId: string, sel: PhaseSelector = {}): IncidentWrite {
+  const ev = evaluated(root, sel);
   const inc = readIncident(root, ev.graph, incidentId);
   if (inc.dismissed.includes(argumentId)) throw new IncidentError(`${argumentId} was already dismissed for ${inc.id}`);
   // already accepted (or hand-recorded): nothing to complete. `revives:` is the record; the attack comes ONLY from the
