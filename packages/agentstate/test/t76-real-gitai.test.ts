@@ -118,3 +118,19 @@ describe('T76 review fix: git_ai_standard_v3.0.0.md §1.2.3.1 id-prefix exclusio
     expect(raw[0]).toMatchObject({ file: 'f.js', startLine: 1, endLine: 5, agent: 'cursor', model: 'gpt-5' });
   });
 });
+
+describe('T76 review 2 (low): human-shaped id parts fail closed', () => {
+  const base = { files: [{ file: 'a.js', sessions: [] as { sessionId: string; ranges: { startLine: number; endLine: number }[] }[] }], meta: {} as Record<string, unknown> };
+  const one = (sessionId: string, meta: Record<string, unknown> = {}) =>
+    gitAiToRawIntents({ files: [{ file: 'a.js', sessions: [{ sessionId, ranges: [{ startLine: 1, endLine: 2 }] }] }], meta } as never);
+  it('composite id whose SUB part is h_-prefixed is excluded', () => {
+    expect(one('s_a1b2c3::h_feedface', { humans: { h_feedface: {} }, sessions: { s_a1b2c3: {} } })).toHaveLength(0);
+  });
+  it('upper-case H_ prefix with no humans map is excluded', () => {
+    expect(one('H_deadbeef')).toHaveLength(0);
+  });
+  it('a plain AI composite id still imports', () => {
+    expect(one('s_a1b2c3::t_00ff', { sessions: { s_a1b2c3: {} } })).toHaveLength(1);
+    void base;
+  });
+});

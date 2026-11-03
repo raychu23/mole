@@ -96,9 +96,14 @@ export function parseGitAiNote(note: string): { files: GitAiFileEntry[]; meta: G
 //     it; treating a bare prefix match as "unknown, import it" would be the wrong-link class this task exists
 //     to catch, so an h_-prefixed id with no humans map is still excluded (treated as human / skipped).
 function isHumanRow(sessionId: string, humans: GitAiMetadata['humans']): boolean {
-  if (sessionId.startsWith('h_')) return true; // spec: h_ prefix always identifies a human key, map or not
-  const baseId = sessionId.split('::')[0]!;
-  if (humans && (sessionId in humans || baseId in humans)) return true;
+  // spec: h_ prefix always identifies a human key, map or not. The spec never writes composite h_ ids or an
+  // upper-case prefix, but fail closed on both: any part of a base::sub id that is human-shaped or a humans key
+  // excludes the row (review 2, T76: s_x::h_y and H_ leaked).
+  const parts = sessionId.split('::');
+  for (const part of [sessionId, ...parts]) {
+    if (/^h_/i.test(part)) return true;
+    if (humans && part in humans) return true;
+  }
   return false;
 }
 
