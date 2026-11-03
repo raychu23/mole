@@ -1,22 +1,22 @@
 ---
-state: submitted
+state: verified
 owner: codex-proposals
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: build/t56-proposals-1102
 worktree: /Users/a1/.hermes/cache/scratch/mole-build/T56
 base: 0029416
-reviewer:
-updated: 2026-11-02 18:17
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+reviewer: hermes-subagent deleg_99bfc656 + deleg_2454d9c3 (fresh, claude-sonnet-5)
+updated: 2026-11-02 18:18
+status: ledger verified
+next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
 claimed: 2026-11-02 17:02
 ---
 ```notes
 T56-feature-proposal-branches      ledger task (rules.md §3 code features)      project tasks
     goal                    D67 first working slice: create isolated git worktree branches of decision records, evaluate competing proposals against the same pinned approved baseline with the existing graph/argument engine, and compare explained affected outcomes without mutating baseline records.
     done-when               Primary prior art and fit check saved before code; failing test first; real temp-git-repo CLI create/evaluate/compare smoke; two proposal branches use same immutable baseline; approved record tree unchanged; malformed input/collisions/dirty-root cases safe; deterministic output includes source ids and base revision; tests and typecheck pass.
-    status                  2026-11-02 submitted      report: tasks/T56-feature-proposal-branches/2 insights.md · checks exit 0 · note: worktree npm run check after fast-forw
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    status                  2026-11-02 verified      reviewer hermes-subagent deleg_99bfc656 + deleg_2454d9c3 (fresh, claude-sonnet-5) · findings: round 1 FAIL fixed 2a6c09b
+    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
     pinned
     mode                    one worker
     boundary                New packages/proposals/** plus minimal build references only if needed, no edits to existing decisions CLI/capture/cascade/reasoning; main live records untouched.

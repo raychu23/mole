@@ -5,4 +5,6 @@ ledger (newest last, nothing deleted)
     2026-11-02 17:02      ready → running      worktree /Users/a1/.hermes/cache/scratch/mole-build/T56 · branch build/t56-proposals-1102 · base 0029416
     2026-11-02 18:17      running → submitted      report: tasks/T56-feature-proposal-branches/2 insights.md · checks exit 0 · note: worktree npm run check after fast-forward to main (has 539db48 MCP test isolation), generated data/m0-engine-report.json copied from main 
     2026-11-02 18:17      checks ran: npm run check in /Users/a1/.hermes/cache/scratch/mole-build/T56 → exit 0 (at new Promise (<anonymous>))
+    2026-11-02 18:18      submitted → verified      reviewer hermes-subagent deleg_99bfc656 + deleg_2454d9c3 (fresh, claude-sonnet-5) · findings: round 1 FAIL fixed 2a6c09b (deleted uncited decision invisible, path inside .git, raw trace), round 2 PASS · checks exit 0
+    2026-11-02 18:18      checks ran: npm run check in /Users/a1/.hermes/cache/scratch/mole-build/T56 → exit 0 (at new Promise (<anonymous>))
 ```
