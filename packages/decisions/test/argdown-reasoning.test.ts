@@ -74,4 +74,41 @@ describe('Argdown relations through packages/reasoning evaluate() (T48 end to en
     expect(framework.attacks).toEqual([['A', 'C']]); // A attacks C; B's "+" edge is support, not fed into the Framework
     expect(supportedBy.get('A')).toEqual(['B']); // display-only: B supports A
   });
+
+  // T67: self-attack semantics decision (prior-art.md D1), checked end to end through this package's
+  // own argumentFramework() + packages/reasoning's evaluate() -- the two primary sources (Caminada's
+  // complete-labelling definition; ICCMA's own IN/UNDEC notation, both prior-art.md #2/#3) agree a
+  // self-attacking argument with no other attacker is UNDECIDED under grounded, not OUT: it can never
+  // be 'in' (attacks itself, so never conflict-free) and can never be 'out' either (its only attacker,
+  // itself, can never be 'in' first). Carneades's own dung.go was NOT RUN (no local Go toolchain/
+  // network -- prior-art.md #4); this is the Caminada/ICCMA reference instead.
+  it('a bare self-attacking argument (no other attacker) is undecided under grounded, matching the Caminada/ICCMA reference', () => {
+    const source = '[A]: a self-contradictory claim\n  - [A]\n';
+    const root = repo(source);
+    const graph = loadGraph(root);
+    expect(graph.problems).toHaveLength(0);
+
+    const { framework } = argumentFramework(graph);
+    expect(framework.attacks).toEqual([['A', 'A']]);
+
+    const result = evaluate(framework);
+    expect(result.labels['A']).toBe('undecided');
+  });
+
+  // Dung's documented "self-defeat poisons anything it attacks" phenomenon (prior-art.md D1,
+  // Baumann/Spanring/Woltran AAAI-20): a self-attacker that also attacks B leaves B undecided too,
+  // because B's only attacker (the self-attacker) can never become 'in' to make B 'out'.
+  it('a self-attacker that also attacks another argument leaves that argument undecided too (no false reinstatement)', () => {
+    const source = '[A]: a self-contradictory claim\n  - [A]\n\n[A]\n  -> [B]: B, attacked only by the self-contradictory claim\n';
+    const root = repo(source);
+    const graph = loadGraph(root);
+    expect(graph.problems).toHaveLength(0);
+
+    const { framework } = argumentFramework(graph);
+    expect(framework.attacks.sort()).toEqual([['A', 'A'], ['A', 'B']]);
+
+    const result = evaluate(framework);
+    expect(result.labels['A']).toBe('undecided');
+    expect(result.labels['B']).toBe('undecided');
+  });
 });

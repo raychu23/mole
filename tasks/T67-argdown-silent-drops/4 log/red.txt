@@ -1,0 +1,236 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T67-argdown-silent-drops
+
+ ✓ packages/decisions/test/argdown-prose-reasons.test.ts (18 tests) 52ms
+stderr | packages/decisions/test/argdown-parser.test.ts > parseArgdown reports problems instead of silently accepting invalid/unsupported syntax (T48 P1) > a blank line inside an indented relation block: real @argdown/core rejects it too, and this parser must not attach the relation across the blank
+[build-model/ModelPlugin]: Error: No "ast" field in response.
+    at createMissingResponseFieldError (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@argdown/core/dist/ArgdownPluginError.js:13:12)
+    at checkResponseFields (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@argdown/core/dist/ArgdownPluginError.js:18:19)
+    at ModelPlugin.run (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@argdown/core/dist/plugins/ModelPlugin.js:186:9)
+    at ArgdownApplication.run (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@argdown/core/dist/ArgdownApplication.js:212:32)
+    at realArgdownRejects (/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T67-argdown-silent-drops/packages/decisions/test/argdown-parser.test.ts:122:26)
+    at /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T67-argdown-silent-drops/packages/decisions/test/argdown-parser.test.ts:132:12
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20
+    at new Promise (<anonymous>)
+
+ ✓ packages/decisions/test/argdown-derive-adr.test.ts (5 tests) 17ms
+stderr | packages/decisions/test/argdown-parser.test.ts > parseArgdown reports problems instead of silently accepting invalid/unsupported syntax (T48 P1) > two relations separated by a blank line (both orphaned): neither relation is attached, both reported
+[build-model/ModelPlugin]: Error: No "ast" field in response.
+    at createMissingResponseFieldError (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@argdown/core/dist/ArgdownPluginError.js:13:12)
+    at checkResponseFields (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@argdown/core/dist/ArgdownPluginError.js:18:19)
+    at ModelPlugin.run (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@argdown/core/dist/plugins/ModelPlugin.js:186:9)
+    at ArgdownApplication.run (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@argdown/core/dist/ArgdownApplication.js:212:32)
+    at realArgdownRejects (/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T67-argdown-silent-drops/packages/decisions/test/argdown-parser.test.ts:122:26)
+    at /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T67-argdown-silent-drops/packages/decisions/test/argdown-parser.test.ts:152:12
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20
+    at new Promise (<anonymous>)
+
+stderr | packages/decisions/test/argdown-parser.test.ts > parseArgdown reports problems instead of silently accepting invalid/unsupported syntax (T48 P1) > a relation token on the very first line is reported (real @argdown/core reports a parser error too)
+[build-model/ModelPlugin]: Error: No "ast" field in response.
+    at createMissingResponseFieldError (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@argdown/core/dist/ArgdownPluginError.js:13:12)
+    at checkResponseFields (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@argdown/core/dist/ArgdownPluginError.js:18:19)
+    at ModelPlugin.run (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@argdown/core/dist/plugins/ModelPlugin.js:186:9)
+    at ArgdownApplication.run (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@argdown/core/dist/ArgdownApplication.js:212:32)
+    at realArgdownRejects (/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T67-argdown-silent-drops/packages/decisions/test/argdown-parser.test.ts:122:26)
+    at /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T67-argdown-silent-drops/packages/decisions/test/argdown-parser.test.ts:170:12
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T67-argdown-silent-drops/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20
+    at new Promise (<anonymous>)
+
+ ❯ packages/decisions/test/argdown-parser.test.ts (15 tests | 3 failed) 379ms
+   ✓ parseArgdown vs @argdown/core (real parser oracle) > support-attack.argdown: matches @argdown/core relation counts, directions and types 20ms
+   ✓ parseArgdown vs @argdown/core (real parser oracle) > undercut.argdown: matches @argdown/core (Exception --undercuts--> Base) 2ms
+   ✓ parseArgdown vs @argdown/core (real parser oracle) > ignores a non-dialectical token (><) and plain prose: no relation emitted, but reports the >< 1ms
+   ✓ parseArgdown vs @argdown/core (real parser oracle) > dedupes a relation repeated via a bare reference block, same as @argdown/core 2ms
+   × parseArgdown vs @argdown/core (real parser oracle) > keeps a self-attack relation (matches real @argdown/core: A attacks A is not dropped) 27ms
+     → expected [] to have a length of 1 but got +0
+   × parseArgdown vs @argdown/core (real parser oracle) > keeps a self-support relation too (argdown-core treats all relation kinds uniformly) 1ms
+     → expected [] to have a length of 1 but got +0
+   × parseArgdown vs @argdown/core (real parser oracle) > keeps a self-undercut relation too 1ms
+     → expected [] to have a length of 1 but got +0
+   ✓ parseArgdown reports problems instead of silently accepting invalid/unsupported syntax (T48 P1) > a blank line inside an indented relation block: real @argdown/core rejects it too, and this parser must not attach the relation across the blank 7ms
+   ✓ parseArgdown reports problems instead of silently accepting invalid/unsupported syntax (T48 P1) > unindented relation lines under a title: real @argdown/core errors, this parser reports them instead of dropping silently 2ms
+   ✓ parseArgdown reports problems instead of silently accepting invalid/unsupported syntax (T48 P1) > two relations separated by a blank line (both orphaned): neither relation is attached, both reported 59ms
+   ✓ parseArgdown reports problems instead of silently accepting invalid/unsupported syntax (T48 P1) > a blank line with nothing relation-shaped after it is not reported (matches @argdown/core: fine on its own) 0ms
+   ✓ parseArgdown reports problems instead of silently accepting invalid/unsupported syntax (T48 P1) > a relation token on the very first line is reported (real @argdown/core reports a parser error too) 43ms
+   ✓ parseArgdown reports problems instead of silently accepting invalid/unsupported syntax (T48 P1) > the `><` contradiction token is reported as intentionally unsupported, matching real @argdown/core emitting a "contradictory" relation this EdgeType has no slot for 175ms
+   ✓ parseArgdown reports problems instead of silently accepting invalid/unsupported syntax (T48 P1) > PCS premise/conclusion lines are ignored but reported exactly once 7ms
+   ✓ parseArgdown reports problems instead of silently accepting invalid/unsupported syntax (T48 P1) > an inference-rule separator line (----) alone is reported as unsupported PCS syntax, not treated as a relation token 6ms
+ ❯ packages/decisions/test/argdown-reasoning.test.ts (5 tests | 2 failed) 471ms
+   ✓ Argdown relations through packages/reasoning evaluate() (T48 end to end) > Nixon diamond (mutual attack, no defender): both arguments undecided, same as the memo's worked example 97ms
+   ✓ Argdown relations through packages/reasoning evaluate() (T48 end to end) > undercut example: the exception undercuts the general rule, collapsed to a plain attack 60ms
+   ✓ Argdown relations through packages/reasoning evaluate() (T48 end to end) > a supports edge is recorded in the graph but excluded from the Framework (memo §4.3: plain Dung has no support slot) 87ms
+   × Argdown relations through packages/reasoning evaluate() (T48 end to end) > a bare self-attacking argument (no other attacker) is undecided under grounded, matching the Caminada/ICCMA reference 92ms
+     → expected [] to deeply equal [ [ 'A', 'A' ] ]
+   × Argdown relations through packages/reasoning evaluate() (T48 end to end) > a self-attacker that also attacks another argument leaves that argument undecided too (no false reinstatement) 135ms
+     → expected [ [ 'B', 'A' ] ] to deeply equal [ [ 'A', 'A' ], [ 'A', 'B' ] ]
+ ❯ packages/decisions/test/argdown-loader.test.ts (6 tests | 2 failed) 550ms
+   ✓ loadArgdown via loadGraph > loads a .argdown file under .mole/arguments into argument nodes + edges 100ms
+   ✓ loadArgdown via loadGraph > loads an ```argdown fenced block inside a markdown file, with the right file:line 51ms
+   ✓ loadArgdown via loadGraph > a repo with no .mole/arguments is unaffected (no problems, no argument nodes) 93ms
+   × loadArgdown via loadGraph > a self-attack edge survives into the graph (not silently dropped) 93ms
+     → expected [] to have a length of 1 but got +0
+   × loadArgdown via loadGraph > a duplicate argument id across two files produces a problem naming both files/lines 130ms
+     → expected [] to have a length of 1 but got +0
+   ✓ loadArgdown via loadGraph > a bare cross-file reference to an existing id is NOT reported as a duplicate 82ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/decisions/test/argdown-loader.test.ts > loadArgdown via loadGraph > a self-attack edge survives into the graph (not silently dropped)
+AssertionError: expected [] to have a length of 1 but got +0
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 0[39m
+
+ ❯ packages/decisions/test/argdown-loader.test.ts:72:21
+     70|     expect(graph.problems).toHaveLength(0);
+     71|     const attacks = graph.edges.filter((e) => e.type === 'attacks');
+     72|     expect(attacks).toHaveLength(1);
+       |                     ^
+     73|     expect(attacks[0]).toMatchObject({ from: 'A', to: 'A' });
+     74|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  packages/decisions/test/argdown-loader.test.ts > loadArgdown via loadGraph > a duplicate argument id across two files produces a problem naming both files/lines
+AssertionError: expected [] to have a length of 1 but got +0
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 0[39m
+
+ ❯ packages/decisions/test/argdown-loader.test.ts:85:28
+     83|     });
+     84|     const graph = loadGraph(root);
+     85|     expect(graph.problems).toHaveLength(1);
+       |                            ^
+     86|     const p = graph.problems[0]!;
+     87|     expect(p.file).toBe('.mole/arguments/second.argdown');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  packages/decisions/test/argdown-parser.test.ts > parseArgdown vs @argdown/core (real parser oracle) > keeps a self-attack relation (matches real @argdown/core: A attacks A is not dropped)
+AssertionError: expected [] to have a length of 1 but got +0
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 0[39m
+
+ ❯ packages/decisions/test/argdown-parser.test.ts:93:30
+     91|   it('keeps a self-attack relation (matches real @argdown/core: A atta…
+     92|     const parsed = parseArgdown('[A]: a\n  - [A]\n');
+     93|     expect(parsed.relations).toHaveLength(1);
+       |                              ^
+     94|     expect(parsed.relations[0]).toMatchObject({ from: 'A', to: 'A', ty…
+     95|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  packages/decisions/test/argdown-parser.test.ts > parseArgdown vs @argdown/core (real parser oracle) > keeps a self-support relation too (argdown-core treats all relation kinds uniformly)
+AssertionError: expected [] to have a length of 1 but got +0
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 0[39m
+
+ ❯ packages/decisions/test/argdown-parser.test.ts:99:30
+     97|   it('keeps a self-support relation too (argdown-core treats all relat…
+     98|     const parsed = parseArgdown('[A]: a\n  + [A]\n');
+     99|     expect(parsed.relations).toHaveLength(1);
+       |                              ^
+    100|     expect(parsed.relations[0]).toMatchObject({ from: 'A', to: 'A', ty…
+    101|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  packages/decisions/test/argdown-parser.test.ts > parseArgdown vs @argdown/core (real parser oracle) > keeps a self-undercut relation too
+AssertionError: expected [] to have a length of 1 but got +0
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 1[39m
+[31m+ 0[39m
+
+ ❯ packages/decisions/test/argdown-parser.test.ts:105:30
+    103|   it('keeps a self-undercut relation too', () => {
+    104|     const parsed = parseArgdown('<A>: a\n  <_ <A>\n');
+    105|     expect(parsed.relations).toHaveLength(1);
+       |                              ^
+    106|     expect(parsed.relations[0]).toMatchObject({ from: 'A', to: 'A', ty…
+    107|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  packages/decisions/test/argdown-reasoning.test.ts > Argdown relations through packages/reasoning evaluate() (T48 end to end) > a bare self-attacking argument (no other attacker) is undecided under grounded, matching the Caminada/ICCMA reference
+AssertionError: expected [] to deeply equal [ [ 'A', 'A' ] ]
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [[39m
+[32m-   [[39m
+[32m-     "A",[39m
+[32m-     "A",[39m
+[32m-   ],[39m
+[32m- ][39m
+[31m+ [][39m
+
+ ❯ packages/decisions/test/argdown-reasoning.test.ts:92:31
+     90| 
+     91|     const { framework } = argumentFramework(graph);
+     92|     expect(framework.attacks).toEqual([['A', 'A']]);
+       |                               ^
+     93| 
+     94|     const result = evaluate(framework);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  packages/decisions/test/argdown-reasoning.test.ts > Argdown relations through packages/reasoning evaluate() (T48 end to end) > a self-attacker that also attacks another argument leaves that argument undecided too (no false reinstatement)
+AssertionError: expected [ [ 'B', 'A' ] ] to deeply equal [ [ 'A', 'A' ], [ 'A', 'B' ] ]
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[2m    [[22m
+[32m-     "A",[39m
+[32m-     "A",[39m
+[32m-   ],[39m
+[32m-   [[39m
+[31m+     "B",[39m
+[2m      "A",[22m
+[32m-     "B",[39m
+[2m    ],[22m
+[2m  ][22m
+
+ ❯ packages/decisions/test/argdown-reasoning.test.ts:108:38
+    106| 
+    107|     const { framework } = argumentFramework(graph);
+    108|     expect(framework.attacks.sort()).toEqual([['A', 'A'], ['A', 'B']]);
+       |                                      ^
+    109| 
+    110|     const result = evaluate(framework);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+
+ Test Files  3 failed | 2 passed (5)
+      Tests  7 failed | 42 passed (49)
+   Start at  02:03:52
+   Duration  6.58s (transform 2.57s, setup 0ms, collect 12.04s, tests 1.47s, environment 2ms, prepare 1.65s)
+
