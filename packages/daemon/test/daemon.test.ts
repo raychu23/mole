@@ -240,7 +240,9 @@ describe('daemon', () => {
     const n = await until(() => c.map('src/svc.ts'), (x) => x.state === 'ok');
     expect(n.state).toBe('ok');
     expect(n.nodes.some((x) => x.name === 'clamp')).toBe(true);
-    expect((await c.status()).state).toBe('ready');
+    // map answers 'ok' as soon as THIS file is indexed; the whole repo may still be indexing under load
+    // (main check 11-03 08:00, load ~23: state was 'indexing'). Wait for ready, bounded like every other wait here.
+    expect((await until(() => c.status(), (s) => s.state === 'ready')).state).toBe('ready');
 
     writeFileSync(join(root, 'src/svc.ts'), SMALL['src/svc.ts'] + 'export function extra() {\n  return 1;\n}\n');
     await c.call('update', { paths: ['src/svc.ts'] });
