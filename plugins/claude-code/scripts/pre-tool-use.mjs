@@ -21,7 +21,9 @@ function main() {
   const formRoot = sameFormRoot(root, input.cwd);
   const rel = relative(formRoot, abs);
   if (rel.startsWith('..')) return; // outside the repo: nothing for Mole's decisions to govern
-  const list = governingDecisions(mole, root, new Set([rel]));
+  // T64: unscoped / repo-wide decisions ranked by meaning against the edited path + the new text (clipped)
+  const newText = String(input.tool_input?.new_string ?? input.tool_input?.content ?? '').slice(0, 4000);
+  const list = governingDecisions(mole, root, new Set([rel]), { text: `${rel}\n${newText}` });
   if (!list.length) return;
   const already = loadAddedDecisions(input.session_id);
   const fresh = list.filter((d) => !already.has(d.id));

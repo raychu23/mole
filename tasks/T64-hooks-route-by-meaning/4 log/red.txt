@@ -1,0 +1,9 @@
+   × T64 bm25Rank (lib.mjs) mirrors packages/decisions route/bm25.ts > same scores and order on a fixture corpus and several queries 3ms
+   × T64 governingDecisions ranks unscoped decisions by the text of the moment > with text: unscoped + repo-wide ranked by BM25, zero-score dropped, capped; file-scoped matches still first 123ms
+   ✓ T64 governingDecisions ranks unscoped decisions by the text of the moment > without text: unscoped records stay silent (old behaviour); only literal repo-wide ones, by id 33ms
+   × T64 UserPromptSubmit hook > is registered in hooks.json 1ms
+   × T64 UserPromptSubmit hook > injects the decisions the prompt is about, once per session; silent when nothing scores 51ms
+   × T64 UserPromptSubmit hook > never fails the session: bad stdin and a missing repo both exit 0 with no output 56ms
+   × T64 PreToolUse ranks unscoped decisions by the edited path + new text > an edit that adds an export surfaces the audit decision 129ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  6 failed | 1 passed (7)

@@ -305,6 +305,49 @@ export function formatSectionsText(s, budget) {
  * */
 export const REPO_WIDE_CAP = 5;
 
+// T64: Okapi BM25 mirrored from packages/decisions/src/route/bm25.ts (T53) -- same stopwords, tokenizer, k1/b and idf,
+// kept dependency-free here like sectionsOfText; test/route-by-meaning.test.ts fails on any score difference.
+const BM25_STOPWORDS = new Set([
+  'the', 'a', 'an', 'and', 'or', 'of', 'to', 'in', 'on', 'for', 'is', 'are', 'be', 'this', 'that', 'with', 'as',
+  'by', 'at', 'from', 'it', 'its', 'was', 'were', 'has', 'have', 'had', 'not', 'but', 'so', 'if', 'than', 'then',
+]);
+export function bm25Tokenize(text) {
+  const spaced = String(text ?? '')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[/\\._\-:#"'`(),;{}[\]<>=+*!?@%^&|~$]+/g, ' ');
+  return spaced.toLowerCase().split(/\s+/).filter((t) => t.length >= 2 && !BM25_STOPWORDS.has(t) && /[a-z]/.test(t));
+}
+/** [{id, text}] scored against `query`; hits with score > 0, best first (stable for ties: input order). */
+export function bm25Rank(docs, query, k1 = 1.2, b = 0.75) {
+  if (!docs.length) return [];
+  const parsed = docs.map((d) => {
+    const tokens = bm25Tokenize(d.text);
+    const tf = new Map();
+    for (const t of tokens) tf.set(t, (tf.get(t) ?? 0) + 1);
+    return { id: d.id, tf, len: tokens.length };
+  });
+  const df = new Map();
+  let total = 0;
+  for (const p of parsed) {
+    total += p.len;
+    for (const t of p.tf.keys()) df.set(t, (df.get(t) ?? 0) + 1);
+  }
+  const n = parsed.length;
+  const avg = total / n || 1;
+  const idf = (t) => Math.log((n - (df.get(t) ?? 0) + 0.5) / ((df.get(t) ?? 0) + 0.5) + 1);
+  const q = new Set(bm25Tokenize(query));
+  const hits = parsed.map((p) => {
+    let score = 0;
+    for (const t of q) {
+      const f = p.tf.get(t) ?? 0;
+      if (f === 0) continue;
+      score += (idf(t) * (f * (k1 + 1))) / (f + k1 * (1 - b + b * (p.len / avg)));
+    }
+    return { id: p.id, score };
+  });
+  return hits.sort((x, y) => y.score - x.score).filter((h) => h.score > 0);
+}
+
 /** T50: a decision's own evidence (.mole/decisions/*.md `evidence:` list) -- the same guard-test fact the Stop hook's
  * line-level `mole check` finds post-edit, but read straight from the record so PreToolUse (pre-edit, no diff exists
  * yet to blame) can name it too. kind: 'test' pairs = test file + optional #title (the YAML value after the colon,
@@ -347,11 +390,14 @@ export function readDecisionRecords(root) {
     const id = parseFrontMatterField(text, 'id');
     if (!id) continue;
     const scopeBlock = /^scope:\n((?:\s+-.*\n)+)/m.exec(text);
+    // T64: the inline form `scope: [a, b]` (accepted by the graph loader) was ignored here; read it as the same list
+    const inlineScope = /^scope:[ \t]*\[([^\]\n]*)\][ \t]*$/m.exec(text);
     const files = new Set();
     const scopeTargets = []; // T50: full raw anchor (file#Symbol or folder/), for display -- `files` above keeps only the file part for matching
     let repoWide = false; // T50
-    if (scopeBlock) {
-      for (const line of scopeBlock[1].split('\n')) {
+    const scopeItems = scopeBlock ? scopeBlock[1].split('\n') : inlineScope ? inlineScope[1].split(',') : [];
+    if (scopeItems.length) {
+      for (const line of scopeItems) {
         const item = line.trim().replace(/^-\s*/, '').replace(/^['"]|['"]$/g, '');
         if (!item) continue;
         if (item.toLowerCase() === 'repo-wide') {
@@ -371,6 +417,7 @@ export function readDecisionRecords(root) {
       files, // repo-relative paths (folder targets keep their trailing '/')
       scopeTargets, // T50: raw anchors, for "which exact symbol/file this governs" in the PreToolUse text
       repoWide, // T50: `scope:` contained the literal item `repo-wide`
+      unscoped: files.size === 0 && !repoWide, // T64: no scope at all -- surfaced only by meaning, never by file
       evidence: parseEvidenceBlock(text), // T50: guard tests / incidents this decision itself cites
       rationale: formatSectionsText(sectionsOfText(text), RATIONALE_BUDGET_PER_DECISION), // T43, '' when none
     });
@@ -395,18 +442,29 @@ function scopeMatches(scopeFile, changed) {
  * and can take seconds on a repo with a long history, so SessionStart and PreToolUse (M31a's p95 <= 2 s budget) use
  * the record's own `status` as a fast, honest proxy for the flag instead; Stop, which has no such budget, asks for
  * the live flag so drift is visible there). */
-export function governingDecisions(mole, root, files, { liveFlags = false } = {}) {
+export function governingDecisions(mole, root, files, { liveFlags = false, text } = {}) {
   const all = readDecisionRecords(root);
   const fileMatched = all
     .filter((d) => [...d.files].some((f) => [...files].some((c) => scopeMatches(f, c))))
     .map((d) => ({ ...d, matchedTargets: d.scopeTargets.filter((t) => [...files].some((c) => scopeMatches(t.split('#')[0], c))) }));
   const fileMatchedIds = new Set(fileMatched.map((d) => d.id));
-  // T50 rank 5: repo-wide fallback, capped independently of how many file-scoped decisions already matched
-  const repoWide = all
-    .filter((d) => d.repoWide && !fileMatchedIds.has(d.id))
-    .sort((a, b) => a.id.localeCompare(b.id))
-    .slice(0, REPO_WIDE_CAP)
-    .map((d) => ({ ...d, matchedTargets: ['repo-wide'] }));
+  let repoWide;
+  if (text && String(text).trim()) {
+    // T64: repo-wide AND unscoped decisions ranked by meaning against the text of the moment (prompt, or the edited
+    // path + new text): BM25 over each record's title + rationale, score > 0, best REPO_WIDE_CAP. Zero model calls.
+    const pool = all.filter((d) => (d.repoWide || d.unscoped) && !fileMatchedIds.has(d.id));
+    const byId = new Map(pool.map((d) => [d.id, d]));
+    repoWide = bm25Rank(pool.map((d) => ({ id: d.id, text: `${d.title}\n${d.rationale}` })), text)
+      .slice(0, REPO_WIDE_CAP)
+      .map((h) => ({ ...byId.get(h.id), matchedTargets: ['by meaning'], score: h.score }));
+  } else {
+    // T50 rank 5: repo-wide fallback, capped independently of how many file-scoped decisions already matched
+    repoWide = all
+      .filter((d) => d.repoWide && !fileMatchedIds.has(d.id))
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .slice(0, REPO_WIDE_CAP)
+      .map((d) => ({ ...d, matchedTargets: ['repo-wide'] }));
+  }
   const records = [...fileMatched, ...repoWide];
   if (records.length === 0) return [];
   let flags = new Map();
@@ -414,7 +472,9 @@ export function governingDecisions(mole, root, files, { liveFlags = false } = {}
     const r = moleJson(mole, root, ['decisions', '--json'], 15_000);
     if (r && Array.isArray(r.decisions)) flags = new Map(r.decisions.map((d) => [d.id, d.flag]));
   }
-  return records.map((d) => ({ ...d, flag: flags.get(d.id) })).sort((a, b) => a.id.localeCompare(b.id));
+  // file-scoped matches first (by id), then the by-meaning ones in rank order (T64), then literal repo-wide (by id)
+  const rank = (d) => (d.matchedTargets?.includes('by meaning') ? 1 : d.matchedTargets?.includes('repo-wide') ? 2 : 0);
+  return records.map((d) => ({ ...d, flag: flags.get(d.id) })).sort((a, b) => rank(a) - rank(b) || (rank(a) === 1 ? (b.score ?? 0) - (a.score ?? 0) : a.id.localeCompare(b.id)));
 }
 
 /** One rule line per decision (M31a: "each as a rule to follow with its flag and owner"), clipped to SCOPE_BUDGET
@@ -431,7 +491,7 @@ export function decisionsBlock(decisions, header = 'Mole decisions governing the
   // decision's title/file) and its guard test(s) straight from the record's own `evidence:` -- the specificity the
   // Stop hook's post-edit `mole check` has (line + guarding test), surfaced here pre-edit instead.
   const lines = decisions.map((d) => {
-    const covers = (d.matchedTargets ?? []).filter((t) => t !== 'repo-wide');
+    const covers = (d.matchedTargets ?? []).filter((t) => t !== 'repo-wide' && t !== 'by meaning');
     const coversPart = covers.length ? ` \u2014 covers: ${covers.join(', ')}` : '';
     const tests = (d.evidence ?? []).filter((e) => e.kind === 'test').map((e) => e.value);
     const guardPart = tests.length ? ` \u2014 guard test: ${tests.join('; ')}` : '';
