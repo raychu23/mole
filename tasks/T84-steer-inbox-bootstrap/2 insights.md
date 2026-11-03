@@ -23,3 +23,13 @@ earlier flakes  06:40 'lock timeout' fix (dc16593) was a different, legitimate r
                     behind at least the 08:13 and 08:33 failures (INFERENCE for the 06:30 one: its message was not captured)
 proof           4 log/red.txt (exact production message reproduced) · 4 log/green.txt
 ```
+
+```notes
+review 1 (deleg_3ab2d2f1)   PASS · 20x5 stress green · probe 20 procs x 50 rounds first-send: 0 errors/lost/doubled
+    LOW 1   no hard links (FAT/exFAT, some network mounts) → linkSync EPERM/ENOTSUP/EXDEV crashed every first send
+            → fall back to O_EXCL create; the empty-file tolerance covers its window
+    LOW 2   .boot-* left by a crash between link and unlink never swept → removed when older than 60 s at bootstrap
+    LOW 3   corrupt non-empty inbox still crashed under the lock → moved aside as .corrupt-<ts> (kept for a person),
+            stderr note, fresh inbox; never silently destroyed
+    tests   2 red → 22/22 green x3 (4 log/red.txt, green.txt)
+```
