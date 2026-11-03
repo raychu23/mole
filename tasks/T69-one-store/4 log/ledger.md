@@ -1,0 +1,4 @@
+```notes
+ledger (newest last, nothing deleted)
+    2026-11-03 01:53      new → proposed      One authoritative decision store: the team server writes and reads decisions through @mole/temporal (tenant-scoped current + as-of) instead of its own second Po
+```
