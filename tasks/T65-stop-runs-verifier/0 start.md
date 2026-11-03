@@ -1,23 +1,23 @@
 ---
-state: submitted
+state: verified
 owner: hermes-build
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t65-stop-runs-verifier
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T65-stop-runs-verifier
 base:
-reviewer:
-updated: 2026-11-03 03:36
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+reviewer: hermes-subagent deleg_6ddeb28d FAIL, deleg_32aa337d FAIL 1 MED (fresh, claude-sonnet-5)
+updated: 2026-11-03 03:39
+status: ledger verified
+next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
 claimed: 2026-11-02 23:56
 ---
 ```notes
 T65-stop-runs-verifier      ledger task (rules.md §3 code features)      project tasks
     goal                    The agent loop uses Mole's measured verifier: `mole cascade-check --worktree` checks uncommitted work (working tree incl. untracked snapshot as a temp commit built with a temp index: user's index, refs and files untouched) and the Claude Code Stop hook runs it when the repo has decision records, returning each violation with its decision, reason and evidence as the systemMessage (so the agent fixes it before finishing). Today stop.mjs runs only `mole check` (past fixes/questions) + T27 rule checks; the cascade (T46 + T53 routing, B2 97% catch) never runs in the loop. MOLE_STOP_VERIFY=0 turns it off.
     done-when               1 tests first (red) · 2 cascade-check --worktree == cascade-check --base HEAD --head <commit of the same tree> on fixtures (same verdicts), and git status / index / refs byte-identical after · 3 stop.mjs: violation → systemMessage naming decision id, verdict reason and file:line; no violation → unchanged output; --no-llm path when MOLE_STOP_VERIFY_LLM=0; never blocks or fails the session; respects hooks.json timeout (raise Stop to 120 s if measured need) · 4 sanity replay: dcbench copy + generated records + an export route without withAuditLog is flagged (D-002); the unmodified repo is not · 5 npm run check
-    status                  2026-11-03 submitted      report: tasks/T65-stop-runs-verifier/2 insights.md, proof 4 log/replay.txt · checks exit 0
+    status                  2026-11-03 verified      reviewer hermes-subagent deleg_6ddeb28d FAIL, deleg_32aa337d FAIL 1 MED (fresh, claude-sonnet-5) · findings: R1: nested
     built                   11-03 595cf9b in worktree · 380 tests pass · no-model replay: clean repo silent, sanity routed to D-010 not D-002 (done-when 4 open until model pass after 08:59) · details 2 insights.md in worktree
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
     pinned
     mode                    one worker
     boundary                packages/decisions/src/cascade/cli.ts (+ a worktree snapshot helper), plugins/claude-code/scripts/stop.mjs + a new verify.mjs, hooks.json timeout, tests
