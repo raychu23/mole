@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-11-03 05:23      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T75-steer-own-package → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-11-03 05:26      submitted → verified      reviewer hermes-subagent deleg_8c98e468 PASS (fresh, claude-sonnet-5) · findings: PASS: .mole untouched, mole rules 0 violations, agentstate no write calls, moved code identical in substance, fresh npm ci + tsc clean · c
     2026-11-03 05:26      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T75-steer-own-package → exit 0 (at new Promise (<anonymous>))
+    2026-11-03 05:33      verified → integrated      merge b7da8b2 + stress-test fix (accepted-items contract under load), main check green 1219/0 earlier, rerun by this move · combined checks exit 0
+    2026-11-03 05:33      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (at new Promise (<anonymous>))
 ```
