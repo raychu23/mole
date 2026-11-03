@@ -1,8 +1,9 @@
 // M30 bench (loop rule R4): seeded-flaw recall + real-record false-flag rate (M30a) and evidence-link precision
 // (M30b). Key is hand-labeled in m30-key.json, dated before this script runs against real code (R1/R2: this file
 // may change; m30-key.json and bench/seeded/*.md may not, once reviewed — see 4 log/key-changes.md for exceptions).
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkAllRecords } from '../src/record-check.js';
@@ -11,7 +12,10 @@ import type { Finding } from '../src/types.js';
 const here = dirname(fileURLToPath(import.meta.url));
 // this file runs from dist/bench; the source tree (bench/seeded, bench/m30-key.json) sits one level up from dist
 const srcBench = resolve(here, '../../bench');
-const root = resolve(here, '../../../../'); // packages/intake/dist/bench -> repo root
+const liveRoot = resolve(here, '../../../../'); // packages/intake/dist/bench -> repo root
+// seeded records go into a throwaway linked worktree of HEAD + the working tree's .mole, never the live folder
+// (backlog seeded-record-race, 11-02); evidence paths are the same relative paths in both
+let root = liveRoot;
 
 interface Key {
   targets: { seededRecallMin: number; realFalseFlagsMax: number; evidencePrecisionPct: number };
@@ -41,18 +45,18 @@ function evidenceIsReal(f: Finding): { total: number; real: number } {
 async function main(): Promise<number> {
   const key: Key = JSON.parse(readFileSync(join(srcBench, 'm30-key.json'), 'utf8'));
   const seededDir = join(srcBench, 'seeded');
-  const realDecisionsDir = join(root, '.mole', 'decisions');
   const seededFiles = readdirSync(seededDir).filter((f) => f.endsWith('.md'));
-  const copied: string[] = [];
+  const tmp = mkdtempSync(join(tmpdir(), 'mole-m30-'));
+  const wt = join(tmp, 'wt');
   let findings: Finding[] = [];
   let evTotal = 0;
   let evReal = 0;
   try {
-    for (const f of seededFiles) {
-      const dest = join(realDecisionsDir, f);
-      copyFileSync(join(seededDir, f), dest);
-      copied.push(dest);
-    }
+    execFileSync('git', ['-C', liveRoot, 'worktree', 'add', '-q', '--detach', wt, 'HEAD']);
+    cpSync(join(liveRoot, '.mole'), join(wt, '.mole'), { recursive: true, filter: (src) => !src.includes(join('.mole', 'local')) });
+    root = wt;
+    const realDecisionsDir = join(root, '.mole', 'decisions');
+    for (const f of seededFiles) copyFileSync(join(seededDir, f), join(realDecisionsDir, f));
     findings = checkAllRecords(root);
     for (const f of findings) {
       const r = evidenceIsReal(f);
@@ -60,7 +64,9 @@ async function main(): Promise<number> {
       evReal += r.real;
     }
   } finally {
-    for (const p of copied) if (existsSync(p)) unlinkSync(p);
+    root = liveRoot;
+    spawnSync('git', ['-C', liveRoot, 'worktree', 'remove', '--force', wt], { stdio: 'ignore' });
+    rmSync(tmp, { recursive: true, force: true });
   }
 
   const byRecord = new Map<string, Finding[]>();

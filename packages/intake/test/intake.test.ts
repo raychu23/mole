@@ -6,7 +6,7 @@
 // after review (R2) — log a needed change in ../../../tasks/T23-decision-traces-intake/4 log/key-changes.md.
 import { afterAll, describe, expect, it } from 'vitest';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -62,16 +62,35 @@ function evidenceIsReal(root: string, f: Finding): boolean {
   });
 }
 
+// The seeded records used to be copied into the LIVE REPO_ROOT/.mole/decisions for the run; a parallel vitest worker
+// reading that folder (decisions cli.test.ts "Mole's own .mole records load without problems") then saw them and
+// failed main's check (11-02, backlog seeded-record-race). Run M30a on a throwaway linked worktree of HEAD instead,
+// overlaid with the working tree's .mole (so uncommitted record edits still count), never writing the live folder.
+function isolatedRepo(): string {
+  const dir = mkdtempSync(join(tmpdir(), 'mole-intake-m30-'));
+  const wt = join(dir, 'wt');
+  git(REPO_ROOT, 'worktree', 'add', '-q', '--detach', wt, 'HEAD');
+  cleanups.push(() => {
+    spawnSync('git', ['-C', REPO_ROOT, 'worktree', 'remove', '--force', wt], { stdio: 'ignore' });
+    rmSync(dir, { recursive: true, force: true });
+  });
+  cpSync(join(REPO_ROOT, '.mole'), join(wt, '.mole'), { recursive: true, filter: (src) => !src.includes(`${join('.mole', 'local')}`) });
+  return wt;
+}
+
 describe('M30a: seeded-flaw recall + real-record false flags (key: bench/m30-key.json)', () => {
   const key: Key = JSON.parse(readFileSync(join(BENCH, 'm30-key.json'), 'utf8'));
   const seededDir = join(BENCH, 'seeded');
-  const decisionsDir = join(REPO_ROOT, '.mole', 'decisions');
+  let root = REPO_ROOT;
+  let decisionsDir = join(REPO_ROOT, '.mole', 'decisions');
   const seededFiles = readdirSync(seededDir).filter((f) => f.endsWith('.md'));
   let findings: Finding[] = [];
 
   it(
-    'setup: run checkAllRecords with the seeded corpus copied alongside the real one',
+    'setup: run checkAllRecords with the seeded corpus copied alongside the real one (in an isolated worktree)',
     () => {
+      root = isolatedRepo();
+      decisionsDir = join(root, '.mole', 'decisions');
       const copied: string[] = [];
       try {
         for (const f of seededFiles) {
@@ -79,9 +98,11 @@ describe('M30a: seeded-flaw recall + real-record false flags (key: bench/m30-key
           copyFileSync(join(seededDir, f), dest);
           copied.push(dest);
         }
-        findings = checkAllRecords(REPO_ROOT);
+        findings = checkAllRecords(root);
         // M30b, checked while the seeded files still exist
-        for (const f of findings) expect(evidenceIsReal(REPO_ROOT, f), `evidence for ${f.check} on ${f.recordId}`).toBe(true);
+        for (const f of findings) expect(evidenceIsReal(root, f), `evidence for ${f.check} on ${f.recordId}`).toBe(true);
+        // the live folder never receives a seeded record
+        for (const f of seededFiles) expect(existsSync(join(REPO_ROOT, '.mole', 'decisions', f))).toBe(false);
       } finally {
         for (const p of copied) if (existsSync(p)) unlinkSync(p);
       }
