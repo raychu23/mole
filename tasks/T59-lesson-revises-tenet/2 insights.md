@@ -1,0 +1,21 @@
+# T59 insights — a lesson revises a tenet (double-loop learning)
+
+## Summary
+`mole-proposals lesson --repo R --lesson L --path P` turns a lesson record (.mole/lessons: learned_from incidents,
+revises a tenet, owner, the new wording under "## Proposed tenet") into a DRAFT of that tenet on a proposal branch: one
+commit that rewrites only that tenet's section and names the lesson + incident, plus the list of records that trace to
+the tenet and so rest on the old wording. Approved tenets never change; a person approves by merging the branch.
+Replay on Mole's own records: tenet-2 drafted from the real 2026-10-27 incident (lesson written for the replay), 4
+records to re-review (decisions 0007/0008/0009 + daemon intent). Open: no flag for a lesson without a check; no UI.
+
+```notes
+design          Argyris & Schön double loop (change the governing variable = the tenet) · SRE postmortem: owner required,
+                record in the repo · draft = T56 proposal branch · prior art 4 log/prior-art.md
+validation      read-only, before any write: lesson committed (.mole clean) · owner · learned_from incidents exist ·
+                tenet exists, not retired · Proposed tenet section present · then createProposal's own checks
+writes          only the proposal worktree: .mole/tenets.md target section + one commit on mole/proposal/lesson-<id>
+tests           packages/proposals/test/lesson.test.ts 7 (red.txt 7/7) · proposals 15
+replay          4 log/replay.txt · /Users/a1/.hermes/cache/scratch/t59-replay (shallow clone of main)
+limits          INFERENCE: `check:` is recorded, not enforced (human graph "lesson without a mechanism is flagged" = later)
+                · tenet text is the person's, never generated · approval/merge is plain git
+```

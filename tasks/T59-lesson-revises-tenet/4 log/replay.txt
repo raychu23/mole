@@ -1,0 +1,71 @@
+# T59 replay — Mole's own .mole (shallow clone /Users/a1/.hermes/cache/scratch/t59-replay/r): real incident 2026-10-27-map-stopped-while-typing + real tenet-2 + an ILLUSTRATIVE lesson written from the incident's five whys
+{
+  "proposal": {
+    "schema": 1,
+    "name": "lesson-l-typing-is-use",
+    "branch": "mole/proposal/lesson-l-typing-is-use",
+    "baselineRevision": "56c0f4146628fcc75d7d29c8716dd961fb0dbe7a",
+    "repo": "/Users/a1/.hermes/cache/scratch/t59-replay/r",
+    "createdAt": "2026-11-03T01:06:54.132Z"
+  },
+  "path": "/Users/a1/.hermes/cache/scratch/t59-replay/draft",
+  "lesson": {
+    "id": "L-typing-is-use",
+    "file": ".mole/lessons/l-typing-is-use.md",
+    "owner": "raymond",
+    "learnedFrom": [
+      "2026-10-27-map-stopped-while-typing"
+    ],
+    "check": "packages/daemon/test/daemon.test.ts#idle shutdown (T9)"
+  },
+  "tenet": {
+    "id": "tenet-2",
+    "before": "A background process nobody asked for must not outlive its editor",
+    "after": "A background process nobody asked for must not outlive its editor, and editing counts as use"
+  },
+  "commit": "bc7b71036b581aacdffdf3eea9993977dbadf5b5",
+  "reReview": [
+    {
+      "id": "0007",
+      "title": "Stop the daemon after 30 idle minutes",
+      "file": ".mole/decisions/0007-idle-shutdown.md",
+      "line": 6
+    },
+    {
+      "id": "0008",
+      "title": "Indexing never counts as idle",
+      "file": ".mole/decisions/0008-indexing-never-idle.md",
+      "line": 6
+    },
+    {
+      "id": "0009",
+      "title": "Editing counts as use",
+      "file": ".mole/decisions/0009-editing-counts-as-use.md",
+      "line": 6
+    },
+    {
+      "id": "intent:packages/daemon",
+      "title": "packages/daemon",
+      "file": ".mole/intent/packages/daemon.md",
+      "line": 7
+    }
+  ]
+}
+## draft tenet-2 section on the proposal branch
+## tenet-2 · A background process nobody asked for must not outlive its editor, and editing counts as use
+
+The daemon serves the editor. It stops on its own only when nobody is reading OR editing: file changes and a running
+index keep it alive, requests alone are not the measure.
+
+Draft revision from lesson L-typing-is-use (learned from 2026-10-27-map-stopped-while-typing; owner raymond; check packages/daemon/test/daemon.test.ts#idle shutdown (T9)). Was: "A background process nobody asked for must not outlive its editor".
+
+## tenet-3 · The map stays usable while you work
+## proposal branch log
+bc7b710 draft: lesson L-typing-is-use revises tenet-2 (learned from 2026-10-27-map-stopped-while-typing)
+56c0f41 illustrative lesson for T59 replay
+## approved checkout
+main
+## tenet-2 · A background process nobody asked for must not outlive its editor
+
+The daemon serves the editor. When nobody uses it, it stops on its own instead of running for days.
+

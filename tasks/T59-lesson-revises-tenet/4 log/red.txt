@@ -1,0 +1,3 @@
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  packages/proposals/test/lesson.test.ts > mole-proposals lesson (T59) > drafts the tenet on a proposal branch, lists decisions to re-review, leaves the approved checkout untouched
+ FAIL  packages/proposals/test/lesson.test.ts > mole-proposals lesson (T59) > refuses a lesson with no owner, writing nothing

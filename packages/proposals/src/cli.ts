@@ -3,7 +3,9 @@
 //   mole-proposals create --repo <dir> --name <slug> --path <absolute new dir> [--base <rev>]
 //   mole-proposals evaluate --path <proposal worktree>
 //   mole-proposals compare --left <proposal> --right <proposal> [--also <proposal> ...]
+//   mole-proposals lesson --repo <dir> --lesson <id> --path <absolute new dir> [--name <slug>]   (T59: draft tenet revision)
 // Output: JSON on stdout. Errors: one line on stderr, exit 1.
+import { proposeTenetRevision } from './lesson.js';
 import { compareProposals, createProposal, evaluateProposal, ProposalError } from './proposals.js';
 
 function flags(argv: string[]): Map<string, string[]> {
@@ -35,8 +37,10 @@ function main(argv: string[]): unknown {
       return evaluateProposal(one(f, 'path'));
     case 'compare':
       return compareProposals([one(f, 'left'), one(f, 'right'), ...(f.get('also') ?? [])]);
+    case 'lesson':
+      return proposeTenetRevision({ repo: one(f, 'repo'), lesson: one(f, 'lesson'), path: one(f, 'path'), ...(f.has('name') ? { name: one(f, 'name') } : {}) });
     default:
-      throw new ProposalError('usage: mole-proposals create|evaluate|compare (see the header of src/cli.ts)');
+      throw new ProposalError('usage: mole-proposals create|evaluate|compare|lesson (see the header of src/cli.ts)');
   }
 }
 
