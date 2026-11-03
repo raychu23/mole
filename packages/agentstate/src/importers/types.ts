@@ -12,6 +12,11 @@ export interface RawIntent {
   file: string; // repo-relative
   startLine: number; // 1-based inclusive
   endLine: number; // 1-based inclusive
+  /** T76: 'file' marks a claim whose source data has no real line range (e.g. real Entire `files_touched`
+   * -- file-level only). startLine/endLine on a 'file' intent are a [1,1] sentinel, not a claimed precise
+   * range, and anchorIntents (unify.ts) must report these as an explicit miss rather than anchor to whatever
+   * symbol sits at the sentinel line. Default/undefined means 'line' (a real per-line claim, anchor as usual). */
+  granularity?: 'line' | 'file';
   agent?: string;
   model?: string;
   prompt?: string;

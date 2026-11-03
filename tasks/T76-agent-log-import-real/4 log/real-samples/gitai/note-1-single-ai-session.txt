@@ -1,0 +1,19 @@
+math.js
+  s_edba1c0dbabdf8::t_fb1f656870bd9d 5-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d2563226c74505d514d540289914210d7513d56a",
+  "prompts": {},
+  "sessions": {
+    "s_edba1c0dbabdf8": {
+      "agent_id": {
+        "tool": "mock_ai",
+        "id": "ai-thread-1793705879643548000",
+        "model": "unknown"
+      },
+      "human_author": "T76 Test <test@example.com>"
+    }
+  }
+}

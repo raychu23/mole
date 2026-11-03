@@ -1,0 +1,11 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T76-agent-log-import-real
+
+ ✓ packages/agentstate/test/t39-importers.test.ts (11 tests) 22ms
+ ✓ packages/agentstate/test/t76-real-gitai.test.ts (4 tests) 26ms
+
+ Test Files  2 passed (2)
+      Tests  15 passed (15)
+   Start at  05:49:02
+   Duration  1.04s (transform 147ms, setup 0ms, collect 1.45s, tests 47ms, environment 0ms, prepare 142ms)
+

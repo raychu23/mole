@@ -1,0 +1,90 @@
+commit d59dfa0c7b6445b762e8b6737d32783f48123c39
+Author: T76 Test <test@example.com>
+Date:   Tue Nov 3 05:43:29 2026 -0600
+
+    multi-file multi-session commit
+
+Notes (ai):
+    fileB.js
+      h_b296cbdc8c227c 2
+      h_b296cbdc8c227c 1
+    fileA.js
+      s_ad36ddc935d61a::t_d02f9535f3f305 2
+      s_ad36ddc935d61a::t_02ab184b2e9609 1
+    ---
+    {
+      "schema_version": "authorship/3.0.0",
+      "git_ai_version": "1.7.5",
+      "base_commit_sha": "d59dfa0c7b6445b762e8b6737d32783f48123c39",
+      "prompts": {},
+      "humans": {
+        "h_b296cbdc8c227c": {
+          "author": "T76 Test <test@example.com>"
+        }
+      },
+      "sessions": {
+        "s_ad36ddc935d61a": {
+          "agent_id": {
+            "tool": "mock_ai",
+            "id": "ai-thread-1793706209698228000",
+            "model": "unknown"
+          },
+          "human_author": "T76 Test <test@example.com>"
+        }
+      }
+    }
+
+commit 9cda3e26f0eac7f17c73412a96d2c988ae30397c
+Author: T76 Test <test@example.com>
+Date:   Tue Nov 3 05:43:09 2026 -0600
+
+    add divide fn via mock_ai
+
+Notes (ai):
+    math2.js
+      s_da2642f92e7134::t_8b85af3c723ac3 3-7
+      s_da2642f92e7134::t_be92687df4a3f2 1-2
+    ---
+    {
+      "schema_version": "authorship/3.0.0",
+      "git_ai_version": "1.7.5",
+      "base_commit_sha": "9cda3e26f0eac7f17c73412a96d2c988ae30397c",
+      "prompts": {},
+      "sessions": {
+        "s_da2642f92e7134": {
+          "agent_id": {
+            "tool": "mock_ai",
+            "id": "ai-thread-1793706188946905000",
+            "model": "unknown"
+          },
+          "human_author": "T76 Test <test@example.com>"
+        }
+      }
+    }
+
+commit d2563226c74505d514d540289914210d7513d56a
+Author: T76 Test <test@example.com>
+Date:   Tue Nov 3 05:42:41 2026 -0600
+
+    add multiply fn
+
+Notes (ai):
+    math.js
+      s_edba1c0dbabdf8::t_fb1f656870bd9d 5-8
+    ---
+    {
+      "schema_version": "authorship/3.0.0",
+      "git_ai_version": "1.7.5",
+      "base_commit_sha": "d2563226c74505d514d540289914210d7513d56a",
+      "prompts": {},
+      "sessions": {
+        "s_edba1c0dbabdf8": {
+          "agent_id": {
+            "tool": "mock_ai",
+            "id": "ai-thread-1793705879643548000",
+            "model": "unknown"
+          },
+          "human_author": "T76 Test <test@example.com>"
+        }
+      }
+    }

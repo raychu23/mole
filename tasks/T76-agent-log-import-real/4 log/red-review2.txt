@@ -1,0 +1,8 @@
+RED (src fix stashed):
+   × T76 review 2 (low): human-shaped id parts fail closed > composite id whose SUB part is h_-prefixed is excluded 5ms
+   × T76 review 2 (low): human-shaped id parts fail closed > upper-case H_ prefix with no humans map is excluded 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 10 passed (12)
+
+GREEN:
+      Tests  12 passed (12)

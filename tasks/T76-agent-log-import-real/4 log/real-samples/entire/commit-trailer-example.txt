@@ -1,0 +1,12 @@
+Condense an amended squash into its own checkpoint
+
+Amending a squash after its first post-commit left every trailer with a
+checkpoint and no inherited-trailer marker, so post-commit found no target
+and skipped condensation, where a lone-trailer amend re-condenses into the
+session's own checkpoint. With every trailer existing, the last one, where
+prepare stamps, is now the preexisting target; stampedByAnotherCommit still
+lets only the session amending it write there.
+
+Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+Entire-Checkpoint: 01M3CPBXB4WW7TXJJ3HDYQR63Z
+

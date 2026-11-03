@@ -1,0 +1,221 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T76-agent-log-import-real
+
+ ❯ packages/agentstate/test/t76-real-entire.test.ts (7 tests | 7 failed) 8ms
+   × T76: real Entire checkpoint data (not fixture) > root metadata.json (CheckpointSummary) parses the real snake_case shape, no line ranges anywhere 4ms
+     → (0 , parseEntireCheckpointSummary) is not a function
+   × T76: real Entire checkpoint data (not fixture) > root metadata.json normalizes a real null files_touched to [] 1ms
+     → (0 , parseEntireCheckpointSummary) is not a function
+   × T76: real Entire checkpoint data (not fixture) > per-session metadata.json parses the real shape: agent, model, files_touched, no fileRanges field exists 1ms
+     → (0 , parseEntireSessionMetadata) is not a function
+   × T76: real Entire checkpoint data (not fixture) > real data: an empty model string ("") normalizes to undefined, not a false empty-string claim 1ms
+     → (0 , parseEntireSessionMetadata) is not a function
+   × T76: real Entire checkpoint data (not fixture) > entireToRawIntents emits one file-level RawIntent per touched file, never a fabricated line range 0ms
+     → (0 , parseEntireCheckpointSummary) is not a function
+   × T76: real Entire checkpoint data (not fixture) > a session with empty files_touched falls back to the root checkpoint files_touched 0ms
+     → (0 , parseEntireCheckpointSummary) is not a function
+   × T76: real Entire checkpoint data (not fixture) > anchorIntents reports a file-level RawIntent as an explicit miss, never anchors it to a wrong function 0ms
+     → (0 , parseEntireCheckpointSummary) is not a function
+ ❯ packages/agentstate/test/t39-importers.test.ts (11 tests | 1 failed) 29ms
+   × T39 importers: parse per the documented format > LEGACY/HAND-BUILT fixture: entire checkpoint metadata.json -> sessions with file ranges (T76 2026-11-03: Entire never writes this shape; see src/importers/entire.ts and 4 log/real-samples/entire/) 2ms
+     → (0 , parseEntireCheckpointLegacyFixture) is not a function
+   ✓ T39 importers: parse per the documented format > LEGACY/HAND-BUILT fixture: rejects an entire checkpoint missing sessions[] 1ms
+   ✓ T39 importers: parse per the documented format > git-ai Authorship Log (table + --- + JSON, usegitai.com "Git Note Format") 1ms
+   ✓ T39 importers: parse per the documented format > git-ai: `git log --show-notes=ai` pretty-printed shape also parses 0ms
+   ✓ T39 importers: parse per the documented format > agent-trace v0.1.0 appendix A minimal valid record 0ms
+   ✓ T39 importers: parse per the documented format > agent-trace: human-contributed ranges carry no agent intent 0ms
+   ✓ T39: anchor onto functions + re-check like a note (T11 invariant) > anchors a raw intent to the containing function, not a neighbour 7ms
+   ✓ T39: anchor onto functions + re-check like a note (T11 invariant) > reports a miss (not a guess) when no symbol contains the range 2ms
+   ✓ T39: anchor onto functions + re-check like a note (T11 invariant) > flags stale after the anchored function body changes 5ms
+   ✓ T39: anchor onto functions + re-check like a note (T11 invariant) > never flags a whitespace/comment-only edit stale 4ms
+   ✓ T39: anchor onto functions + re-check like a note (T11 invariant) > flags stale when the anchored function is deleted entirely 4ms
+ ❯ packages/agentstate/test/t76-real-gitai.test.ts (9 tests | 4 failed) 33ms
+   ✓ T76: real git-ai v1.7.5 output (not fixture) > note-1: single AI session anchors to the function it touched, tagged mock_ai 11ms
+   ✓ T76: real git-ai v1.7.5 output (not fixture) > note-2: one AI session split into two ranges, both anchor, both tagged mock_ai 5ms
+   ✓ T76: real git-ai v1.7.5 output (not fixture) > note-3: known_human rows are never imported as agent intents (0 wrong links) 5ms
+   ✓ T76: real git-ai v1.7.5 output (not fixture) > show-notes-pretty.txt (git log --show-notes=ai form) parses the same three commits with no human leakage 3ms
+   × T76 review fix: git_ai_standard_v3.0.0.md §1.2.3.1 id-prefix exclusion (gitai.ts MED finding) > excludes a row whose composite base::sub id has its BASE (not the full composite) as a meta.humans key 5ms
+     → expected [ { source: 'git-ai', …(7) } ] to have a length of +0 but got 1
+   × T76 review fix: git_ai_standard_v3.0.0.md §1.2.3.1 id-prefix exclusion (gitai.ts MED finding) > excludes an h_-prefixed row even when meta.humans is entirely absent (prefix alone identifies it as human, per the spec) 1ms
+     → expected [ { source: 'git-ai', …(7) } ] to have a length of +0 but got 1
+   × T76 review fix: git_ai_standard_v3.0.0.md §1.2.3.1 id-prefix exclusion (gitai.ts MED finding) > excludes an h_-prefixed composite row with no meta.humans map at all (both guards compose) 1ms
+     → expected [ { source: 'git-ai', …(7) } ] to have a length of +0 but got 1
+   × T76 review fix: git_ai_standard_v3.0.0.md §1.2.3.1 id-prefix exclusion (gitai.ts MED finding) > fuzz: a known_human exclusion never leaks regardless of trace-id suffix or whether meta.humans lists the base, the full id, both, or neither 0ms
+     → expected [ { source: 'git-ai', …(7) } ] to have a length of +0 but got 1
+   ✓ T76 review fix: git_ai_standard_v3.0.0.md §1.2.3.1 id-prefix exclusion (gitai.ts MED finding) > still imports a legitimate s_-prefixed AI row (the exclusion does not over-match non-human prefixes) 0ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/agentstate/test/t39-importers.test.ts > T39 importers: parse per the documented format > LEGACY/HAND-BUILT fixture: entire checkpoint metadata.json -> sessions with file ranges (T76 2026-11-03: Entire never writes this shape; see src/importers/entire.ts and 4 log/real-samples/entire/)
+TypeError: (0 , parseEntireCheckpointLegacyFixture) is not a function
+ ❯ packages/agentstate/test/t39-importers.test.ts:11:18
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  packages/agentstate/test/t76-real-entire.test.ts > T76: real Entire checkpoint data (not fixture) > root metadata.json (CheckpointSummary) parses the real snake_case shape, no line ranges anywhere
+TypeError: (0 , parseEntireCheckpointSummary) is not a function
+ ❯ packages/agentstate/test/t76-real-entire.test.ts:19:21
+     17| describe('T76: real Entire checkpoint data (not fixture)', () => {
+     18|   it('root metadata.json (CheckpointSummary) parses the real snake_cas…
+     19|     const summary = parseEntireCheckpointSummary(sample('checkpoint-01…
+       |                     ^
+     20|     expect(summary).toMatchObject({
+     21|       checkpointId: '01KX0ENQ9M4C5P85G431G5YR2E',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  packages/agentstate/test/t76-real-entire.test.ts > T76: real Entire checkpoint data (not fixture) > root metadata.json normalizes a real null files_touched to []
+TypeError: (0 , parseEntireCheckpointSummary) is not a function
+ ❯ packages/agentstate/test/t76-real-entire.test.ts:30:21
+     28| 
+     29|   it('root metadata.json normalizes a real null files_touched to []', …
+     30|     const summary = parseEntireCheckpointSummary(sample('checkpoint-01…
+       |                     ^
+     31|     expect(summary.filesTouched).toEqual([]);
+     32|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+ FAIL  packages/agentstate/test/t76-real-entire.test.ts > T76: real Entire checkpoint data (not fixture) > per-session metadata.json parses the real shape: agent, model, files_touched, no fileRanges field exists
+TypeError: (0 , parseEntireSessionMetadata) is not a function
+ ❯ packages/agentstate/test/t76-real-entire.test.ts:35:21
+     33| 
+     34|   it('per-session metadata.json parses the real shape: agent, model, f…
+     35|     const session = parseEntireSessionMetadata(sample('checkpoint-01KX…
+       |                     ^
+     36|     expect(session).toMatchObject({
+     37|       checkpointId: '01KX0ENQ9M4C5P85G431G5YR2E',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/12]⎯
+
+ FAIL  packages/agentstate/test/t76-real-entire.test.ts > T76: real Entire checkpoint data (not fixture) > real data: an empty model string ("") normalizes to undefined, not a false empty-string claim
+TypeError: (0 , parseEntireSessionMetadata) is not a function
+ ❯ packages/agentstate/test/t76-real-entire.test.ts:47:21
+     45| 
+     46|   it('real data: an empty model string ("") normalizes to undefined, n…
+     47|     const session = parseEntireSessionMetadata(sample('checkpoint-01KX…
+       |                     ^
+     48|     expect(session.model).toBeUndefined();
+     49|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/12]⎯
+
+ FAIL  packages/agentstate/test/t76-real-entire.test.ts > T76: real Entire checkpoint data (not fixture) > entireToRawIntents emits one file-level RawIntent per touched file, never a fabricated line range
+TypeError: (0 , parseEntireCheckpointSummary) is not a function
+ ❯ packages/agentstate/test/t76-real-entire.test.ts:52:21
+     50| 
+     51|   it('entireToRawIntents emits one file-level RawIntent per touched fi…
+     52|     const summary = parseEntireCheckpointSummary(sample('checkpoint-01…
+       |                     ^
+     53|     const session = parseEntireSessionMetadata(sample('checkpoint-01KX…
+     54|     const raw = entireToRawIntents(summary, [session]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/12]⎯
+
+ FAIL  packages/agentstate/test/t76-real-entire.test.ts > T76: real Entire checkpoint data (not fixture) > a session with empty files_touched falls back to the root checkpoint files_touched
+TypeError: (0 , parseEntireCheckpointSummary) is not a function
+ ❯ packages/agentstate/test/t76-real-entire.test.ts:62:21
+     60| 
+     61|   it('a session with empty files_touched falls back to the root checkp…
+     62|     const summary = parseEntireCheckpointSummary(sample('checkpoint-01…
+       |                     ^
+     63|     const session = parseEntireSessionMetadata(sample('checkpoint-01KW…
+     64|     expect(session.filesTouched).toEqual([]); // real data: session-le…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/12]⎯
+
+ FAIL  packages/agentstate/test/t76-real-entire.test.ts > T76: real Entire checkpoint data (not fixture) > anchorIntents reports a file-level RawIntent as an explicit miss, never anchors it to a wrong function
+TypeError: (0 , parseEntireCheckpointSummary) is not a function
+ ❯ packages/agentstate/test/t76-real-entire.test.ts:70:21
+     68| 
+     69|   it('anchorIntents reports a file-level RawIntent as an explicit miss…
+     70|     const summary = parseEntireCheckpointSummary(sample('checkpoint-01…
+       |                     ^
+     71|     const session = parseEntireSessionMetadata(sample('checkpoint-01KX…
+     72|     const raw = entireToRawIntents(summary, [session]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/12]⎯
+
+ FAIL  packages/agentstate/test/t76-real-gitai.test.ts > T76 review fix: git_ai_standard_v3.0.0.md §1.2.3.1 id-prefix exclusion (gitai.ts MED finding) > excludes a row whose composite base::sub id has its BASE (not the full composite) as a meta.humans key
+AssertionError: expected [ { source: 'git-ai', …(7) } ] to have a length of +0 but got 1
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ 1[39m
+
+ ❯ packages/agentstate/test/t76-real-gitai.test.ts:83:39
+     81|   it('excludes a row whose composite base::sub id has its BASE (not th…
+     82|     const parsed = parseGitAiNote(note('h_deadbeef1234::t_feedface5678…
+     83|     expect(gitAiToRawIntents(parsed)).toHaveLength(0);
+       |                                       ^
+     84|   });
+     85| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/12]⎯
+
+ FAIL  packages/agentstate/test/t76-real-gitai.test.ts > T76 review fix: git_ai_standard_v3.0.0.md §1.2.3.1 id-prefix exclusion (gitai.ts MED finding) > excludes an h_-prefixed row even when meta.humans is entirely absent (prefix alone identifies it as human, per the spec)
+AssertionError: expected [ { source: 'git-ai', …(7) } ] to have a length of +0 but got 1
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ 1[39m
+
+ ❯ packages/agentstate/test/t76-real-gitai.test.ts:88:39
+     86|   it('excludes an h_-prefixed row even when meta.humans is entirely ab…
+     87|     const parsed = parseGitAiNote(note('h_deadbeef1234 1-5', {}));
+     88|     expect(gitAiToRawIntents(parsed)).toHaveLength(0);
+       |                                       ^
+     89|   });
+     90| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/12]⎯
+
+ FAIL  packages/agentstate/test/t76-real-gitai.test.ts > T76 review fix: git_ai_standard_v3.0.0.md §1.2.3.1 id-prefix exclusion (gitai.ts MED finding) > excludes an h_-prefixed composite row with no meta.humans map at all (both guards compose)
+AssertionError: expected [ { source: 'git-ai', …(7) } ] to have a length of +0 but got 1
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ 1[39m
+
+ ❯ packages/agentstate/test/t76-real-gitai.test.ts:93:39
+     91|   it('excludes an h_-prefixed composite row with no meta.humans map at…
+     92|     const parsed = parseGitAiNote(note('h_deadbeef1234::t_feedface5678…
+     93|     expect(gitAiToRawIntents(parsed)).toHaveLength(0);
+       |                                       ^
+     94|   });
+     95| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/12]⎯
+
+ FAIL  packages/agentstate/test/t76-real-gitai.test.ts > T76 review fix: git_ai_standard_v3.0.0.md §1.2.3.1 id-prefix exclusion (gitai.ts MED finding) > fuzz: a known_human exclusion never leaks regardless of trace-id suffix or whether meta.humans lists the base, the full id, both, or neither
+AssertionError: expected [ { source: 'git-ai', …(7) } ] to have a length of +0 but got 1
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ 1[39m
+
+ ❯ packages/agentstate/test/t76-real-gitai.test.ts:109:43
+    107|       for (const humans of humanMapVariants) {
+    108|         const parsed = parseGitAiNote(note(`${baseHuman}::${trace} 1-5…
+    109|         expect(gitAiToRawIntents(parsed)).toHaveLength(0);
+       |                                           ^
+    110|       }
+    111|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/12]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  12 failed | 15 passed (27)
+   Start at  06:16:04
+   Duration  829ms (transform 169ms, setup 0ms, collect 1.48s, tests 70ms, environment 0ms, prepare 231ms)
+

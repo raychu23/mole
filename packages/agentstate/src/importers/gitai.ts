@@ -1,13 +1,20 @@
-// Git AI Authorship Logs (git note in `refs/notes/ai`, attached post-commit). Format per usegitai.com docs
+// Git AI Authorship Logs (git note in `refs/notes/ai`, attached post-commit). Table format per usegitai.com docs
 // (fetched 2026-10-30, context/product-plan/systems/design-reviews/research/ has the Entire pages; git-ai's own
 // pages are summarized in tasks/T39-import-agent-session-logs/4 log/prior-art.md with URLs):
 //   <file>   <sessionId> <line-ranges>[   <sessionId2> <line-ranges2> ...]
 //   ...
 //   ---
-//   { "schema_version": "authorship/3.0.0", "git_ai_version": "...", "base_commit_sha": "...",
-//     "prompts": { "<sessionId>": { "agent": "...", "model": "...", "author": "...", "messages_url": "..." } } }
+//   { "schema_version": "authorship/3.0.0", "git_ai_version": "...", "base_commit_sha": "...", "prompts": {...} }
 // (usegitai.com/docs/cli/how-git-ai-works, "Git Note Format"). `git log --show-notes=ai` pretty-prints the same
 // file/session/range table indented under "Notes (ai):"; both shapes are accepted here.
+//
+// T76 (2026-11-03): the real v1.7.5 binary's own notes (tasks/T76-agent-log-import-real/4 log/real-samples/gitai/,
+// produced with git-ai's own `mock_ai`/`human`/`known_human` test presets -- no live AI agent, no fixture) always
+// emit `"prompts": {}` and instead carry attribution under two undocumented keys: `sessions` (AI checkpoints,
+// keyed by the table row's session id with the `::<sub-session>` suffix stripped) and `humans` (`known_human`
+// checkpoints -- explicitly NOT agent work). Both the docs' `prompts` shape and the real `sessions`/`humans` shape
+// are read below; a row whose id is a key in `humans` is skipped entirely (importing it would be a wrong link:
+// a human-attested range reported as AI-authored).
 import type { RawIntent } from './types.js';
 
 interface GitAiMetadata {
@@ -15,6 +22,8 @@ interface GitAiMetadata {
   git_ai_version?: string;
   base_commit_sha?: string;
   prompts?: Record<string, { agent?: string; model?: string; author?: string; messages_url?: string }>;
+  sessions?: Record<string, { agent_id?: { tool?: string; id?: string; model?: string }; human_author?: string }>;
+  humans?: Record<string, { author?: string }>;
 }
 
 interface GitAiFileEntry {
@@ -72,11 +81,46 @@ export function parseGitAiNote(note: string): { files: GitAiFileEntry[]; meta: G
   return { files, meta };
 }
 
+// git_ai_standard_v3.0.0.md §1.2.3.1 "Attestation Key Formats": three key prefixes route to three maps --
+//   `s_` -> metadata.sessions (composite `s_<id>::t_<trace>`, split on `::` and look up the base `s_<id>`)
+//   `h_` -> metadata.humans (bare `h_<id>`, never composite)
+//   (no prefix) -> metadata.prompts (legacy, pre-v1.4.0, bare 16-hex)
+// A row whose id is an `h_` key is ALWAYS a known-human attestation, never agent work (§1.2.3.1 "Human Keys":
+// "Human keys: MUST correspond to an entry in `metadata.humans`"). T76 review (2026-11-03): the original fix
+// only excluded `s.sessionId in parsed.meta.humans` -- an exact-string lookup. Two real cases that check missed:
+//  1. the BASE of a composite `base::sub` id is the humans key (not the full composite string) -- can't happen
+//     with a spec-compliant `h_` key (never composite), but a malformed/future note could still carry one, and
+//     checking the base, not just the full id, costs nothing and closes the gap either way.
+//  2. an `h_`-prefixed id shows up with `meta.humans` absent entirely (older note, or a parser that dropped the
+//     map) -- the prefix itself identifies it as human per the spec, independent of whether the map confirms
+//     it; treating a bare prefix match as "unknown, import it" would be the wrong-link class this task exists
+//     to catch, so an h_-prefixed id with no humans map is still excluded (treated as human / skipped).
+function isHumanRow(sessionId: string, humans: GitAiMetadata['humans']): boolean {
+  // spec: h_ prefix always identifies a human key, map or not. The spec never writes composite h_ ids or an
+  // upper-case prefix, but fail closed on both: any part of a base::sub id that is human-shaped or a humans key
+  // excludes the row (review 2, T76: s_x::h_y and H_ leaked).
+  const parts = sessionId.split('::');
+  for (const part of [sessionId, ...parts]) {
+    if (/^h_/i.test(part)) return true;
+    if (humans && part in humans) return true;
+  }
+  return false;
+}
+
 export function gitAiToRawIntents(parsed: { files: GitAiFileEntry[]; meta: GitAiMetadata }): RawIntent[] {
   const out: RawIntent[] = [];
   for (const f of parsed.files) {
     for (const s of f.sessions) {
-      const prompt = parsed.meta.prompts?.[s.sessionId];
+      // A row whose id is a key in meta.humans (or h_-prefixed at all, per the spec) is a known_human
+      // checkpoint, not agent work -- importing it would be a wrong link (T76 real-samples/gitai/
+      // note-3-multi-file-mixed-human-ai.txt, fileB.js rows).
+      if (isHumanRow(s.sessionId, parsed.meta.humans)) continue;
+      const legacyPrompt = parsed.meta.prompts?.[s.sessionId]; // docs' shape: prompts keyed by the bare sessionId
+      // Real shape: an AI row's id is "<base_session_id>::<sub_session_id>"; meta.sessions is keyed by the base.
+      const baseId = s.sessionId.split('::')[0]!;
+      const session = parsed.meta.sessions?.[baseId] ?? parsed.meta.sessions?.[s.sessionId];
+      const agent = legacyPrompt?.agent ?? session?.agent_id?.tool;
+      const model = legacyPrompt?.model ?? session?.agent_id?.model;
       for (const r of s.ranges) {
         out.push({
           source: 'git-ai',
@@ -84,8 +128,8 @@ export function gitAiToRawIntents(parsed: { files: GitAiFileEntry[]; meta: GitAi
           file: f.file,
           startLine: r.startLine,
           endLine: r.endLine,
-          agent: prompt?.agent,
-          model: prompt?.model,
+          agent,
+          model,
           commitSha: parsed.meta.base_commit_sha,
         });
       }
