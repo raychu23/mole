@@ -78,7 +78,8 @@ export interface CouplingResult {
   pairs: CouplingPair[];
   /** commits read from `git log`, before the changeset-size filter */
   commitsConsidered: number;
-  /** distinct rankable files with >= minRevs (post changeset-size-filter) revisions */
+  /** distinct rankable files touched by any commit that passed the changeset-size filter (min-revs is a pair
+   * filter on the pair's average revisions, as in code-maat, so it no longer narrows this count) */
   filesConsidered: number;
   codeownersPath: string | null;
   minRevs: number;
