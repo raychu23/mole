@@ -1,22 +1,22 @@
 ---
-state: submitted
+state: verified
 owner: codex-capture
 repo:
 branch: build/t51-capture-1102
 worktree: /Users/a1/.hermes/cache/scratch/mole-build/T51
 base: 0029416
-reviewer:
-updated: 2026-11-02 18:13
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+reviewer: hermes-subagent deleg_aea3aa68 (fresh, claude-sonnet-5)
+updated: 2026-11-02 18:14
+status: ledger verified
+next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
 claimed: 2026-11-02 16:54
 ---
 ```notes
 T51-capture-cli-dedupe      ledger task (rules.md §3 code features)      project tasks
     goal                    adr-tools-style record workflow (mole decision new / supersede / link writing both sides atomically) + Graphiti-style deterministic fuzzy dedupe (exact + MinHash/LSH, no LLM stage) for multi-source records. Source: Project/Mole/context/product-plan/systems/core-audit/capture-records-schema.md top 3-4.
     done-when               1 failing tests first · 2 supersede updates both records in one write · 3 near-duplicate imports flagged, not merged silently · 4 npm run check
-    status                  2026-11-02 submitted      report: tasks/T51-capture-cli-dedupe/2 insights.md · checks exit 0 · note: worktree npm run check after fast-forward to
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    status                  2026-11-02 verified      reviewer hermes-subagent deleg_aea3aa68 (fresh, claude-sonnet-5) · findings: PASS: traversal, overwrite, crash+recover,
+    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
     pinned
     mode                    one worker
     boundary                packages/decisions/src/cli.ts plus capture modules/tests, no edits to cascade, argdown, reasoning or shared manifests without reporting

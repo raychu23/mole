@@ -5,4 +5,6 @@ ledger (newest last, nothing deleted)
     2026-11-02 16:54      ready → running      worktree /Users/a1/.hermes/cache/scratch/mole-build/T51 · branch build/t51-capture-1102 · base 0029416
     2026-11-02 18:13      running → submitted      report: tasks/T51-capture-cli-dedupe/2 insights.md · checks exit 0 · note: worktree npm run check after fast-forward to main (has 539db48 MCP test isolation), generated data/m0-engine-report.json copied from main (gitign
     2026-11-02 18:13      checks ran: npm run check in /Users/a1/.hermes/cache/scratch/mole-build/T51 → exit 0 (at new Promise (<anonymous>))
+    2026-11-02 18:14      submitted → verified      reviewer hermes-subagent deleg_aea3aa68 (fresh, claude-sonnet-5) · findings: PASS: traversal, overwrite, crash+recover, injection, idempotent link, graph edges, 0/151 LSH misses, low open: CRLF normalised on relation wri
+    2026-11-02 18:14      checks ran: npm run check in /Users/a1/.hermes/cache/scratch/mole-build/T51 → exit 0 (at new Promise (<anonymous>))
 ```
