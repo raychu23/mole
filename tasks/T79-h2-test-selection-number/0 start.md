@@ -1,5 +1,5 @@
 ---
-state: proposed
+state: ready
 owner: hermes-build
 repo:
 branch:
@@ -7,15 +7,15 @@ worktree:
 base:
 reviewer:
 updated: 2026-11-03 07:03
-status: ledger proposed
-next: fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+status: ledger ready
+next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
 ---
 ```notes
 T79-h2-test-selection-number      ledger task (rules.md §3 code features)      project tasks
     goal                    Resolve D52: the H2 head-to-head (hand-back test selection, packages/verify/src/testmap.ts vs named baselines, packages/bench/src/h3-baselines.ts + scoreboard) reports internally inconsistent numbers (18.5% vs 1347.5%). Reproduce from the frozen inputs, find the arithmetic or definition bug, fix the bench (not the product unless the product is wrong, then a separate commit with its own test), and report the corrected metric with the field's standard names (test impact analysis / regression test selection: inclusiveness = recall of failing tests, selection size %, time saved; cite RTS papers e.g. Ekstazi, STARTS, Gligoric/Legunsen).
     done-when               1 prior-art note naming the standard RTS metrics with sources · 2 a failing test reproducing the inconsistency (red) · 3 fixed, corrected numbers in 4 log/results.md with the old vs new and why · 4 bench + verify tests pass
-    status                  2026-11-03 proposed
-    next                    fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+    status                  2026-11-03 ready      owner hermes-build
+    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
     pinned
     mode                    one worker
     boundary                packages/bench, packages/verify (only if the product is wrong), tests
