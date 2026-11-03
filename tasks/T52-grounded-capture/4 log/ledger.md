@@ -5,4 +5,5 @@ ledger (newest last, nothing deleted)
     2026-11-01 21:51      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T52-grounded-capture · branch ledger/t52-grounded-capture · base ceb35b5
     2026-11-01 23:18      running → submitted      report: packages/decisions/src/compile/ground.ts (new: repo map, code search, verifyScope/verifyMatch with breadth caps) + draft.ts (compilePromptGrounded, draftChecksForGrounded) + cli.ts (--grounded --repo) + types.ts 
     2026-11-01 23:18      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T52-grounded-capture → exit 0 (at new Promise (<anonymous>))
+    2026-11-02 23:48      submitted → failed      cause: gate missed: routing accuracy dev 0.36 / heldout 0.21 vs T49 0.39 (4 log/results.md), verification fixes hallucinated paths, not over-broad real ones, superseded by T53 semantic routing (routes by meaning, 28/29 c
 ```
