@@ -1,0 +1,17 @@
+HIGH 2 latency proof (Review 1): PreToolUse hook (Edit) latency, n=30 each, identical harness
+(same temp repo, same root, same empty-inbox session per call), only lib.mjs's hasPendingSteer
+short-circuit toggled on/off.
+
+BEFORE (old T74 behavior: steerDeliverText always spawns `mole steer deliver`, even on an empty inbox):
+n=30 avg=156.96ms min=106.39ms max=267.91ms
+
+AFTER (HIGH 2 fix: hasPendingSteer's existsSync/JSON check short-circuits before any subprocess spawn):
+n=30 avg=76.88ms min=46.40ms max=197.09ms
+
+delta (avg): 80.08ms saved per Edit|Write call on an empty inbox -- matches the reported "+60-80ms on
+every tool call" finding; after the fix only a session with a genuinely pending signal/update pays for
+the CLI spawn (the inbox write->read->exactly-once-delivery path still goes through the real CLI, see
+HIGH 3 below).
+
+Isolated CLI-spawn cost for reference (`mole steer deliver` alone, no hook wrapper), n=30:
+n=30 avg=71.35ms min=47.77ms max=172.80ms

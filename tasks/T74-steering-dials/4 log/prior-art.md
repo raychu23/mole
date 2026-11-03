@@ -87,3 +87,49 @@ condition, not LangGraph's pause-and-resume.
   `*`) and `user-prompt-submit.mjs`: both call `mole steer deliver --session <id> --json` and surface the result as
   `additionalContext`, never a decision field -- so the hook never blocks, matching Claude Code's own
   block-vs-additionalContext split above.
+
+## Review 1 additions (fetched + dated 2026-11-03): atomic inbox claim (HIGH 3)
+
+### 4. Maildir delivery: tmp -> new is atomic via rename() (fetched 2026-11-03)
+- https://en.wikipedia.org/wiki/Maildir
+- https://manpages.debian.org/stretch/qmail/maildir.5.en.html (qmail's original maildir(5) spec)
+
+What it says: a message is written privately into a maildir's `tmp/` subdirectory under a name guaranteed unique
+(`time.pid.host`), then becomes visible to every reader in one step by a `rename()` (or link()+unlink()) into
+`new/`. POSIX `rename()` within one filesystem is atomic -- every other process sees either the whole old state or
+the whole new state, never a partial write -- so readers never need to coordinate with the writer through a
+separate lock, and this is exactly why Maildir works even over NFS where `flock()`/`fcntl()` locking was unreliable.
+
+**What we borrow:** the inbox file itself doubles as its own mutual-exclusion token. `withInboxClaim`
+(`packages/agentstate/src/steer/store.ts`) renames the canonical inbox to a unique per-process "claimed" name;
+`rename()`'s atomicity guarantees at most one racer's rename can succeed against a given canonical path, so the
+winner is provably the only process holding the content. It mutates, then renames back to release -- the Maildir
+"publish by rename" step, run in reverse (claim by rename, publish-the-release by rename).
+
+**What does not fit:** Maildir's three-subdirectory (`tmp`/`new`/`cur`) layout models a queue of many
+independently-named messages a reader drains one at a time; our inbox is a single small JSON document per session
+(all pending signals/updates in one file), so there is no `tmp`/`new` split -- the "claim" step plays the role
+`tmp` would, and the single canonical path plays the role `new`/`cur` would, collapsed into one file since the
+whole inbox is cheap to read-modify-write in one shot.
+
+### 5. git's lockfile API: O_EXCL create + rename to commit (fetched 2026-11-03)
+- https://git-scm.com/docs/api-lockfile/2.0.5 (git's own technical docs for the mechanism behind `.git/index.lock`)
+- https://stackoverflow.com/questions/20268300/what-does-the-git-index-lock-file-actually-do (citing the same docs)
+
+What it says: "when we write out a new index file, first we create a new file `$GIT_DIR/index.lock`, write the new
+contents into it, and rename it to the final destination `$GIT_DIR/index`. We try to create the `index.lock` file
+with `O_EXCL` so that we can notice and fail when somebody else is already trying to update the index file."
+Automatic cruft removal (an atexit/signal handler unlinking stale lock files) is the other half of the API.
+
+**What we borrow:** the bootstrap case -- a session's very first `mole steer signal` call, when no inbox file
+exists yet at all -- uses the identical `O_EXCL` idiom (`openSync(canonical, 'wx')`): only one of several racers
+creating a brand-new inbox can win the exclusive create, and the loser retries the normal claim-by-rename loop
+instead of silently overwriting the winner's write (the bug a plain `writeFileSync` on first-use would have).
+
+**What does not fit:** git's lockfile is a SEPARATE file (`index.lock`) next to the file it protects, with explicit
+commit/rollback calls and crash cleanup via atexit handlers; we fold the lock into the protected file itself (no
+separate `.lock` file to go stale) because a `mole steer` CLI process is always short-lived and synchronous end to
+end -- there is no long-held lock across an async boundary that could be abandoned by a crash the way git's
+lockfile API explicitly guards against, so we accepted a simpler bounded-retry loop (300 attempts x 10ms, ~3s
+ceiling, comfortably inside the hooks' own 15/30s timeouts) instead of git's cleanup machinery.
+

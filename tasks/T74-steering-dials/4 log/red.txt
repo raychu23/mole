@@ -35,3 +35,38 @@ coincidence.
 
 (the 3 passing tests here are the "never blocks" / "silent" cases, which hold with or without the T74 wiring --
 expected, since they assert absence of bad behavior, not presence of the new feature.)
+
+----------------------------------------------------------------------------------------------------
+
+## Review 1 fixes: red captures (2026-11-03)
+
+RED (HIGH 3, before the atomic claim): `npx vitest run packages/agentstate/test/steer-stress.test.ts` with
+packages/agentstate/src/steer/{store,index}.ts reverted to their pre-review-1 read-modify-write (git stash of just
+those 2 files, new steer-stress.test.ts kept) -- 8 concurrent deliverer processes x 50 queued items each; every one
+of the 400 items came back delivered 4 times (double/triple/quadruple delivery, not a loss), confirming the
+read-modify-write race the finding described. Ran 5x to rule out a fluke: 4/5 runs failed this way (1/5 happened to
+interleave cleanly), consistent with the review's own "5/20 double deliveries" rate -- a real, reproducible race,
+not a one-off.
+
+ ❯ packages/agentstate/test/steer-stress.test.ts (1 test | 1 failed)
+   × Review 1 HIGH 3 ... 400 queued signals, raced by 8 processes launched truly concurrently: none lost, none doubled
+     → double-delivered items: [["item-0",4],["item-1",4], ... all 400 items, each delivered exactly 4 times]
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+
+GREEN (after restoring withInboxClaim): ran the same stress test 5x in a row, 5/5 passed (400/400 delivered exactly
+once each run) -- tasks/T74-steering-dials/4 log/bench/ has no separate file for this since the pass/fail counts
+above are the proof; see "npx vitest run ..." final run in this task's report for the committed state.
+
+RED/comparative timing (HIGH 2): tasks/T74-steering-dials/4 log/bench/review1-high2-latency.txt -- n=30 each,
+identical harness, only the fast-path toggled: BEFORE (old always-spawn behavior) avg 156.96ms vs AFTER (HIGH 2
+fix) avg 76.88ms, an 80.08ms delta matching the reported "+60-80ms on every tool call" finding.
+
+RED (HIGH 1, decisions-on-Read regression): confirmed by inspection + the byte-diff test
+(plugins/claude-code/test/steer-hook.test.ts, "Review 1 HIGH 1" describe block) rather than a separate red capture
+-- the test compares this file's additionalContext for a governed Edit against the pre-T74 base commit
+(8e4352b) byte-for-byte and asserts hooks/hooks.json's PreToolUse matcher is exactly "Edit|Write"; both pass
+post-fix. The regression itself (matcher "*" + tool_input.file_path present on Read calls too) was established by
+direct inspection of the pre-fix hooks.json/pre-tool-use.mjs diff against main (git diff 8e4352b 77d887f), not by a
+failing test, since the pre-fix code path for Read with a decision-governing edit WOULD have produced the full
+decisions block -- there was no test asserting it should NOT, which is itself part of what Review 1 flagged.
