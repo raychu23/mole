@@ -3,4 +3,6 @@ ledger (newest last, nothing deleted)
     2026-11-03 02:52      new → proposed      Live agent steering: a small signal/update/query contract over the existing hooks transport so a person (or Mole) can steer a running agent: query = what is the
     2026-11-03 02:53      proposed → ready      owner hermes-build
     2026-11-03 02:53      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T74-steering-dials · branch ledger/t74-steering-dials · base ?
+    2026-11-03 05:15      running → submitted      report: tasks/T74-steering-dials/2 insights.md, proof 4 log/bench/review1-high2-latency.txt, worktree fast-forwarded to main (includes T75 fix for decision 0014) · checks exit 0
+    2026-11-03 05:15      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T74-steering-dials → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
