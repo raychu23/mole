@@ -37,9 +37,9 @@
 // the canonical path (atomic on POSIX) -- so a reader that opens the canonical path outside the lock (the cheap
 // `readInbox` peek in index.ts's `deliverPending`) never sees a half-written file. The canonical inbox itself is
 // NEVER renamed away, closing the exact hole Review 1's scheme had.
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, linkSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
-import { basename, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import lockfile from 'proper-lockfile';
 import type { SteerInbox } from './types.js';
 
@@ -59,6 +59,28 @@ function ensureDir(root: string): void {
       writeFileSync(gi, '# Mole: personal, never committed\n*\n');
     } catch {
       // best effort: the inbox itself still works without it
+    }
+  }
+}
+
+/** A crash between linkSync and unlinkSync leaves `<inbox>.boot-<pid>-<ts>` holding only the empty skeleton (never
+ * real items). Remove ones older than a minute so they never pile up (T84 review LOW 2). Best effort. */
+function sweepStaleBoots(canonical: string): void {
+  const dir = dirname(canonical);
+  const prefix = `${basename(canonical)}.boot-`;
+  let names: string[];
+  try {
+    names = readdirSync(dir);
+  } catch {
+    return;
+  }
+  for (const n of names) {
+    if (!n.startsWith(prefix)) continue;
+    const p = join(dir, n);
+    try {
+      if (Date.now() - statSync(p).mtimeMs > 60_000) unlinkSync(p);
+    } catch {
+      // raced with its owner or already gone
     }
   }
 }
@@ -143,11 +165,35 @@ export function withInboxClaim<T>(root: string, session: string, mutate: (inbox:
   // symlink, but mkdir-based locking still wants the parent dir ensured, done above). Create an empty inbox with
   // O_EXCL ('wx') on first-ever use so a concurrent first-writer race can't clobber a just-created file -- the
   // loser's 'wx' throws EEXIST and is ignored, same idiom git's index.lock bootstrap uses.
+  // T84: 'wx' alone is create-THEN-write, so a concurrent sender could lock and read the still-empty file. Write
+  // the full initial inbox to a private temp file and hard-link it into place: link(2) is atomic and fails with
+  // EEXIST if another process won, so the canonical path only ever appears with complete content.
+  sweepStaleBoots(canonical);
   if (!existsSync(canonical)) {
+    const boot = `${canonical}.boot-${process.pid}-${Date.now()}`;
+    const empty = JSON.stringify({ session, signals: [], updates: [] } satisfies SteerInbox);
     try {
-      writeFileSync(canonical, JSON.stringify({ session, signals: [], updates: [] } satisfies SteerInbox), { flag: 'wx' });
+      writeFileSync(boot, empty, { flag: 'wx' });
+      linkSync(boot, canonical);
     } catch (e) {
-      if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
+      const code = (e as NodeJS.ErrnoException).code;
+      if (code === 'EEXIST') {
+        // another process published the inbox first: fine
+      } else if (code === 'EPERM' || code === 'ENOTSUP' || code === 'ENOSYS' || code === 'EXDEV' || code === 'EOPNOTSUPP') {
+        // filesystem without hard links (FAT/exFAT, some network mounts): fall back to O_EXCL create; the empty-file
+        // tolerance under the lock below covers its create-then-write window (T84 review LOW 1)
+        try {
+          writeFileSync(canonical, empty, { flag: 'wx' });
+        } catch (e2) {
+          if ((e2 as NodeJS.ErrnoException).code !== 'EEXIST') throw e2;
+        }
+      } else throw e;
+    } finally {
+      try {
+        unlinkSync(boot);
+      } catch {
+        // already gone: nothing to clean
+      }
     }
   }
 
@@ -181,7 +227,20 @@ export function withInboxClaim<T>(root: string, session: string, mutate: (inbox:
   if (!release) throw lastErr instanceof Error ? lastErr : new Error(`mole steer: could not acquire inbox lock for session ${session}`);
 
   try {
-    const inbox: SteerInbox = existsSync(canonical) ? (JSON.parse(readFileSync(canonical, 'utf8')) as SteerInbox) : { session, signals: [], updates: [] };
+    // an empty file (left by a pre-T84 bootstrap or a crash before its first write) holds no items: read it as empty
+    const raw = existsSync(canonical) ? readFileSync(canonical, 'utf8') : '';
+    let inbox: SteerInbox = { session, signals: [], updates: [] };
+    if (raw.trim()) {
+      try {
+        inbox = JSON.parse(raw) as SteerInbox;
+      } catch (e) {
+        // corrupt but non-empty (disk fault, hand edit, restore): never crash every future send, never silently
+        // destroy it either -- move it aside for a person and start a fresh inbox (T84 review LOW 3)
+        const aside = `${canonical}.corrupt-${Date.now()}`;
+        renameSync(canonical, aside);
+        process.stderr.write(`mole steer: inbox for session ${session} was not valid JSON (${(e as Error).message}); kept as ${aside}\n`);
+      }
+    }
     foldOrphanedClaims(root, session, inbox);
     const result = mutate(inbox);
     const tmp = `${canonical}.tmp-${process.pid}-${randomUUID()}`;

@@ -1,0 +1,11 @@
+   × T84 inbox bootstrap > an empty inbox file (the window between create and write, or a crash mid-bootstrap) is read as an empty inbox, not a crash 10ms
+     → expected [Function] to not throw an error but 'SyntaxError: Unexpected end of JSON i…' was thrown
+   ✓ T84 inbox bootstrap > first-ever send leaves no temp files beside the inbox 6ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected [Function] to not throw an error but 'SyntaxError: Unexpected end of JSON i…' was thrown
+"SyntaxError: Unexpected end of JSON input"
+      Tests  1 failed | 1 passed (2)
+   × T84 inbox bootstrap > review LOW: a stale .boot-* temp left by a crash between link and unlink is swept 10ms
+   × T84 inbox bootstrap > review LOW: a corrupt non-empty inbox is moved aside (kept for a person) and the send still succeeds 4ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 2 passed (4)
