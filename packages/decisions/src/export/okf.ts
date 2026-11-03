@@ -128,7 +128,8 @@ export function buildOkfBundle(graph: DecisionGraph, root: string): OkfBundle {
     '',
     '# Mole decision graph export',
     '',
-    `Exported from ${graph.root} by \`mole export --format okf\` (T72). Source spec:`,
+    // T72 review: never the absolute root (a machine-local path); the bundle is meant to travel
+    `Exported from the repository's .mole records by \`mole export --format okf\` (T72). Source spec:`,
     'https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md',
     '',
     '# Concepts',

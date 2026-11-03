@@ -150,3 +150,16 @@ describe('OKF v0.2 round-trip through the reference validator', () => {
     expect(result).not.toMatch(/ERROR/);
   });
 });
+
+describe('T72 review: the bundle carries no machine-local path', () => {
+  it('no file in the bundle contains the absolute repo path or the home directory', () => {
+    const root = repo();
+    const bundle = buildOkfBundle(loadGraph(root), root);
+    const home = process.env.HOME ?? '/Users/';
+    for (const f of bundle.files) {
+      expect(f.content, f.path).not.toContain(root);
+      expect(f.content, f.path).not.toContain(home);
+    }
+  });
+});
+

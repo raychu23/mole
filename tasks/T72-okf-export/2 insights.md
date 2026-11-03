@@ -69,3 +69,11 @@ NOT RUN; the test still warns+skips gracefully if python3 is ever absent elsewhe
   actually ran and passed (not skipped).
 - Not attempted: Attested Computation concepts (§10) — out of boundary; Mole has no
   computation-execution surface for `export/` to attest.
+
+## Review 1 (deleg_6b03cdb7) FAIL HIGH → fixed
+```notes
+HIGH      index.md said "Exported from <absolute repo path>" (machine-local path in a bundle meant to travel)
+fix       generic wording · test: no bundle file contains the repo root or $HOME (red first) · decisions + daemon 410 pass
+verified  spec copy byte-identical to live SPEC.md · every emitted key in spec (§4.1/§5.1/§5.2/§5.4/§7/§12) · validator not vacuous
+          (broken frontmatter → exit 1) · Mole + dcbench exports conformant · no secrets, no writes outside --out
+```
