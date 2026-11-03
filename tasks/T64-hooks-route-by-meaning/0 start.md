@@ -1,5 +1,5 @@
 ---
-state: proposed
+state: ready
 owner: hermes-build
 repo:
 branch:
@@ -7,15 +7,15 @@ worktree:
 base:
 reviewer:
 updated: 2026-11-02 23:50
-status: ledger proposed
-next: fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+status: ledger ready
+next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
 ---
 ```notes
 T64-hooks-route-by-meaning      ledger task (rules.md §3 code features)      project tasks
     goal                    Mole's Claude Code hooks surface decisions with no file scope by MEANING before the agent edits: (1) a record with no scope: counts as repo-wide (today it is never surfaced pre-edit); (2) repo-wide decisions are ranked by BM25 (T53's scoring, mirrored dependency-free in lib.mjs with a parity test) against the text of the moment instead of id order; (3) new UserPromptSubmit hook injects the top decisions for the task prompt once per session; (4) PreToolUse ranks by the edited path + new text. Found by T63 prep: on dcbench's 15 unscoped decisions every pre-edit hook printed nothing.
     done-when               1 tests first (red) · 2 lib.mjs bm25 scores == packages/decisions/src/route/bm25.ts on a fixture corpus (parity test) · 3 unscoped + repo-wide records ranked by BM25 against the prompt / edit text, top REPO_WIDE_CAP with score > 0, zero-score dropped; with no text the old id order stays · 4 user-prompt-submit.mjs registered in hooks.json, emits additionalContext once per decision per session, never blocks, silent when nothing scores · 5 existing plugin tests unchanged and green · 6 replay on the dcbench repo copy with the generated records: the CSV-export prompt (TASK-001) surfaces D-002 (audit log) in the top 5 — recorded, NOT tuned against (protocol freeze rule) · 7 npm run check
-    status                  2026-11-02 proposed
-    next                    fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+    status                  2026-11-02 ready      owner hermes-build
+    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
     pinned
     mode                    one worker
     boundary                plugins/claude-code/scripts/{lib,pre-tool-use,session-start,user-prompt-submit}.mjs, hooks.json, plugin tests
