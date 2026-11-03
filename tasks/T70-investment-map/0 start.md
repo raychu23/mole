@@ -1,21 +1,22 @@
 ---
-state: ready
+state: running
 owner: hermes-build
-repo:
-branch:
-worktree:
+repo: /Users/a1/Desktop/CS Code/Project/Mole
+branch: ledger/t70-investment-map
+worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T70-investment-map
 base:
 reviewer:
 updated: 2026-11-03 01:54
-status: ledger ready
-next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+status: ledger running
+next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+claimed: 2026-11-03 01:54
 ---
 ```notes
 T70-investment-map      ledger task (rules.md §3 code features)      project tasks
     goal                    Rank code areas to pay down from data Mole already has (D68): churn x complexity hotspots (Tornhill/code-maat) x decision volatility (temporal revisions) x incident/fix density (history), as `mole hotspots` (CLI + read-only MCP tool), each rank explained by its four inputs.
     done-when               1 prior-art note (Tornhill, code-maat, Nagappan & Ball churn) · 2 tests first on a fixture repo · 3 run on Mole's own repo: top 10 with inputs in 4 log · 4 touched packages' tests pass
-    status                  2026-11-03 ready      owner hermes-build
-    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+    status                  2026-11-03 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T70-investment-map · branch ledger/t70-investment-map · base ?
+    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
     pinned
     mode                    one worker
     boundary                packages/history or new packages/hotspots, daemon cli, mcp tool, tests
