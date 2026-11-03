@@ -42,6 +42,37 @@ the first regex to be impossibly precise. T66 borrows that shape directly: `isEx
 routing) stays; a new `isModuleExportTitle` (title mentions `export(s)` together with `default`/`named`/`module`/
 `barrel`/`index`/`re-export`, grounded in source #1's actual vocabulary) decides crispness.
 
+## 4. Review-1 fix (HIGH): evidence for a wider module-export vocabulary, fetched fresh 2026-11-03
+Review-1 found the round-3 `isModuleExportTitle` (requiring "export(s)" + one of default/named/module/barrel/
+index/re-export in the SAME title) too narrow in two ways: (a) it has no word for "convention(s)" itself, so a
+title literally named after the convention ("Export conventions", "Export Convention") failed its own gate; (b) its
+`\bre-?export\b` word-boundary test cannot match "re-exporting" (the trailing "ing" breaks the closing `\b`), so
+"Barrel files re-exporting" only passed by accident, via "barrel", in cases that lack a bare "barrel"/"index"/etc.
+word. Evidence gathered to fix the vocabulary from real-world wording, not ad hoc:
+- `github.com/import-js/eslint-plugin-import/blob/main/README.md` (fetched 2026-11-03): rule names/descriptions
+  `no-default-export` ("Forbid default exports"), `prefer-default-export`, `no-named-export`, `no-named-default`,
+  `no-anonymous-default-export` ("Forbid anonymous values as default exports"), `group-exports` ("Prefer named
+  exports to be grouped together in a single export declaration") -- all pair "export(s)" with default/named/
+  anonymous/grouped vocabulary, confirming default/named stay central and adding no new words needed beyond what
+  round 3 already had.
+- `github.com/luciocabrera/lcabrera-stack/blob/main/docs/decisions/ADR-007-barrel-export-boundaries.md` (fetched
+  2026-11-03): a real ADR titled "Barrel Export Boundaries", body talks about "public API" and "stable module
+  boundaries" -- confirms "barrel" + "public api" as real module-export-ADR title vocabulary.
+- `github.com/danielsimonjr/MemoryJS/blob/master/docs/development/ARCHITECTURE_DECISIONS.md` (fetched 2026-11-03):
+  ADR-008 titled "Barrel Export Pattern" -- a second independent real ADR confirming "barrel" + "export" as a
+  title pairing distinct from any data-export sense.
+- Backstage ADR004's own body (already quoted in #1 above): "only index files will have re-exports" -- confirms
+  "index files" is genuine module-structure phrasing, used as the basis for deliberately NOT adding "file"/"files"
+  to the data-export exclusion list (unlike the task description's example list), since that would make "Barrel
+  files re-exporting" and "index files" false negatives for no real-corpus benefit (no bench/task data-export title
+  contains "file").
+Fix: widened `isModuleExportTitle`'s module-vocabulary alternation to add `convention(s)`, `entry point`, `public
+api`, `api surface`, and moved the re-export alternative outside the `\b...\b` wrapper as `re-?export(?:s|ing)?` so
+it matches "re-exporting"/"re-exports" too. Added a `dataVocab` exclusion (data/csv/report(s)/download(s)/
+endpoint(s)/job(s)/pipeline(s)/user(s)/excel/pdf, deliberately NOT "file") as a safety net for titles that mix both
+registers (e.g. "Default export of CSV report data"), kept as a strictly later/independent check so none of the six
+review-1 negative titles needed it (all six already fail at the module-vocabulary step with no module word present).
+
 ## What we borrow / what does not fit
 Borrow: CODEOWNERS' "broad test picks the candidate set, a more specific test decides the outcome" layering (#2), and
 typescript-eslint naming-convention's two-regex composition shape for implementing it (#3), applied to the exact

@@ -31,3 +31,101 @@ Received: [31m"[7mzero-[27mllm"[39m
    Start at  02:02:57
    Duration  4.83s (transform 1.09s, setup 0ms, collect 1.97s, tests 2.39s, environment 0ms, prepare 154ms)
 
+
+---- review-1 fix round (2026-11-03): packages/decisions/test/options-module-export-title.test.ts, red before fix ----
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T66-export-convention-trap
+
+ ❯ packages/decisions/test/options-module-export-title.test.ts (35 tests | 6 failed) 8ms
+   × T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Export conventions 4ms
+     → expected false to be true // Object.is equality
+   × T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Export Convention 0ms
+     → expected false to be true // Object.is equality
+   × T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Barrel files re-exporting 0ms
+     → expected false to be true // Object.is equality
+   ✓ T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Avoid Default Exports and Prefer Named Exports 0ms
+   ✓ T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Module Export Structure 0ms
+   ✓ T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Prefer named exports over default exports 0ms
+   ✓ T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Disallow default exports 0ms
+   ✓ T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): No anonymous default export 0ms
+   ✓ T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Group named exports together 0ms
+   ✓ T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Barrel export boundaries 0ms
+   ✓ T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Barrel export pattern 0ms
+   ✓ T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Index files re-export only their own directory 0ms
+   × T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Public API surface exported via barrel index 0ms
+     → expected false to be true // Object.is equality
+   ✓ T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Single entry point module exports 0ms
+   ✓ T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Re-exporting named exports through index.ts 0ms
+   ✓ T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Export convention: named exports only 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Audit every data export 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): CSV export 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Export job scheduling 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Exporting reports 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Data exporter config 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Export endpoint rate limits 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Nightly data export job 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): User export to CSV 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): PDF export rate limiting 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Export report generation pipeline 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Excel export formatting 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Bulk user data export 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Scheduled export job for analytics pipeline 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Download export endpoint timeout 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Export audit log retention 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Customer data export compliance 0ms
+   ✓ T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Export pipeline for reports 0ms
+   × T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Default export of CSV report data 0ms
+     → expected true to be false // Object.is equality
+   × T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Barrel file for user export job 0ms
+     → expected true to be false // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/decisions/test/options-module-export-title.test.ts > T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Export conventions
+ FAIL  packages/decisions/test/options-module-export-title.test.ts > T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Export Convention
+ FAIL  packages/decisions/test/options-module-export-title.test.ts > T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Barrel files re-exporting
+ FAIL  packages/decisions/test/options-module-export-title.test.ts > T66 review-1: isModuleExportTitle table > crisp (module-export vocabulary): Public API surface exported via barrel index
+AssertionError: expected false to be true // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+ ❯ packages/decisions/test/options-module-export-title.test.ts:63:40
+     61| describe('T66 review-1: isModuleExportTitle table', () => {
+     62|   it.each(CRISP_MODULE_EXPORT_TITLES)('crisp (module-export vocabulary…
+     63|     expect(isModuleExportTitle(title)).toBe(true);
+       |                                        ^
+     64|   });
+     65| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  packages/decisions/test/options-module-export-title.test.ts > T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Default export of CSV report data
+ FAIL  packages/decisions/test/options-module-export-title.test.ts > T66 review-1: isModuleExportTitle table > NOT crisp (data/business export vocabulary): Barrel file for user export job
+AssertionError: expected true to be false // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ packages/decisions/test/options-module-export-title.test.ts:67:40
+     65| 
+     66|   it.each(NON_CRISP_DATA_EXPORT_TITLES)('NOT crisp (data/business expo…
+     67|     expect(isModuleExportTitle(title)).toBe(false);
+       |                                        ^
+     68|   });
+     69| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 29 passed (35)
+   Start at  02:33:19
+   Duration  736ms (transform 91ms, setup 0ms, collect 485ms, tests 8ms, environment 0ms, prepare 51ms)
+
