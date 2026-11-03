@@ -8,7 +8,7 @@ import { formatSections, sectionsOf } from './rationale.js';
 import type { DecisionsResult, FlagContext, FlagResult, LoadOptions } from './types.js';
 import { CaptureError, linkDecisions, newDecision, readDecisionRecords, recoverTransactions, supersedeDecision } from './capture/records.js';
 import { suggestDuplicates } from './capture/dedupe.js';
-import { comparePhases, evaluatePhase, PrioritiesError, readPriorities } from './priorities.js';
+import { comparePhases, compareWithOrder, evaluatePhase, PrioritiesError, readPriorities, setPriorities } from './priorities.js';
 import { acceptIncident, dismissIncident, IncidentError, incidentSummary, suggestRevivals } from './incidents/revive.js';
 import { recallSimilar, RecallError } from './recall/recall.js';
 
@@ -196,8 +196,11 @@ export function incidentCli(pos: string[], flags: Record<string, string | true>,
   }
 }
 
-/** `mole priorities [--phase P | --at YYYY-MM-DD]` · `mole priorities list` · `mole priorities compare <A> <B>` (T60). Read-only, JSON. */
-export function prioritiesCli(pos: string[], flags: Record<string, string | true>, root: string): number {
+/** `mole priorities [--phase P | --at YYYY-MM-DD]` · `mole priorities list` · `mole priorities compare <A> <B>` (T60) ·
+ *  `mole priorities set --phase P --order a,b,c` (T73: writes .mole/priorities.md, a person's act) ·
+ *  `mole priorities whatif --order a,b,c [--phase P | --at D]` (T73: compares the phase in force against an
+ *  arbitrary order, never writes -- the panel's/CLI's "compare with order X"). */
+export async function prioritiesCli(pos: string[], flags: Record<string, string | true>, root: string): Promise<number> {
   const [sub, a, b] = pos;
   try {
     let out: unknown;
@@ -209,10 +212,25 @@ export function prioritiesCli(pos: string[], flags: Record<string, string | true
       out = comparePhases(root, a, b);
     } else if (sub === 'list') {
       out = readPriorities(root);
+    } else if (sub === 'set') {
+      const phase = str(flags.phase);
+      const orderStr = str(flags.order);
+      if (!phase || !orderStr) {
+        console.error('usage: mole priorities set --phase P --order a,b,c');
+        return 2;
+      }
+      out = await setPriorities(root, phase, orderStr.split(',').map((s) => s.trim()).filter(Boolean));
+    } else if (sub === 'whatif') {
+      const orderStr = str(flags.order);
+      if (!orderStr) {
+        console.error('usage: mole priorities whatif --order a,b,c [--phase P | --at YYYY-MM-DD]');
+        return 2;
+      }
+      out = compareWithOrder(root, orderStr.split(',').map((s) => s.trim()).filter(Boolean), { ...(str(flags.phase) ? { phase: str(flags.phase)! } : {}), ...(str(flags.at) ? { at: str(flags.at)! } : {}) });
     } else if (sub === undefined) {
       out = evaluatePhase(root, { ...(str(flags.phase) ? { phase: str(flags.phase)! } : {}), ...(str(flags.at) ? { at: str(flags.at)! } : {}) });
     } else {
-      console.error('usage: mole priorities [--phase P | --at YYYY-MM-DD] | list | compare <A> <B>');
+      console.error('usage: mole priorities [--phase P | --at YYYY-MM-DD] | list | compare <A> <B> | set --phase P --order a,b,c | whatif --order a,b,c');
       return 2;
     }
     console.log(JSON.stringify(out, null, 2));

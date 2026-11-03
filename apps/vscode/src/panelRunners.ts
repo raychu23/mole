@@ -186,6 +186,14 @@ export function makeRunners(h: CliHandle, client: () => MoleClient | undefined):
     async prioritiesCompare(a, b) {
       return run(h, ['priorities', 'compare', a, b]) as never;
     },
+    // T73: the panel's "compare with order X" what-if -- never writes .mole/priorities.md (the CLI's own
+    // `whatif` subcommand is read-only, @mole/decisions compareWithOrder); resolved against today, same as
+    // `priorities()` above, so the baseline side of the diff matches what the passive section already shows.
+    async prioritiesWhatIf(order) {
+      const d = new Date();
+      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return run(h, ['priorities', 'whatif', '--order', order.join(','), '--at', today]) as never;
+    },
     async incidents() {
       return run(h, ['incident', 'list']) as never;
     },

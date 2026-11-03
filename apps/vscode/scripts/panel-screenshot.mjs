@@ -25,9 +25,10 @@ const cfgPath = join(SCRATCH, 'm26-check.json');
 const resultPath = join(SCRATCH, 'result.json');
 const shotBase = join(SCRATCH, 'shot');
 // T62: WORKSPACE / FILES (comma list) / SCROLL_TO (section id) / MODEL_OUT (keep the rendered model) overrides
+// T73: WHATIF_ORDER (comma list of tenet ids) scripts the reasoning section's "compare with order X" before the shot
 const WORKSPACE = process.env.WORKSPACE ?? repoRoot;
 const FILES = process.env.FILES ? process.env.FILES.split(',') : ['apps/vscode/src/panelData.ts'];
-writeFileSync(cfgPath, JSON.stringify({ out: resultPath, shot: shotBase, files: FILES, ...(process.env.SCROLL_TO ? { scrollTo: process.env.SCROLL_TO } : {}) }));
+writeFileSync(cfgPath, JSON.stringify({ out: resultPath, shot: shotBase, files: FILES, ...(process.env.SCROLL_TO ? { scrollTo: process.env.SCROLL_TO } : {}), ...(process.env.WHATIF_ORDER ? { whatIfOrder: process.env.WHATIF_ORDER } : {}) }));
 const env = { ...process.env, MOLE_M26_CHECK: cfgPath, MOLE_STATE_DIR: join(SCRATCH, 'state') };
 const child = spawn(CODE, ['--new-window', '--user-data-dir', ud, '--extensions-dir', extDir, '--extensionDevelopmentPath', extRoot, '--disable-workspace-trust', '--skip-welcome', '--skip-release-notes', WORKSPACE], { env, stdio: 'ignore' });
 

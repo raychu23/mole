@@ -91,10 +91,36 @@ textarea{width:100%;min-height:40px}
       this.saveExplain(String(m.text));
     } else if (m.type === 'runTests') {
       await this.runTests();
+    } else if (m.type === 'reasoningWhatIf') {
+      await this.reasoningWhatIf(String(m.order ?? ''));
     }
   }
 
   private lastTarget?: BuildTarget;
+
+  /** T73: the panel's "compare with order X" what-if -- never writes; merges into the already-rendered model
+   *  and re-posts it (the same patch-on-postMessage idiom every other refresh uses, M26b), so renderReasoning
+   *  (webview/reasoning.ts) is the one place that knows how to show it. */
+  private async reasoningWhatIf(orderCsv: string): Promise<void> {
+    const order = orderCsv.split(',').map((s) => s.trim()).filter(Boolean);
+    if (!this.lastModel || order.length === 0) return;
+    const reasoning = this.lastModel.sections.reasoning;
+    const data = { ...(reasoning.data as Record<string, unknown>) };
+    try {
+      const comparison = await this.runners.prioritiesWhatIf(order);
+      data.whatIf = { order, comparison };
+    } catch (e) {
+      data.whatIf = { order, comparison: { error: (e as Error).message.split('\n')[0] } };
+    }
+    this.lastModel = { ...this.lastModel, sections: { ...this.lastModel.sections, reasoning: { ...reasoning, data } } };
+    await this.post(this.lastModel, ++this.seq);
+  }
+
+  /** M26 check proof only: fills the what-if input and clicks Compare, the same deterministic-click idiom
+   *  webview/main.ts's selftestClick uses for the map panel. Never called outside a scripted check. */
+  triggerWhatIf(order: string): void {
+    void this.view?.webview.postMessage({ type: 'selftestWhatIf', order });
+  }
 
   private async addNote(text: string): Promise<void> {
     if (!this.lastTarget?.symbol) return;

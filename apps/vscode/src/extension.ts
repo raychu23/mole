@@ -233,7 +233,7 @@ async function m26Check(mole: MolePanel, panelView: MolePanelView | undefined, r
     }
     if (!raw) await new Promise((r) => setTimeout(r, 250));
   }
-  const cfg = JSON.parse(raw || '{}') as { out?: string; files?: string[]; shot?: string; scrollTo?: string };
+  const cfg = JSON.parse(raw || '{}') as { out?: string; files?: string[]; shot?: string; scrollTo?: string; whatIfOrder?: string };
   if (!cfg.out) {
     output.appendLine(`m26 check: could not read config at ${cfgPath}`);
     return;
@@ -278,7 +278,9 @@ async function m26Check(mole: MolePanel, panelView: MolePanelView | undefined, r
       // the only thing this screenshot deliberately avoids — it needs a macOS Automation grant this sandboxed
       // run does not have; see tasks/T34-one-panel/2 insights.md).
       if (cfg.scrollTo) panelView?.scrollTo(cfg.scrollTo); // T62: bring one section into view for its screenshot
-      await new Promise((r) => setTimeout(r, 1500));
+      if (cfg.whatIfOrder) panelView?.triggerWhatIf(cfg.whatIfOrder); // T73: script the what-if before the shot
+      await new Promise((r) => setTimeout(r, cfg.whatIfOrder ? 3000 : 1500)); // the what-if is one more CLI round trip
+      out.model = panelView?.lastModel; // T73: re-capture AFTER the what-if round trip updated it (was stale above)
       writeFileSync(`${cfg.shot}.ready`, 'ok');
       await new Promise((r) => setTimeout(r, 4000));
     }
