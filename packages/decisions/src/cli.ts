@@ -8,6 +8,7 @@ import { formatSections, sectionsOf } from './rationale.js';
 import type { DecisionsResult, FlagContext, FlagResult, LoadOptions } from './types.js';
 import { CaptureError, linkDecisions, newDecision, readDecisionRecords, recoverTransactions, supersedeDecision } from './capture/records.js';
 import { suggestDuplicates } from './capture/dedupe.js';
+import { acceptIncident, dismissIncident, IncidentError, suggestRevivals } from './incidents/revive.js';
 
 /** The JSON `mole decisions --json` prints and the MCP tool mole_decisions returns. Every decision/tenet
  * node (T43) gets its full rationale text attached (bounded, section-aware -- see rationale.ts), read
@@ -143,5 +144,33 @@ export function decisionCli(pos: string[], flags: Record<string, string | true>,
   } catch (error) {
     console.error(`mole decision new: ${error instanceof Error ? error.message : String(error)}`);
     return error instanceof CaptureError ? 2 : 1;
+  }
+}
+
+/** `mole incident suggest <id>` (read-only advice) · `mole incident accept|dismiss <id> --argument <A>` (the person's step).
+ *  T58, plan update 11-01 §6: an incident never changes a decision's status by itself. */
+export function incidentCli(pos: string[], flags: Record<string, string | true>, root: string): number {
+  const [sub, id] = pos;
+  const usage = 'usage: mole incident suggest <incident-id> | mole incident accept|dismiss <incident-id> --argument <argument-id>';
+  if (!sub || !id || !['suggest', 'accept', 'dismiss'].includes(sub)) {
+    console.error(usage);
+    return 2;
+  }
+  try {
+    if (sub === 'suggest') {
+      console.log(JSON.stringify({ incident: id, candidates: suggestRevivals(root, id) }, null, 2));
+      return 0;
+    }
+    const arg = str(flags.argument);
+    if (!arg) {
+      console.error(usage);
+      return 2;
+    }
+    const r = sub === 'accept' ? acceptIncident(root, id, arg) : dismissIncident(root, id, arg);
+    console.log(JSON.stringify(r, null, 2));
+    return 0;
+  } catch (error) {
+    console.error(`mole incident ${sub}: ${error instanceof Error ? error.message : String(error)}`);
+    return error instanceof IncidentError ? 2 : 1;
   }
 }

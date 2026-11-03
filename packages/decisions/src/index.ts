@@ -5,7 +5,7 @@ export { frontMatter, loadGraph, MOLE_DIR, normStatus } from './graph.js';
 export { formatSections, RATIONALE_BUDGET, sectionsOf, type DecisionSections } from './rationale.js';
 export { computeFlags } from './flags.js';
 export { contentHash } from './anchors.js';
-export { decisions, decisionsCli, decisionCli, formatDecisions } from './cli.js';
+export { decisions, decisionsCli, decisionCli, formatDecisions, incidentCli } from './cli.js';
 export { applyRecordTransaction, CaptureError, ID_PATTERN, linkDecisions, newDecision, recoverTransactions, supersedeDecision } from './capture/records.js';
 export type { CaptureResult, NewDecisionInput, TransactionEntry } from './capture/records.js';
 export { suggestDuplicates } from './capture/dedupe.js';
@@ -27,3 +27,5 @@ export { loadArgdown } from './argdown/loader.js';
 // T54: derive a Dung framework from an ADR's own MADR/Nygard sections (no hand-authored Argdown file)
 export { deriveAdrArgumentFramework } from './argdown/derive-adr.js';
 export type { AdrArgument, AdrArgumentFramework, AdrArgumentRole } from './argdown/derive-adr.js';
+export { acceptIncident, dismissIncident, IncidentError, incidentArgumentId, suggestRevivals } from './incidents/revive.js';
+export type { IncidentWrite, RevivalCandidate, RevivalEvidence } from './incidents/revive.js';

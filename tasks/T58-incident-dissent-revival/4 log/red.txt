@@ -1,0 +1,7 @@
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  packages/decisions/test/incident-revive.test.ts > mole incident suggest (done-when 2): read-only, deterministic, evidence on every candidate > lists the losing argument of a decision the incident names, with the evidence, and nothing unrelated
+TypeError: (0 , suggestRevivals) is not a function
+ FAIL  packages/decisions/test/incident-revive.test.ts > mole incident suggest (done-when 2): read-only, deterministic, evidence on every candidate > finds the same candidate through a shared scope path when the incident names no decision
+   × mole incident accept / dismiss (done-when 3, 4) > a candidate shows every OTHER argument its accept would also bring back (dry run), so the person sees the knock-on 7ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 10 passed (11)
