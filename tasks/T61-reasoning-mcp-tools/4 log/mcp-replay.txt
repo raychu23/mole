@@ -1,0 +1,139 @@
+# T61 replay 11-02 — real python-tuf ADR 0002 records + T60 illustrative tenets/phases + T58 illustrative incident (before accept); two proposals, lts-window adds <security-window> -> <best-effort>. Repo /Users/a1/.hermes/cache/scratch/t61-replay/r
+# tools/list (stdio, real mole-mcp): mole_priorities readOnly=true · mole_incident_suggest readOnly=true · mole_proposals_compare readOnly=true
+
+## mole_priorities {"compare":["launch","scale"]}
+{
+  "from": "launch",
+  "to": "scale",
+  "arguments": [
+    {
+      "id": "best-effort",
+      "before": "in",
+      "after": "out",
+      "flipped": [
+        {
+          "from": "parallel",
+          "to": "best-effort",
+          "fromValue": "tenet-users",
+          "toValue": "tenet-focus",
+          "before": {
+            "succeeds": false,
+            "ranks": [
+              2,
+              1
+            ]
+          },
+          "after": {
+            "succeeds": true,
+            "ranks": [
+              1,
+              2
+            ]
+          }
+        }
+      ],
+      "via": []
+    },
+    {
+      "id": "parallel",
+      "before": "out",
+      "after": "in",
+      "flipped": [
+        {
+          "from": "best-effort",
+          "to": "parallel",
+          "fromValue": "tenet-focus",
+          "toValue": "tenet-users",
+          "before": {
+            "succeeds": true,
+            "ranks": [
+              1,
+              2
+            ]
+          },
+          "after": {
+            "succeeds": false,
+            "ranks": [
+              2,
+              1
+            ]
+          }
+        }
+      ],
+      "via": []
+    }
+  ],
+  "decisions": [
+    {
+      "id": "ADR-0002",
+      "title": "Pre-1.0 deprecation strategy (python-tuf docs/adr/0002)",
+      "before": "holds",
+      "after": "defeated",
+      "because": [
+        "best-effort"
+      ],
+      "file": ".mole/decisions/adr-0002.md",
+      "line": 1
+    }
+  ]
+}
+
+## mole_incident_suggest {"incident":"inc-legacy-users"}
+{
+  "incident": "inc-legacy-users",
+  "candidates": []
+}
+
+## mole_proposals_compare {}
+{
+  "baselineRevision": "7b6ff985d6fd4a49bd62f8f4844c8e871799d597",
+  "proposals": [
+    {
+      "name": "drop-old",
+      "branch": "mole/proposal/drop-old",
+      "path": "/Users/a1/.hermes/cache/scratch/t61-replay/p-drop",
+      "baselineRevision": "7b6ff985d6fd4a49bd62f8f4844c8e871799d597",
+      "changes": {
+        "arguments": [],
+        "decisions": []
+      },
+      "notEvaluated": [],
+      "problems": []
+    },
+    {
+      "name": "lts-window",
+      "branch": "mole/proposal/lts-window",
+      "path": "/Users/a1/.hermes/cache/scratch/t61-replay/p-lts",
+      "baselineRevision": "7b6ff985d6fd4a49bd62f8f4844c8e871799d597",
+      "changes": {
+        "arguments": [
+          {
+            "id": "best-effort",
+            "text": "Support the legacy code on a best-effort basis; we only have finite resources to move the project forward. #tenet-focus",
+            "before": "undecided",
+            "after": "out",
+            "source": {
+              "file": ".mole/arguments/0002.argdown",
+              "line": 1
+            }
+          },
+          {
+            "id": "parallel",
+            "text": "Maintain the legacy code in parallel for a fixed period after the release. #tenet-users",
+            "before": "undecided",
+            "after": "in",
+            "source": {
+              "file": ".mole/arguments/0002.argdown",
+              "line": 2
+            }
+          },
+          {
+            "id": "security-window",
+            "text": "A one-year LTS window l
+
+## mole_priorities {"phase":"growth"} -> isError
+mole_priorities: no phase 'growth' in .mole/priorities.md (have: launch, scale)
+replay repo unchanged
+
+# note: mole_incident_suggest = [] here is the library's answer (test-equal): with T60's mutual attack both arguments
+# are undecided under plain Dung, so nothing "lost". T58 suggest ignores the phase in force -> backlog incident-under-phase.
