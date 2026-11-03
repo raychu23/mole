@@ -1,0 +1,28 @@
+fileB.js
+  h_b296cbdc8c227c 2
+  h_b296cbdc8c227c 1
+fileA.js
+  s_ad36ddc935d61a::t_d02f9535f3f305 2
+  s_ad36ddc935d61a::t_02ab184b2e9609 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d59dfa0c7b6445b762e8b6737d32783f48123c39",
+  "prompts": {},
+  "humans": {
+    "h_b296cbdc8c227c": {
+      "author": "T76 Test <test@example.com>"
+    }
+  },
+  "sessions": {
+    "s_ad36ddc935d61a": {
+      "agent_id": {
+        "tool": "mock_ai",
+        "id": "ai-thread-1793706209698228000",
+        "model": "unknown"
+      },
+      "human_author": "T76 Test <test@example.com>"
+    }
+  }
+}

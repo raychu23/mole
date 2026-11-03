@@ -1,13 +1,20 @@
-// Git AI Authorship Logs (git note in `refs/notes/ai`, attached post-commit). Format per usegitai.com docs
+// Git AI Authorship Logs (git note in `refs/notes/ai`, attached post-commit). Table format per usegitai.com docs
 // (fetched 2026-10-30, context/product-plan/systems/design-reviews/research/ has the Entire pages; git-ai's own
 // pages are summarized in tasks/T39-import-agent-session-logs/4 log/prior-art.md with URLs):
 //   <file>   <sessionId> <line-ranges>[   <sessionId2> <line-ranges2> ...]
 //   ...
 //   ---
-//   { "schema_version": "authorship/3.0.0", "git_ai_version": "...", "base_commit_sha": "...",
-//     "prompts": { "<sessionId>": { "agent": "...", "model": "...", "author": "...", "messages_url": "..." } } }
+//   { "schema_version": "authorship/3.0.0", "git_ai_version": "...", "base_commit_sha": "...", "prompts": {...} }
 // (usegitai.com/docs/cli/how-git-ai-works, "Git Note Format"). `git log --show-notes=ai` pretty-prints the same
 // file/session/range table indented under "Notes (ai):"; both shapes are accepted here.
+//
+// T76 (2026-11-03): the real v1.7.5 binary's own notes (tasks/T76-agent-log-import-real/4 log/real-samples/gitai/,
+// produced with git-ai's own `mock_ai`/`human`/`known_human` test presets -- no live AI agent, no fixture) always
+// emit `"prompts": {}` and instead carry attribution under two undocumented keys: `sessions` (AI checkpoints,
+// keyed by the table row's session id with the `::<sub-session>` suffix stripped) and `humans` (`known_human`
+// checkpoints -- explicitly NOT agent work). Both the docs' `prompts` shape and the real `sessions`/`humans` shape
+// are read below; a row whose id is a key in `humans` is skipped entirely (importing it would be a wrong link:
+// a human-attested range reported as AI-authored).
 import type { RawIntent } from './types.js';
 
 interface GitAiMetadata {
@@ -15,6 +22,8 @@ interface GitAiMetadata {
   git_ai_version?: string;
   base_commit_sha?: string;
   prompts?: Record<string, { agent?: string; model?: string; author?: string; messages_url?: string }>;
+  sessions?: Record<string, { agent_id?: { tool?: string; id?: string; model?: string }; human_author?: string }>;
+  humans?: Record<string, { author?: string }>;
 }
 
 interface GitAiFileEntry {
@@ -76,7 +85,15 @@ export function gitAiToRawIntents(parsed: { files: GitAiFileEntry[]; meta: GitAi
   const out: RawIntent[] = [];
   for (const f of parsed.files) {
     for (const s of f.sessions) {
-      const prompt = parsed.meta.prompts?.[s.sessionId];
+      // A row whose id is a key in meta.humans is a known_human checkpoint, not agent work -- importing it would
+      // be a wrong link (T76 real-samples/gitai/note-3-multi-file-mixed-human-ai.txt, fileB.js rows).
+      if (parsed.meta.humans && s.sessionId in parsed.meta.humans) continue;
+      const legacyPrompt = parsed.meta.prompts?.[s.sessionId]; // docs' shape: prompts keyed by the bare sessionId
+      // Real shape: an AI row's id is "<base_session_id>::<sub_session_id>"; meta.sessions is keyed by the base.
+      const baseId = s.sessionId.split('::')[0]!;
+      const session = parsed.meta.sessions?.[baseId] ?? parsed.meta.sessions?.[s.sessionId];
+      const agent = legacyPrompt?.agent ?? session?.agent_id?.tool;
+      const model = legacyPrompt?.model ?? session?.agent_id?.model;
       for (const r of s.ranges) {
         out.push({
           source: 'git-ai',
@@ -84,8 +101,8 @@ export function gitAiToRawIntents(parsed: { files: GitAiFileEntry[]; meta: GitAi
           file: f.file,
           startLine: r.startLine,
           endLine: r.endLine,
-          agent: prompt?.agent,
-          model: prompt?.model,
+          agent,
+          model,
           commitSha: parsed.meta.base_commit_sha,
         });
       }

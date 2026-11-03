@@ -1,0 +1,105 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T76-agent-log-import-real
+
+ ❯ packages/agentstate/test/t76-real-gitai.test.ts (4 tests | 4 failed) 18ms
+   × T76: real git-ai v1.7.5 output (not fixture) > note-1: single AI session anchors to the function it touched, tagged mock_ai 9ms
+     → expected { source: 'git-ai', …(7) } to match object { file: 'math.js', startLine: 5, …(2) }
+(4 matching properties omitted from actual)
+   × T76: real git-ai v1.7.5 output (not fixture) > note-2: one AI session split into two ranges, both anchor, both tagged mock_ai 3ms
+     → expected false to be true // Object.is equality
+   × T76: real git-ai v1.7.5 output (not fixture) > note-3: known_human rows are never imported as agent intents (0 wrong links) 3ms
+     → expected [ { source: 'git-ai', …(7) }, …(3) ] to have a length of 2 but got 4
+   × T76: real git-ai v1.7.5 output (not fixture) > show-notes-pretty.txt (git log --show-notes=ai form) parses the same three commits with no human leakage 2ms
+     → expected false to be true // Object.is equality
+ ✓ packages/agentstate/test/t39-importers.test.ts (11 tests) 20ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/agentstate/test/t76-real-gitai.test.ts > T76: real git-ai v1.7.5 output (not fixture) > note-1: single AI session anchors to the function it touched, tagged mock_ai
+AssertionError: expected { source: 'git-ai', …(7) } to match object { file: 'math.js', startLine: 5, …(2) }
+(4 matching properties omitted from actual)
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "agent": "mock_ai",[39m
+[31m+   "agent": undefined,[39m
+[2m    "endLine": 8,[22m
+[2m    "file": "math.js",[22m
+[2m    "startLine": 5,[22m
+[2m  }[22m
+
+ ❯ packages/agentstate/test/t76-real-gitai.test.ts:32:20
+     30|     const raw = gitAiToRawIntents(parseGitAiNote(sample('note-1-single…
+     31|     expect(raw).toHaveLength(1);
+     32|     expect(raw[0]).toMatchObject({ file: 'math.js', startLine: 5, endL…
+       |                    ^
+     33|     const { intents, misses } = anchorIntents(root, raw);
+     34|     expect(misses).toHaveLength(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  packages/agentstate/test/t76-real-gitai.test.ts > T76: real git-ai v1.7.5 output (not fixture) > note-2: one AI session split into two ranges, both anchor, both tagged mock_ai
+AssertionError: expected false to be true // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+ ❯ packages/agentstate/test/t76-real-gitai.test.ts:41:53
+     39|     const raw = gitAiToRawIntents(parseGitAiNote(sample('note-2-two-ra…
+     40|     expect(raw).toHaveLength(2);
+     41|     expect(raw.every((r) => r.agent === 'mock_ai')).toBe(true);
+       |                                                     ^
+     42|     const { intents, misses } = anchorIntents(root, raw);
+     43|     expect(misses).toHaveLength(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  packages/agentstate/test/t76-real-gitai.test.ts > T76: real git-ai v1.7.5 output (not fixture) > note-3: known_human rows are never imported as agent intents (0 wrong links)
+AssertionError: expected [ { source: 'git-ai', …(7) }, …(3) ] to have a length of 2 but got 4
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 2[39m
+[31m+ 4[39m
+
+ ❯ packages/agentstate/test/t76-real-gitai.test.ts:50:17
+     48|     const raw = gitAiToRawIntents(parseGitAiNote(sample('note-3-multi-…
+     49|     // Only fileA.js's mock_ai rows are agent intents; fileB.js's know…
+     50|     expect(raw).toHaveLength(2);
+       |                 ^
+     51|     expect(raw.every((r) => r.file === 'fileA.js')).toBe(true);
+     52|     expect(raw.every((r) => r.agent === 'mock_ai')).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  packages/agentstate/test/t76-real-gitai.test.ts > T76: real git-ai v1.7.5 output (not fixture) > show-notes-pretty.txt (git log --show-notes=ai form) parses the same three commits with no human leakage
+AssertionError: expected false to be true // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+ ❯ packages/agentstate/test/t76-real-gitai.test.ts:68:55
+     66|       const raw = gitAiToRawIntents(parseGitAiNote(noteText));
+     67|       totalRaw += raw.length;
+     68|       expect(raw.every((r) => r.file !== 'fileB.js')).toBe(true); // f…
+       |                                                       ^
+     69|     }
+     70|     expect(totalRaw).toBe(5); // 1 (math.js) + 2 (math2.js) + 2 (fileA…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  4 failed | 11 passed (15)
+   Start at  05:47:42
+   Duration  797ms (transform 140ms, setup 0ms, collect 1.00s, tests 38ms, environment 0ms, prepare 120ms)
+

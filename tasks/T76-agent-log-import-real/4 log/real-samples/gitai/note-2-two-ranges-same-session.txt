@@ -1,0 +1,20 @@
+math2.js
+  s_da2642f92e7134::t_8b85af3c723ac3 3-7
+  s_da2642f92e7134::t_be92687df4a3f2 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9cda3e26f0eac7f17c73412a96d2c988ae30397c",
+  "prompts": {},
+  "sessions": {
+    "s_da2642f92e7134": {
+      "agent_id": {
+        "tool": "mock_ai",
+        "id": "ai-thread-1793706188946905000",
+        "model": "unknown"
+      },
+      "human_author": "T76 Test <test@example.com>"
+    }
+  }
+}
