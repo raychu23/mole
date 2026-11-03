@@ -11,6 +11,9 @@ export const MOLE_DIR = '.mole';
 
 const posix = (p: string) => p.split(sep).join('/');
 
+// T67: the only EdgeTypes where a self-loop is meaningful data, not a typo (see Builder.edge below).
+const ARGUMENTATION_EDGE_TYPES = new Set<EdgeType>(['supports', 'attacks', 'undercuts']);
+
 /** A YAML value with the 1-based file line where it is written. */
 interface Item {
   value: string;
@@ -138,8 +141,19 @@ class Builder {
     const n = this.nodes.find((x) => x.id === id);
     if (n && n.kind === 'argument') n.definitions = [...(n.definitions ?? []), ...defs];
   }
+  /** Where an id already in the graph was first defined, for a loader that wants to name both
+   * locations in a duplicate-id Problem (T67) instead of just silently skipping the second one. */
+  nodeLocation(id: string): { file: string; line: number } | undefined {
+    const n = this.nodes.find((x) => x.id === id);
+    return n ? { file: n.file, line: n.line } : undefined;
+  }
   edge(e: GraphEdge): void {
-    if (!e.from || !e.to || e.from === e.to) return;
+    if (!e.from || !e.to) return;
+    // T67: a self-reference is never meaningful for the ADR relation types (supersedes self, cites
+    // self, etc. is a typo, not data) -- but a self-attack/support/undercut edge in an argument graph
+    // is Dung/ASPIC+/Carneades-meaningful (an argument that refutes/reinforces itself) and must not be
+    // dropped; see tasks/T67-argdown-silent-drops/4 log/prior-art.md #1.
+    if (e.from === e.to && !ARGUMENTATION_EDGE_TYPES.has(e.type)) return;
     const k = `${e.from}\0${e.to}\0${e.type}`;
     if (this.edgeKeys.has(k)) return;
     this.edgeKeys.add(k);

@@ -128,8 +128,12 @@ export function parseArgdown(text: string): ParsedArgdown {
   const define = (id: string, line: number, text: string): void => {
     items.get(id)!.definitions.push({ line, text: text.trim() });
   };
+  // T67: real @argdown/core keeps self-relations uniformly (A -> A support/attack/undercut all
+  // survive; confirmed by running the real parser -- prior-art.md #1), so dropping `from === to`
+  // here was this parser's own bug, not a grammar-subset choice. A self-attack in particular is
+  // Dung/ASPIC+/Carneades-meaningful (an argument that refutes itself) and must reach the graph.
   const addRelation = (from: string, to: string, type: ArgdownRelationType, line: number): void => {
-    if (!from || !to || from === to) return;
+    if (!from || !to) return;
     const key = `${from}\0${to}\0${type}`;
     if (relKeys.has(key)) return;
     relKeys.add(key);

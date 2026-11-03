@@ -18,6 +18,8 @@ export interface GraphBuilder {
   node(n: GraphNode): void;
   /** append definitions found in a later file/block for an id already in the graph (T60) */
   addDefinitions?(id: string, defs: Array<{ file: string; line: number; text: string }>): void;
+  /** where an id already in the graph was first defined (T67: lets a duplicate-id Problem name both locations) */
+  nodeLocation?(id: string): { file: string; line: number } | undefined;
   edge(e: GraphEdge): void;
   problems: Problem[];
 }
@@ -70,7 +72,18 @@ function applyParsed(b: GraphBuilder, file: string, offset: number, parsed: Retu
   for (const it of parsed.items) {
     const defs = it.definitions.map((d) => ({ file, line: d.line + offset - 1, text: d.text }));
     if (b.has(it.id)) {
-      if (defs.length) b.addDefinitions?.(it.id, defs);
+      // T67: a bare cross-file reference to an already-defined title (no `: text` of its own) is
+      // normal Argdown usage -- the same statement/argument reused across documents by design (the
+      // parser's own header comment: "Argdown keys its statement/argument dictionaries by title") --
+      // and stays silent. But a second `<title>: text` definition for the same id IS a real conflict
+      // (two different texts claiming the same id) and must be reported, naming both locations,
+      // instead of silently winning/losing with no signal (loader.ts used to just merge here).
+      if (defs.length) {
+        const first = b.nodeLocation?.(it.id);
+        const where = first ? `${first.file}:${first.line}` : 'an earlier definition';
+        b.problems.push({ file, line: defs[0]!.line, message: `duplicate argument id '${it.id}': also defined at ${where} (first kept; this definition appended to it)` });
+        b.addDefinitions?.(it.id, defs);
+      }
       continue;
     } // another record (or an earlier .argdown file) already defined this title: first one kept, same rule as graph.ts's Builder.node
     b.node({

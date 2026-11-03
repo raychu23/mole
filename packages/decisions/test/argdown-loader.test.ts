@@ -60,4 +60,47 @@ describe('loadArgdown via loadGraph', () => {
     expect(graph.nodes.some((n) => n.kind === 'argument')).toBe(false);
     expect(graph.problems).toHaveLength(0);
   });
+
+  // T67: a self-attack edge must reach the graph (not be dropped by graph.ts's Builder.edge, which
+  // used to treat e.from === e.to as always meaningless -- true for ADR relation types, wrong for
+  // supports/attacks/undercuts; see prior-art.md #1).
+  it('a self-attack edge survives into the graph (not silently dropped)', () => {
+    const root = repo({ '.mole/arguments/self.argdown': '[A]: a self-contradictory claim\n  - [A]\n' });
+    const graph = loadGraph(root);
+    expect(graph.problems).toHaveLength(0);
+    const attacks = graph.edges.filter((e) => e.type === 'attacks');
+    expect(attacks).toHaveLength(1);
+    expect(attacks[0]).toMatchObject({ from: 'A', to: 'A' });
+  });
+
+  // T67: a duplicate argument id (same title re-defined with its own `: text` in a second file) must
+  // produce an explicit problem naming both files/lines, not just silently merge (loader.ts:69-75
+  // used to bypass graph.ts's own "duplicate id" problem reporting here).
+  it('a duplicate argument id across two files produces a problem naming both files/lines', () => {
+    const root = repo({
+      '.mole/arguments/first.argdown': '[A]: the first definition of A\n',
+      '.mole/arguments/second.argdown': '[A]: a second, conflicting definition of A\n',
+    });
+    const graph = loadGraph(root);
+    expect(graph.problems).toHaveLength(1);
+    const p = graph.problems[0]!;
+    expect(p.file).toBe('.mole/arguments/second.argdown');
+    expect(p.message).toMatch(/duplicate argument id/i);
+    expect(p.message).toContain('A');
+    expect(p.message).toContain('.mole/arguments/first.argdown');
+    // only the first definition's node is kept (same "first one kept" rule as graph.ts's own Builder.node)
+    expect(graph.nodes.filter((n) => n.id === 'A')).toHaveLength(1);
+  });
+
+  // T67: a bare cross-file reference to an already-defined title (no `: text` of its own) is normal
+  // Argdown usage -- the same statement/argument reused across documents, not a conflict -- and must
+  // stay silent, same as before this task.
+  it('a bare cross-file reference to an existing id is NOT reported as a duplicate', () => {
+    const root = repo({
+      '.mole/arguments/first.argdown': '[A]: the only definition of A\n',
+      '.mole/arguments/second.argdown': '[A]\n  - [B]: B attacks A\n',
+    });
+    const graph = loadGraph(root);
+    expect(graph.problems).toHaveLength(0);
+  });
 });

@@ -83,6 +83,28 @@ describe('parseArgdown vs @argdown/core (real parser oracle)', () => {
     const parsed = parseArgdown('[A]: a\n  + [B]: b\n  -> <C>: c\n\n[A]\n  + [B]\n  -> <C>\n');
     expect(parsed.relations).toHaveLength(2);
   });
+
+  // T67: real @argdown/core keeps self-relations (confirmed by running the real parser directly on
+  // `[A]: a\n  - [A]\n`, `[A]: a\n  + [A]\n` and `<A>: a\n  <_ <A>\n` -- see prior-art.md #1); this
+  // parser's own `from === to` guard in addRelation was silently dropping them, not matching the
+  // grammar it claims to subset.
+  it('keeps a self-attack relation (matches real @argdown/core: A attacks A is not dropped)', () => {
+    const parsed = parseArgdown('[A]: a\n  - [A]\n');
+    expect(parsed.relations).toHaveLength(1);
+    expect(parsed.relations[0]).toMatchObject({ from: 'A', to: 'A', type: 'attacks' });
+  });
+
+  it('keeps a self-support relation too (argdown-core treats all relation kinds uniformly)', () => {
+    const parsed = parseArgdown('[A]: a\n  + [A]\n');
+    expect(parsed.relations).toHaveLength(1);
+    expect(parsed.relations[0]).toMatchObject({ from: 'A', to: 'A', type: 'supports' });
+  });
+
+  it('keeps a self-undercut relation too', () => {
+    const parsed = parseArgdown('<A>: a\n  <_ <A>\n');
+    expect(parsed.relations).toHaveLength(1);
+    expect(parsed.relations[0]).toMatchObject({ from: 'A', to: 'A', type: 'undercuts' });
+  });
 });
 
 // T48 P1 fix: a blank line inside an indented relation block, unrecognized relation tokens (incl.
