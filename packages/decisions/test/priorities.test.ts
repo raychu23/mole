@@ -110,6 +110,27 @@ describe('mole priorities (T60)', () => {
     expect(() => evaluatePhase(root, { phase: 'launch' })).toThrow(/ship-fast.*queue\.argdown:1.*x\.argdown:1/);
   });
 
+  // review 2 (deleg_d06cf655): a separate regex scanner read prose/links/code outside ```argdown fences and missed
+  // `-><id>:` with no space. Definitions now come from the parser itself.
+  it('ignores definition-like prose, link references and code outside argdown fences in a decision .md', () => {
+    const root = repo(PHASES);
+    write(root, '.mole/arguments/queue.argdown', '');
+    write(root, '.mole/decisions/d1.md', ['---', 'id: D1', 'title: Hand-roll the job queue', 'status: accepted', 'cites: [ship-fast]', '---', '',
+      '<ship-fast>: prose that looks like a definition #tenet-cost', '[ship-fast]: https://example.com#tenet-cost', '```js', '<use-kafka>: code #tenet-speed', '```', '',
+      '```argdown', '<ship-fast>: A hand-rolled queue ships this week. #tenet-speed', '  -> <use-kafka>: A managed queue is cheaper. #tenet-cost', '',
+      '<use-kafka>', '  -> <ship-fast>', '```', ''].join('\n'));
+    expect(evaluatePhase(root, { phase: 'launch' }).labels).toEqual({ 'ship-fast': 'in', 'use-kafka': 'out' });
+  });
+
+  it('reads a definition inline after an arrow with no space (-><id>: text), as the parser does', () => {
+    const root = repo(PHASES);
+    write(root, '.mole/arguments/queue.argdown', [
+      '<ship-fast>: A hand-rolled queue ships this week. #tenet-speed', '  -><use-kafka>: A managed queue is cheaper. #tenet-cost', '',
+      '<use-kafka>', '  -> <ship-fast>', '',
+    ].join('\n'));
+    expect(evaluatePhase(root, { phase: 'launch' }).labels).toEqual({ 'ship-fast': 'in', 'use-kafka': 'out' });
+  });
+
   it('refuses an impossible calendar date (review 1 LOW)', () => {
     expect(() => readPriorities(repo(PHASES.replace('from 2026-09-01', 'from 2026-02-30')))).toThrow(/2026-02-30/);
   });

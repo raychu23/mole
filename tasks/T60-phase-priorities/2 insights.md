@@ -33,3 +33,13 @@ limits          INFERENCE: one value per argument (last tag wins) · strict orde
 - reviewer's probes re-run: repro gives launch {ship-fast in, use-kafka out}; 200-trial property vs engine 0 failures
 - not ours (pre-existing T48 loader): self-attack edges dropped silently, no problem reported → backlog
 - decisions + proposals 362 tests
+
+## 11-02 20:00 review 2 (deleg_d06cf655) FAIL → definitions now come from the parser itself (2 red → green)
+- both HIGHs = my round-1 helper was a 2nd Argdown scanner: it read prose / `[id]: url` links / ```js code outside
+  ```argdown fences, and missed `-><id>: text` (no space) that the parser accepts
+- fix: parser.ts records every definition (top-level `<id>: text` and inline after an arrow) on the item; loader.ts
+  carries them onto the node (GraphNode.definitions, + Builder.addDefinitions for a later file's definition of an id
+  already loaded); definitions.ts only reads node.definitions. One parser, one set of fence/arrow rules
+- reviewer probes re-run: fence2/fence3 no spurious definitions, no-space arrow tag kept, property 0 failures,
+  explain invariant 0 failures · decisions + proposals + plugin 46 files, 385 tests
+- INFERENCE: third time this session the fix was "one source" (T58 one write, T59 one rev, T60 one parser)

@@ -16,6 +16,8 @@ export interface GraphBuilder {
   readonly root: string;
   has(id: string): boolean;
   node(n: GraphNode): void;
+  /** append definitions found in a later file/block for an id already in the graph (T60) */
+  addDefinitions?(id: string, defs: Array<{ file: string; line: number; text: string }>): void;
   edge(e: GraphEdge): void;
   problems: Problem[];
 }
@@ -66,7 +68,11 @@ function fencedBlocks(text: string): Array<{ body: string; startLine: number }> 
 function applyParsed(b: GraphBuilder, file: string, offset: number, parsed: ReturnType<typeof parseArgdown>): void {
   for (const p of parsed.problems) b.problems.push({ file, line: p.line + offset - 1, message: p.message });
   for (const it of parsed.items) {
-    if (b.has(it.id)) continue; // another record (or an earlier .argdown file) already defined this title: first one kept, same rule as graph.ts's Builder.node
+    const defs = it.definitions.map((d) => ({ file, line: d.line + offset - 1, text: d.text }));
+    if (b.has(it.id)) {
+      if (defs.length) b.addDefinitions?.(it.id, defs);
+      continue;
+    } // another record (or an earlier .argdown file) already defined this title: first one kept, same rule as graph.ts's Builder.node
     b.node({
       id: it.id,
       kind: 'argument',
@@ -79,6 +85,7 @@ function applyParsed(b: GraphBuilder, file: string, offset: number, parsed: Retu
       scope: [],
       evidence: [],
       fields: { title: it.line + offset - 1 },
+      definitions: defs,
     });
   }
   for (const r of parsed.relations) {

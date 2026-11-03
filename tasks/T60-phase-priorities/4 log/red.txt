@@ -5,3 +5,7 @@
    × mole priorities (T60) > refuses an impossible calendar date (review 1 LOW) 3ms
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
       Tests  3 failed | 13 passed (16)
+   × mole priorities (T60) > ignores definition-like prose, link references and code outside argdown fences in a decision .md 6ms
+   × mole priorities (T60) > reads a definition inline after an arrow with no space (-><id>: text), as the parser does 5ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 16 passed (18)
