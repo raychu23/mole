@@ -1,0 +1,145 @@
+packages/decisions/src/graph.ts(7,39): error TS2307: Cannot find module './argdown/captured-loader.js' or its corresponding type declarations.
+packages/decisions/src/index.ts(17,37): error TS2307: Cannot find module './capture/arguments.js' or its corresponding type declarations.
+packages/decisions/src/index.ts(18,104): error TS2307: Cannot find module './capture/arguments.js' or its corresponding type declarations.
+packages/decisions/src/index.ts(19,183): error TS2307: Cannot find module './capture/captured-store.js' or its corresponding type declarations.
+packages/decisions/src/index.ts(20,30): error TS2307: Cannot find module './capture/arguments-cli.js' or its corresponding type declarations.
+
+--- T80-argument-capture review-fix red (HIGH 1, HIGH 2, MEDIUM 3) ---
+`npx vitest run test/argument-capture.test.ts test/argdown-derive-adr.test.ts test/captured-arguments-lock.test.ts`
+against the PRE-FIX src (captured-store.ts merges by id only, derive-adr.ts's sameName() doesn't strip
+single quotes, no capture-level chosen-option guard, no lock): 9 failed, 14 passed.
+
+FAIL test/argdown-derive-adr.test.ts > deriveAdrArgumentFramework: MADR Considered Options / Decision Outcome -> Dung framework > the chosen option is excluded even when its Decision Outcome phrasing nests single quotes inside double quotes
+  AssertionError: expected [ 'Include "Consulted" and "Informed" of RACI', 'Include all fields of RACI' ] to equal [ 'Include all fields of RACI' ]
+  -- sameName() left the single-quoted chosen name unmatched, so chosenIdx stayed -1 and the chosen option
+     was NOT excluded: it appeared as a considered-option attacking its own claim.
+
+FAIL test/argument-capture.test.ts > T80 stop condition... > approving an unknown argument id is a named error, never a silent no-op
+  (pre-existing test updated to await+rejects.toThrow for the now-async approveCapturedArgument -- passes
+   once the store's locking change lands; listed here only because it ran red against the stashed src,
+   which still has the OLD sync signature.)
+
+FAIL test/argument-capture.test.ts > review HIGH 1: approval binds to CONTENT... > INSERT above an approved row...
+  AssertionError: expected 'draft' to be 'approved' -- the SAME content ("Use badge"), now at a NEW id
+  (option:2, after a bullet was inserted above it), did not carry its approval: merge-by-id handed the old
+  id's 'approved' status to the UNRELATED new bullet's text instead.
+
+FAIL test/argument-capture.test.ts > review HIGH 1... > EDIT-IN-PLACE: changing an approved row's own text reverts it to draft, noting previouslyApproved
+  AssertionError: expected 'approved' to be 'draft' -- editing an approved row's own text in place kept the
+  stale 'approved' status on text nobody has reviewed; no previouslyApproved note at all.
+
+FAIL test/argument-capture.test.ts > review HIGH 1... > REORDER: two considered options swapping source order keep their OWN approval status, not each other's
+  AssertionError: expected 'draft' to be 'approved' -- swapping two bullets' source order swapped their ids;
+  merge-by-id handed each one the OTHER bullet's stored status.
+
+FAIL test/argument-capture.test.ts > review HIGH 2: the record's own chosen option never attacks its own claim > sameName() normalizes single quotes too, not just double/curly quotes
+  AssertionError: expected "include 'consulted' and 'informed' of raci" to be "include consulted and informed of raci"
+
+FAIL test/argument-capture.test.ts > review HIGH 2... > real record 0015 (m29-madr): the chosen option is excluded, never a considered-option attacking the claim
+  AssertionError: expected true to be false -- 0015's chosen option 'Include "Consulted" and "Informed" of
+  RACI' appeared as a considered-option (self-attacking the claim), confirming the real-record bug.
+
+FAIL test/argument-capture.test.ts > review HIGH 2... > real record 0016 (m29-madr): same guard holds for a chosen option phrased with nested single quotes
+  AssertionError: expected true to be false -- same bug, real record 0016.
+
+FAIL test/captured-arguments-lock.test.ts > T80 review MEDIUM 3: concurrent CLI approves... > 12 concurrent approves x 10 rounds: every row ends approved by its LAST round's approver, none lost
+  AssertionError: expected [ Array(13) ] to have a length of 12 but got 13 -- unlocked concurrent
+  read-modify-write corrupted the stored array (a lost update manifested as a DUPLICATED row here), proving
+  the race without a lock.
+
+--- T80-argument-capture review-2-fix red (NEW HIGH D-attack, COMPOUNDING duplicate-id) ---
+`npx vitest run packages/decisions/test/argument-capture.test.ts` against the PRE-review-2-fix src
+(contentHashOf = sha256(role::text), no approvedHash field, mergeByContent's backfill keeps a leftover
+row's OWN id unconditionally, setRow's findIndex with no ambiguity check -- verified by `git stash push --
+captured-store.ts arguments.ts` then re-running the (already-written) new tests against the stashed src):
+4 failed, 16 passed.
+
+FAIL test/argument-capture.test.ts > review 2 NEW HIGH (D-attack)... > moving an approved con from Option A to Option B reverts it to draft -- labels do NOT change until re-approved
+  AssertionError: expected 'approved' to be 'draft' -- the SAME con text ("Bad, because shared drawback"),
+  moved from Option A's Pros-and-Cons subsection to Option B's, hashed identically under the OLD
+  role::text-only contentHashOf and so silently carried alice's approval (and A's defeat) onto B.
+
+FAIL test/argument-capture.test.ts > review 2 NEW HIGH (D-attack)... > re-capturing identical text under the SAME option keeps the approval (no false revert)
+  AssertionError: expected undefined to be '7435bc3f2dd9960042631d58d67ca97db3a42...' -- approvedHash did
+  not exist on the pre-fix row shape at all, confirming the invariant this field exists to make checkable
+  was previously unobservable.
+
+FAIL test/argument-capture.test.ts > review 2 COMPOUNDING... > a reshaped document that reissues a stale id never produces two rows sharing that id
+  AssertionError: expected 5 to be 7 -- a reshaped re-capture (shrinking MADR_WITH_INSERTED_BULLET down to
+  MADR_WITH_PROS_CONS) produced 7 rows but only 5 DISTINCT ids: two rows shared one id
+  (`new Set(ids).size !== ids.length`), proving the collision the reviewer's own `D-move::pro:1` example
+  describes (`mergeByContent`'s backfill had no disambiguation).
+
+FAIL test/argument-capture.test.ts > review 2: property-style re-capture... > 30 random sequences across 2-3 options: no duplicate ids, approvedHash matches, evaluate() labels match recomputation
+  AssertionError: expected undefined to be '559274cad5f6cb552a01feae72a50c05384e4...' -- same approvedHash
+  gap as above, hit by at least one of the 30 random insert/move/edit/delete sequences (the loop fails on
+  its first `approvedHash` assertion before ever reaching a duplicate-id case, since the field doesn't
+  exist pre-fix at all).
+
+After the fix (contentHashOf hashes role + normalized text + sorted target NAMES; approvedHash stamped at
+approval time and asserted equal to contentHash for every approved row; mergeByContent's backfill
+disambiguates a colliding leftover id and asserts the whole merged set is duplicate-free; setRow refuses
+an ambiguous id): `npx vitest run packages/decisions/test/argument-capture.test.ts` -- 20 passed, 0 failed.
+Full target scope `npx vitest run packages/decisions packages/reasoning packages/daemon packages/verify
+packages/mcp/test/tool-annotations-schema.test.ts` -- 553 passed (captured-arguments-lock.test.ts and
+daemon.test.ts each re-verified green in isolation, 47s/27s resp.; their one failure each in the combined
+run was a 60s-timeout from CPU contention running everything concurrently, not a regression -- both are
+untouched by this change and pass standalone with no code difference). `npx tsc -b` clean;
+`mole rules --root .` -- 0 violations.
+
+--- T80-argument-capture review-3-fix red (structural: positional ids as the root cause) ---
+Review 3 named the root cause behind every prior round: graph edges were built from captured arguments'
+own POSITIONAL ids (`::option:N`), never re-validated against what they currently mean. Three findings:
+HIGH 1 (name-collision last-write-wins in `optionIdByName`), HIGH 2 (a `::staleN` row's attacks/supports
+still point at an id a later capture reissued to an unrelated argument), and `mole arguments list` printing
+raw ids instead of names/flags. New tests written FIRST, then verified red against the pre-fix src (`git
+stash push -- packages/decisions/src/argdown/captured-loader.ts packages/decisions/src/capture/arguments-
+cli.ts packages/decisions/src/capture/arguments.ts packages/decisions/src/capture/captured-store.ts`, new
+test files kept in the working tree, then `git stash pop` to restore the fix):
+
+`npx vitest run packages/decisions/test/argument-capture.test.ts` against the PRE-fix src: 4 failed, 19 passed.
+
+FAIL review 3 HIGH 1: two considered options whose names normalize equal never silently collapse > a con
+  under "Option A" and a pro under "Option A." both come out ambiguousTarget with NO attacks/supports
+  AssertionError: expected [ 'D-collide::option:2' ] to deeply equal [] -- pre-fix `optionIdByName` is
+  last-write-wins: the con under "### Option A" silently attacked whichever of the two same-normalized-name
+  options happened to be written last into the map, instead of refusing to pick either.
+
+FAIL review 3 HIGH 1... > an ambiguousTarget row can still be approved as TEXT, but produces no graph edge at all
+  AssertionError: expected true to be false -- pre-fix, the ambiguous con's (fabricated) attack produced a
+  real graph edge once approved; confirms the collapsed-collision bug reaches evaluate(), not just the row.
+
+FAIL review 3 HIGH 2: a deleted option's stale rows never defeat the argument that reuses its old id > X/Y/Z,
+  delete Y: the stale Y rows refuse approve/reject, and Z's label is unchanged by the attempt
+  AssertionError: expected 0 to be greater than 0 -- pre-fix, `mergeByContent`'s leftover rows had no
+  explicit `stale` flag at all (only an `::staleN` id suffix on a COLLISION, which this scenario's shape
+  doesn't even trigger), so there was nothing for approve/reject to check and refuse.
+
+FAIL review 2: property-style re-capture... > 30 random sequences ... and every edge targets its OWN name
+  AssertionError: expected [] to include 'claim' -- pre-fix, rows have no `attacksNames`/`supportsNames` at
+  all (new fields), so the new invariant (d) has nothing to read; extending the property test with option
+  deletes/renames (new actions 4/5) also exercises the exact id-reuse shape HIGH 2's own reproducer covers,
+  across 30 random seeds instead of one fixed case.
+
+After the fix (capture/arguments.ts: `attacksNames`/`supportsNames` set at capture time from the option's
+own NAME, never its id; an `ambiguousNames` map built from every considered-option sharing a normalized
+name forces `attacks`/`supports` empty + `ambiguousTarget` set, naming both options, on any Pros-and-Cons
+subsection whose heading is itself ambiguous; captured-store.ts: every leftover ("case 4") row from
+`mergeByContent`'s backfill is now explicitly flagged `stale: true`, and `setRow` (approve/reject) refuses
+outright on a stale row; captured-loader.ts: NEVER reads `row.attacks`/`row.supports` directly any more --
+resolves every edge by NAME against a map built only from THIS LOAD's current, non-stale, approved nodes,
+dropping (never fabricating) an edge whose target name is missing or ambiguous; arguments-cli.ts:
+`formatRow` now prints targets by name and flags STALE/AMBIGUOUS-TARGET rows, and `capture` prints one
+PROBLEM line per distinct name collision):
+`npx vitest run packages/decisions/test/argument-capture.test.ts` -- 29 passed, 0 failed.
+`npx vitest run packages/decisions/test/captured-arguments-lock.test.ts` -- 1 passed (57s standalone; kept
+its 12-procs-x-10-rounds workload unchanged, only raised the explicit timeout from 60s to 240s -- the
+pre-existing flake was CPU-contention-under-load, not a real failure, confirmed by this standalone run and
+by the full-scope run below both being green with no code difference to the stress test's own logic).
+Full target scope `npx vitest run packages/decisions packages/reasoning packages/daemon packages/verify
+packages/mcp/test/tool-annotations-schema.test.ts` -- 556 passed, 0 failed, 53 test files (156s). `npx tsc
+-b` clean; `node packages/daemon/dist/cli.js rules --root .` -- 0 violations.
+   × T80 review 4 MEDIUM: decorated MADR option bullets > a Pros-and-Cons subsection finds its option when the Considered Options bullet is `**Name** - description` 9ms
+     → expected [] to deeply equal [ 'D-dec::option:1' ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 23 passed (24)

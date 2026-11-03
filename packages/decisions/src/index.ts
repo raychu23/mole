@@ -12,6 +12,12 @@ export { applyRecordTransaction, CaptureError, ID_PATTERN, linkDecisions, newDec
 export type { CaptureResult, NewDecisionInput, TransactionEntry } from './capture/records.js';
 export { suggestDuplicates } from './capture/dedupe.js';
 export type { DuplicateRecord, DuplicateSuggestion } from './capture/dedupe.js';
+// T80: contestable AI-drafted arguments captured from a decision's own MADR structure, with an exact
+// source span + provenance, draft until a person approves (CLI only; MCP stays read-only per contract).
+export { captureAdrArguments } from './capture/arguments.js';
+export type { ArgumentProvenance, ArgumentRole, ArgumentStatus, CapturedArgument, TextQuoteSpan } from './capture/arguments.js';
+export { allCapturedArguments, approveCapturedArgument, CapturedArgumentError, capturedDir, capturedPath, listCapturedArguments, rejectCapturedArgument, saveCapturedArguments } from './capture/captured-store.js';
+export { argumentsCli } from './capture/arguments-cli.js';
 export * from './check/index.js';
 export * from './compile/index.js';
 export * from './cascade/index.js';

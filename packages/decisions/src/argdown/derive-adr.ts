@@ -79,17 +79,51 @@ function bulletsOf(block: string): string[] {
   return items.map((x) => x.replace(/\s+/g, ' ').trim()).filter((x) => x.length > 0);
 }
 
-/** Compare option names ignoring wrapping whitespace, case and a trailing period. */
-function sameName(s: string): string {
-  return s.replace(/\*\*/g, '').replace(/["“”]/g, '').replace(/\s+/g, ' ').trim().replace(/\.$/, '').toLowerCase();
+/** Compare option names ignoring wrapping whitespace, case, a trailing period, and EVERY quote kind MADR
+ *  text uses to wrap an option name -- straight double ("), straight single ('), curly double (" "), curly
+ *  single (' '), and backtick (`). Exported (T80): capture/arguments.ts matches a MADR `### <option>`
+ *  Pros-and-Cons subheading back to the SAME considered-option id this module already derived, instead of
+ *  re-implementing the comparison.
+ *
+ *  Review HIGH 2: stripping double/curly quotes but not single quotes let a real record's own chosen
+ *  option escape exclusion -- m29-madr's 0015/0016 phrase the Decision Outcome's chosen name with single
+ *  quotes nested inside the outer double quotes (`"Include 'Consulted' and 'Informed' of RACI"`) while the
+ *  Considered Options bullet has no nesting (`"Include "Consulted" and "Informed" of RACI"` once its own
+ *  wrapping quotes are stripped) -- the two normalized strings differed only by leftover `'`s, so
+ *  `chosenIdx` below never matched and the chosen option came out as a considered-option attacking its own
+ *  claim. Stripping every quote kind closes that (and the backtick case nothing here has hit yet). */
+export function sameName(s: string): string {
+  return s
+    .replace(/\*\*/g, '')
+    .replace(/[`'"\u2018\u2019\u201c\u201d]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\.$/, '')
+    .toLowerCase();
 }
 
 /** The option "name" from a MADR bullet (`- **Name** -- why`, `- [Name](url) -- why`, or plain `- Name`):
- *  strip markdown emphasis/links, then take the lead phrase up to the first ` - `/` -- `/` – `/`:` separator. */
-function optionNameOf(bullet: string): string {
+ *  strip markdown emphasis/links, then take the lead phrase up to the first ` - `/` -- `/` – `/`:` separator.
+ *  Exported (T80 review HIGH 2): capture/arguments.ts reuses this to re-derive an option's bare name from a
+ *  considered-option argument's full bullet text, for its own defensive "never attack-the-claim with the
+ *  chosen option" guard (findChosenOptionName below), instead of re-implementing the lead-phrase split. */
+export function optionNameOf(bullet: string): string {
   const cleaned = bullet.replace(/\*\*/g, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');
   const m = /^(.*?)(\s+[-\u2013\u2014:]+\s+|$)/.exec(cleaned);
   return (m?.[1] ?? cleaned).trim();
+}
+
+/** The record's own chosen option, normalized by `sameName` -- the SAME value `deriveAdrArgumentFramework`
+ *  uses internally to find `chosenIdx` and exclude that option from its considered-option attackers, now
+ *  also exported (T80 review HIGH 2) so capture/arguments.ts can independently re-check, belt-and-suspenders,
+ *  that no considered-option argument it emits attacks the claim with the chosen option's own text -- even
+ *  if a future change to this exclusion logic ever regresses. `undefined` when no "Chosen option:" line is
+ *  found (e.g. a record with no Decision Outcome section). */
+export function findChosenOptionName(adrText: string): string | undefined {
+  const outcomeBlock = headingSlice(adrText, DECISION_OUTCOME_HEADING) ?? sectionsOf(adrText).decision;
+  const chosenMatch = outcomeBlock ? CHOSEN_OPTION_LINE.exec(outcomeBlock) : null;
+  const chosenRaw = chosenMatch?.[1] ?? chosenMatch?.[2] ?? chosenMatch?.[3];
+  return chosenRaw ? sameName(chosenRaw) : undefined;
 }
 
 /** Build the Dung framework + display arguments for one decision's ADR text. `decisionId` namespaces the
