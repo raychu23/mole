@@ -33,6 +33,15 @@ services:
       dockerfile: deploy/Dockerfile
     environment:
       DATABASE_URL: postgresql://mole:mole@postgres:5432/mole
+      # T69: this compose previously omitted WEBHOOK_SECRET/ORG_REPO_DIRS, which buildApp()
+      # requires at startup (src/index.ts) -- `docker compose up` crash-looped the server
+      # container before this fix (see 2 insights.md for the actual `docker compose up`
+      # output). Both are env-configured here (override via deploy/.env, docker compose's own
+      # convention, not hardcoded secrets in this committed file) so a real deploy sets its own
+      # values without editing this file.
+      WEBHOOK_SECRET: ${MOLE_WEBHOOK_SECRET:-change-me-webhook-secret}
+      ORG_REPO_DIRS: ${MOLE_ORG_REPO_DIRS:-{}}
+      PORT: "3000"
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       MLFLOW_TRACKING_URI: http://mlflow:5000
     ports: ["3000:3000"]

@@ -1,0 +1,10 @@
+packages/server/test/decisionStore.spec.ts(17,47): error TS2307: Cannot find module '../src/decisionStore.js' or its corresponding type declarations.
+packages/server/test/decisionStore.spec.ts(57,67): error TS2353: Object literal may only specify known properties, and 'temporalPool' does not exist in type 'RebuildOptions'.
+packages/server/test/decisionStore.spec.ts(74,68): error TS2353: Object literal may only specify known properties, and 'temporalPool' does not exist in type 'RebuildOptions'.
+packages/server/test/decisionStore.spec.ts(86,68): error TS2353: Object literal may only specify known properties, and 'temporalPool' does not exist in type 'RebuildOptions'.
+
+--- vitest run packages/server/test/decisionStore.spec.ts (before implementation) ---
+FAIL packages/server/test/decisionStore.spec.ts
+Error: Cannot find module '../src/decisionStore.js' imported from decisionStore.spec.ts
+Test Files  1 failed (1)
+Tests  no tests
