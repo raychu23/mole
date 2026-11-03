@@ -4,22 +4,29 @@
 // calls, lib.mjs bm25Rank mirrors T53's route/bm25.ts). Each decision at most once per session (shared with PreToolUse).
 // Never blocks (no "decision": "block"); nothing relevant, no repo, or bad input = no output, exit 0.
 // Output: https://code.claude.com/docs/en/hooks#userpromptsubmit  hookSpecificOutput.additionalContext
-import { clip, decisionsBlock, emit, governingDecisions, loadAddedDecisions, readInput, repoRoot, saveAddedDecisions } from './lib.mjs';
+import { clip, decisionsBlock, emit, governingDecisions, loadAddedDecisions, readInput, repoRoot, saveAddedDecisions, steerDeliverText, findMole } from './lib.mjs';
 
 function main() {
   const input = readInput();
   const prompt = typeof input?.prompt === 'string' ? input.prompt : '';
-  if (!prompt.trim()) return;
   const root = repoRoot(input.cwd || process.cwd());
   if (!root) return;
-  const list = governingDecisions(undefined, root, new Set(), { text: prompt });
-  if (!list.length) return;
-  const already = loadAddedDecisions(input.session_id);
-  const fresh = list.filter((d) => !already.has(d.id));
-  if (!fresh.length) return;
-  for (const d of fresh) already.add(d.id);
-  saveAddedDecisions(input.session_id, already);
-  emit({ hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: clip(decisionsBlock(fresh, 'Mole: team decisions that may bear on this task (word matches, ranked; follow the ones that apply)')) } });
+  const mole = findMole(root);
+  const steer = steerDeliverText(mole, root, input.session_id); // T74: a signal/accepted update seen on the next prompt
+  const parts = [];
+  if (prompt.trim()) {
+    const list = governingDecisions(undefined, root, new Set(), { text: prompt });
+    const already = loadAddedDecisions(input.session_id);
+    const fresh = list.filter((d) => !already.has(d.id));
+    if (fresh.length) {
+      for (const d of fresh) already.add(d.id);
+      saveAddedDecisions(input.session_id, already);
+      parts.push(decisionsBlock(fresh, 'Mole: team decisions that may bear on this task (word matches, ranked; follow the ones that apply)'));
+    }
+  }
+  if (steer) parts.push(steer);
+  if (!parts.length) return;
+  emit({ hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: clip(parts.join('\n\n')) } });
 }
 
 try {

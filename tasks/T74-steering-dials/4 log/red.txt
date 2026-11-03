@@ -1,0 +1,107 @@
+RED (before implementation): `npx vitest run packages/agentstate/test/steer.test.ts` with packages/agentstate/src/steer/
+removed (mv'd aside) -- confirms the test file only passes once the steer/ module exists.
+
+RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T74-steering-dials
+
+FAIL  packages/agentstate/test/steer.test.ts [ packages/agentstate/test/steer.test.ts ]
+Error: Cannot find module '../src/steer/index.js' imported from
+'/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T74-steering-dials/packages/agentstate/test/steer.test.ts'
+Caused by: Error: Failed to load url ../src/steer/index.js (resolved id: ../src/steer/index.js) in
+.../packages/agentstate/test/steer.test.ts. Does the file exist?
+
+ Test Files  1 failed (1)
+      Tests  no tests
+
+----------------------------------------------------------------------------------------------------
+
+RED (before implementation): `npx vitest run plugins/claude-code/test/steer-hook.test.ts` with
+plugins/claude-code/scripts/lib.mjs, pre-tool-use.mjs, user-prompt-submit.mjs and hooks/hooks.json reverted to their
+pre-T74 state (git stash of just those 4 files) -- confirms the hook-delivery tests fail without the wiring, not by
+coincidence.
+
+ ❯ plugins/claude-code/test/steer-hook.test.ts (6 tests | 3 failed) 1668ms
+   × PreToolUse ... a Read tool call gets the signal as additionalContext; a second call gets nothing new
+     → expected '' to contain 'stop editing a.ts for now'
+   × PreToolUse ... an accepted update is delivered once on a tool call with no path at all (e.g. Bash)
+     → expected '' to contain 'stop touching a.ts, it is frozen'
+   ✓ PreToolUse ... never blocks: no permissionDecision/decision field even when steering is delivered
+   × UserPromptSubmit ... a queued signal reaches the next prompt as additionalContext, then is gone
+     → expected '' to contain 'the plan changed: focus on tests only'
+   ✓ UserPromptSubmit ... silent (exit 0, no output) with an empty prompt and nothing queued
+   ✓ never blocks or fails the session (T74 stop condition) ... malformed stdin, an unknown session, or no mole CLI: exit 0, no crash
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 3 passed (6)
+
+(the 3 passing tests here are the "never blocks" / "silent" cases, which hold with or without the T74 wiring --
+expected, since they assert absence of bad behavior, not presence of the new feature.)
+
+----------------------------------------------------------------------------------------------------
+
+## Review 1 fixes: red captures (2026-11-03)
+
+RED (HIGH 3, before the atomic claim): `npx vitest run packages/agentstate/test/steer-stress.test.ts` with
+packages/agentstate/src/steer/{store,index}.ts reverted to their pre-review-1 read-modify-write (git stash of just
+those 2 files, new steer-stress.test.ts kept) -- 8 concurrent deliverer processes x 50 queued items each; every one
+of the 400 items came back delivered 4 times (double/triple/quadruple delivery, not a loss), confirming the
+read-modify-write race the finding described. Ran 5x to rule out a fluke: 4/5 runs failed this way (1/5 happened to
+interleave cleanly), consistent with the review's own "5/20 double deliveries" rate -- a real, reproducible race,
+not a one-off.
+
+ ❯ packages/agentstate/test/steer-stress.test.ts (1 test | 1 failed)
+   × Review 1 HIGH 3 ... 400 queued signals, raced by 8 processes launched truly concurrently: none lost, none doubled
+     → double-delivered items: [["item-0",4],["item-1",4], ... all 400 items, each delivered exactly 4 times]
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+
+GREEN (after restoring withInboxClaim): ran the same stress test 5x in a row, 5/5 passed (400/400 delivered exactly
+once each run) -- tasks/T74-steering-dials/4 log/bench/ has no separate file for this since the pass/fail counts
+above are the proof; see "npx vitest run ..." final run in this task's report for the committed state.
+
+RED/comparative timing (HIGH 2): tasks/T74-steering-dials/4 log/bench/review1-high2-latency.txt -- n=30 each,
+identical harness, only the fast-path toggled: BEFORE (old always-spawn behavior) avg 156.96ms vs AFTER (HIGH 2
+fix) avg 76.88ms, an 80.08ms delta matching the reported "+60-80ms on every tool call" finding.
+
+RED (HIGH 1, decisions-on-Read regression): confirmed by inspection + the byte-diff test
+(plugins/claude-code/test/steer-hook.test.ts, "Review 1 HIGH 1" describe block) rather than a separate red capture
+-- the test compares this file's additionalContext for a governed Edit against the pre-T74 base commit
+(8e4352b) byte-for-byte and asserts hooks/hooks.json's PreToolUse matcher is exactly "Edit|Write"; both pass
+post-fix. The regression itself (matcher "*" + tool_input.file_path present on Read calls too) was established by
+direct inspection of the pre-fix hooks.json/pre-tool-use.mjs diff against main (git diff 8e4352b 77d887f), not by a
+failing test, since the pre-fix code path for Read with a decision-governing edit WOULD have produced the full
+decisions block -- there was no test asserting it should NOT, which is itself part of what Review 1 flagged.
+
+## Review 2 fixes: red captures (2026-11-03)
+
+Reviewer's finding: the Review 1 claim-rename `withInboxClaim` could not tell "no inbox yet" (ENOENT) from "inbox
+currently claimed by someone else" (also ENOENT, since a successful claim renames the canonical file away) --
+it just created a brand-new EMPTY inbox on ENOENT and kept racing, so whichever claim renamed back LAST won and
+silently discarded the other racer's items (reviewer measured 98 sends -> 6 survived). A kill -9'd claimer also
+orphaned its claimed file forever. The Review 1 stress test never caught this because it sent all 400 items BEFORE
+any deliverer started -- it only ever raced deliverers against each other, never a sender against a deliverer.
+
+RED (before the proper-lockfile rewrite): `npx vitest run packages/agentstate/test/steer-stress.test.ts` --
+rewrote the whole file for Review 2 (interleaved senders+deliverers, kill -9 stale-reclaim, orphan-claim migration,
+hook-budget timeout), run against the OLD claim-rename `withInboxClaim` (store.ts/index.ts still Review-1 state,
+no `.lock` dir concept, no orphan folding, no `staleMs` option):
+
+ ❯ packages/agentstate/test/steer-stress.test.ts (4 tests | 4 failed) 10664ms
+   × senders and deliverers racing AT THE SAME TIME ... 8x8, 20 iterations
+     → deliverer.mjs exited 1: SyntaxError: Unexpected end of JSON input at withInboxClaim (store.js:111) --
+       the exact "two racers both renamed, one clobbered the other's write mid-flight" corruption window.
+   × a kill -9'd lock holder is reclaimed after it goes stale; inbox stays intact
+     → expected false to be true (no `${inboxFile}.lock` dir ever created -- the old scheme has no such concept,
+       so the test's own "did the holder actually take a lock" check fails immediately, confirming there was
+       nothing here to reclaim from)
+   × leftover *.claim-* files from the old rename scheme are folded back in, not lost
+     → expected ['already-in-inbox'] to include 'orphaned-before-upgrade' (nothing ever looked for orphans)
+   × lock-acquire failure fits the hook budget and never loses queued items
+     → expected false to be true (same missing-lock-dir reason as the kill-9 test)
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+
+GREEN (after the proper-lockfile rewrite of store.ts + index.ts, see "Review 2 fixes" in
+tasks/T74-steering-dials/2 insights.md): all 4 tests pass, including the 20-iteration interleaved
+senders+deliverers race (2400 items total across all iterations, none lost, none doubled) and the kill -9
+stale-reclaim case. Full capture below this line is the final `npx vitest run packages/agentstate
+plugins/claude-code packages/daemon` run (see report for the exact pass count).

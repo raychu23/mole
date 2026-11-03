@@ -611,3 +611,54 @@ export function saveAddedDecisions(sessionId, set) {
     // best effort: a decision may be re-added once more next call, never a crash
   }
 }
+
+// ---------------------------------------------------------------- T74: steering dials (signal / update / query)
+/**
+ * The per-session steer inbox path, duplicated from packages/agentstate/src/steer/store.ts's `inboxFile` on
+ * purpose (same reasoning as this file's own duplicated decision parsing: a hook stays dependency-free of
+ * @mole/agentstate's TypeScript build, it only ever shells out to the CLI). Kept in sync by
+ * packages/agentstate/test/steer.test.ts asserting the real inboxFile() lands at this same path shape.
+ */
+function steerInboxFile(root, sessionId) {
+  return join(root, '.mole', 'local', 'steer', `${String(sessionId || 'unknown').replace(/[^\w.-]/g, '_')}.json`);
+}
+
+/**
+ * Review 1 (HIGH 2): this used to call `mole steer deliver` (a subprocess spawn, measured +60-80ms) on EVERY
+ * Edit|Write call even when the session's inbox was empty or fully delivered already. Before spawning anything, do
+ * the cheap in-process check the CLI itself would otherwise have done: no inbox file at all (existsSync, no
+ * subprocess) or an inbox with nothing undelivered (one readFileSync + JSON.parse, still no subprocess) both
+ * short-circuit to '' without ever touching execFileSync. Only an inbox with real pending signals/updates pays for
+ * the CLI call (which also performs the atomic claim -- see packages/agentstate/src/steer/store.ts). Timed proof:
+ * tasks/T74-steering-dials/4 log/red.txt ("Review 1: HIGH 2 latency").
+ */
+function hasPendingSteer(root, sessionId) {
+  const f = steerInboxFile(root, sessionId);
+  if (!existsSync(f)) return false;
+  try {
+    const inbox = JSON.parse(readFileSync(f, 'utf8'));
+    return (inbox.signals ?? []).some((s) => !s.delivered) || (inbox.updates ?? []).some((u) => u.accepted && !u.delivered);
+  } catch {
+    return true; // unreadable/corrupt: let the real CLI (same failure tolerance as readInbox) decide, never guess empty
+  }
+}
+
+/**
+ * PreToolUse/UserPromptSubmit: pending steering signals + accepted updates for this session, delivered exactly once
+ * (`mole steer deliver`, @mole/agentstate's steer/ -- the per-session inbox lives under .mole/local/steer/, never
+ * CLAUDE_PLUGIN_DATA, so it works the same whether a human or another agent sent the signal). '' when nothing is
+ * pending, on any CLI failure, or on a repo with no mole CLI: delivery never blocks or fails the session (T74 stop
+ * condition). A short budget (default 10s, well under the hooks' own 15/30s timeouts) so a stuck daemon-less CLI
+ * call can't eat the hook's whole timeout.
+ */
+export function steerDeliverText(mole, root, sessionId, timeoutMs = 10_000) {
+  if (!mole || !sessionId) return '';
+  if (!hasPendingSteer(root, sessionId)) return ''; // HIGH 2 fix: never spawn the CLI for an empty/fully-delivered inbox
+  const r = moleJson(mole, root, ['steer', 'deliver', '--session', String(sessionId), '--json'], timeoutMs);
+  if (!r || (!r.signals?.length && !r.updates?.length)) return '';
+  const lines = [
+    ...(r.signals ?? []).map((s) => `- signal${s.from ? ` (from ${s.from})` : ''}: ${s.text}`),
+    ...(r.updates ?? []).map((u) => `- update (${u.kind}${u.target ? ` ${u.target}` : ''})${u.from ? ` (from ${u.from})` : ''}: ${u.text}`),
+  ];
+  return `mole: steering for this session (mole steer, delivered once):\n${lines.join('\n')}`;
+}

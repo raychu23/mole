@@ -109,6 +109,7 @@ async function main(): Promise<number> {
     return ev.length === 0 && inputs.length > 0 && !flags.stdin ? 1 : 0;
   }
   if (cmd === 'claims') return (await import('@mole/agentstate/dist/src/claims/cli.js')).claimsCli(pos, flags); // claim check (T24): light entry, no daemon
+  if (cmd === 'steer') return (await import('@mole/agentstate/dist/src/steer/cli.js')).steerCli(pos, flags, root); // T74: signal/update/query/deliver, light entry, no daemon
   if (['runs', 'run', 'tried', 'agents', 'agent-intent', 'collisions'].includes(cmd)) return (await import('@mole/agentstate')).agentCli(cmd, pos, flags, root); // agent states (T18) + collisions (T21) + external agent-session intent (T39), no daemon needed
   if (cmd === 'decisions') return (await import('@mole/decisions')).decisionsCli(pos, flags, root); // decision graph + flags (T29), no daemon needed
   if (cmd === 'decision') return (await import('@mole/decisions')).decisionCli(pos, flags, root); // write records: new / supersede / link / suggest / recover (T51)
