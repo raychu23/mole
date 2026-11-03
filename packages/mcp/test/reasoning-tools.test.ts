@@ -2,7 +2,7 @@
 // Tests first. Each tool's structuredContent must equal the library call on the same temp repo (done-when 2), errors
 // come back as isError results (MCP 2025-06-18 "tool execution errors"), and nothing in the repo changes (done-when 5).
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -132,6 +132,31 @@ describe('T61 mole_proposals_compare', () => {
     const { tools } = await client.listTools();
     const t = tools.find((x) => x.name === 'mole_proposals_compare')!;
     expect(Object.keys((t.inputSchema as { properties: object }).properties)).toEqual(['names']);
+  });
+});
+
+// review 1 (deleg_ef4c137c) HIGH: a hand-written mole-proposal.json in an unrelated linked worktree was trusted
+describe('T61 review 1: a proposal is a worktree on its own mole/proposal/<name> branch, nothing else', () => {
+  it('ignores an unrelated linked worktree carrying a forged proposal meta (by name or by its own branch)', async () => {
+    const root = repo();
+    const base = tmp('mole-t61-forge-');
+    const legit = createProposal({ repo: root, name: 'legit', path: join(base, 'legit') });
+    git(root, 'worktree', 'add', '-q', '-b', 'evilbranch', join(base, 'evil'), 'HEAD');
+    const forged = { ...legit, branch: 'evilbranch' };
+    writeFileSync(git(join(base, 'evil'), 'rev-parse', '--path-format=absolute', '--git-path', 'mole-proposal.json'), JSON.stringify(forged));
+    const client = await connect(root);
+    const r = await call(client, 'mole_proposals_compare', {});
+    expect(r.isError).toBeFalsy();
+    expect((r.structuredContent as { proposals: Array<{ path: string }> }).proposals.map((p) => realpathSync(p.path))).toEqual([realpathSync(join(base, 'legit'))]);
+    // even a meta that claims the evil worktree's own branch name is not a proposal: the branch must be mole/proposal/<name>
+    writeFileSync(git(join(base, 'evil'), 'rev-parse', '--path-format=absolute', '--git-path', 'mole-proposal.json'), JSON.stringify({ ...legit, name: 'evil', branch: 'evilbranch' }));
+    expect(((await call(client, 'mole_proposals_compare', {})).structuredContent as { proposals: unknown[] }).proposals).toHaveLength(1);
+  });
+  it('limit 0 returns no candidates, as the library does (review 1 LOW)', async () => {
+    const root = repo();
+    const r = await call(await connect(root), 'mole_incident_suggest', { incident: 'inc-1', limit: 0 });
+    expect(r.isError).toBeFalsy();
+    expect(r.structuredContent).toEqual({ incident: 'inc-1', candidates: JSON.parse(JSON.stringify(suggestRevivals(root, 'inc-1', { limit: 0 }))) });
   });
 });
 

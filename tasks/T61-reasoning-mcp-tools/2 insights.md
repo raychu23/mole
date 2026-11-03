@@ -20,3 +20,12 @@ gap             INFERENCE: suggestRevivals uses plain Dung; under T60 tags best-
                 so the incident finds nothing to revive · backlog incident-under-phase
 mcp tests       9 files, 22 tests
 ```
+
+## 11-02 22:25 review 1 (deleg_ef4c137c) FAIL → fixed tests-first (2 red → green)
+- HIGH a hand-written mole-proposal.json in an unrelated linked worktree was listed as a proposal (same name twice)
+  → a proposal must ALSO have its own branch checked out: meta.branch = mole/proposal/<name> = the worktree's branch
+  (createProposal's naming, proposals.ts:131) · one branch per worktree → names unique
+- LOW limit 0 refused by the schema while the library returns [] → nonnegative, passed through
+- confirmed OK by the reviewer: temp snapshot dirs removed, JSON round-trip loses nothing, compare+phase isError,
+  different baselines isError, non-git root, prunable worktrees skipped, stdio tools/list, nothing written
+- left: mole_priorities outputSchema is passthrough (validates anything) · mcp 24 tests

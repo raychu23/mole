@@ -28,18 +28,21 @@ const real = (p: string): string => {
   }
 };
 
-/** proposal worktrees whose metadata names this repo, sorted by name. Never takes a path from the caller. */
+/** proposal worktrees of this repo, sorted by name. Never takes a path from the caller. A worktree counts only if its
+ *  metadata names this repo AND it has the branch createProposal gives it, `mole/proposal/<name>`, checked out (review 1:
+ *  a hand-written meta file in an unrelated linked worktree was trusted). One branch per worktree, so names are unique. */
 export function repoProposals(root: string): Array<{ path: string; meta: ProposalMeta }> {
   const top = real(execFileSync('git', ['-C', root, 'rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim());
   const listing = execFileSync('git', ['-C', root, 'worktree', 'list', '--porcelain'], { encoding: 'utf8' });
   const out: Array<{ path: string; meta: ProposalMeta }> = [];
-  for (const line of listing.split('\n')) {
-    if (!line.startsWith('worktree ')) continue;
-    const path = line.slice('worktree '.length);
-    if (real(path) === top) continue;
+  for (const block of listing.split('\n\n')) {
+    const path = /^worktree (.+)$/m.exec(block)?.[1];
+    const branch = /^branch (.+)$/m.exec(block)?.[1];
+    if (!path || !branch || real(path) === top) continue;
     try {
       const meta = readMeta(path);
-      if (real(meta.repo) === top) out.push({ path, meta });
+      const own = `mole/proposal/${meta.name}`;
+      if (real(meta.repo) === top && meta.branch === own && branch === `refs/heads/${own}`) out.push({ path, meta });
     } catch {
       // not a Mole proposal worktree (another linked worktree): skip
     }
@@ -86,14 +89,14 @@ export function registerReasoningTools(server: McpServer, opts: Opts): void {
         "a person's act (`mole incident accept`), not available over MCP. Same JSON as `mole incident suggest`. Deterministic, no LLM, read-only.",
       inputSchema: {
         incident: z.string().describe('incident id, e.g. inc-42'),
-        limit: z.number().int().positive().optional().describe('max candidates (default 20)'),
+        limit: z.number().int().nonnegative().optional().describe('max candidates (default 20; 0 = none, as the library)'),
       },
       annotations: { ...READ_ONLY_ANNOTATIONS, title: 'Mole incident suggest' },
       outputSchema: z.object({ incident: z.string(), candidates: z.array(z.unknown()) }).passthrough(),
     },
     async ({ incident, limit }) => {
       try {
-        return ok({ incident, candidates: suggestRevivals(opts.root, incident, limit ? { limit } : {}) });
+        return ok({ incident, candidates: suggestRevivals(opts.root, incident, limit !== undefined ? { limit } : {}) });
       } catch (e) {
         return fail('mole_incident_suggest', e);
       }

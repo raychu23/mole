@@ -10,3 +10,9 @@ npm notice run 'tsc' -b packages/mcp
    × T61 annotations > all three are read-only, closed-world, with an outputSchema 82ms
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
       Tests  7 failed (7)
+
+# review 1 fix red (11-02 22:20)
+   × T61 review 1: a proposal is a worktree on its own mole/proposal/<name> branch, nothing else > ignores an unrelated linked worktree carrying a forged proposal meta; a duplicate name is an error 807ms
+   × T61 review 1: a proposal is a worktree on its own mole/proposal/<name> branch, nothing else > limit 0 returns no candidates, as the library does (review 1 LOW) 71ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 7 passed (9)
