@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-11-03 04:35      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T72-okf-export → exit 0 (at new Promise (<anonymous>))
     2026-11-03 04:37      submitted → verified      reviewer hermes-subagent deleg_6b03cdb7 FAIL HIGH (fresh, claude-sonnet-5), fix parent-verified · findings: HIGH absolute repo path in bundle index.md -> fixed 082efba with test red first, rest PASS (spec byte-identical,
     2026-11-03 04:37      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T72-okf-export → exit 0 (at new Promise (<anonymous>))
+    2026-11-03 04:39      verified → integrated      merge 2101b06, main 2101b06 full check 1160 pass 0 fail (/Users/a1/.hermes/cache/scratch/mole-build/main-check-t71t72.txt) · combined checks exit 0
+    2026-11-03 04:39      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (at new Promise (<anonymous>))
 ```
