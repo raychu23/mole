@@ -1,0 +1,33 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T66-export-convention-trap
+
+ ❯ packages/decisions/test/cascade-export-convention-title.test.ts (3 tests | 1 failed) 2386ms
+   × T66: a title that merely contains an export-prefixed word is not a crisp module-export signal > "Audit every data export" + a new TS export: NOT a crisp zero-llm violation when an LLM tier is configured -- escalates and lets the judge decide 688ms
+     → expected 'zero-llm' to be 'llm' // Object.is equality
+   ✓ T66: a title that merely contains an export-prefixed word is not a crisp module-export signal > routing is unaffected: the data-export decision still becomes a candidate and still gets an export-convention hit  588ms
+   ✓ T66: a title that merely contains an export-prefixed word is not a crisp module-export signal > the real M24-shaped module-export decision ("Avoid Default Exports and Prefer Named Exports") stays crisp: zero-llm, no judge call needed  701ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/decisions/test/cascade-export-convention-title.test.ts > T66: a title that merely contains an export-prefixed word is not a crisp module-export signal > "Audit every data export" + a new TS export: NOT a crisp zero-llm violation when an LLM tier is configured -- escalates and lets the judge decide
+AssertionError: expected 'zero-llm' to be 'llm' // Object.is equality
+
+Expected: [32m"llm"[39m
+Received: [31m"[7mzero-[27mllm"[39m
+
+ ❯ packages/decisions/test/cascade-export-convention-title.test.ts:78:21
+     76|     const v = r.verdicts.find((x) => x.decision === 'D-data-export');
+     77|     expect(v).toBeDefined();
+     78|     expect(v!.tier).toBe('llm'); // escalated to the judge, not auto-d…
+       |                     ^
+     79|     expect(calls.length).toBeGreaterThan(0); // the judge was actually…
+     80|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  02:02:57
+   Duration  4.83s (transform 1.09s, setup 0ms, collect 1.97s, tests 2.39s, environment 0ms, prepare 154ms)
+

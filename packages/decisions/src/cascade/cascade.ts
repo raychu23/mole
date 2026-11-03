@@ -8,6 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { LlmClient } from '../compile/types.js';
+import { isModuleExportTitle } from '../check/options.js';
 import { prCheck } from '../check/pr-check.js';
 import type { GovernedRecord } from '../check/types.js';
 import { routeDecisions } from '../route/route.js';
@@ -16,8 +17,17 @@ import type { CascadeFlag, CascadeResult, CascadeVerdict, RoutedDecision, Semant
 
 /** T49: a decision's content/export-convention/rule hit decides outright (the pattern IS the signal); a decision
  *  governed ONLY by a scope anchor has nothing crisp and must escalate. `rule:` (rules/check.ts import:/call:
- *  violations wired into prCheck, verifier.md #1) joins `match:` and `export-convention` as a crisp signal. */
-const isCrisp = (g: GovernedRecord): boolean => g.hits.some((h) => h.anchor.startsWith('match:') || h.anchor === 'export-convention' || h.anchor.startsWith('rule:'));
+ *  violations wired into prCheck, verifier.md #1) joins `match:` and `export-convention` as a crisp signal.
+ *
+ *  T66: an `export-convention` hit is crisp only when the decision's OWN title actually uses module-export
+ *  vocabulary (isModuleExportTitle) -- a title that merely contains a word starting with "export" (e.g. "Audit
+ *  every data export") still ROUTES via the broad isExportConventionTitle test (prCheck still gives it the AST
+ *  hit, nothing about recall changes) but is not treated as a no-judge, auto-decide signal; it escalates to the
+ *  LLM tier like any other governed-but-not-crisp hit instead. The two real ADRs that motivated option 4
+ *  (Backstage's "Avoid Default Exports and Prefer Named Exports" / "Module Export Structure") both pass
+ *  isModuleExportTitle, so they are unaffected. */
+const isCrisp = (g: GovernedRecord): boolean =>
+  g.hits.some((h) => h.anchor.startsWith('match:') || h.anchor.startsWith('rule:') || (h.anchor === 'export-convention' && isModuleExportTitle(g.title)));
 
 export interface CascadeOptions {
   root: string;

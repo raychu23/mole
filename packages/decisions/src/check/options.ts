@@ -212,9 +212,28 @@ export function isCommentOnlyHunk(add: string[]): boolean {
 
 /** title -> generic IR trigger: true when the record's OWN title is itself about the export/named-export convention
  *  (same titleTermsOf extraction as option 3, no new data). Scopes the option-4 detector below to records that are
- *  actually about exports, so it never fires for an unrelated scope:[] convention record. */
+ *  actually about exports, so it never fires for an unrelated scope:[] convention record.
+ *
+ *  Deliberately BROAD (any title term merely starting with "export"): this only decides whether the record becomes
+ *  a prCheck candidate and gets an `export-convention` AST hit at all (routing). A record titled "Audit every data
+ *  export" also passes this -- on purpose, same as a `match:` content anchor would route it -- because dropping a
+ *  routing hit silently removes the decision from `governed` entirely (T49's recall-ceiling finding). Whether that
+ *  hit is CRISP enough to decide alone with no judge is a separate, narrower question: see isModuleExportTitle. */
 export function isExportConventionTitle(title: string): boolean {
   return titleTermsOf(title).some((t) => t.startsWith('export'));
+}
+
+/** T66: narrower than isExportConventionTitle -- true only when the title uses actual JS/TS module-export
+ *  vocabulary (default/named exports, module export structure, barrel/index re-exports), not merely a title term
+ *  that happens to start with "export" (e.g. "Audit every data export" is about a data/report export, not the
+ *  language construct). Grounded in the two real ADRs that motivated option 4 (prior-art.md #1): Backstage's
+ *  ADR003 "Avoid Default Exports and Prefer Named Exports" and ADR004 "Module Export Structure" -- both pair
+ *  "export(s)" with one of these words in the SAME title, where a data-export title never does. Used by
+ *  cascade.ts's isCrisp to gate whether an `export-convention` hit decides outright (no judge) or must escalate;
+ *  it never affects routing (isExportConventionTitle, above, is unchanged and still broad). */
+export function isModuleExportTitle(title: string): boolean {
+  const lw = title.toLowerCase();
+  return /\bexports?\b/.test(lw) && /\b(default|named|module|barrel|index|re-?export)\b/.test(lw);
 }
 
 const scriptKindOf = (path: string) => (/\.tsx$/.test(path) ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
