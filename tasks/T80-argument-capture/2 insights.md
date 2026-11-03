@@ -10,6 +10,46 @@ Tested end to end (library + real CLI on a scratch repo); 5 real MADR records ca
 every span hand-checked. Found and fixed a real extraction bug (example code fences in the real corpus
 faked out the section-end scan). All existing tests + `mole rules` (0013/0014/0017) stay green.
 
+**Review 3 fixes (structural: positional ids are the root cause of every prior review round):**
+Review 3 named what reviews 1 and 2 had each only patched one symptom of: a captured argument's
+`attacks`/`supports` are POSITIONAL ids (`::option:N`), and nothing ever re-validated a stored id against
+what it CURRENTLY means before building a graph edge from it. Fixed structurally, at the one place edges
+are actually built (the loader), not with another targeted patch:
+- **HIGH 1 (name collision, last-write-wins):** `capture/arguments.ts`'s `optionIdByName` map was
+  last-write-wins, so two considered options whose names normalize equal (`Option A` / `Option A.`)
+  collapsed to one id -- a Pros-and-Cons subsection naming either one silently attacked/supported whichever
+  option happened to be written last. Fixed: every considered-option's raw text is tracked per normalized
+  name; a name with >1 distinct text is ambiguous, and any Pros-and-Cons subsection whose heading matches
+  it gets `attacks`/`supports` forced empty + a new `ambiguousTarget` field naming BOTH colliding options
+  (never guessed). `mole arguments capture` prints one `PROBLEM:` line per distinct collision. The row's
+  own text is still captured and approvable (as text), just never produces a graph edge.
+- **HIGH 2 (stale rows keep pointing at a reused id):** a `::staleN` row (captured-store.ts's
+  `mergeByContent`: no fresh capture claims it any more -- an option/bullet deleted or reshaped past
+  recognition) kept its OLD `attacks`/`supports` ids, which a later re-capture can silently REISSUE to an
+  unrelated argument -- approving the stale row (or even just loading the graph) could defeat/support the
+  WRONG target. Fixed on both sides: (a) every row now carries an explicit `stale: true` flag (not just an
+  id-shape convention) set by `mergeByContent`'s backfill, and `setRow` (approve/reject) refuses outright
+  on a stale row with a named error; (b) `captured-loader.ts` NEVER reads `row.attacks`/`row.supports`
+  directly any more -- every row now also carries `attacksNames`/`supportsNames` (the target's own
+  NORMALIZED NAME, set at capture time), and the loader resolves every edge by NAME against a map built
+  ONLY from THIS load's current (non-stale, approved) nodes; a name with no current match (renamed/deleted)
+  or more than one current match (HIGH 1's own collision, reaching the loader via old/hand-written data)
+  never produces an edge -- dropped silently, never fabricated. This is the actual fix for review 2's
+  D-attack and COMPOUNDING findings too: they no longer depend on `contentHashOf`/`mergeByContent` getting
+  every case right, because the loader itself can no longer be fooled by a reused positional id.
+- **`mole arguments list` (arguments-cli.ts):** `formatRow` now prints each row's targets by NAME
+  (`[attacks:name]`/`[supports:name]`), and flags a row `<STALE>` / `<AMBIGUOUS-TARGET>` (with the problem
+  message on its own line) so a person reviewing the list sees the issue before approve/reject refuses it.
+- Tested: both reviewer reproducers (`Option A` / `Option A.` collision -- captured with `ambiguousTarget`
+  and no edge even once approved; X/Y/Z with Y deleted -- the stale Y rows refuse approve/reject and Z's
+  label is provably unchanged by the refused attempt), plus the 30-seed property test extended with two new
+  random actions (option delete, option rename) and a new invariant (d): no edge ever targets an argument
+  whose current name differs from the source row's own stored target name. `captured-arguments-lock.test.ts`
+  (pre-existing 12-procs-x-10-rounds stress test) kept its workload unchanged but raised its timeout from
+  60s to 240s with a comment -- the flake was CPU contention under full-suite load, not a bug, confirmed by
+  repeated standalone green runs. New tests verified red against the pre-fix src first (`4 log/red.txt`):
+  4 failed / 19 passed, all four failures tracing to the exact mechanisms this fix changes; green after.
+
 **Review fixes (this pass, HIGH 1 / HIGH 2 / MEDIUM 3):**
 - **HIGH 1 (approval was positional, not content-bound):** a captured argument's id is positional
   (`::pro:N`/`::con:N`/`::option:N`), so inserting a new bullet above an approved one shifted every id

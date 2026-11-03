@@ -10,10 +10,22 @@ import { loadGraph } from '../graph.js';
 const str = (v: string | true | undefined): string | undefined => (typeof v === 'string' ? v : undefined);
 
 function formatRow(d: CapturedArgument): string {
-  const base = `${d.decisionId} ${d.id} [${d.status}] ${d.role} ${d.span.file}:${d.span.startLine} "${d.text.length > 60 ? `${d.text.slice(0, 57)}...` : d.text}"`;
-  if (d.status === 'approved') return `${base} (approved by ${d.approvedBy} at ${d.approvedAt})`;
-  if (d.status === 'rejected') return `${base} (rejected: ${d.rejectedReason})`;
-  return base;
+  const targets: string[] = [];
+  for (const n of d.attacksNames ?? []) targets.push(`attacks:${n}`);
+  for (const n of d.supportsNames ?? []) targets.push(`supports:${n}`);
+  const targetStr = targets.length ? ` [${targets.join(', ')}]` : '';
+  // review 3: flag a stale (history-only, never a graph node/edge) or ambiguous-target row right in the
+  // listing -- a person deciding whether to approve/reject needs to see this BEFORE acting, not discover
+  // it only when approve/reject refuses the call.
+  const flags: string[] = [];
+  if (d.stale) flags.push('STALE');
+  if (d.ambiguousTarget) flags.push('AMBIGUOUS-TARGET');
+  const flagStr = flags.length ? ` <${flags.join(',')}>` : '';
+  const base = `${d.decisionId} ${d.id} [${d.status}]${flagStr} ${d.role} ${d.span.file}:${d.span.startLine}${targetStr} "${d.text.length > 60 ? `${d.text.slice(0, 57)}...` : d.text}"`;
+  const withAmbiguous = d.ambiguousTarget ? `${base}\n    PROBLEM: ${d.ambiguousTarget}` : base;
+  if (d.status === 'approved') return `${withAmbiguous} (approved by ${d.approvedBy} at ${d.approvedAt})`;
+  if (d.status === 'rejected') return `${withAmbiguous} (rejected: ${d.rejectedReason})`;
+  return withAmbiguous;
 }
 
 /** CLI entry used by packages/daemon/src/cli.ts: `mole arguments <capture|approve|reject|list> --id ID ...` */
@@ -36,6 +48,10 @@ export async function argumentsCli(pos: string[], flags: Record<string, string |
     const adrText = from ? readFileSync(resolve(from), 'utf8') : readFileSync(resolve(recordsRoot, node.file), 'utf8');
     const fresh = captureAdrArguments(id, node.file, adrText);
     const saved = await saveCapturedArguments(recordsRoot, id, fresh);
+    // review 3 HIGH 1: a capture problem (two considered options whose names normalize equal) is reported
+    // loudly here, once per distinct colliding pair -- never silently buried in the per-row listing only.
+    const problems = Array.from(new Set(saved.filter((r) => r.ambiguousTarget).map((r) => r.ambiguousTarget!)));
+    for (const p of problems) console.error(`mole arguments capture: PROBLEM: ${id}: ${p}`);
     console.log(flags.json ? JSON.stringify(saved, null, 2) : saved.map(formatRow).join('\n') || `mole arguments capture: no arguments found in ${node.file}`);
     return 0;
   }

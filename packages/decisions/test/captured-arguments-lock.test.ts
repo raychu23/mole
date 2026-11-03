@@ -65,5 +65,9 @@ describe('T80 review MEDIUM 3: concurrent CLI approves on the same decision neve
       expect(row.status).toBe('approved');
       expect(row.approvedBy).toBe('approver-r9'); // the LAST round's write survived -- nothing clobbered it
     }
-  }, 60_000);
+    // pre-existing: 12 procs x 10 rounds is CPU-heavy; under load (full-suite run, shared CI/dev-machine
+    // contention) the default 60s timeout flaked even though nothing was wrong (re-verified standalone,
+    // repeatedly green). A generous explicit timeout, not a smaller workload, is the fix: shrinking either
+    // knob would weaken the very stress test MEDIUM 3 exists to prove.
+  }, 240_000);
 });

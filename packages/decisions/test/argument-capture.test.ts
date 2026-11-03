@@ -15,6 +15,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { evaluate } from '@mole/reasoning';
 import { afterEach, describe, expect, it } from 'vitest';
+import { optionNameOf, sameName } from '../src/argdown/derive-adr.js';
 import {
   allCapturedArguments,
   approveCapturedArgument,
@@ -473,9 +474,15 @@ describe('review 2 COMPOUNDING: captured argument ids stay unique within a decis
     const ids = merged.map((r) => r.id);
     expect(new Set(ids).size).toBe(ids.length); // no duplicate id, however the content moved around
 
-    // approve/reject must still resolve every id to exactly one row -- no ambiguous-id error expected here
+    // review 3 HIGH 2: approve/reject must still resolve every CURRENT id to exactly one row (no
+    // ambiguous-id error), but a STALE row (deleted-from-source, kept append-only above) must be REFUSED,
+    // never silently acted on -- its old attacks/supports ids may now mean something else entirely.
     for (const r of merged) {
-      await expect(rejectCapturedArgument(root, 'D-move', r.id, 'audit')).resolves.toBeDefined();
+      if (r.stale) {
+        await expect(rejectCapturedArgument(root, 'D-move', r.id, 'audit')).rejects.toThrow(/STALE/);
+      } else {
+        await expect(rejectCapturedArgument(root, 'D-move', r.id, 'audit')).resolves.toBeDefined();
+      }
     }
   });
 });
@@ -506,14 +513,15 @@ describe('review 2: property-style re-capture -- random insert/move/edit/delete 
     return lines.join('\n');
   }
 
-  it('30 random sequences across 2-3 options: no duplicate ids, approvedHash matches, evaluate() labels match recomputation', async () => {
-    const optionTexts = ['Use YAML front matter', 'Option A', 'Option B']; // index 0 is always chosen
-
+  it('30 random sequences across 2-3 options: no duplicate ids, approvedHash matches, evaluate() labels match recomputation, and every edge targets its OWN name (never a reused id)', async () => {
     for (let seed = 0; seed < 30; seed++) {
       const root = repo(); // fresh repo per seed: loadGraph aggregates EVERY decision under root, so a
       // shared root across seeds would mix an earlier seed's approved rows into this seed's framework.
       const rand = rng(seed * 7919 + 13);
       const decisionId = `D-prop-${seed}`;
+      // review 3: optionTexts is now MUTABLE per seed -- actions 4/5 below rename or delete a rejected
+      // option mid-sequence, the exact shape (name collision aside) the structural fix targets.
+      let optionTexts = ['Use YAML front matter', 'Option A', 'Option B']; // index 0 is always chosen
       const file = writeDecision(root, decisionId, buildMadr(optionTexts, []));
 
       // a small pool of bullet labels that steps insert/move/edit/delete across 1-3 options (indices 1/2
@@ -522,10 +530,10 @@ describe('review 2: property-style re-capture -- random insert/move/edit/delete 
 
       const steps = 1 + Math.floor(rand() * 6);
       for (let step = 0; step < steps; step++) {
-        const action = Math.floor(rand() * 4);
+        const action = Math.floor(rand() * 6);
         if (action === 0 && bullets.length < 4) {
-          bullets = [...bullets, { optionIdx: 1 + Math.floor(rand() * 2), kind: rand() < 0.5 ? 'Bad' : 'Good', label: `label-${step}-${seed}` }];
-        } else if (action === 1 && bullets.length > 0) {
+          bullets = [...bullets, { optionIdx: 1 + Math.floor(rand() * (optionTexts.length - 1)), kind: rand() < 0.5 ? 'Bad' : 'Good', label: `label-${step}-${seed}` }];
+        } else if (action === 1 && bullets.length > 0 && optionTexts.length > 2) {
           // MOVE: relocate an existing bullet to the other rejected option, text unchanged
           const idx = Math.floor(rand() * bullets.length);
           const moved = { ...bullets[idx]!, optionIdx: bullets[idx]!.optionIdx === 1 ? 2 : 1 };
@@ -535,9 +543,23 @@ describe('review 2: property-style re-capture -- random insert/move/edit/delete 
           const idx = Math.floor(rand() * bullets.length);
           bullets = bullets.map((b, i) => (i === idx ? { ...b, label: `${b.label}-edited-${step}` } : b));
         } else if (action === 3 && bullets.length > 1) {
-          // DELETE
+          // DELETE a bullet
           const idx = Math.floor(rand() * bullets.length);
           bullets = bullets.filter((_, i) => i !== idx);
+        } else if (action === 4 && optionTexts.length > 1) {
+          // review 3: RENAME a rejected option -- any row whose stored target NAME no longer matches a
+          // CURRENT option's name must lose its approval (store, content-hash) and its edge (loader,
+          // name resolution), never keep attacking/supporting under the option's OLD name.
+          const idx = 1 + Math.floor(rand() * (optionTexts.length - 1));
+          optionTexts = optionTexts.map((t, i) => (i === idx ? `${t} Renamed-${step}-${seed}` : t));
+        } else if (action === 5 && optionTexts.length > 2) {
+          // review 3: DELETE the last rejected option entirely -- its Considered-Options bullet AND its
+          // Pros-and-Cons subsection both vanish; any bullet that pointed at it (and the option's own
+          // considered-option row) must become history-only (`stale: true`), never leak onto whatever
+          // reuses its old positional id.
+          const idx = optionTexts.length - 1;
+          optionTexts = optionTexts.slice(0, idx);
+          bullets = bullets.filter((b) => b.optionIdx !== idx);
         }
 
         const text = buildMadr(optionTexts, bullets);
@@ -548,8 +570,9 @@ describe('review 2: property-style re-capture -- random insert/move/edit/delete 
         const ids = merged.map((r) => r.id);
         expect(new Set(ids).size).toBe(ids.length);
 
-        // randomly approve a still-draft row, simulating a human reviewing after each re-capture
-        const draft = merged.filter((r) => r.status === 'draft' && (r.role === 'con' || r.role === 'pro' || r.role === 'considered-option'));
+        // randomly approve a still-draft, non-stale, non-ambiguous row, simulating a human reviewing
+        // after each re-capture (approving a stale/ambiguous row is refused -- not what this loop tests)
+        const draft = merged.filter((r) => r.status === 'draft' && !r.stale && !r.ambiguousTarget && (r.role === 'con' || r.role === 'pro' || r.role === 'considered-option'));
         if (draft.length > 0 && rand() < 0.7) {
           const pick = draft[Math.floor(rand() * draft.length)]!;
           await approveCapturedArgument(root, decisionId, pick.id, `reviewer-${step}`);
@@ -562,14 +585,28 @@ describe('review 2: property-style re-capture -- random insert/move/edit/delete 
           if (r.status === 'approved') expect(r.approvedHash).toBe(r.contentHash);
         }
 
-        // (c) evaluate() labels equal those computed from ONLY the approved rows whose approval hash
-        // still matches their current content hash (the same set captured-loader.ts turns into nodes)
+        // (c) evaluate() labels equal those computed from ONLY the approved, non-stale rows whose approval
+        // hash still matches their current content hash (the same set captured-loader.ts turns into nodes)
         const graph = loadGraph(root);
         const { framework } = argumentFramework(graph);
         const result = evaluate(framework);
-        const expectedNodeIds = new Set(current.filter((r) => r.status === 'approved' && r.approvedHash === r.contentHash).map((r) => r.id));
+        const expectedNodeIds = new Set(current.filter((r) => r.status === 'approved' && !r.stale && r.approvedHash === r.contentHash).map((r) => r.id));
         expect(new Set(framework.args.map((a) => a.id))).toEqual(expectedNodeIds);
         for (const id of expectedNodeIds) expect(result.labels[id]).toBeDefined();
+
+        // (d) review 3's own invariant: NO edge ever targets an argument whose CURRENT name differs from
+        // the attacking/supporting row's own stored target name -- i.e. the loader never resolved an edge
+        // via a reused/stale positional id, only ever by matching a CURRENT node's own name.
+        const rowById = new Map(current.map((r) => [r.id, r]));
+        for (const e of graph.edges) {
+          const fromRow = rowById.get(e.from);
+          if (!fromRow) continue; // not one of this decision's captured rows (unrelated edge type/source)
+          const toRow = rowById.get(e.to);
+          const toName = e.to === `${decisionId}::claim` ? 'claim' : toRow ? sameName(optionNameOf(toRow.text)) : undefined;
+          expect(toName).toBeDefined();
+          const expectedNames = e.type === 'supports' ? fromRow.supportsNames : fromRow.attacksNames;
+          expect(expectedNames ?? []).toContain(toName);
+        }
       }
     }
   });
@@ -604,5 +641,205 @@ describe('review HIGH 2: the record\'s own chosen option never attacks its own c
     expect(options.some((o) => o.text.startsWith('Section "Pros and Cons of the Options" after'))).toBe(false);
     const claim = rows.find((r) => r.role === 'claim')!;
     for (const o of options) expect(o.attacks).toContain(claim.id);
+  });
+});
+
+// review 3 HIGH 1 reproducer: two considered options whose names normalize EQUAL ("Option A" / "Option
+// A." -- sameName() strips the trailing period), so a Pros-and-Cons subsection naming either one is
+// structurally ambiguous: there is no correct single id `optionIdByName` could pick.
+const MADR_NAME_COLLISION = [
+  '## Considered Options',
+  '',
+  '* Use YAML front matter',
+  '* Option A',
+  '* Option A.',
+  '',
+  '## Decision Outcome',
+  '',
+  'Chosen option: "Use YAML front matter", because comes out best (see below).',
+  '',
+  '## Pros and Cons of the Options',
+  '',
+  '### Use YAML front matter',
+  '',
+  '* Good, because simple',
+  '',
+  '### Option A',
+  '',
+  '* Bad, because drawback of A',
+  '',
+  '### Option A.',
+  '',
+  '* Good, because benefit of A-dot',
+  '',
+].join('\n');
+
+describe('review 3 HIGH 1: two considered options whose names normalize equal never silently collapse', () => {
+  it('a con under "Option A" and a pro under "Option A." both come out ambiguousTarget with NO attacks/supports', () => {
+    const rows = captureAdrArguments('D-collide', '.mole/decisions/D-collide.md', MADR_NAME_COLLISION);
+    // both considered-option rows are still captured as distinct rows -- the collision is in the
+    // Pros-and-Cons NAME LOOKUP, never in deriveAdrArgumentFramework's own positional option ids.
+    const options = rows.filter((r) => r.role === 'considered-option');
+    expect(options.map((o) => o.text).sort()).toEqual(['Option A', 'Option A.']);
+    expect(new Set(options.map((o) => o.id)).size).toBe(2); // distinct ids, never collapsed
+
+    const con = rows.find((r) => r.role === 'con' && r.text.includes('drawback of A'))!;
+    const pro = rows.find((r) => r.role === 'pro' && r.text.includes('benefit of A-dot'))!;
+    for (const row of [con, pro]) {
+      expect(row.attacks).toEqual([]);
+      expect(row.supports).toEqual([]);
+      expect(row.attacksNames ?? []).toEqual([]);
+      expect(row.supportsNames ?? []).toEqual([]);
+      // the capture problem names BOTH colliding options, never guesses which one was meant
+      expect(row.ambiguousTarget).toBeDefined();
+      expect(row.ambiguousTarget).toContain('Option A');
+      expect(row.ambiguousTarget).toContain('Option A.');
+    }
+    // the pro under the UNAMBIGUOUS chosen-option subsection is unaffected by the collision elsewhere
+    const chosenPro = rows.find((r) => r.role === 'pro' && r.text.includes('simple'))!;
+    expect(chosenPro.ambiguousTarget).toBeUndefined();
+  });
+
+  it('an ambiguousTarget row can still be approved as TEXT, but produces no graph edge at all', async () => {
+    const root = repo();
+    const file = writeDecision(root, 'D-collide-approve', MADR_NAME_COLLISION);
+    const rows = captureAdrArguments('D-collide-approve', file, MADR_NAME_COLLISION);
+    await saveCapturedArguments(root, 'D-collide-approve', rows);
+    const con = rows.find((r) => r.role === 'con' && r.text.includes('drawback of A'))!;
+    const optionA = rows.find((r) => r.role === 'considered-option' && r.text === 'Option A')!;
+    const optionADot = rows.find((r) => r.role === 'considered-option' && r.text === 'Option A.')!;
+
+    await approveCapturedArgument(root, 'D-collide-approve', con.id, 'alice');
+    await approveCapturedArgument(root, 'D-collide-approve', optionA.id, 'alice');
+    await approveCapturedArgument(root, 'D-collide-approve', optionADot.id, 'alice');
+
+    const graph = loadGraph(root);
+    expect(graph.nodes.some((n) => n.id === con.id)).toBe(true); // approved as text -- still a node
+    // but NO edge from the ambiguous con exists at all -- never guessed which option it meant
+    expect(graph.edges.some((e) => e.from === con.id)).toBe(false);
+    const { framework } = argumentFramework(graph);
+    const result = evaluate(framework);
+    // neither option is defeated by the ambiguous con -- it is structurally invisible as an attacker
+    expect(result.labels[optionA.id]).toBe('in');
+    expect(result.labels[optionADot.id]).toBe('in');
+  });
+});
+
+// review 3 HIGH 2 reproducer: X/Y/Z considered options, each with its own con attacking it. Y is approved
+// and defeated by its own con; Y is then DELETED from the source and the document re-captured, reissuing
+// Y's old positional ids (option/con) to Z. The old, now-stale Y rows must never be approve/reject-able,
+// and must never leak an edge onto Z via the id they used to (and no longer) own.
+const MADR_XYZ = [
+  '## Considered Options',
+  '',
+  '* Use YAML front matter',
+  '* X',
+  '* Y',
+  '* Z',
+  '',
+  '## Decision Outcome',
+  '',
+  'Chosen option: "Use YAML front matter", because comes out best (see below).',
+  '',
+  '## Pros and Cons of the Options',
+  '',
+  '### Use YAML front matter',
+  '',
+  '* Good, because simple',
+  '',
+  '### X',
+  '',
+  '* Bad, because x drawback',
+  '',
+  '### Y',
+  '',
+  '* Bad, because y drawback',
+  '',
+  '### Z',
+  '',
+  '* Bad, because z drawback',
+  '',
+].join('\n');
+
+// SAME document with Y removed entirely (its Considered Options bullet AND its Pros-and-Cons subsection)
+// -- Z's positional ids shift down to occupy the ids Y used to hold.
+const MADR_XZ_AFTER_DELETE_Y = [
+  '## Considered Options',
+  '',
+  '* Use YAML front matter',
+  '* X',
+  '* Z',
+  '',
+  '## Decision Outcome',
+  '',
+  'Chosen option: "Use YAML front matter", because comes out best (see below).',
+  '',
+  '## Pros and Cons of the Options',
+  '',
+  '### Use YAML front matter',
+  '',
+  '* Good, because simple',
+  '',
+  '### X',
+  '',
+  '* Bad, because x drawback',
+  '',
+  '### Z',
+  '',
+  '* Bad, because z drawback',
+  '',
+].join('\n');
+
+describe("review 3 HIGH 2: a deleted option's stale rows never defeat the argument that reuses its old id", () => {
+  it("X/Y/Z, delete Y: the stale Y rows refuse approve/reject, and Z's label is unchanged by the attempt", async () => {
+    const root = repo();
+    const file = writeDecision(root, 'D-xyz', MADR_XYZ);
+    const rows = captureAdrArguments('D-xyz', file, MADR_XYZ);
+    await saveCapturedArguments(root, 'D-xyz', rows);
+
+    const optX = rows.find((r) => r.role === 'considered-option' && r.text === 'X')!;
+    const optY = rows.find((r) => r.role === 'considered-option' && r.text === 'Y')!;
+    const optZ = rows.find((r) => r.role === 'considered-option' && r.text === 'Z')!;
+    const conY = rows.find((r) => r.role === 'con' && r.text.includes('y drawback'))!;
+    expect(conY.attacks).toEqual([optY.id]);
+
+    await approveCapturedArgument(root, 'D-xyz', optX.id, 'alice');
+    await approveCapturedArgument(root, 'D-xyz', optY.id, 'alice');
+    await approveCapturedArgument(root, 'D-xyz', optZ.id, 'alice');
+    await approveCapturedArgument(root, 'D-xyz', conY.id, 'alice'); // Y, and only Y, is defeated
+
+    let graph = loadGraph(root);
+    let result = evaluate(argumentFramework(graph).framework);
+    expect(result.labels[optY.id]).toBe('out');
+    expect(result.labels[optZ.id]).toBe('in'); // Z's own con was never approved -- unattacked
+
+    // delete Y from the source and re-capture: Z's option/con ids shift to occupy ids Y used to own
+    const fresh = captureAdrArguments('D-xyz', file, MADR_XZ_AFTER_DELETE_Y);
+    const merged = await saveCapturedArguments(root, 'D-xyz', fresh);
+    const staleRows = merged.filter((r) => r.stale);
+    expect(staleRows.length).toBeGreaterThan(0); // Y's own rows (option + con) survive only as stale history
+    expect(staleRows.some((r) => r.text === 'Y')).toBe(true);
+    expect(staleRows.some((r) => r.text.includes('y drawback'))).toBe(true);
+
+    const zAfter = merged.find((r) => r.role === 'considered-option' && r.text === 'Z')!;
+    const zLabelBeforeAttempt = evaluate(argumentFramework(loadGraph(root)).framework).labels[zAfter.id];
+
+    // attempting to approve/reject a STALE row (Y's old option OR con) must be refused, not silently acted
+    // on -- its id may now be the SAME id Z's own current row holds (the exact root-cause bug).
+    for (const stale of staleRows) {
+      await expect(approveCapturedArgument(root, 'D-xyz', stale.id, 'mallory')).rejects.toThrow(/STALE/);
+      await expect(rejectCapturedArgument(root, 'D-xyz', stale.id, 'cleanup')).rejects.toThrow(/STALE/);
+    }
+
+    // Z's label is completely unaffected by the refused attempts
+    graph = loadGraph(root);
+    result = evaluate(argumentFramework(graph).framework);
+    expect(result.labels[zAfter.id]).toBe(zLabelBeforeAttempt);
+    expect(result.labels[zAfter.id]).toBe('in'); // still unattacked -- never defeated by Y's stale con
+    // no stale row is ever a graph node or an edge source, regardless of its own stored status
+    for (const stale of staleRows) {
+      expect(graph.nodes.some((n) => n.id === stale.id)).toBe(false);
+      expect(graph.edges.some((e) => e.from === stale.id)).toBe(false);
+    }
   });
 });

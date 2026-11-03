@@ -86,3 +86,56 @@ daemon.test.ts each re-verified green in isolation, 47s/27s resp.; their one fai
 run was a 60s-timeout from CPU contention running everything concurrently, not a regression -- both are
 untouched by this change and pass standalone with no code difference). `npx tsc -b` clean;
 `mole rules --root .` -- 0 violations.
+
+--- T80-argument-capture review-3-fix red (structural: positional ids as the root cause) ---
+Review 3 named the root cause behind every prior round: graph edges were built from captured arguments'
+own POSITIONAL ids (`::option:N`), never re-validated against what they currently mean. Three findings:
+HIGH 1 (name-collision last-write-wins in `optionIdByName`), HIGH 2 (a `::staleN` row's attacks/supports
+still point at an id a later capture reissued to an unrelated argument), and `mole arguments list` printing
+raw ids instead of names/flags. New tests written FIRST, then verified red against the pre-fix src (`git
+stash push -- packages/decisions/src/argdown/captured-loader.ts packages/decisions/src/capture/arguments-
+cli.ts packages/decisions/src/capture/arguments.ts packages/decisions/src/capture/captured-store.ts`, new
+test files kept in the working tree, then `git stash pop` to restore the fix):
+
+`npx vitest run packages/decisions/test/argument-capture.test.ts` against the PRE-fix src: 4 failed, 19 passed.
+
+FAIL review 3 HIGH 1: two considered options whose names normalize equal never silently collapse > a con
+  under "Option A" and a pro under "Option A." both come out ambiguousTarget with NO attacks/supports
+  AssertionError: expected [ 'D-collide::option:2' ] to deeply equal [] -- pre-fix `optionIdByName` is
+  last-write-wins: the con under "### Option A" silently attacked whichever of the two same-normalized-name
+  options happened to be written last into the map, instead of refusing to pick either.
+
+FAIL review 3 HIGH 1... > an ambiguousTarget row can still be approved as TEXT, but produces no graph edge at all
+  AssertionError: expected true to be false -- pre-fix, the ambiguous con's (fabricated) attack produced a
+  real graph edge once approved; confirms the collapsed-collision bug reaches evaluate(), not just the row.
+
+FAIL review 3 HIGH 2: a deleted option's stale rows never defeat the argument that reuses its old id > X/Y/Z,
+  delete Y: the stale Y rows refuse approve/reject, and Z's label is unchanged by the attempt
+  AssertionError: expected 0 to be greater than 0 -- pre-fix, `mergeByContent`'s leftover rows had no
+  explicit `stale` flag at all (only an `::staleN` id suffix on a COLLISION, which this scenario's shape
+  doesn't even trigger), so there was nothing for approve/reject to check and refuse.
+
+FAIL review 2: property-style re-capture... > 30 random sequences ... and every edge targets its OWN name
+  AssertionError: expected [] to include 'claim' -- pre-fix, rows have no `attacksNames`/`supportsNames` at
+  all (new fields), so the new invariant (d) has nothing to read; extending the property test with option
+  deletes/renames (new actions 4/5) also exercises the exact id-reuse shape HIGH 2's own reproducer covers,
+  across 30 random seeds instead of one fixed case.
+
+After the fix (capture/arguments.ts: `attacksNames`/`supportsNames` set at capture time from the option's
+own NAME, never its id; an `ambiguousNames` map built from every considered-option sharing a normalized
+name forces `attacks`/`supports` empty + `ambiguousTarget` set, naming both options, on any Pros-and-Cons
+subsection whose heading is itself ambiguous; captured-store.ts: every leftover ("case 4") row from
+`mergeByContent`'s backfill is now explicitly flagged `stale: true`, and `setRow` (approve/reject) refuses
+outright on a stale row; captured-loader.ts: NEVER reads `row.attacks`/`row.supports` directly any more --
+resolves every edge by NAME against a map built only from THIS LOAD's current, non-stale, approved nodes,
+dropping (never fabricating) an edge whose target name is missing or ambiguous; arguments-cli.ts:
+`formatRow` now prints targets by name and flags STALE/AMBIGUOUS-TARGET rows, and `capture` prints one
+PROBLEM line per distinct name collision):
+`npx vitest run packages/decisions/test/argument-capture.test.ts` -- 29 passed, 0 failed.
+`npx vitest run packages/decisions/test/captured-arguments-lock.test.ts` -- 1 passed (57s standalone; kept
+its 12-procs-x-10-rounds workload unchanged, only raised the explicit timeout from 60s to 240s -- the
+pre-existing flake was CPU-contention-under-load, not a real failure, confirmed by this standalone run and
+by the full-scope run below both being green with no code difference to the stress test's own logic).
+Full target scope `npx vitest run packages/decisions packages/reasoning packages/daemon packages/verify
+packages/mcp/test/tool-annotations-schema.test.ts` -- 556 passed, 0 failed, 53 test files (156s). `npx tsc
+-b` clean; `node packages/daemon/dist/cli.js rules --root .` -- 0 violations.

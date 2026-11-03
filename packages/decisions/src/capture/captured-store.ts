@@ -46,7 +46,12 @@ export function listCapturedArguments(root: string, decisionId: string): Capture
  *  lookup of the SAME capture batch `row` came from: an id is only meaningful within the one capture (old
  *  stored set, or freshly-extracted set) that produced it, never mixed across the two. Falls back to the
  *  target's own normalized text for a role that is neither claim nor considered-option (nothing currently
- *  attacks/supports a pro/con, but never silently treat an unresolvable target as equal to its raw id). */
+ *  attacks/supports a pro/con, but never silently treat an unresolvable target as equal to its raw id).
+ *
+ *  review 3: this is now a FALLBACK only -- arguments.ts sets `attacksNames`/`supportsNames` directly at
+ *  capture time (the name is already known there, no id lookup needed), and `mergeByContent` carries them
+ *  through on every resolved row. This function covers the one case those fields can be missing: a row
+ *  persisted before this field existed (pre-migration data on disk). */
 function targetNameOf(id: string, decisionId: string, byId: Map<string, { role: string; text: string }>): string {
   if (id === `${decisionId}::claim`) return 'claim';
   const target = byId.get(id);
@@ -64,11 +69,12 @@ function targetNameOf(id: string, decisionId: string, byId: Map<string, { role: 
  *  shift independently of what they point to) means a row whose text is untouched but whose target moved
  *  gets a DIFFERENT hash -- `mergeByContent` then treats it exactly like an edit-in-place: back to `draft`
  *  with `previouslyApproved` noted, never silently still-approved. `byId` is the id->row lookup of the
- *  SAME batch (existing or fresh) this row's own `attacks`/`supports` ids were assigned in. */
-function contentHashOf(row: { decisionId: string; role: string; text: string; attacks: string[]; supports: string[] }, byId: Map<string, { role: string; text: string }>): string {
-  const targetNames = Array.from(new Set([...row.attacks, ...row.supports]))
-    .map((id) => targetNameOf(id, row.decisionId, byId))
-    .sort();
+ *  SAME batch (existing or fresh) this row's own `attacks`/`supports` ids were assigned in; only used as a
+ *  fallback when the row has no `attacksNames`/`supportsNames` of its own (review 3, see `targetNameOf`). */
+function contentHashOf(row: { decisionId: string; role: string; text: string; attacks: string[]; supports: string[]; attacksNames?: string[]; supportsNames?: string[] }, byId: Map<string, { role: string; text: string }>): string {
+  const attacksNames = row.attacksNames ?? row.attacks.map((id) => targetNameOf(id, row.decisionId, byId));
+  const supportsNames = row.supportsNames ?? row.supports.map((id) => targetNameOf(id, row.decisionId, byId));
+  const targetNames = Array.from(new Set([...attacksNames, ...supportsNames])).sort();
   return createHash('sha256').update(`${row.role}::${sameName(row.text)}::${targetNames.join('|')}`).digest('hex');
 }
 
@@ -253,7 +259,13 @@ function mergeByContent(decisionId: string, existing: CapturedArgument[], fresh:
     claimedIds.add(id);
     // deleted-from-source row: kept, never dropped -- also back-fills contentHash for any row persisted
     // before this field existed, so every row on disk has one after its first merge through this code.
-    merged.push({ ...r, id, contentHash: r.contentHash ?? contentHashOf(r, existingById) });
+    // review 3 HIGH 2: explicitly flagged `stale` -- a row no fresh capture claims is HISTORY ONLY from
+    // this point on: captured-loader.ts never turns it into a graph node/edge (even if it was `approved`
+    // before going stale) and setRow (approve/reject, below) refuses to act on it. This is the fix for the
+    // root cause behind every review round on this task: a stale row's `attacks`/`supports` ids are
+    // positional and may now point at a DIFFERENT, unrelated argument that reused that id -- the explicit
+    // flag, not the id's shape, is what callers must check.
+    merged.push({ ...r, id, contentHash: r.contentHash ?? contentHashOf(r, existingById), stale: true });
   }
   // review 2 COMPOUNDING: assert the invariant this function exists to guarantee, rather than trust the
   // disambiguation above silently did its job -- a regression here must be loud, never a quiet data bug.
@@ -298,6 +310,14 @@ async function setRow(
     }
     const idx = rows.findIndex((r) => r.id === argumentId);
     if (idx < 0) throw new CapturedArgumentError(`mole arguments ${verb}: ${decisionId} has no captured argument ${argumentId}`);
+    // review 3 HIGH 2: a STALE row (no longer present in the latest capture -- deleted/renamed-beyond-
+    // recognition from the source) is history only. Approving it can silently defeat/support an UNRELATED
+    // argument now holding a reused positional id; refuse outright rather than acting on it.
+    if (rows[idx]!.stale) {
+      throw new CapturedArgumentError(
+        `mole arguments ${verb}: ${decisionId}'s ${argumentId} is a STALE captured argument (not present in the latest \`mole arguments capture\`) -- refusing to ${verb} history; re-run \`mole arguments capture --id ${decisionId}\` and ${verb} the CURRENT row instead`,
+      );
+    }
     const resolvedPatch = typeof patch === 'function' ? patch(rows[idx]!) : patch;
     const next = { ...rows[idx]!, ...resolvedPatch };
     rows[idx] = next;

@@ -76,6 +76,29 @@ export interface CapturedArgument {
    *  row's current contentHash is exactly the bug this field exists to make detectable: it means some path
    *  carried an approval forward onto content (text OR attack/support targets) nobody actually reviewed. */
   approvedHash?: string;
+  /** review 3 structural fix: the NORMALIZED NAME of every id in `attacks`, in the SAME order -- 'claim'
+   *  for the claim, or the considered-option's own name (never its positional `::option:N` id, which a
+   *  later re-capture can silently reassign to an UNRELATED argument). captured-loader.ts resolves every
+   *  approved row's edges by these names against the CURRENT (non-stale) capture batch, never by trusting
+   *  `attacks` itself -- the root cause of every review round on this task is that a stored positional id,
+   *  once written, is never re-validated against what it currently points at. Always set when `attacks` is
+   *  non-empty (and the role has a resolvable target); undefined/omitted only for rows with no attack. */
+  attacksNames?: string[];
+  /** Same as `attacksNames`, for `supports`. */
+  supportsNames?: string[];
+  /** review 3 HIGH 1 (name collision): set when this row's attack/support target could not be resolved
+   *  because two considered options in the record normalize to the SAME name (e.g. "Option A" / "Option
+   *  A.") -- naming BOTH options, rather than guessing (last-write-wins) which one a Pros-and-Cons bullet
+   *  meant. The row itself is still captured (text/span intact, approvable as TEXT) but `attacks`/
+   *  `supports` are forced empty until the record's own option names are disambiguated. */
+  ambiguousTarget?: string;
+  /** review 3 HIGH 2 (stale rows): set by captured-store.ts's `mergeByContent` on a row no fresh capture
+   *  claimed (deleted/renamed-beyond-recognition from the source) -- history only, append-only, never
+   *  dropped, but NEVER a graph node or edge (captured-loader.ts skips every stale row outright) and
+   *  approve/reject refuse to act on it (setRow) with a clear message. A row's positional id is NOT a
+   *  reliable way to tell stale apart from current (a later capture can reissue the same id for an
+   *  unrelated argument) -- this explicit flag is the source of truth. */
+  stale?: boolean;
 }
 
 const BULLET_LINE = /^(\s*[-*]\s+)(.*)$/;
@@ -126,10 +149,18 @@ function locateChosenLine(rawLines: string[], file: string): TextQuoteSpan | und
  *  prior-art.md design choice #2), a pro SUPPORTS it (display only, T48's existing supports rule). A
  *  subsection whose option has no id in `optionIdByName` (the CHOSEN option: derive-adr.ts deliberately
  *  never turns it into a graph argument) still gets captured arguments, just with an empty attacks/
- *  supports list -- never a fabricated target. */
+ *  supports list -- never a fabricated target.
+ *
+ *  review 3 HIGH 1: `optionIdByName` is necessarily last-write-wins for a NAME that two considered options
+ *  share once normalized (e.g. "Option A" / "Option A.") -- there is no correct single id to pick, so a
+ *  subsection whose heading normalizes to an ambiguous name (`ambiguousNames`, built by the caller from
+ *  every considered option sharing that name) never resolves a target at all: its pros/cons are still
+ *  captured as rows (approvable as TEXT) but with `attacks`/`supports` forced empty and `ambiguousTarget`
+ *  naming every option the heading could have meant, rather than silently attacking/supporting whichever
+ *  option happened to be last into the map. */
 const FENCE = /^\s*```/;
 
-function extractProsCons(decisionId: string, file: string, rawLines: string[], optionIdByName: Map<string, string>): CapturedArgument[] {
+function extractProsCons(decisionId: string, file: string, rawLines: string[], optionIdByName: Map<string, string>, ambiguousNames: Map<string, string[]>): CapturedArgument[] {
   const startIdx = rawLines.findIndex((l) => PROS_CONS_HEADING.test(l.trim()));
   if (startIdx === -1) return [];
   // real MADR records embed ```markdown example fences showing headings/bullets AS ILLUSTRATION TEXT
@@ -152,6 +183,8 @@ function extractProsCons(decisionId: string, file: string, rawLines: string[], o
   }
   const out: CapturedArgument[] = [];
   let currentOptionId: string | undefined;
+  let currentOptionName: string | undefined;
+  let currentAmbiguous: string | undefined;
   let proN = 0;
   let conN = 0;
   let inFence = false;
@@ -164,7 +197,17 @@ function extractProsCons(decisionId: string, file: string, rawLines: string[], o
     if (inFence) continue;
     const sub = SUBHEADING.exec(raw.trim());
     if (sub) {
-      currentOptionId = optionIdByName.get(sameName(sub[1]!));
+      const norm = sameName(sub[1]!);
+      const dup = ambiguousNames.get(norm);
+      if (dup && dup.length > 1) {
+        currentOptionId = undefined;
+        currentOptionName = undefined;
+        currentAmbiguous = `ambiguous considered-option name "${norm}": matches both ${dup.map((t) => `"${t}"`).join(' and ')} -- the Pros-and-Cons subsection's target cannot be resolved until the record's own option names are disambiguated`;
+      } else {
+        currentOptionId = optionIdByName.get(norm);
+        currentOptionName = norm;
+        currentAmbiguous = undefined;
+      }
       continue;
     }
     const bullet = BULLET_LINE.exec(raw);
@@ -175,14 +218,18 @@ function extractProsCons(decisionId: string, file: string, rawLines: string[], o
     const role: ArgumentRole = kind[1]!.toLowerCase() === 'bad' ? 'con' : 'pro';
     const startChar = bullet[1]!.length;
     const n = role === 'pro' ? ++proN : ++conN;
+    const hasTarget = !currentAmbiguous && currentOptionId !== undefined;
     out.push({
       id: `${decisionId}::${role}:${n}`,
       decisionId,
       role,
       text: content,
       span: spanAt(file, rawLines, i, content, startChar),
-      attacks: role === 'con' && currentOptionId ? [currentOptionId] : [],
-      supports: role === 'pro' && currentOptionId ? [currentOptionId] : [],
+      attacks: role === 'con' && hasTarget ? [currentOptionId!] : [],
+      attacksNames: role === 'con' && hasTarget ? [currentOptionName!] : [],
+      supports: role === 'pro' && hasTarget ? [currentOptionId!] : [],
+      supportsNames: role === 'pro' && hasTarget ? [currentOptionName!] : [],
+      ambiguousTarget: currentAmbiguous,
       provenance: { source: 'compiler', detail: 'mole-derive-adr-pros-cons' },
       status: 'draft',
     });
@@ -200,12 +247,33 @@ export function captureAdrArguments(decisionId: string, file: string, adrText: s
   const rawLines = adrText.split(/\r?\n/);
   const out: CapturedArgument[] = [];
   const optionIdByName = new Map<string, string>();
+  // review 3 HIGH 1: track EVERY raw text that normalizes to a given name, not just the last id written --
+  // `optionIdByName` must stay last-write-wins deterministic for lookups, but a name with >1 entry here is
+  // ambiguous and extractProsCons must refuse to pick either option rather than silently attacking/
+  // supporting whichever one happened to win the map.
+  const optionTextsByName = new Map<string, string[]>();
+  const byId = new Map(derived.arguments.map((a) => [a.id, a]));
   // review HIGH 2: an independent, defensive re-check -- the record's own chosen option is never emitted as
   // an attacker of the claim, even if deriveAdrArgumentFramework's own chosenIdx exclusion (derive-adr.ts)
   // ever regresses. Computed once per adrText; undefined (no "Chosen option:" line) disables the guard.
   const chosenName = findChosenOptionName(adrText);
+  // review 3 structural fix: the display NAME of an attack/support target -- 'claim' for the claim, else
+  // the considered-option's own normalized name. Never the target's positional id: that is exactly what a
+  // later re-capture can reassign to an unrelated argument (the root cause behind every review round here).
+  const nameOf = (id: string): string => {
+    if (id === derived.claimId) return 'claim';
+    const target = byId.get(id);
+    if (!target) return id; // unresolvable within this batch -- fall back, never throw
+    return sameName(target.role === 'considered-option' ? optionNameOf(target.text) : target.text);
+  };
   for (const a of derived.arguments) {
-    if (a.role === 'considered-option') optionIdByName.set(sameName(a.text), a.id);
+    if (a.role === 'considered-option') {
+      const norm = sameName(a.text);
+      if (!optionIdByName.has(norm)) optionIdByName.set(norm, a.id);
+      const texts = optionTextsByName.get(norm) ?? [];
+      texts.push(a.text);
+      optionTextsByName.set(norm, texts);
+    }
     const span = a.role === 'claim' ? locateChosenLine(rawLines, file) : locateBulletLine(rawLines, file, a.text);
     if (!span) continue; // never fabricate a span for text we cannot find verbatim (prior-art.md #2)
     const isChosen = a.role === 'considered-option' && chosenName !== undefined && sameName(optionNameOf(a.text)) === chosenName;
@@ -219,11 +287,14 @@ export function captureAdrArguments(decisionId: string, file: string, adrText: s
       text: a.text,
       span,
       attacks,
+      attacksNames: attacks.map(nameOf),
       supports: [],
       provenance: { source: 'compiler', detail: 'mole-derive-adr' },
       status: 'draft',
     });
   }
-  out.push(...extractProsCons(decisionId, file, rawLines, optionIdByName));
+  const ambiguousNames = new Map<string, string[]>();
+  for (const [norm, texts] of optionTextsByName) if (texts.length > 1) ambiguousNames.set(norm, texts);
+  out.push(...extractProsCons(decisionId, file, rawLines, optionIdByName, ambiguousNames));
   return out;
 }
