@@ -70,3 +70,12 @@ limits          INFERENCE: mole priorities's own bare default (sel={}) was left 
   literals (`['names']` → `['at','names','phase']`, similarly incident_suggest).
 - Green: decisions 51 / proposals 26 / mcp reasoning-tools 11 = 88 tests, `npx tsc -b` clean, no unrelated test
   touched beyond those two pre-existing assertions.
+
+## Review 1 (deleg_34eee310 #3) PASS + 1 MED fixed
+```notes
+verified   real T61 replay: --phase launch finds the parallel revival plain Dung misses (cycle undecided); scale/default none · single resolver
+           (priorities.ts) · acceptIncident unchanged · MCP annotations ok · apps/vscode 480 pass
+MED fixed  `mole proposals` (daemon CLI, used by the VS Code panel) dropped --phase/--at → now forwarded; proof 4 log/review-fix-daemon-proposals.txt
+           (launch vs scale differ: best-effort in→out, parallel out→in under launch). INFERENCE: no unit test (needs proposal worktrees); replay is the proof
+follow-up  mole_priorities bare default = plain Dung while its doc says today's phase (pre-T68) → backlog priorities-default
+```
