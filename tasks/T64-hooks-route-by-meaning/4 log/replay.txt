@@ -1,0 +1,17 @@
+# T64 replay 11-03: dcbench (brief-hq 9f507ce) prompts -> user-prompt-submit hook on a copy with the 15 generated unscoped records (generate.mjs). RECORDED, not tuned (T63 freeze rule).
+TASK-001* surfaced ['D-009', 'D-001', 'D-002', 'D-003', 'D-004']  gotchas ['D-001', 'D-002', 'D-003']  found 3/3
+TASK-002  surfaced ['D-005', 'D-002', 'D-011', 'D-004', 'D-003']  gotchas ['D-005']  found 1/1
+TASK-003* surfaced ['D-004', 'D-002', 'D-010', 'D-012', 'D-009']  gotchas ['D-004', 'D-010']  found 2/2
+TASK-004* surfaced ['D-011', 'D-015', 'D-014', 'D-005', 'D-002']  gotchas ['D-008', 'D-011']  found 1/2
+TASK-005  surfaced ['D-007', 'D-011', 'D-009', 'D-002', 'D-015']  gotchas ['D-006', 'D-007']  found 1/2
+TASK-006* surfaced ['D-003', 'D-011', 'D-004', 'D-009', 'D-002']  gotchas ['D-009', 'D-014']  found 1/2
+TASK-007  surfaced ['D-012', 'D-011', 'D-004', 'D-006', 'D-003']  gotchas ['D-001', 'D-012']  found 1/2
+TASK-008* surfaced ['D-003', 'D-012', 'D-002', 'D-015', 'D-010']  gotchas ['D-002', 'D-003']  found 2/2
+TASK-009* surfaced ['D-013', 'D-002', 'D-010', 'D-011', 'D-015']  gotchas ['D-004', 'D-010', 'D-013']  found 2/3
+TASK-010  surfaced ['D-011', 'D-015', 'D-003', 'D-014', 'D-006']  gotchas ['D-015']  found 1/1
+TASK-011  surfaced ['D-011', 'D-009', 'D-001', 'D-003', 'D-015']  gotchas ['D-003', 'D-014']  found 1/2
+TASK-012* surfaced ['D-010', 'D-011', 'D-004', 'D-006', 'D-008']  gotchas ['D-006', 'D-010']  found 2/2
+TASK-013* surfaced ['D-002', 'D-005', 'D-001', 'D-014', 'D-003']  gotchas ['D-002', 'D-005']  found 2/2
+TASK-014  surfaced ['D-001', 'D-008', 'D-015', 'D-011']  gotchas []  found 0/0
+TASK-015  surfaced ['D-008', 'D-001', 'D-006', 'D-004', 'D-002']  gotchas ['D-008']  found 1/1
+paper 8 tasks (*): gotcha decisions surfaced before coding 15/18
