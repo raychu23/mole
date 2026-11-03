@@ -48,22 +48,31 @@ export function requestUpdate(root: string, session: string, req: SteerUpdateReq
  * PreToolUse and UserPromptSubmit firing the same turn, or N concurrent hook processes under test) can never both
  * read the same undelivered item and each report delivering it -- only the racer holding the claim sees the
  * not-yet-delivered items; by the time the next racer gets the claim, this one has already marked them delivered.
- * Cheap short-circuit kept before the claim: a fresh/empty session never needs to take the lock at all. */
+ * Cheap short-circuit kept before the claim: a fresh/empty session never needs to take the lock at all.
+ * Review 2: if the lock cannot be acquired within its retry budget (someone else holds it the whole time,
+ * contended but not stale), `withInboxClaim` throws a lock-timeout error -- caught here and turned into an empty
+ * delivery rather than propagated, so a hook calling this delivers nothing THIS CALL and exits 0 (never blocks,
+ * never crashes); the queued item(s) are untouched in the canonical inbox and get delivered on a later call. */
 export function deliverPending(root: string, session: string): SteerDelivery {
   const peek = readInbox(root, session);
   if (!peek.signals.some((s) => !s.delivered) && !peek.updates.some((u) => u.accepted && !u.delivered)) {
     return { session, signals: [], updates: [] };
   }
-  return withInboxClaim(root, session, (inbox) => {
-    const signals = inbox.signals.filter((s) => !s.delivered);
-    const updates = inbox.updates.filter((u) => u.accepted && !u.delivered);
-    if (signals.length === 0 && updates.length === 0) return { session, signals: [], updates: [] };
-    const now = new Date().toISOString();
-    const out = { session, signals: signals.map((s) => ({ ...s, delivered: true, deliveredAt: now })), updates: updates.map((u) => ({ ...u, delivered: true, deliveredAt: now })) };
-    const deliveredSignalIds = new Set(signals.map((s) => s.id));
-    const deliveredUpdateIds = new Set(updates.map((u) => u.id));
-    inbox.signals = inbox.signals.map((s) => (deliveredSignalIds.has(s.id) ? { ...s, delivered: true, deliveredAt: now } : s));
-    inbox.updates = inbox.updates.map((u) => (deliveredUpdateIds.has(u.id) ? { ...u, delivered: true, deliveredAt: now } : u));
-    return out;
-  });
+  try {
+    return withInboxClaim(root, session, (inbox) => {
+      const signals = inbox.signals.filter((s) => !s.delivered);
+      const updates = inbox.updates.filter((u) => u.accepted && !u.delivered);
+      if (signals.length === 0 && updates.length === 0) return { session, signals: [], updates: [] };
+      const now = new Date().toISOString();
+      const out = { session, signals: signals.map((s) => ({ ...s, delivered: true, deliveredAt: now })), updates: updates.map((u) => ({ ...u, delivered: true, deliveredAt: now })) };
+      const deliveredSignalIds = new Set(signals.map((s) => s.id));
+      const deliveredUpdateIds = new Set(updates.map((u) => u.id));
+      inbox.signals = inbox.signals.map((s) => (deliveredSignalIds.has(s.id) ? { ...s, delivered: true, deliveredAt: now } : s));
+      inbox.updates = inbox.updates.map((u) => (deliveredUpdateIds.has(u.id) ? { ...u, delivered: true, deliveredAt: now } : u));
+      return out;
+    });
+  } catch (e) {
+    process.stderr.write(`mole steer: deliver skipped this call for session ${session}: ${(e as Error).message}\n`);
+    return { session, signals: [], updates: [] }; // items stay queued in the untouched inbox, never lost
+  }
 }

@@ -4,8 +4,49 @@ running agent, over the existing hooks transport. `signal` queues a one-shot not
 validator before it's queued and a rejection carries its reason and is never delivered; `query` reads the agent's
 current intent/files/decisions from @mole/agentstate's own run graph (T18). State lives in a per-session,
 file-based inbox under `.mole/local/steer/` (never committed). Steering is delivered exactly once via
-PreToolUse (Edit|Write only) and UserPromptSubmit, as `additionalContext`, never a block. Delivery is atomic
-(claim-by-rename, store.ts's `withInboxClaim`) and `steerDeliverText` never spawns the CLI for an empty inbox.
+PreToolUse (Edit|Write only) and UserPromptSubmit, as `additionalContext`, never a block. Delivery is atomic:
+every read-modify-write of the inbox (signal/update/deliver) runs inside `withInboxClaim` (store.ts), which since
+Review 2 is backed by `proper-lockfile` (mkdir-based lock directory, mtime-refresh staleness, stale reclaim) --
+the canonical inbox file is never moved away, only ever read -> mutated -> written to a temp file -> renamed over
+itself while the lock is held. `steerDeliverText` never spawns the CLI for an empty inbox.
+
+## Review 2 fixes (finding -> fix -> proof)
+- **HIGH** (Review 1's `withInboxClaim` hand-rolled mutual exclusion by renaming the canonical inbox to a unique
+  claimed name and back; on `ENOENT` it could not tell "no inbox yet" from "inbox currently claimed by ANOTHER
+  process" -- both look identical to a failed `renameSync` -- so it guessed "bootstrap a fresh empty inbox" and
+  looped back to claim THAT, meaning two racers could each mutate their own empty copy and whichever renamed back
+  LAST won, silently discarding the other's items; reviewer measured 98 successful sends -> 6 survived. A kill
+  -9'd claimer also orphaned its claimed file forever, since nothing ever looked for it again, so the next writer
+  started from empty too. The Review 1 stress test never caught this because it sent all 400 items BEFORE any
+  deliverer started -- it only ever raced deliverers against each other, never a sender against a deliverer) ->
+  fix: stopped hand-rolling. `store.ts`'s `withInboxClaim` now wraps every read-modify-write in `proper-lockfile`
+  (moxystudio, npm, mature/widely-used): a SEPARATE mkdir-based lock directory next to the (never-moved) canonical
+  inbox, so "claimed by someone else" and "doesn't exist yet" are two independent, unambiguous facts instead of
+  the same ENOENT. Stale reclaim (mtime refresh via `update` while held, a new acquirer's own `stale` option
+  decides staleness) replaces the old scheme's permanent kill-9-orphan failure mode with a bounded, self-healing
+  one; `onCompromised` logs instead of throwing, so a lock lost out from under a holder never crashes the process.
+  The write itself still follows Review 1's Maildir/git-lockfile "read -> mutate -> write temp -> atomic rename
+  onto canonical" idiom, just with the canonical path itself never renamed away. `withInboxClaim`'s retry budget
+  (default 30 attempts x 80ms ~= 2.4s, fits comfortably inside the hooks' 15s timeout) is bounded; on timeout it
+  throws, and `deliverPending` (index.ts) catches that specific case and returns an empty delivery instead of
+  propagating -- a hook that cannot get the lock in time delivers nothing THIS CALL and exits 0, the item(s) stay
+  queued in the untouched canonical file, never lost. Leftover `*.claim-*` files from the OLD scheme are folded
+  back into the inbox (`foldOrphanedClaims`, inside the new lock, every call) so nothing queued before this
+  upgrade is lost. Added `proper-lockfile` + `@types/proper-lockfile` as real dependencies (not hand-rolled) ->
+  proof: rewrote `packages/agentstate/test/steer-stress.test.ts` for the reviewer's exact scenario -- 8 concurrent
+  SENDER processes x 8 concurrent DELIVERER processes launched together (senders keep adding WHILE deliverers are
+  already polling, not sent-then-raced) over 20 iterations (2400 items total): every sent item delivered exactly
+  once, none lost, none doubled. Confirmed red first: ran this new test against the OLD claim-rename
+  `withInboxClaim` (git-stashed back to Review 1 state) -- it failed immediately with a JSON parse error
+  ("Unexpected end of JSON input" mid-claim, the exact "two racers both renamed, one clobbered the other's
+  half-written file" corruption window) rather than merely losing items, an even sharper failure than the
+  reviewer's silent-loss description; restored the fix and all 4 new tests pass (verbatim captures in
+  `tasks/T74-steering-dials/4 log/red.txt`'s "Review 2 fixes" section). Two additional new tests cover the kill -9
+  case directly (a process holding the lock is SIGKILL'd mid-mutation; a later `deliverPending` call eventually
+  succeeds once the lock goes stale, and the pre-existing item survives while the killed process's never-written
+  mutation does not) and the hook-budget case (a long-held, non-stale lock makes `withInboxClaim` give up within
+  ~2.5s and `deliverPending` returns `{signals:[],updates:[]}` rather than throwing, and the queued item is still
+  there -- delivered later once the lock frees up).
 
 ## Review 1 fixes (finding -> fix -> proof)
 - **HIGH 1** (`hooks/hooks.json` PreToolUse matcher widened to `"*"` made the full decisions block fire on Read,
@@ -69,25 +110,33 @@ PreToolUse (Edit|Write only) and UserPromptSubmit, as `additionalContext`, never
   (`lib.mjs`, `pre-tool-use.mjs`, `user-prompt-submit.mjs`, `hooks.json`) and rerunning -- 3 of 6 failed exactly as
   expected (the delivery assertions); the 3 "never blocks"/"silent" tests passed even pre-wiring, as they should
   (absence of bad behavior, not presence of the new feature).
-- Full regression (post Review 1 fixes): `npx tsc -b` clean; `npx vitest run packages/agentstate plugins/claude-code
-  packages/daemon` = 205/205 passed (25 test files, including every pre-existing T15/T18/T21/T24/T37/T64/T65 hook
-  and agentstate test, the two new Review 1 test files, and daemon's own 23 tests, all in one run).
+- `packages/agentstate/test/steer-stress.test.ts` (Review 2 rewrite): 4 tests -- 8x8 interleaved senders/
+  deliverers x 20 iterations (2400 items, none lost/doubled), kill -9 stale reclaim, orphaned `*.claim-*`
+  migration, and lock-acquire-timeout-fits-hook-budget. Red against the OLD claim-rename scheme (all 4 failed,
+  the main race test with a JSON-parse corruption error, not merely a lost item); green after the proper-lockfile
+  rewrite.
+- Full regression (post Review 2 fixes): `npx tsc -b` clean; `npx vitest run packages/agentstate plugins/claude-code
+  packages/daemon` = 208/208 passed (25 test files, including every pre-existing T15/T18/T21/T24/T37/T64/T65 hook
+  and agentstate test, all Review 1 + Review 2 steer test files, and daemon's own 23 tests, all in one run).
 
 ## Proof paths
 - `tasks/T74-steering-dials/4 log/prior-art.md` (Temporal handling-messages/message-passing/TypeScript SDK docs,
-  Claude Code hooks reference + additionalContext issue history, LangGraph interrupt/human-in-the-loop docs, and
-  (Review 1) Maildir delivery + git's lockfile API; all fetched and dated 2026-11-03).
-- `tasks/T74-steering-dials/4 log/red.txt` (red captures, verbatim, including the Review 1 stress-test red/green).
+  Claude Code hooks reference + additionalContext issue history, LangGraph interrupt/human-in-the-loop docs,
+  (Review 1) Maildir delivery + git's lockfile API, and (Review 2) proper-lockfile's own docs/source; all fetched
+  and dated 2026-11-03).
+- `tasks/T74-steering-dials/4 log/red.txt` (red captures, verbatim, including the Review 1 and Review 2
+  stress-test red/green cycles).
 - `tasks/T74-steering-dials/4 log/bench/review1-high2-latency.txt` (HIGH 2 before/after timing, n=30).
 
 ## NOT RUN
 - Nothing. Every check in this task's scope (`tsc -b`, the steer/steer-hook/steer-stress test files, the full
-  `agentstate` + `claude-code` + `daemon` suites, the HIGH 2 latency bench, the HIGH 3 stress test red/green cycle)
-  ran for real; no model calls were needed (validators and query are deterministic, zero-LLM, same as the rest of
-  this plugin's hooks). The one thing explicitly NOT built: a separate any-tool-matcher hook (the task's fix spec
-  made this optional -- "if a separate any-tool hook is kept at all" -- and PreToolUse Edit|Write + UserPromptSubmit
-  already satisfy "before the agent's very next edit or next prompt" without reintroducing HIGH 1's matcher-widening
-  regression, so it was not added; no n>=30 any-tool-hook latency measurement was needed as a result).
+  `agentstate` + `claude-code` + `daemon` suites, the HIGH 2 latency bench, the HIGH 3 and Review 2 stress-test
+  red/green cycles) ran for real; no model calls were needed (validators and query are deterministic, zero-LLM,
+  same as the rest of this plugin's hooks). The one thing explicitly NOT built: a separate any-tool-matcher hook
+  (the task's fix spec made this optional -- "if a separate any-tool hook is kept at all" -- and PreToolUse
+  Edit|Write + UserPromptSubmit already satisfy "before the agent's very next edit or next prompt" without
+  reintroducing HIGH 1's matcher-widening regression, so it was not added; no n>=30 any-tool-hook latency
+  measurement was needed as a result).
 
 ## Limits (INFERENCE)
 - INFERENCE: decision-scope matching for `queryAgentState`'s `decisionsInPlay` and for `validateUpdate`'s
@@ -96,15 +145,19 @@ PreToolUse (Edit|Write only) and UserPromptSubmit, as `additionalContext`, never
   present as a `.md` file would still validate as "exists" here. This mirrors the SAME simplification
   `plugins/claude-code/scripts/lib.mjs` already makes on purpose (dependency-free hooks), so it is consistent with
   the existing codebase's risk profile, not a new one.
-- INFERENCE: ~~`deliverPending`'s read-modify-write has no file lock.~~ FIXED in Review 1 (HIGH 3): see
-  `withInboxClaim` (store.ts) and the "Review 1 fixes" section above -- a rename-based atomic claim closes this
-  window, proven by `packages/agentstate/test/steer-stress.test.ts`'s 8x50 concurrent stress test.
-- INFERENCE: `withInboxClaim`'s retry loop is bounded (300 attempts x 10ms sleep, ~3s ceiling) and throws past that
-  -- a session under far heavier contention than this task's proven 8-concurrent-deliverer case (e.g. dozens of
-  parallel agents steering the same session id) could see a thrown error surface as a stderr line from
-  `steerDeliverText`'s `moleJson` catch (never a crash or a block, per the T74 stop condition, but the steering
-  text for that call would be `''`). Not exercised beyond 8 concurrent deliverers; widening the stress test is a
-  one-parameter change (`WORKERS`) if this needs a higher proven ceiling later.
+- INFERENCE: ~~`deliverPending`'s read-modify-write has no file lock.~~ FIXED in Review 1 (HIGH 3), then the
+  mechanism itself replaced in Review 2 after a real data-loss bug was found in the Review 1 claim-rename scheme
+  under sender/deliverer interleaving. See `withInboxClaim` (store.ts, now `proper-lockfile`-backed) and the
+  "Review 2 fixes" section above -- proven by `packages/agentstate/test/steer-stress.test.ts`'s 8-sender x
+  8-deliverer x 20-iteration interleaved race (2400 items), kill -9 stale-reclaim, and orphan-migration tests.
+- INFERENCE: `withInboxClaim`'s retry loop is bounded (default 30 attempts x 80ms, ~2.4s ceiling) and on timeout
+  `deliverPending` catches it and returns an empty delivery (never a throw out of the public `deliver` path) --
+  but `sendSignal`/`requestUpdate` still let the lock-timeout error propagate (a human/agent sending a signal
+  should know it failed to queue, unlike a hook's silent `deliver`). Not exercised beyond 8 concurrent senders x 8
+  concurrent deliverers; widening either count is a one-parameter change in the stress test if a higher proven
+  ceiling is needed later. `proper-lockfile`'s `stale` option has a library-enforced 2000ms floor regardless of
+  what is passed -- a `staleMs` below that is clamped, not honored exactly (confirmed empirically while writing
+  the kill-9 test).
 - INFERENCE: `requestUpdate`'s `KNOWN_UPDATE_KINDS` (`stop-editing`, `decision-superseded`, `scope`, `note`) is a
   starting set chosen to cover the two examples in the task contract ("stop editing X", "decision D superseded")
   plus two more that fit the same validator shape; it is not exhaustive and is meant to grow (each kind's check

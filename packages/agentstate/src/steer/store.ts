@@ -2,26 +2,41 @@
 // packages/memory/src/seen.ts's .mole/local/seen.jsonl) -- the folder gets a `.gitignore` with `*` so it is never
 // committed even in a repo that never listed .mole/local.
 //
-// Review 1 (HIGH 3): the original read-modify-write here had no lock. A stress test with 8 concurrent deliverers x
-// 50 iterations produced double deliveries (two racers each read the same "undelivered" item and each wrote it back
-// marked delivered, so both callers reported delivering it). `withInboxClaim` below closes that window with an
-// atomic rename-based claim, modeled on two well-known file-locking idioms:
-//   - Maildir delivery (https://en.wikipedia.org/wiki/Maildir ; qmail's maildir(5),
-//     https://manpages.debian.org/stretch/qmail/maildir.5.en.html): a message is written privately under tmp/ and
-//     only becomes visible by an atomic rename() into new/ -- POSIX rename() within one filesystem is atomic, so
-//     every reader sees either the whole old state or the whole new state, never a partial write, and no reader
-//     needs to coordinate with the writer via a separate lock.
-//   - git's lockfile API (https://git-scm.com/docs/api-lockfile/2.0.5 ; the same mechanism behind the familiar
-//     `.git/index.lock`): "we try to create the lock file with O_EXCL so that we can notice and fail when somebody
-//     else is already trying to update the index file", then rename the lock file onto the real one to commit.
-// Here the inbox file ITSELF is both the content and the mutual-exclusion token: a racer that successfully
-// `renameSync`s the canonical inbox to a unique "claimed" name is provably the only process holding it (the losing
-// racer's renameSync throws ENOENT, since the source is already gone); it reads, mutates, and renames back to
-// release. Bootstrapping an inbox that does not exist yet uses the O_EXCL idiom directly (open with 'wx') for the
-// same mutual-exclusion reason.
-import { closeSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+// Review 2 (HIGH): Review 1's `withInboxClaim` used a hand-rolled claim-by-rename scheme (rename the canonical
+// inbox to a unique per-process name, mutate, rename back). The reviewer found a real data-loss bug in it: on
+// ENOENT the old code could not tell "no inbox yet" (first ever write) from "inbox currently claimed by ANOTHER
+// process" (also ENOENT, because a successful claim renames the canonical file away) -- both look identical to a
+// `renameSync` that fails. It responded to either case by creating a brand-new EMPTY inbox and looping back to
+// claim THAT, so two racers could each be mutating their own empty copy and whichever renamed back LAST won,
+// silently discarding every item the other had written (reviewer: 98 successful sends -> 6 survived). A process
+// kill -9'd mid-claim also orphaned its claimed file forever (nothing ever looked for `*.claim-*` again), so the
+// next writer started from empty too.
+//
+// Fix: stop hand-rolling mutual exclusion on the content file itself. Use proper-lockfile
+// (https://github.com/moxystudio/node-proper-lockfile), the mature, widely used Node file-locking library:
+//   - it creates a SEPARATE lock directory (`<canonical>.lock`, via `mkdir` -- atomic the same way O_EXCL is,
+//     `mkdir` fails EEXIST if the dir exists) NEXT TO the canonical inbox, so the canonical file is never moved
+//     away and there is never a "which rename-back wins" question -- the thing racers contend over is the lock
+//     directory's existence, not the content file's path, so an ENOENT vs EEXIST ambiguity like Review 1's can't
+//     arise: `mkdir` either succeeds (we hold the lock) or fails EEXIST (someone else holds it) or fails for a
+//     real reason (ENOENT on a missing parent dir, handled by `ensureDir` before every lock attempt).
+//   - stale reclaim: if the lock directory's mtime is older than `stale` ms (refreshed periodically by the
+//     holder while it holds the lock -- the "mtime refresh" `update` option), a new claimant treats it as
+//     abandoned (e.g. the previous holder was kill -9'd) and removes + re-acquires it, so a dead process can never
+//     wedge the inbox forever the way Review 1's orphaned `*.claim-*` files could.
+//   - `onCompromised` is a required callback (library default: throw) for when the lock is lost unexpectedly
+//     (e.g. someone else reclaimed it as stale while we still thought we held it); we log and let our own write
+//     fail/retry rather than crashing the whole process, since this is a hook-adjacent CLI that must never crash.
+// The read-modify-write itself still follows the Maildir/git-lockfile rename-to-publish idiom from Review 1 (see
+// tasks/T74-steering-dials/4 log/prior-art.md's Review 1 additions) for the WRITE half only: while holding the
+// lock, read the canonical file, mutate in memory, write a unique temp file, then `renameSync` the temp file ONTO
+// the canonical path (atomic on POSIX) -- so a reader that opens the canonical path outside the lock (the cheap
+// `readInbox` peek in index.ts's `deliverPending`) never sees a half-written file. The canonical inbox itself is
+// NEVER renamed away, closing the exact hole Review 1's scheme had.
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
+import lockfile from 'proper-lockfile';
 import type { SteerInbox } from './types.js';
 
 const LOCAL_DIR = '.mole/local/steer';
@@ -66,53 +81,114 @@ function sleepSync(ms: number): void {
 }
 
 /**
- * Atomic claim-modify-release on the per-session inbox file (see this file's header for the Maildir/git-lockfile
- * prior art). `mutate` receives the current inbox, mutates it in place, and returns whatever the caller wants back;
- * the mutated inbox is written back and the claim is released (renamed back to the canonical path) before this
- * returns -- including on a thrown error, so a failing mutate() never leaves the inbox stuck under a claimed name.
- * Concurrent `sendSignal`/`requestUpdate`/`deliverPending` calls on the SAME session therefore serialize instead of
- * racing: only one process can ever be inside `mutate` for a given session at a time.
+ * Review 2 migration: before the proper-lockfile rewrite, a claim-rename scheme left `<canonical>.claim-PID-UUID`
+ * files behind when a claimer was kill -9'd mid-claim (nothing ever looked for them again, so anything queued in
+ * one was lost forever). Folds every such leftover file's signals/updates into `inbox` and deletes it. Runs
+ * INSIDE the lock on every `withInboxClaim` call (cheap no-op once no orphans remain -- a single `readdirSync` of
+ * a small directory) so nothing queued before this upgrade is silently dropped.
  */
-export function withInboxClaim<T>(root: string, session: string, mutate: (inbox: SteerInbox) => T, opts: { retries?: number; delayMs?: number } = {}): T {
-  const retries = opts.retries ?? 300;
-  const delayMs = opts.delayMs ?? 10;
+function foldOrphanedClaims(root: string, session: string, inbox: SteerInbox): void {
+  const canonical = inboxFile(root, session);
+  const dir = join(root, LOCAL_DIR);
+  const prefix = `${basename(canonical)}.claim-`;
+  let entries: string[];
+  try {
+    entries = readdirSync(dir);
+  } catch {
+    return;
+  }
+  for (const name of entries) {
+    if (!name.startsWith(prefix)) continue;
+    const p = join(dir, name);
+    try {
+      const orphan = JSON.parse(readFileSync(p, 'utf8')) as SteerInbox;
+      inbox.signals.push(...(orphan.signals ?? []));
+      inbox.updates.push(...(orphan.updates ?? []));
+    } catch {
+      // corrupt orphan: drop it rather than wedge every future call trying to parse it again
+    }
+    try {
+      unlinkSync(p);
+    } catch {
+      // best effort: a failed unlink just means we try again next call, never a crash
+    }
+  }
+}
+
+/**
+ * Atomic claim-modify-release on the per-session inbox file, via proper-lockfile (see this file's header for why
+ * Review 2 replaced the Review 1 hand-rolled claim-by-rename scheme with it). `mutate` receives the current
+ * inbox (already folded with any pre-upgrade orphaned claim files), mutates it in place, and returns whatever the
+ * caller wants back; the mutated inbox is written to a temp file and renamed over the canonical path -- still
+ * holding the lock -- before this returns, including on a thrown error (release always runs in `finally`).
+ * Concurrent `sendSignal`/`requestUpdate`/`deliverPending` calls on the SAME session therefore serialize instead
+ * of racing: only one process can ever be inside `mutate` for a given session at a time.
+ *
+ * `opts.retries` bounds the total time spent trying to acquire a CONTENDED (not stale) lock -- the hook budget:
+ * default ~30 attempts x 80ms = ~2.4s, comfortably under the hooks' own 15s timeout. On timeout this throws;
+ * `deliverPending` (index.ts) catches that specific case and returns an empty delivery instead of propagating,
+ * so a hook that cannot get the lock in time delivers nothing THIS CALL and exits 0 -- the item(s) stay queued in
+ * the untouched canonical file and are delivered on a later call, never lost. `opts.staleMs` (library's `stale`)
+ * is how long an idle lock directory must sit before a new claimant treats its holder as dead and reclaims it
+ * (handles a kill -9'd holder); proper-lockfile enforces a 2000ms floor on this.
+ */
+export function withInboxClaim<T>(root: string, session: string, mutate: (inbox: SteerInbox) => T, opts: { retries?: number; retryDelayMs?: number; staleMs?: number } = {}): T {
   ensureDir(root);
   const canonical = inboxFile(root, session);
-  const claimed = `${canonical}.claim-${process.pid}-${randomUUID()}`;
-  for (let attempt = 0; ; attempt++) {
+  // bootstrap: lockfile needs a real path to lock (we pass realpath:false below so it need not resolve a
+  // symlink, but mkdir-based locking still wants the parent dir ensured, done above). Create an empty inbox with
+  // O_EXCL ('wx') on first-ever use so a concurrent first-writer race can't clobber a just-created file -- the
+  // loser's 'wx' throws EEXIST and is ignored, same idiom git's index.lock bootstrap uses.
+  if (!existsSync(canonical)) {
     try {
-      renameSync(canonical, claimed); // atomic: only one racer's rename can succeed per existing canonical file
+      writeFileSync(canonical, JSON.stringify({ session, signals: [], updates: [] } satisfies SteerInbox), { flag: 'wx' });
     } catch (e) {
-      if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
-        // nothing to claim yet (first ever write for this session): create it with O_EXCL, same mutual-exclusion
-        // idiom as git's index.lock, then loop back to claim the file we (or a racer) just created.
-        try {
-          const fd = openSync(canonical, 'wx');
-          try {
-            writeFileSync(fd, JSON.stringify({ session, signals: [], updates: [] } satisfies SteerInbox));
-          } finally {
-            closeSync(fd);
-          }
-        } catch (e2) {
-          if ((e2 as NodeJS.ErrnoException).code !== 'EEXIST') throw e2;
-          // a racer created/claimed it between our ENOENT and our 'wx' attempt: just retry the claim loop
-        }
-        if (attempt >= retries) throw new Error(`mole steer: inbox lock timeout for session ${session}`);
-        sleepSync(delayMs);
-        continue;
-      }
-      if (attempt >= retries) throw new Error(`mole steer: inbox lock timeout for session ${session}`);
-      sleepSync(delayMs);
-      continue;
+      if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
     }
-    // we now exclusively own `claimed` (it cannot exist under any other name): read, mutate, write, release.
+  }
+
+  const retries = opts.retries ?? 30;
+  const retryDelayMs = opts.retryDelayMs ?? 80; // ~2.4s worst case total, under the ~3s hook budget
+  const staleMs = opts.staleMs ?? 5000;
+  let release: (() => void) | undefined;
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const inbox = JSON.parse(readFileSync(claimed, 'utf8')) as SteerInbox;
-      const result = mutate(inbox);
-      writeFileSync(claimed, JSON.stringify(inbox));
-      return result;
-    } finally {
-      renameSync(claimed, canonical); // release: atomic, and always succeeds (same filesystem, we alone hold `claimed`)
+      release = lockfile.lockSync(canonical, {
+        realpath: false, // the inbox need not be a real/resolved path; avoids an extra fs.realpath round trip
+        stale: staleMs,
+        update: Math.max(1000, Math.min(staleMs / 2, 2500)), // mtime refresh cadence while held (library floor: 1000ms)
+        onCompromised: (err: Error) => {
+          // the lock was reclaimed out from under us (e.g. we held it past `stale` while genuinely busy, or the
+          // holder record was lost) -- never throw out of a background callback; the in-flight write below will
+          // simply be racing the new holder's eventual write, same as any other contended retry, not a crash.
+          process.stderr.write(`mole steer: lock compromised for session ${session}: ${err.message}\n`);
+        },
+      });
+      break;
+    } catch (e) {
+      lastErr = e;
+      if (attempt >= retries) {
+        throw new Error(`mole steer: inbox lock timeout for session ${session} (tried ${retries + 1}x over ~${(retries + 1) * retryDelayMs}ms): ${(e as Error).message}`);
+      }
+      sleepSync(retryDelayMs);
+    }
+  }
+  if (!release) throw lastErr instanceof Error ? lastErr : new Error(`mole steer: could not acquire inbox lock for session ${session}`);
+
+  try {
+    const inbox: SteerInbox = existsSync(canonical) ? (JSON.parse(readFileSync(canonical, 'utf8')) as SteerInbox) : { session, signals: [], updates: [] };
+    foldOrphanedClaims(root, session, inbox);
+    const result = mutate(inbox);
+    const tmp = `${canonical}.tmp-${process.pid}-${randomUUID()}`;
+    writeFileSync(tmp, JSON.stringify(inbox));
+    renameSync(tmp, canonical); // atomic publish: the canonical path is NEVER moved away, only ever overwritten in one step
+    return result;
+  } finally {
+    try {
+      release();
+    } catch {
+      // already released/compromised: nothing more to release, never let cleanup itself throw
     }
   }
 }

@@ -133,3 +133,49 @@ end -- there is no long-held lock across an async boundary that could be abandon
 lockfile API explicitly guards against, so we accepted a simpler bounded-retry loop (300 attempts x 10ms, ~3s
 ceiling, comfortably inside the hooks' own 15/30s timeouts) instead of git's cleanup machinery.
 
+## Review 2 additions (fetched + dated 2026-11-03): proper-lockfile replaces the hand-rolled claim-rename scheme
+
+### 6. proper-lockfile (moxystudio/node-proper-lockfile, npm, v4.1.2) -- fetched 2026-11-03
+- https://github.com/moxystudio/node-proper-lockfile (README: design, mtime staleness, "Compromised" section)
+- https://www.npmjs.com/package/proper-lockfile
+- https://www.npmjs.com/package/@types/proper-lockfile (TypeScript types: `LockOptions.stale/update/retries/
+  onCompromised`, `lock`/`lockSync`/`unlock`/`check` + Sync variants)
+
+What it says: creates a lock as a DIRECTORY next to the protected file (`${file}.lock`) via `fs.mkdir`, which is
+atomic the same way `O_EXCL` is (`mkdir` either succeeds -- we hold the lock -- or fails `EEXIST` -- someone else
+does). While held, the lock's mtime is periodically refreshed (`update` interval, default `stale/2`) so a live
+holder's lock never looks abandoned; if a NEW acquirer finds an existing lock dir whose mtime is older than ITS
+OWN `stale` option, it treats the holder as dead, removes the lock dir, and reclaims it -- this is per-acquisition
+(the new claimant's own `stale`, not whatever the original holder set), confirmed by reading `lib/lockfile.js`'s
+`acquireLock`/`isLockStale`. `onCompromised` fires if the lock is lost unexpectedly (e.g. reclaimed as stale while
+the original holder still thought it was alive); the library's own default is to throw, which this repo's
+callback overrides to a stderr log instead, since a hook-adjacent CLI must never crash. `lockSync`/`unlockSync`
+exist (used here) but forbid `retries > 0` (`toSyncOptions` throws `ESYNC`) since retrying needs an async wait --
+`withInboxClaim` (store.ts) does its own bounded `sleepSync`-based retry loop around single `lockSync` attempts
+instead, so the whole call stays synchronous (no ripple of `async`/`await` through `sendSignal`/`requestUpdate`/
+`deliverPending`/the CLI, which were all synchronous before this fix and still are).
+
+**What we borrow:** the entire mutual-exclusion mechanism, replacing Review 1's hand-rolled claim-by-rename. The
+reviewer's HIGH finding was specific to the rename scheme: renaming the canonical file away to claim it meant
+"claimed by someone else" and "doesn't exist yet" were the SAME observable state (ENOENT) to a racer, and the old
+code's guess (ENOENT = bootstrap a fresh empty inbox) was wrong exactly when it mattered (contention). A
+mkdir-based lock DIRECTORY next to an UNTOUCHED canonical file removes that ambiguity entirely: the canonical
+file's existence and the lock directory's existence are two independent, unambiguous facts, so there is no state
+where "the file is gone" could mean two different things. Stale reclaim replaces the old scheme's permanent
+kill -9-orphan failure mode (nothing ever looked for an abandoned claimed file again) with a bounded, self-healing
+one.
+
+**What does not fit:** proper-lockfile's library default (`onCompromised` throws, `stale` floor 2000ms, no
+built-in retry budget tuned for a 15s hook timeout) is tuned for general-purpose file locking, not this task's
+specific "hooks must fit inside ~3s of an overall 15s budget" constraint -- `withInboxClaim`'s own retry loop
+(default 30 attempts x 80ms, ~2.4s) and `onCompromised` override are both this task's values layered on top of
+the library's mechanism, not the library's own defaults.
+
+### 7. Review 2 migration note: folding Review 1's orphaned `*.claim-*` files
+Not third-party prior art -- a one-time compatibility step this task's own fix needed. Any `<canonical>.claim-*`
+file left over from the OLD scheme (a kill -9'd claimer that never renamed back) is read, its signals/updates
+merged into the in-memory inbox, and the file deleted -- inside the NEW lock, on every `withInboxClaim` call (see
+`foldOrphanedClaims`, store.ts). This runs unconditionally rather than once-at-startup because there is no reliable
+"have we migrated yet" flag to check that would be simpler than just re-scanning a small directory each time; the
+scan is a no-op once no orphans remain.
+

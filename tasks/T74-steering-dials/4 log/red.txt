@@ -70,3 +70,38 @@ post-fix. The regression itself (matcher "*" + tool_input.file_path present on R
 direct inspection of the pre-fix hooks.json/pre-tool-use.mjs diff against main (git diff 8e4352b 77d887f), not by a
 failing test, since the pre-fix code path for Read with a decision-governing edit WOULD have produced the full
 decisions block -- there was no test asserting it should NOT, which is itself part of what Review 1 flagged.
+
+## Review 2 fixes: red captures (2026-11-03)
+
+Reviewer's finding: the Review 1 claim-rename `withInboxClaim` could not tell "no inbox yet" (ENOENT) from "inbox
+currently claimed by someone else" (also ENOENT, since a successful claim renames the canonical file away) --
+it just created a brand-new EMPTY inbox on ENOENT and kept racing, so whichever claim renamed back LAST won and
+silently discarded the other racer's items (reviewer measured 98 sends -> 6 survived). A kill -9'd claimer also
+orphaned its claimed file forever. The Review 1 stress test never caught this because it sent all 400 items BEFORE
+any deliverer started -- it only ever raced deliverers against each other, never a sender against a deliverer.
+
+RED (before the proper-lockfile rewrite): `npx vitest run packages/agentstate/test/steer-stress.test.ts` --
+rewrote the whole file for Review 2 (interleaved senders+deliverers, kill -9 stale-reclaim, orphan-claim migration,
+hook-budget timeout), run against the OLD claim-rename `withInboxClaim` (store.ts/index.ts still Review-1 state,
+no `.lock` dir concept, no orphan folding, no `staleMs` option):
+
+ ❯ packages/agentstate/test/steer-stress.test.ts (4 tests | 4 failed) 10664ms
+   × senders and deliverers racing AT THE SAME TIME ... 8x8, 20 iterations
+     → deliverer.mjs exited 1: SyntaxError: Unexpected end of JSON input at withInboxClaim (store.js:111) --
+       the exact "two racers both renamed, one clobbered the other's write mid-flight" corruption window.
+   × a kill -9'd lock holder is reclaimed after it goes stale; inbox stays intact
+     → expected false to be true (no `${inboxFile}.lock` dir ever created -- the old scheme has no such concept,
+       so the test's own "did the holder actually take a lock" check fails immediately, confirming there was
+       nothing here to reclaim from)
+   × leftover *.claim-* files from the old rename scheme are folded back in, not lost
+     → expected ['already-in-inbox'] to include 'orphaned-before-upgrade' (nothing ever looked for orphans)
+   × lock-acquire failure fits the hook budget and never loses queued items
+     → expected false to be true (same missing-lock-dir reason as the kill-9 test)
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+
+GREEN (after the proper-lockfile rewrite of store.ts + index.ts, see "Review 2 fixes" in
+tasks/T74-steering-dials/2 insights.md): all 4 tests pass, including the 20-iteration interleaved
+senders+deliverers race (2400 items total across all iterations, none lost, none doubled) and the kill -9
+stale-reclaim case. Full capture below this line is the final `npx vitest run packages/agentstate
+plugins/claude-code packages/daemon` run (see report for the exact pass count).
