@@ -5,4 +5,6 @@ ledger (newest last, nothing deleted)
     2026-11-02 22:08      ready → running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T61-reasoning-mcp-tools · branch ledger/t61-reasoning-mcp-tools · base ?
     2026-11-02 22:35      running → submitted      report: tasks/T61-reasoning-mcp-tools/2 insights.md, proof 4 log/mcp-replay.txt · checks exit 0 · note: worktree fast-forwarded to main, mcp 24 tests
     2026-11-02 22:35      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T61-reasoning-mcp-tools → exit 0 (at new Promise (<anonymous>))
+    2026-11-02 22:37      submitted → verified      reviewer hermes-subagents deleg_ef4c137c (FAIL, fixed) + deleg_cdaae854 PASS (fresh, claude-sonnet-5) · findings: r1 HIGH forged mole-proposal.json in an unrelated worktree listed -> proposal must have its own mole/propo
+    2026-11-02 22:37      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T61-reasoning-mcp-tools → exit 0 (at new Promise (<anonymous>))
 ```
