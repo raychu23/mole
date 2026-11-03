@@ -40,5 +40,10 @@ export { buildOkfBundle, OKF_VERSION } from './export/okf.js';
 export type { OkfBundle, OkfFile } from './export/okf.js';
 export { exportCli } from './export/cli.js';
 // T78 (D65): per-link assurance on door: one-way decisions, never inferred -- see assurance/report.ts header.
-export { assuranceCli, assuranceReport, parseAssurance } from './assurance/report.js';
+export { assuranceCli, assuranceReport, isValidIsoDate, parseAssurance } from './assurance/report.js';
 export type { AssuranceOptions } from './assurance/report.js';
+// T81 (D66): outcome ledger -- prediction/outcome/rollout front matter, due/overdue checks, never-automatic
+// SUGGESTED incident drafts on a contradicted outcome (see outcomes/report.ts header).
+export { outcomesCli, outcomesReport, parseOutcomeBlocks } from './outcomes/report.js';
+export type { OutcomesOptions } from './outcomes/report.js';
+export { draftIncidentRecord } from './incidents/revive.js';

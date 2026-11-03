@@ -24,7 +24,9 @@ const PROVENANCES: ReadonlySet<string> = new Set<Provenance>(['person', 'compile
 /** True only for a real ISO calendar date `YYYY-MM-DD` -- rejects both non-date strings ('not-a-date')
  * and dates that are the right shape but don't exist (2026-02-30: Date's own rollover would otherwise
  * silently turn that into 2026-03-02). */
-function isValidIsoDate(raw: string): boolean {
+// T81: exported so outcomes/report.ts (prediction check_at / outcome date) reuses this instead of a second
+// ISO-date validator (T78 learned the hard way: reject non-ISO AND calendar-invalid dates like 2026-02-30).
+export function isValidIsoDate(raw: string): boolean {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
   if (!m) return false;
   const year = Number(m[1]);

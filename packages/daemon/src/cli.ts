@@ -118,6 +118,7 @@ async function main(): Promise<number> {
   if (cmd === 'recall') return (await import('@mole/decisions')).recallCli(pos, flags, root); // T71: similar past decisions/incidents, Klein RPD "resembles", read-only
   if (cmd === 'export') return (await import('@mole/decisions')).exportCli(pos, flags, root); // T72: `mole export --format okf` -- OKF v0.2 bundle, no daemon needed
   if (cmd === 'assurance') return (await import('@mole/decisions')).assuranceCli(pos, flags, root); // T78 (D65): assured share of door: one-way decisions per governed folder, no daemon needed
+  if (cmd === 'outcomes') return (await import('@mole/decisions')).outcomesCli(pos, flags, root); // T81 (D66): prediction vs outcome + due/overdue checks, no daemon needed
   if (cmd === 'proposals') { // this repo's what-if proposals vs their baseline, same JSON as mole_proposals_compare (T62); read-only
     try {
       console.log(JSON.stringify((await import('@mole/proposals')).summarizeProposals(root, pos.length ? pos : undefined, { ...(typeof flags.phase === 'string' ? { phase: flags.phase } : {}), ...(typeof flags.at === 'string' ? { at: flags.at } : {}), ...(typeof flags.order === 'string' ? { order: flags.order.split(',').map((s) => s.trim()).filter(Boolean) } : {}) }), null, 2)); // T68 review: forward --phase/--at; T73: --order (a what-if, never written)

@@ -195,3 +195,72 @@ export interface AssuranceReport {
    * decision governs several folders -- each malformed field is one source entry, reported once). */
   malformed: AssuranceMalformed[];
 }
+
+// T81 (D66): outcome ledger -- a decision record may carry a `prediction:` (what is expected, how it will be
+// measured, and when to check) and later an `outcome:` (what was actually observed). A `rollout:` block names a
+// staged rollout's treated and holdout scopes -- recording only, no assignment logic (D66: "staggered rollout +
+// 1 holdout folder"). Like `door` (T78), every field here is human-authored and never inferred by Mole.
+export type OutcomeResult = 'confirmed' | 'contradicted' | 'inconclusive'; // the human's own verdict, never inferred
+
+/** `prediction:` front matter on a decision record. */
+export interface Prediction extends Loc {
+  expected: string; // the expected outcome, in the author's own words
+  signal: string; // the measurable signal that will tell them
+  checkAt?: string; // YYYY-MM-DD: when to check it (rejected -> undefined, see OutcomeMalformed)
+}
+
+/** `outcome:` front matter recorded later, once checked. */
+export interface Outcome extends Loc {
+  observed: string; // what was actually observed
+  date?: string; // YYYY-MM-DD: when it was recorded (rejected -> undefined)
+  who?: string; // who recorded it
+  result?: OutcomeResult; // the human's verdict against the prediction (rejected -> undefined)
+}
+
+/** `rollout:` front matter: a staged rollout's two named scopes. Recording only -- Mole assigns nothing. */
+export interface Rollout extends Loc {
+  treated: string;
+  holdout: string;
+}
+
+/** One rejected `prediction:`/`outcome:`/`rollout:` field value: not silently dropped (same convention as
+ * AssuranceMalformed) -- reported with the value that was rejected and why, with the decision it belongs to. */
+export interface OutcomeMalformed {
+  decisionId: string;
+  block: 'prediction' | 'outcome' | 'rollout';
+  field: string;
+  value: string;
+  reason: string;
+  file: string;
+  line: number;
+}
+
+/** One decision record with an opt-in `prediction:` block, its outcome (if recorded yet) and rollout (if any). */
+export interface OutcomeEntry {
+  decisionId: string;
+  title: string;
+  file: string;
+  line: number;
+  prediction: Prediction;
+  outcome?: Outcome;
+  rollout?: Rollout;
+  /** no outcome yet and checkAt <= today */
+  due: boolean;
+  /** no outcome yet and checkAt < today */
+  overdue: boolean;
+  daysOverdue?: number;
+  /** outcome.result === 'contradicted' -- the human's own verdict, read as-is, never computed from text */
+  contradicts: boolean;
+  /** T58 T81: present only when contradicts is true. A draft incident record (same front-matter shape
+   * `readIncident` in incidents/revive.ts already parses) for a PERSON to review and save -- never written to
+   * disk by this report, never accepted automatically. Saving it is the person's act; from there the existing
+   * `mole incident suggest/accept/dismiss` (T58) flow applies unchanged. */
+  suggestedIncident?: { title: string; decisions: string[]; draft: string };
+}
+
+export interface OutcomesReport {
+  root: string;
+  generatedAt: string;
+  entries: OutcomeEntry[];
+  malformed: OutcomeMalformed[];
+}
