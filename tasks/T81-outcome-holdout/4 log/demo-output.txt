@@ -1,0 +1,102 @@
+== mole outcomes (text) ==
+OVERDUE (2489d) d1-cache-ttl  p95 API latency drops without a meaningful hit-rate loss  .mole/decisions/d1-cache-ttl.md:1
+  rollout  treated=packages/api/ holdout=packages/api-eu/
+CONTRADICTED   d2-retry-budget  fewer user-visible 5xx errors from transient failures  .mole/decisions/d2-retry-budget.md:1
+  outcome  5xx rate rose 18% -- retries amplified load during a downstream outage  2026-11-02 by raymond
+  SUGGESTED incident (not written): Outcome contradicts prediction for d2-retry-budget
+confirmed      d3-ok  onboarding completion rate rises  .mole/decisions/d3-ok.md:1
+  outcome  completion rose 6pp  2026-10-01 by alice
+
+== mole outcomes --due (text) ==
+OVERDUE (2489d) d1-cache-ttl  p95 API latency drops without a meaningful hit-rate loss  .mole/decisions/d1-cache-ttl.md:1
+  rollout  treated=packages/api/ holdout=packages/api-eu/
+
+== mole outcomes --json ==
+{
+  "root": "/Users/a1/.hermes/cache/scratch/t81-outcomes-demo",
+  "generatedAt": "2026-11-03T13:12:11.224Z",
+  "entries": [
+    {
+      "decisionId": "d1-cache-ttl",
+      "title": "Shorten the hot-path cache TTL from 60s to 10s",
+      "file": ".mole/decisions/d1-cache-ttl.md",
+      "line": 1,
+      "prediction": {
+        "expected": "p95 API latency drops without a meaningful hit-rate loss",
+        "signal": "p95 latency (ms) and cache hit rate (%) over 7 days post-rollout",
+        "checkAt": "2020-01-10",
+        "file": ".mole/decisions/d1-cache-ttl.md",
+        "line": 5
+      },
+      "rollout": {
+        "treated": "packages/api/",
+        "holdout": "packages/api-eu/",
+        "file": ".mole/decisions/d1-cache-ttl.md",
+        "line": 9
+      },
+      "due": true,
+      "overdue": true,
+      "daysOverdue": 2489,
+      "contradicts": false
+    },
+    {
+      "decisionId": "d2-retry-budget",
+      "title": "Raise the client retry budget from 2 to 5",
+      "file": ".mole/decisions/d2-retry-budget.md",
+      "line": 1,
+      "prediction": {
+        "expected": "fewer user-visible 5xx errors from transient failures",
+        "signal": "user-visible 5xx rate per day",
+        "checkAt": "2020-02-01",
+        "file": ".mole/decisions/d2-retry-budget.md",
+        "line": 5
+      },
+      "outcome": {
+        "observed": "5xx rate rose 18% -- retries amplified load during a downstream outage",
+        "date": "2026-11-02",
+        "who": "raymond",
+        "result": "contradicted",
+        "file": ".mole/decisions/d2-retry-budget.md",
+        "line": 9
+      },
+      "due": false,
+      "overdue": false,
+      "contradicts": true,
+      "suggestedIncident": {
+        "title": "Outcome contradicts prediction for d2-retry-budget",
+        "decisions": [
+          "d2-retry-budget"
+        ],
+        "draft": "---\nid: suggested-d2-retry-budget\ntitle: Outcome contradicts prediction for d2-retry-budget\ndecisions:\n  - d2-retry-budget\n---\n\nExpected: fewer user-visible 5xx errors from transient failures\nSignal: user-visible 5xx rate per day\nObserved: 5xx rate rose 18% -- retries amplified load during a downstream outage\nRecorded by raymond on 2026-11-02.\nSUGGESTED by `mole outcomes` -- review and save under .mole/incidents/ to use `mole incident suggest/accept/dismiss` (T58).\n"
+      }
+    },
+    {
+      "decisionId": "d3-ok",
+      "title": "Already confirmed prediction",
+      "file": ".mole/decisions/d3-ok.md",
+      "line": 1,
+      "prediction": {
+        "expected": "onboarding completion rate rises",
+        "signal": "day-1 completion %",
+        "checkAt": "2020-03-01",
+        "file": ".mole/decisions/d3-ok.md",
+        "line": 5
+      },
+      "outcome": {
+        "observed": "completion rose 6pp",
+        "date": "2026-10-01",
+        "who": "alice",
+        "result": "confirmed",
+        "file": ".mole/decisions/d3-ok.md",
+        "line": 9
+      },
+      "due": false,
+      "overdue": false,
+      "contradicts": false
+    }
+  ],
+  "malformed": []
+}
+
+== .mole/incidents never written by this report ==
+decisions

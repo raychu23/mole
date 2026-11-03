@@ -1,0 +1,35 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T81-outcome-holdout
+
+stdout | packages/decisions/test/outcomes.test.ts > outcomesReport > CLI prints JSON with --json and a non-zero exit never happens on a clean report
+{
+  "root": "/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-outcomes-fC3HfA",
+  "generatedAt": "2026-11-03T13:10:11.459Z",
+  "entries": [
+    {
+      "decisionId": "ok",
+      "title": "OK",
+      "file": ".mole/decisions/ok.md",
+      "line": 1,
+      "prediction": {
+        "expected": "x",
+        "signal": "y",
+        "checkAt": "2099-01-01",
+        "file": ".mole/decisions/ok.md",
+        "line": 5
+      },
+      "due": false,
+      "overdue": false,
+      "contradicts": false
+    }
+  ],
+  "malformed": []
+}
+
+ ✓ packages/decisions/test/outcomes.test.ts (13 tests) 35ms
+
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  07:10:11
+   Duration  431ms (transform 121ms, setup 0ms, collect 196ms, tests 35ms, environment 0ms, prepare 39ms)
+

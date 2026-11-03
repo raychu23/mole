@@ -9,6 +9,7 @@ import { registerOneOnOneTool } from './oneonone-tool.js'; // T31: 1:1 prep + re
 import { registerReasoningTools } from './reasoning-tools.js'; // T61: priorities, incident suggestions, proposals (read-only)
 import { registerHotspotsTool } from './hotspots-tool.js'; // T70: churn x complexity x decision volatility x fix density, ranked (read-only)
 import { registerCouplingTool } from './coupling-tool.js'; // T77: logical coupling (co-change) x CODEOWNERS teams, cross-team pairs first (read-only)
+import { registerOutcomesTool } from './outcomes-tool.js'; // T81 (D66): outcome ledger -- prediction vs outcome, due/overdue checks (read-only)
 import { executeTool, GEN_AI } from '@mole/telemetry';
 import type { Change } from '@mole/history';
 import { resolve } from 'node:path';
@@ -128,6 +129,7 @@ export function createServer(opts: MoleMcpOptions): McpServer {
   registerReasoningTools(server, opts); // T61: T60 priorities, T58 incident suggest, T56 proposals compare -- read-only
   registerHotspotsTool(server, opts); // T70: D68 hotspot ranking -- read-only
   registerCouplingTool(server, opts); // T77: D69 coupling x CODEOWNERS -- read-only
+  registerOutcomesTool(server, opts); // T81: D66 outcome ledger -- read-only
   // T39: external agent-session memory (Entire Checkpoints, git-ai Authorship Logs, Agent Trace v0.1.0) mapped
   // onto the function it touched, re-checked against the function's current body like a T11 note.
   server.registerTool(

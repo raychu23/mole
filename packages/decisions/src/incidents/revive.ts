@@ -311,6 +311,17 @@ export function acceptIncident(root: string, incidentId: string, argumentId: str
   return { incident: inc.id, argument: argumentId, written: [inc.file], alsoReinstates };
 }
 
+/** T81 (D66): the front-matter TEXT for a candidate incident record -- same shape `readIncident` (above) already
+ * parses (`decisions:` list + a title + body), so once a PERSON saves it under `.mole/incidents/<id>.md` the
+ * existing `mole incident suggest/accept/dismiss` flow picks it up unchanged. This function only builds the
+ * string; it never writes a file and is never called automatically -- the write, and the choice to make one at
+ * all, stays a person's act (same boundary as acceptIncident's own comment: "a person's step, only for a
+ * current candidate"). Used by outcomes/report.ts when an outcome contradicts its prediction. */
+export function draftIncidentRecord(id: string, title: string, text: string, decisionIds: string[]): string {
+  const lines = ['---', `id: ${id}`, `title: ${title}`, 'decisions:', ...decisionIds.map((d) => `  - ${d}`), '---', '', text, ''];
+  return lines.join('\n');
+}
+
 export function dismissIncident(root: string, incidentId: string, argumentId: string): IncidentWrite {
   const ev = evaluated(root);
   const inc = readIncident(root, ev.graph, incidentId);

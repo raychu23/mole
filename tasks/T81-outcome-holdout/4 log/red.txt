@@ -1,0 +1,27 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T81-outcome-holdout
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/decisions/test/outcomes.test.ts [ packages/decisions/test/outcomes.test.ts ]
+Error: Cannot find module '../src/outcomes/report.js' imported from '/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T81-outcome-holdout/packages/decisions/test/outcomes.test.ts'
+ ❯ packages/decisions/test/outcomes.test.ts:8:1
+      6| import { join } from 'node:path';
+      7| import { afterEach, describe, expect, it } from 'vitest';
+      8| import { outcomesCli, outcomesReport } from '../src/outcomes/report.js…
+       | ^
+      9| 
+     10| const roots: string[] = [];
+
+Caused by: Error: Failed to load url ../src/outcomes/report.js (resolved id: ../src/outcomes/report.js) in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T81-outcome-holdout/packages/decisions/test/outcomes.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../../CS%20Code/Project/Mole-worktrees/T81-outcome-holdout/node_modules/vite/dist/node/chunks/config.js:22907:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  07:08:57
+   Duration  318ms (transform 36ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 50ms)
+
