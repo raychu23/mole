@@ -4,3 +4,6 @@
    × mole-proposals lesson (T59) > refuses records that are not committed at the baseline (.mole gitignored), leaving no branch or worktree 340ms
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
       Tests  1 failed | 7 passed (8)
+   × mole-proposals lesson (T59) > validates against the baseline commit, not the working tree (skip-worktree edit to a retired tenet) 432ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 8 passed (9)

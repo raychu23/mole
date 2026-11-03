@@ -152,7 +152,7 @@ export function createProposal(opts: CreateOptions): ProposalMeta {
 }
 
 /** The baseline commit's .mole records, extracted to a temp dir (git archive), so the approved checkout is never read or changed. */
-function baselineSnapshot(worktree: string, rev: string): string {
+export function baselineSnapshot(worktree: string, rev: string): string {
   const dir = mkdtempSync(join(tmpdir(), 'mole-proposal-base-'));
   if (gitOk(worktree, ['cat-file', '-e', `${rev}:.mole`])) {
     const tar = execFileSync('git', ['-C', worktree, 'archive', '--format=tar', rev, '--', '.mole'], { maxBuffer: 1 << 30 });

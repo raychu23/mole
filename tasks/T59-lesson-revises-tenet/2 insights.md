@@ -29,3 +29,12 @@ limits          INFERENCE: `check:` is recorded, not enforced (human graph "less
 - MEDIUM noted, not changed: a "## " heading inside the Proposed tenet text ends the section (same rule as tenets.md)
 - held per reviewer: tenet-1 vs tenet-10 · retired refused · CRLF + last section · invalid branch names refused
   before writes · missing git identity → Mole <mole@localhost> · re-review = every traces_to edge (decisions + intent)
+
+## 11-02 19:30 review 2 (deleg_06b5fca1) FAIL → validation now reads the baseline itself (1 red → green, proposals 17)
+- HIGH skip-worktree/assume-unchanged hide a disk edit from `git status`; existence at HEAD (round-1 fix) was not
+  enough: a retired-at-HEAD tenet passed because validation read the disk → lesson, tenets, incidents are now read
+  from HEAD's .mole via `git archive` (baselineSnapshot, exported from proposals.ts, same as T56 evaluate), and the
+  proposal is created from that same rev. The round-1 existence loop is gone (subsumed)
+- INFERENCE: rounds 1+2 = one root cause, "validate one source, build from another"; the fix is one source
+- held: cleanup never deletes a pre-existing branch/worktree (createProposal refuses both first) · rename/deleted
+  incident fail safe · replay re-run: same tenet-2 draft, 4 records, approved checkout clean

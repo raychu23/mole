@@ -93,6 +93,21 @@ describe('mole-proposals lesson (T59)', () => {
     expect(git(root, ['worktree', 'list']).split('\n')).toHaveLength(1);
   });
 
+  // review 2 (deleg_06b5fca1) HIGH: skip-worktree hid a disk edit from `git status`; validation read the disk
+  // (tenet not retired) while the draft is pinned to HEAD (tenet retired). Validation now reads HEAD's own records.
+  it('validates against the baseline commit, not the working tree (skip-worktree edit to a retired tenet)', () => {
+    const root = repo();
+    write(root, '.mole/tenets.md', TENETS.replace('## tenet-1 · Prefer boring tech', '## tenet-1 · Prefer boring tech (retired)'));
+    git(root, ['commit', '-qam', 'retire tenet-1']);
+    git(root, ['update-index', '--skip-worktree', '.mole/tenets.md']);
+    write(root, '.mole/tenets.md', TENETS); // disk says not retired; git status stays clean
+    expect(git(root, ['status', '--porcelain'])).toBe('');
+    const path = join(tmp('mole-t59-wt-'), 'draft');
+    expect(() => proposeTenetRevision({ repo: root, lesson: 'L1', path })).toThrow(/retired/);
+    expect(existsSync(path)).toBe(false);
+    expect(git(root, ['branch', '--list', 'mole/proposal/*'])).toBe('');
+  });
+
   it('refuses an uncommitted lesson (the draft must come from the pinned baseline)', () => {
     const root = repo();
     write(root, '.mole/lessons/l1.md', readFileSync(join(root, '.mole/lessons/l1.md'), 'utf8').replace('owner: raymond', 'owner: someone'));
