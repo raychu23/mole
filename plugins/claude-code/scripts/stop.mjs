@@ -11,6 +11,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { clip, collisionsStopText, decisionsDiffText, emit, findMole, git, loadSession, moleJson, readInput, repoRoot, ruleViolationsText, sessionCollisions } from './lib.mjs';
+import { runVerifier, verifierParts } from './verify.mjs';
 
 const range = (h) => (h.oldLines > 1 ? `${h.oldStart}-${h.oldStart + h.oldLines - 1}` : `${h.oldStart}`);
 const one = (s, n = 240) => {
@@ -123,11 +124,18 @@ function main() {
   // T21: what this session edited that another parallel run relies on
   const coll = collisionsStopText(sessionCollisions(mole, root, input, 35_000), input.session_id);
   const claims = claimLines(mole, root, input.session_id); // T24: unsupported / contradicted claims in the last answer
-  const parts = [check ? format(check.r, check.label) : '', decisions, violations, coll, claims.join('\n')].filter(Boolean);
+  // T65: Mole's measured verifier (cascade + semantic routing) on the session's change; first, since it is the one that
+  // can say "this violates decision X, because ..."
+  const sess = loadSession(input.session_id);
+  const verified = verifierParts(runVerifier(mole, root, sess && sess.root === root ? sess.head : undefined));
+  const parts = [verified.text, check ? format(check.r, check.label) : '', decisions, violations, coll, claims.join('\n')].filter(Boolean);
   if (!parts.length) return;
   const msg = { systemMessage: clip(parts.join('\n\n')) };
-  if (check && process.env.MOLE_STOP_CONTINUE === '1' && input.stop_hook_active !== true && check.r.questions?.length) {
-    msg.hookSpecificOutput = { hookEventName: 'Stop', additionalContext: clip(`Mole asks about the lines you just edited (answer briefly, then stop):\n${check.r.questions.map((q, i) => `${i + 1}. ${q.text}`).join('\n')}`) };
+  const cont = [];
+  if (verified.continueText) cont.push(verified.continueText);
+  if (check && check.r.questions?.length) cont.push(`Mole asks about the lines you just edited (answer briefly, then stop):\n${check.r.questions.map((q, i) => `${i + 1}. ${q.text}`).join('\n')}`);
+  if (cont.length && process.env.MOLE_STOP_CONTINUE === '1' && input.stop_hook_active !== true) {
+    msg.hookSpecificOutput = { hookEventName: 'Stop', additionalContext: clip(cont.join('\n\n')) };
   }
   emit(msg);
 }

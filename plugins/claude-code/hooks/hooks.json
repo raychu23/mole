@@ -1,10 +1,14 @@
 {
-  "description": "Mole: notes + decisions for the files in play at session start; a decision added once when you edit its lines; mole check on the session's diff when Claude stops",
+  "description": "Mole: notes + decisions for the files in play at session start; a decision added once when you edit its lines; when Claude stops: Mole's verifier (cascade-check) + mole check on the session's diff",
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
-          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/session-start.mjs\"", "timeout": 30 }
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/session-start.mjs\"",
+            "timeout": 30
+          }
         ]
       }
     ],
@@ -12,14 +16,22 @@
       {
         "matcher": "Edit|Write",
         "hooks": [
-          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/pre-tool-use.mjs\"", "timeout": 15 }
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/pre-tool-use.mjs\"",
+            "timeout": 15
+          }
         ]
       }
     ],
     "Stop": [
       {
         "hooks": [
-          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/stop.mjs\"", "timeout": 60 }
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/stop.mjs\"",
+            "timeout": 120
+          }
         ]
       }
     ]

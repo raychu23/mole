@@ -1,0 +1,15 @@
+   × T65 snapshotWorktree > captures tracked edits, untracked files and staged changes as a commit; index, refs, status and files untouched 175ms
+   × T65 snapshotWorktree > leaves .mole/ out of the snapshot (records are not code under check) 141ms
+   × T65 snapshotWorktree > a clean worktree gives head === base (nothing to check) 126ms
+   × T65 mole cascade-check --worktree > routes the unscoped decision by meaning and reports its violation; same verdicts as cascadeCheck on the snapshot commit 141ms
+   × T65 mole cascade-check --worktree > the compliant version is not flagged 143ms
+   ✓ T65 mole cascade-check --worktree > --base/--head still required without --worktree (exit 2) 121ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+TypeError: (0 , snapshotWorktree) is not a function
+TypeError: (0 , snapshotWorktree) is not a function
+TypeError: (0 , snapshotWorktree) is not a function
+AssertionError: expected 2 to be +0 // Object.is equality
+SyntaxError: Unexpected end of JSON input
+Error: Cannot find module '../scripts/verify.mjs' imported from '/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T65-stop-runs-verifier/plugins/claude-code/test/stop-verifier.test.ts'
+Caused by: Error: Failed to load url ../scripts/verify.mjs (resolved id: ../scripts/verify.mjs) in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T65-stop-runs-verifier/plugins/claude-code/test/stop-verifier.test.ts. Does the file exist?
+      Tests  no tests
