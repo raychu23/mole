@@ -139,3 +139,19 @@ describe('T64 review 1', () => {
     expect(block).toMatch(/D-01.*matched by words, not by file/);
   });
 });
+
+describe('T64 review 2', () => {
+  it('PreToolUse header does not say "is governed by" when every listed decision is a word match', () => {
+    const root = repo();
+    const data = tmp('mole-t64-data-');
+    const out = execFileSync(process.execPath, [join(plugin, 'scripts/pre-tool-use.mjs')], {
+      input: JSON.stringify({ session_id: 'r2', cwd: root, hook_event_name: 'PreToolUse', tool_name: 'Write', tool_input: { file_path: join(root, 'src/api/new.ts'), content: 'export a csv data export with an audit log' } }),
+      encoding: 'utf8',
+      env: { ...process.env, MOLE_BIN: cli, CLAUDE_PLUGIN_ROOT: plugin, CLAUDE_PLUGIN_DATA: data },
+    });
+    const ctx = JSON.parse(out).hookSpecificOutput.additionalContext as string;
+    expect(ctx).toContain('D-01');
+    expect(ctx).not.toContain('is governed by');
+    expect(ctx).toContain('may bear on src/api/new.ts');
+  });
+});

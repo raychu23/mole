@@ -32,3 +32,12 @@ F4 LOW      15/18 subset undocumented      fix: summary names the paper's 8 + ad
 passed      bm25 parity fuzz 0 diffs · no hook throws/blocks · dedupe per session · 500 decisions 0.3-0.4 s · 375 tests
 after fix   plugin + decisions 378 pass (3 new tests red first)
 ```
+
+## Review 2 (deleg_2f15c9b5) PASS
+```notes
+verified    F1 hook output byte-identical to pre-T64 for file-scoped + repo-wide repos (fixture + Mole repo read-only) · F2 · F3 · F4 recomputed 15/18, 21/27
+MED fixed   PreToolUse header still said "is governed by" when every line is a word match → header "decisions that may bear on <file> (word matches;
+            check each applies)" in that case · test via the real pre-tool-use.mjs, red first · plugin 32 pass
+env note    reviewer found this worktree's git index deleted and a stray GIT_INDEX_FILE in its shell; rebuilt with read-tree HEAD. Cause unknown
+            (INFERENCE: a concurrent T65 review probing snapshotWorktree); main + T65 worktree checked clean 00:20
+```

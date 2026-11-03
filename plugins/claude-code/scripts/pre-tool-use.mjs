@@ -30,7 +30,7 @@ function main() {
   if (!fresh.length) return; // every governing decision was already surfaced this session: no repeat (done-when 3)
   for (const d of fresh) already.add(d.id);
   saveAddedDecisions(input.session_id, already);
-  emit({ hookSpecificOutput: { hookEventName: 'PreToolUse', additionalContext: clip(decisionsBlock(fresh, `Mole: ${rel} is governed by`)) } });
+  emit({ hookSpecificOutput: { hookEventName: 'PreToolUse', additionalContext: clip(decisionsBlock(fresh, fresh.every((d) => d.matchedTargets?.includes('by meaning')) ? `Mole: decisions that may bear on ${rel} (word matches; check each applies)` : `Mole: ${rel} is governed by`)) } });
   // intentionally no permissionDecision field: Claude Code allows the tool call as normal (never a block)
 }
 
