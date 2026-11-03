@@ -114,6 +114,7 @@ async function main(): Promise<number> {
   if (cmd === 'decision') return (await import('@mole/decisions')).decisionCli(pos, flags, root); // write records: new / supersede / link / suggest / recover (T51)
   if (cmd === 'incident') return (await import('@mole/decisions')).incidentCli(pos, flags, root); // incident revives dissent: suggest / accept / dismiss (T58)
   if (cmd === 'priorities') return (await import('@mole/decisions')).prioritiesCli(pos, flags, root); // tenet order per phase, launch -> scale (T60)
+  if (cmd === 'export') return (await import('@mole/decisions')).exportCli(pos, flags, root); // T72: `mole export --format okf` -- OKF v0.2 bundle, no daemon needed
   if (cmd === 'proposals') { // this repo's what-if proposals vs their baseline, same JSON as mole_proposals_compare (T62); read-only
     try {
       console.log(JSON.stringify((await import('@mole/proposals')).summarizeProposals(root, pos.length ? pos : undefined, { ...(typeof flags.phase === 'string' ? { phase: flags.phase } : {}), ...(typeof flags.at === 'string' ? { at: flags.at } : {}) }), null, 2)); // T68 review: forward --phase/--at

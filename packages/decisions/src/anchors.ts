@@ -57,6 +57,13 @@ export class Git {
     return this.shown.get(k) ?? null;
   }
 
+  /** ISO 8601 (with UTC offset) commit date of a commit-ish, or null when git does not know it (T72: OKF `generated.at`, SPEC.md §5.2). */
+  commitDate(rev: string): string | null {
+    if (!this.ok) return null;
+    const out = this.run(['show', '-s', '--format=%cI', rev]);
+    return out?.trim() || null;
+  }
+
   /** last commit that touched each of the given root-relative files (one git log pass) */
   lastCommits(paths: string[]): Map<string, string> {
     const out = new Map<string, string>();
