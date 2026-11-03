@@ -43,3 +43,9 @@ limits          INFERENCE: one value per argument (last tag wins) · strict orde
 - reviewer probes re-run: fence2/fence3 no spurious definitions, no-space arrow tag kept, property 0 failures,
   explain invariant 0 failures · decisions + proposals + plugin 46 files, 385 tests
 - INFERENCE: third time this session the fix was "one source" (T58 one write, T59 one rev, T60 one parser)
+
+## 11-02 20:05 review 3 (deleg_c1d6eac9) PASS
+- Mole's own repo graph identical before/after (16 nodes, 31 edges, 0 problems; main base 9a569de vs this build)
+- parser oracle tests unchanged · round-2 probes clean (property 0/200+300, explain invariant 0/300, fences, no-space
+  arrow, absolute lines in fenced blocks) · addDefinitions across 3 files in load order · [x] and <x> same path
+- note: argdown nodes now carry `definitions: []` when empty (shape change, nothing depends on key counts)
