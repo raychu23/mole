@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-11-03 09:59      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T84-steer-inbox-bootstrap → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
     2026-11-03 10:03      submitted → verified      reviewer hermes-subagent deleg_3ab2d2f1 PASS (fresh, claude-sonnet-5) + 3 LOWs fixed 8a945b8 · findings: PASS: link(2) atomic on APFS/ext4, 20 procs x 50 rounds first-send 0 errors/lost/doubled, stress 5x green, LOWs (no
     2026-11-03 10:03      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T84-steer-inbox-bootstrap → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
+    2026-11-03 10:07      verified → integrated      merge 9c9973c (main check green: Tests  1324 passed | 19 skipped (1343), mole-build/main-check-waveD2b.txt) · combined checks exit 0
+    2026-11-03 10:07      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
 ```
