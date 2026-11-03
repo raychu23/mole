@@ -1,0 +1,12 @@
+# T61 red: tests written before src/reasoning-tools.ts (11-02 20:45)
+npm notice run mole@0.0.0 npx
+npm notice run 'tsc' -b packages/mcp
+   × T61 mole_priorities > evaluates a phase and compares two, equal to the library, writing nothing 116ms
+   × T61 mole_priorities > an unknown phase is an isError result with the library message, not a throw 70ms
+   × T61 mole_incident_suggest > lists revival candidates equal to the library, writing nothing (no accept over MCP) 89ms
+   × T61 mole_incident_suggest > an unknown incident is an isError result 74ms
+   × T61 mole_proposals_compare > finds this repo's proposal worktrees itself and compares them, equal to the library, writing nothing 547ms
+   × T61 mole_proposals_compare > no proposals, or an unknown name, is an isError result; it takes names, never filesystem paths 69ms
+   × T61 annotations > all three are read-only, closed-world, with an outputSchema 82ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  7 failed (7)
