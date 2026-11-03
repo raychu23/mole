@@ -44,7 +44,6 @@ export interface RevivalCandidate {
 const ARG_FILE = '.mole/arguments/incidents.argdown';
 /** the incident's argument id: the record id itself is already taken by the incident node (the loader keeps the first id) */
 export const incidentArgumentId = (incidentId: string): string => `incident-${incidentId}`;
-const MAX_HOPS = 3;
 
 interface IncidentRecord {
   id: string;
@@ -125,12 +124,13 @@ function evaluated(root: string): Evaluated {
   return { graph, labels: evaluate(framework).labels, attacks: framework.attacks };
 }
 
-/** Arguments within MAX_HOPS attack edges (either direction) of the decision's cited arguments. */
+/** Every argument attack-connected (either direction, any distance) to the decision's cited arguments.
+ *  Review 1 MEDIUM: a 3-hop limit silently dropped a real dissent 5 steps away. */
 function neighbourhood(ev: Evaluated, decisionId: string): Set<string> {
   const isArg = new Set(ev.graph.nodes.filter((n) => n.kind === 'argument').map((n) => n.id));
   let frontier = ev.graph.edges.filter((e) => e.type === 'cites' && e.from === decisionId && isArg.has(e.to)).map((e) => e.to);
   const seen = new Set(frontier);
-  for (let hop = 0; hop < MAX_HOPS && frontier.length; hop++) {
+  while (frontier.length) {
     const next: string[] = [];
     for (const [a, b] of ev.attacks) {
       for (const [x, y] of [[a, b], [b, a]] as const) if (frontier.includes(x) && !seen.has(y)) (seen.add(y), next.push(y));
@@ -202,6 +202,14 @@ function addToList(root: string, file: string, key: string, item: string): boole
   const at = lines.findIndex((l, i) => i > 0 && i < close && new RegExp(`^${key}:`).test(l));
   if (at < 0) {
     lines.splice(close, 0, `${key}: [${item}]`);
+  } else if (/^[^:]+:\s*$/.test(lines[at]!)) {
+    // block-style list (review 1 LOW): `key:` then `  - x` lines
+    let end = at + 1;
+    const items: string[] = [];
+    while (end < close && /^\s+-\s+/.test(lines[end]!)) items.push(lines[end++]!.replace(/^\s+-\s+/, '').trim().replace(/^['"]|['"]$/g, ''));
+    if (items.includes(item)) return false;
+    const indent = /^(\s+)-/.exec(lines[at + 1] ?? '')?.[1] ?? '  ';
+    lines.splice(end, 0, `${indent}- ${item}`);
   } else {
     const m = /^[^:]+:\s*\[(.*)\]\s*$/.exec(lines[at]!);
     if (!m) throw new IncidentError(`${file}:${at + 1}: ${key} must be a [list] to add to it`);
@@ -232,13 +240,21 @@ export function acceptIncident(root: string, incidentId: string, argumentId: str
   let alsoReinstates: string[] = [];
   if (!inc.revives.includes(argumentId)) {
     const c = candidates(root, ev, inc).find((x) => x.argument === argumentId);
+    const argId = incidentArgumentId(inc.id);
+    // crash recovery (review 1 HIGH): the attack is already written (so the dissent is no longer 'out' and not a
+    // candidate) but `revives:` is missing -> only complete the record
+    const attackersOfArg = new Set(ev.attacks.filter(([, b]) => b === argumentId).map(([a]) => a));
+    const alreadyWritten = ev.attacks.some(([a, b]) => a === argId && attackersOfArg.has(b));
+    if (!c && alreadyWritten) {
+      addToList(root, inc.file, 'revives', argumentId);
+      return { incident: inc.id, argument: argumentId, written: [inc.file], alsoReinstates: [] };
+    }
     if (!c) throw new IncidentError(`${argumentId} is not a candidate for ${inc.id} (run: mole incident suggest ${inc.id})`);
     alsoReinstates = c.alsoReinstates;
     // the argument first: a crash after it leaves an attack with no `revives:` line, and re-running accept completes it
     const argPath = join(root, ARG_FILE);
     const existing = existsSync(argPath) ? readFileSync(argPath, 'utf8') : '';
     const have = new Set([...existing.matchAll(new RegExp(`^\\s+-> <([^>]+)>`, 'gm'))].map((m) => m[1]));
-    const argId = incidentArgumentId(inc.id);
     const head = new RegExp(`^<${argId.replace(/[.]/g, '\\.')}>`, 'm').test(existing);
     const block = [
       ...(head ? [`<${argId}>`] : [`<${argId}>: ${inc.title.replace(/\s+/g, ' ').trim()}`]),

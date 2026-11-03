@@ -151,3 +151,33 @@ describe('mole incident CLI', () => {
     expect(quiet(() => incidentCli(['accept', 'inc-42'], { argument: 'stale' }, root))).toBe(0);
   });
 });
+
+describe('T58 review 1 (deleg_27342d20) findings', () => {
+  it('HIGH: a crash after the argument write but before `revives:` is completed by re-running accept', () => {
+    const root = repo();
+    acceptIncident(root, 'inc-42', 'stale');
+    const rec = join(root, '.mole/incidents/inc-42.md');
+    writeFileSync(rec, readFileSync(rec, 'utf8').replace(/^revives: \[stale\]\n/m, '')); // simulated crash
+    const r = acceptIncident(root, 'inc-42', 'stale');
+    expect(r.written).toEqual(['.mole/incidents/inc-42.md']);
+    expect(readFileSync(rec, 'utf8')).toMatch(/^revives: \[stale\]$/m);
+    expect(readFileSync(join(root, '.mole/arguments/incidents.argdown'), 'utf8').match(/<incident-inc-42>:/g)).toHaveLength(1);
+  });
+
+  it('MEDIUM: a dissent 5 attack steps from the decision is still found (no hop limit)', () => {
+    const root = repo();
+    write(root, '.mole/arguments/case.argdown', [
+      '<fast>: Cache reads are fast.', '  -> <h1>: h1.', '', '<h1>', '  -> <h2>: h2.', '', '<h2>', '  -> <h3>: h3.', '',
+      '<h3>', '  -> <h4>: h4.', '', '<h4>', '  -> <stale>: Cached reads can serve stale prices.', '',
+    ].join('\n'));
+    expect(suggestRevivals(root, 'inc-42').map((c) => c.argument)).toContain('stale');
+  });
+
+  it('LOW: appends to a block-style YAML list instead of refusing it', () => {
+    const root = repo(['decisions: [D1]', 'dismissed:', '  - other']);
+    expect(dismissIncident(root, 'inc-42', 'stale').written).toEqual(['.mole/incidents/inc-42.md']);
+    const text = readFileSync(join(root, '.mole/incidents/inc-42.md'), 'utf8');
+    expect(text).toMatch(/dismissed:\n {2}- other\n {2}- stale\n/);
+    expect(suggestRevivals(root, 'inc-42')).toEqual([]);
+  });
+});

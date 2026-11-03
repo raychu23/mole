@@ -5,3 +5,8 @@ TypeError: (0 , suggestRevivals) is not a function
    × mole incident accept / dismiss (done-when 3, 4) > a candidate shows every OTHER argument its accept would also bring back (dry run), so the person sees the knock-on 7ms
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
       Tests  1 failed | 10 passed (11)
+   × T58 review 1 (deleg_27342d20) findings > HIGH: a crash after the argument write but before `revives:` is completed by re-running accept 9ms
+   × T58 review 1 (deleg_27342d20) findings > MEDIUM: a dissent 5 attack steps from the decision is still found (no hop limit) 5ms
+   × T58 review 1 (deleg_27342d20) findings > LOW: appends to a block-style YAML list instead of refusing it 4ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  3 failed | 11 passed (14)

@@ -24,3 +24,12 @@ limits          INFERENCE: reinstating = attacking ALL in-attackers, which can k
                 ("finite resources") · shown as alsoReinstates, not prevented · a finer encoding needs attacks on attacks
                 (not in the Dung engine) · incident text vs argument text overlap is weak (0.26 for the right one)
 ```
+
+## 11-02 18:40 review 1 (deleg_27342d20) PASS on the stop condition, 3 findings fixed tests-first (3 red → green)
+- HIGH crash between the 2 writes could not be completed (dissent already 'in' → not a candidate) → accept detects
+  the written attack and only adds `revives:`
+- MEDIUM 3-hop neighbourhood silently missed a dissent 5 steps away → whole attack-connected component
+- LOW block-style `dismissed:\n  - x` refused → appended in the same style
+- held: no label/status change without accept · suggest read-only · unicode id refused before writes · dotted ids ·
+  '>' in titles inert · two incidents on one dissent (2nd refused) · attacked incident re-labels normally ·
+  alsoReinstates = real diff · CRLF kept · 14 tests, decisions 323
