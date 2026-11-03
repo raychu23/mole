@@ -1,21 +1,21 @@
 ---
-state: proposed
+state: ready
 owner: hermes-build
 repo:
 branch:
 worktree:
 base:
 reviewer:
-updated: 2026-11-03 02:52
-status: ledger proposed
-next: fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+updated: 2026-11-03 02:53
+status: ledger ready
+next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
 ---
 ```notes
 T74-steering-dials      ledger task (rules.md §3 code features)      project tasks
     goal                    Live agent steering: a small signal/update/query contract over the existing hooks transport so a person (or Mole) can steer a running agent: query = what is the agent doing (intent, files, decisions in play), signal = a note the agent sees on its next tool call, update = a validated change (e.g. 'stop touching X', 'decision D now superseded') that is checked before it is accepted. Built on Temporal's signal/update/query semantics, delivered via PreToolUse/UserPromptSubmit additionalContext.
     done-when               1 prior-art note (Temporal workflow signals/updates/queries docs; Claude Code hooks; LangGraph interrupts/human-in-the-loop) · 2 tests first · 3 `mole steer signal|update|query --session S` (CLI) writes to a per-session inbox; hooks deliver once; update validators reject invalid updates with a reason · 4 query returns the agent state from agentstate (T18) · 5 never blocks the agent; plugin + agentstate tests pass
-    status                  2026-11-03 proposed
-    next                    fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+    status                  2026-11-03 ready      owner hermes-build
+    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
     pinned
     mode                    one worker
     boundary                packages/agentstate (steer/), plugins/claude-code/scripts (deliver), daemon cli, tests
