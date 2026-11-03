@@ -145,4 +145,143 @@ describe('assuranceReport', () => {
     const code = assuranceCli([], { json: true }, root);
     expect(code).toBe(0);
   });
+
+  it('rejects an unrecognized doubt type: unassured and listed in malformed', () => {
+    const root = repo();
+    write(
+      root,
+      '.mole/decisions/bad-doubt.md',
+      [
+        '---',
+        'id: bad-doubt',
+        'title: Bad doubt type',
+        'status: accepted',
+        'door: one-way',
+        'assurance:',
+        `  - {to: other, doubt: made-up-type, provenance: person, author: alice, approver: bob, alcoa: '${FULL_ALCOA}', reverify_by: '2099-01-01'}`,
+        '---',
+        '',
+      ].join('\n'),
+    );
+    const r = assuranceReport(root);
+    expect(r.totalAssured).toBe(0);
+    expect(r.malformed).toHaveLength(1);
+    expect(r.malformed[0]).toMatchObject({ decisionId: 'bad-doubt', to: 'other', field: 'doubt', value: 'made-up-type' });
+  });
+
+  it('rejects an unrecognized provenance: unassured and listed in malformed', () => {
+    const root = repo();
+    write(
+      root,
+      '.mole/decisions/bad-provenance.md',
+      [
+        '---',
+        'id: bad-provenance',
+        'title: Bad provenance',
+        'status: accepted',
+        'door: one-way',
+        'assurance:',
+        `  - {to: other, doubt: rebutting, provenance: bogus, author: alice, approver: bob, alcoa: '${FULL_ALCOA}', reverify_by: '2099-01-01'}`,
+        '---',
+        '',
+      ].join('\n'),
+    );
+    const r = assuranceReport(root);
+    expect(r.totalAssured).toBe(0);
+    expect(r.malformed).toHaveLength(1);
+    expect(r.malformed[0]).toMatchObject({ decisionId: 'bad-provenance', to: 'other', field: 'provenance', value: 'bogus' });
+  });
+
+  it('rejects a non-date reverify_by: unassured, not overdue, listed in malformed', () => {
+    const root = repo();
+    write(
+      root,
+      '.mole/decisions/bad-date.md',
+      [
+        '---',
+        'id: bad-date',
+        'title: Bad date',
+        'status: accepted',
+        'door: one-way',
+        'assurance:',
+        `  - {to: other, doubt: rebutting, provenance: person, author: alice, approver: bob, alcoa: '${FULL_ALCOA}', reverify_by: 'not-a-date'}`,
+        '---',
+        '',
+      ].join('\n'),
+    );
+    const r = assuranceReport(root);
+    expect(r.totalAssured).toBe(0);
+    expect(r.folders[0]!.overdue).toEqual([]);
+    expect(r.malformed).toHaveLength(1);
+    expect(r.malformed[0]).toMatchObject({ decisionId: 'bad-date', to: 'other', field: 'reverify_by', value: 'not-a-date' });
+  });
+
+  it('rejects a calendar-invalid date like 2026-02-30: unassured, not overdue, listed in malformed', () => {
+    const root = repo();
+    write(
+      root,
+      '.mole/decisions/bad-calendar.md',
+      [
+        '---',
+        'id: bad-calendar',
+        'title: Bad calendar date',
+        'status: accepted',
+        'door: one-way',
+        'assurance:',
+        `  - {to: other, doubt: rebutting, provenance: person, author: alice, approver: bob, alcoa: '${FULL_ALCOA}', reverify_by: '2026-02-30'}`,
+        '---',
+        '',
+      ].join('\n'),
+    );
+    const r = assuranceReport(root);
+    expect(r.totalAssured).toBe(0);
+    expect(r.folders[0]!.overdue).toEqual([]);
+    expect(r.malformed).toHaveLength(1);
+    expect(r.malformed[0]).toMatchObject({ decisionId: 'bad-calendar', to: 'other', field: 'reverify_by', value: '2026-02-30' });
+  });
+
+  it('lists an assurance entry that lacks `to` in malformed instead of silently dropping it', () => {
+    const root = repo();
+    write(
+      root,
+      '.mole/decisions/no-to.md',
+      [
+        '---',
+        'id: no-to',
+        'title: Missing to',
+        'status: accepted',
+        'door: one-way',
+        'assurance:',
+        `  - {doubt: rebutting, provenance: person, author: alice, approver: bob, alcoa: '${FULL_ALCOA}', reverify_by: '2099-01-01'}`,
+        '---',
+        '',
+      ].join('\n'),
+    );
+    const r = assuranceReport(root);
+    expect(r.malformed).toHaveLength(1);
+    expect(r.malformed[0]).toMatchObject({ decisionId: 'no-to', field: 'to' });
+  });
+
+  it('CLI text output shows malformed entries, and --json includes the malformed array', () => {
+    const root = repo();
+    write(
+      root,
+      '.mole/decisions/bad-doubt.md',
+      [
+        '---',
+        'id: bad-doubt',
+        'title: Bad doubt type',
+        'status: accepted',
+        'door: one-way',
+        'assurance:',
+        `  - {to: other, doubt: made-up-type, provenance: person, author: alice, approver: bob, alcoa: '${FULL_ALCOA}', reverify_by: '2099-01-01'}`,
+        '---',
+        '',
+      ].join('\n'),
+    );
+    const r = assuranceReport(root);
+    expect(r.malformed).toHaveLength(1);
+    const code = assuranceCli([], { json: true }, root);
+    expect(code).toBe(0);
+  });
 });

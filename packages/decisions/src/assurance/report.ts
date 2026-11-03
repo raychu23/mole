@@ -5,9 +5,34 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve, sep } from 'node:path';
 import { frontMatter, loadGraph } from '../graph.js';
-import { ALCOA_PLUS_ATTRS, type AlcoaAttr, type AssuranceFolder, type AssuranceLink, type AssuranceReport } from '../types.js';
+import {
+  ALCOA_PLUS_ATTRS,
+  type AlcoaAttr,
+  type AssuranceFolder,
+  type AssuranceLink,
+  type AssuranceMalformed,
+  type AssuranceReport,
+  type DoubtType,
+  type Provenance,
+} from '../types.js';
 
 const posix = (p: string) => p.split(sep).join('/');
+
+const DOUBT_TYPES: ReadonlySet<string> = new Set<DoubtType>(['rebutting', 'undermining', 'undercutting']);
+const PROVENANCES: ReadonlySet<string> = new Set<Provenance>(['person', 'compiler', 'model']);
+
+/** True only for a real ISO calendar date `YYYY-MM-DD` -- rejects both non-date strings ('not-a-date')
+ * and dates that are the right shape but don't exist (2026-02-30: Date's own rollover would otherwise
+ * silently turn that into 2026-03-02). */
+function isValidIsoDate(raw: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (!m) return false;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  const d = new Date(Date.UTC(year, month - 1, day));
+  return d.getUTCFullYear() === year && d.getUTCMonth() === month - 1 && d.getUTCDate() === day;
+}
 
 function parseAlcoa(raw: string | undefined): AlcoaAttr[] {
   if (!raw) return [];
@@ -16,29 +41,41 @@ function parseAlcoa(raw: string | undefined): AlcoaAttr[] {
 }
 
 /** Reads the `assurance:` front-matter list of one `.mole/decisions/*.md` record. Returns one
- * AssuranceLink per list item; a `to` field is required (it says which link this entry assures) and a
- * missing one is dropped rather than guessed. */
-export function parseAssurance(text: string, file: string): AssuranceLink[] {
+ * AssuranceLink per list item with a `to` field (it says which link this entry assures), plus every
+ * rejected field value as an AssuranceMalformed -- an entry with no `to` is listed as malformed rather
+ * than silently dropped, and an invalid doubt/provenance/reverify_by is dropped from the link (so it
+ * can never count as assured) but still recorded with the value that was rejected and why. */
+export function parseAssurance(text: string, file: string, decisionId: string): { links: AssuranceLink[]; malformed: AssuranceMalformed[] } {
   const fm = frontMatter(text, file);
-  if (!fm || 'error' in fm) return [];
+  if (!fm || 'error' in fm) return { links: [], malformed: [] };
   const field = fm.fields.get('assurance');
-  const out: AssuranceLink[] = [];
+  const links: AssuranceLink[] = [];
+  const malformed: AssuranceMalformed[] = [];
   for (const item of field?.items ?? []) {
     const m = item.map;
-    if (!m?.to) continue;
-    out.push({
-      to: m.to,
-      doubt: m.doubt as AssuranceLink['doubt'],
-      provenance: m.provenance as AssuranceLink['provenance'],
-      author: m.author,
-      approver: m.approver,
-      alcoa: parseAlcoa(m.alcoa),
-      reverifyBy: m.reverify_by,
-      file,
-      line: item.line,
-    });
+    if (!m?.to) {
+      malformed.push({ decisionId, to: '(missing)', field: 'to', value: '', reason: 'assurance entry has no `to` target', file, line: item.line });
+      continue;
+    }
+    const to = m.to;
+    let doubt: DoubtType | undefined;
+    if (m.doubt !== undefined) {
+      if (DOUBT_TYPES.has(m.doubt)) doubt = m.doubt as DoubtType;
+      else malformed.push({ decisionId, to, field: 'doubt', value: m.doubt, reason: `not a recognized doubt type (${[...DOUBT_TYPES].join('|')})`, file, line: item.line });
+    }
+    let provenance: Provenance | undefined;
+    if (m.provenance !== undefined) {
+      if (PROVENANCES.has(m.provenance)) provenance = m.provenance as Provenance;
+      else malformed.push({ decisionId, to, field: 'provenance', value: m.provenance, reason: `not a recognized provenance (${[...PROVENANCES].join('|')})`, file, line: item.line });
+    }
+    let reverifyBy: string | undefined;
+    if (m.reverify_by !== undefined) {
+      if (isValidIsoDate(m.reverify_by)) reverifyBy = m.reverify_by;
+      else malformed.push({ decisionId, to, field: 'reverify_by', value: m.reverify_by, reason: 'not a real ISO calendar date (YYYY-MM-DD)', file, line: item.line });
+    }
+    links.push({ to, doubt, provenance, author: m.author, approver: m.approver, alcoa: parseAlcoa(m.alcoa), reverifyBy, file, line: item.line });
   }
-  return out;
+  return { links, malformed };
 }
 
 function isAssured(link: AssuranceLink, today: string): boolean {
@@ -78,6 +115,7 @@ export function assuranceReport(root: string, opts: AssuranceOptions = {}): Assu
   const wantFolder = opts.folder ? posix(opts.folder).replace(/\/$/, '') : undefined;
   const graph = loadGraph(root);
   const byFolder = new Map<string, { oneWayDoors: number; slots: Slot[] }>();
+  const allMalformed: AssuranceMalformed[] = [];
   for (const n of graph.nodes) {
     if (n.kind !== 'decision' || n.door !== 'one-way') continue;
     const folders = governedFolders(n.scope.map((a) => a.target), n.file).filter((f) => !wantFolder || f === wantFolder);
@@ -88,7 +126,10 @@ export function assuranceReport(root: string, opts: AssuranceOptions = {}): Assu
     } catch {
       continue; // an unreadable file would already be a graph problem; this report doesn't duplicate that
     }
-    const links = parseAssurance(text, n.file);
+    const { links, malformed: linkMalformed } = parseAssurance(text, n.file, n.id);
+    // malformed field values are a per-report list, recorded once per decision -- not duplicated for
+    // every folder a decision happens to govern (see types.ts AssuranceMalformed doc comment).
+    allMalformed.push(...linkMalformed);
     const slots: Slot[] = links.length
       ? links.map((link) => ({ decisionId: n.id, link }))
       // an unassured one-way door with no `assurance:` entries at all is one unassured slot, not zero
@@ -116,7 +157,7 @@ export function assuranceReport(root: string, opts: AssuranceOptions = {}): Assu
     totalLinks += bucket.slots.length;
     totalAssured += assured;
   }
-  return { root, generatedAt: new Date().toISOString(), folders, totalOneWayDoors, totalLinks, totalAssured, assuredShare: totalLinks ? totalAssured / totalLinks : 0 };
+  return { root, generatedAt: new Date().toISOString(), folders, totalOneWayDoors, totalLinks, totalAssured, assuredShare: totalLinks ? totalAssured / totalLinks : 0, malformed: allMalformed };
 }
 
 function formatAssurance(r: AssuranceReport): string {
@@ -127,6 +168,10 @@ function formatAssurance(r: AssuranceReport): string {
     for (const o of f.overdue) out.push(`  overdue  ${o.decisionId} -> ${o.to}  reverify_by ${o.reverifyBy}  ${o.file}:${o.line}`);
   }
   out.push(`total: ${r.totalAssured}/${r.totalLinks} assured (${(r.assuredShare * 100).toFixed(0)}%) across ${r.totalOneWayDoors} one-way door record(s)`);
+  if (r.malformed.length) {
+    out.push(`malformed (${r.malformed.length}):`);
+    for (const m of r.malformed) out.push(`  ${m.decisionId} -> ${m.to}  ${m.field}=${m.value || '(empty)'}  ${m.reason}  ${m.file}:${m.line}`);
+  }
   return out.join('\n');
 }
 

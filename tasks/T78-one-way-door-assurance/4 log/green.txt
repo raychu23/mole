@@ -87,3 +87,5 @@ McpError: MCP error -32000: Connection closed
    Start at  05:44:48
    Duration  3.94s (transform 540ms, setup 0ms, collect 2.57s, tests 2.63s, environment 0ms, prepare 328ms)
 
+
+2026-11-03 06:08  T78 review fix green: 43 test files / 495 tests passed (packages/decisions, packages/daemon); npx tsc -b packages/reasoning packages/decisions packages/daemon clean

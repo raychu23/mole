@@ -25,3 +25,5 @@ Caused by: Error: Failed to load url ../src/assurance/report.js (resolved id: ..
    Start at  05:41:16
    Duration  278ms (transform 26ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 56ms)
 
+
+2026-11-03 06:07  T78 review fix red: 6 failed | 8 passed (14) in packages/decisions/test/assurance.test.ts -- new tests for doubt/provenance/reverify_by validation + malformed list + missing-to

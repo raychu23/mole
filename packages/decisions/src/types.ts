@@ -161,6 +161,19 @@ export interface AssuranceOverdue {
   line: number;
 }
 
+/** One rejected `assurance:` entry field: an unrecognized doubt/provenance value, a `reverify_by` that
+ * is not a real ISO calendar date, or an entry with no `to` at all (field: 'to'). The link it belongs to
+ * (when it has a `to`) is always unassured -- an invalid value never silently counts as present. */
+export interface AssuranceMalformed {
+  decisionId: string;
+  to: string; // '(missing)' when the entry itself has no `to`
+  field: string;
+  value: string;
+  reason: string;
+  file: string;
+  line: number;
+}
+
 export interface AssuranceFolder {
   folder: string;
   oneWayDoors: number; // decision records with door: one-way in this folder
@@ -178,4 +191,7 @@ export interface AssuranceReport {
   totalLinks: number;
   totalAssured: number;
   assuredShare: number;
+  /** rejected assurance field values across the whole report (not duplicated per folder, even when a
+   * decision governs several folders -- each malformed field is one source entry, reported once). */
+  malformed: AssuranceMalformed[];
 }
