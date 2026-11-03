@@ -15,3 +15,11 @@ scratch limit  this worktree's node_modules links to MAIN's packages, so daemon 
                binaries fail here identically with or without T51 (checked by stash) · real check = after merge on main
 boundary       capture/** + decisions cli.ts/index.ts + one line in packages/daemon/src/cli.ts (shared-file rule)
 ```
+
+## 11-02 17:48 review (deleg_aea3aa68) PASS      probes /Users/a1/.hermes/cache/scratch/t51-review/
+    held            traversal ids · overwrite · crash mid-supersede/link + recover byte-equal · bad manifests · case collision
+                    YAML injection via title/body · link ×3 idempotent · loadGraph supersedes/amends/overrides edges
+                    dedupe deterministic ×5 · 200-trial stress 0/151 LSH misses · "Postgres for storage" vs "…caching" no match
+    LOW (open)      records.ts:98 replaceField normalises a CRLF file to LF on any relation write
+                    records.ts:166 a txn dir with no manifest.json is skipped, never removed
+merge           main 68a0af7 (not pushed, D49)      full check → /Users/a1/.hermes/cache/scratch/mole-build/main-check-t51.txt
