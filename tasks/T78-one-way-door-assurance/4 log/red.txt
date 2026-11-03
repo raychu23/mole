@@ -1,0 +1,27 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T78-one-way-door-assurance
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/decisions/test/assurance.test.ts [ packages/decisions/test/assurance.test.ts ]
+Error: Cannot find module '../src/assurance/report.js' imported from '/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T78-one-way-door-assurance/packages/decisions/test/assurance.test.ts'
+ ❯ packages/decisions/test/assurance.test.ts:8:1
+      6| import { join } from 'node:path';
+      7| import { afterEach, describe, expect, it } from 'vitest';
+      8| import { assuranceCli, assuranceReport } from '../src/assurance/report…
+       | ^
+      9| 
+     10| const roots: string[] = [];
+
+Caused by: Error: Failed to load url ../src/assurance/report.js (resolved id: ../src/assurance/report.js) in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T78-one-way-door-assurance/packages/decisions/test/assurance.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../../CS%20Code/Project/Mole-worktrees/T78-one-way-door-assurance/node_modules/vite/dist/node/chunks/config.js:22907:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  05:41:16
+   Duration  278ms (transform 26ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 56ms)
+

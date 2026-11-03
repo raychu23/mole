@@ -1,0 +1,89 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T78-one-way-door-assurance
+
+stdout | packages/decisions/test/assurance.test.ts > assuranceReport > CLI prints JSON with --json and a non-zero exit never happens on a clean report
+{
+  "root": "/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-assurance-4MBbzt",
+  "generatedAt": "2026-11-03T11:44:48.894Z",
+  "folders": [
+    {
+      "folder": ".mole/decisions",
+      "oneWayDoors": 1,
+      "links": 1,
+      "assured": 0,
+      "assuredShare": 0,
+      "overdue": []
+    }
+  ],
+  "totalOneWayDoors": 1,
+  "totalLinks": 1,
+  "totalAssured": 0,
+  "assuredShare": 0
+}
+
+ ✓ packages/decisions/test/assurance.test.ts (8 tests) 39ms
+stdout | packages/decisions/test/capture.test.ts > mole decision new > creates an explicit-id proposed record without changing an existing record
+wrote .mole/decisions/D-42.md
+
+stdout | packages/decisions/test/capture.test.ts > mole decision supersede > marks the explicit predecessor superseded and writes reciprocal links to both records
+wrote .mole/decisions/D-old.md
+wrote .mole/decisions/D-new.md
+superseded D-old with D-new
+
+stdout | packages/decisions/test/capture.test.ts > mole decision link > writes a supported relation and its reciprocal to the named records
+wrote .mole/decisions/D-one.md
+wrote .mole/decisions/D-two.md
+linked D-one amends D-two
+
+stdout | packages/decisions/test/capture.test.ts > capture transaction recovery > restores both records after a failure between two replacements
+wrote .mole/decisions/D-a.md
+wrote .mole/decisions/D-b.md
+
+stdout | packages/decisions/test/capture.test.ts > duplicate suggestions > reads candidates without writing and rejects a malformed source record
+wrote .mole/decisions/D-existing.md
+
+ ✓ packages/decisions/test/capture.test.ts (7 tests) 147ms
+node:internal/modules/cjs/loader:1386
+  throw err;
+  ^
+
+Error: Cannot find module '/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T78-one-way-door-assurance/packages/mcp/dist/cli.js'
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1383:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+    at Function._load (node:internal/modules/cjs/loader:1192:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+
+Node.js v22.21.0
+ ❯ packages/decisions/test/cli.test.ts (6 tests | 1 failed) 2445ms
+   ✓ mole decisions (done-when 1) > --json lists every decision and tenet with flag + reasons + file:line  602ms
+   ✓ mole decisions (done-when 1) > text output: one line per decision with flag, id and file:line, reasons indented with file:line  554ms
+   ✓ mole decisions (done-when 1) > --test-report makes a decision with failing evidence yellow  550ms
+   ✓ mole decisions (done-when 1) > Mole's own .mole records load without problems and every scope anchor exists  580ms
+   × MCP mole_decisions > is in the tool list (toContain) and returns the same JSON as the CLI 156ms
+     → MCP error -32000: Connection closed
+   ✓ R6: no model or network calls > the package source imports no network client and calls no fetch 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/decisions/test/cli.test.ts > MCP mole_decisions > is in the tool list (toContain) and returns the same JSON as the CLI
+McpError: MCP error -32000: Connection closed
+ ❯ Function.fromError ../../../../CS%20Code/Project/Mole-worktrees/T78-one-way-door-assurance/node_modules/@modelcontextprotocol/sdk/dist/esm/types.js:2048:16
+ ❯ Client._onclose ../../../../CS%20Code/Project/Mole-worktrees/T78-one-way-door-assurance/node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.js:267:32
+ ❯ StdioClientTransport._transport.onclose ../../../../CS%20Code/Project/Mole-worktrees/T78-one-way-door-assurance/node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.js:227:18
+ ❯ ChildProcess.<anonymous> ../../../../CS%20Code/Project/Mole-worktrees/T78-one-way-door-assurance/node_modules/@modelcontextprotocol/sdk/dist/esm/client/stdio.js:85:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 20 passed (21)
+   Start at  05:44:48
+   Duration  3.94s (transform 540ms, setup 0ms, collect 2.57s, tests 2.63s, environment 0ms, prepare 328ms)
+

@@ -128,3 +128,54 @@ export interface DecisionsResult {
   decisions: FlagResult[];
   problems: Problem[];
 }
+
+// T78 (D65): per-link assurance on `door: one-way` decisions only. 'door' itself stays the explicit,
+// human-authored front-matter string it always was (types.ts GraphNode.door) -- see
+// tasks/T78-one-way-door-assurance/4 log/prior-art.md: Mole has no door classifier to trust (0 lines of
+// inference code; 0/146 real vendored ADRs carry a door field at all), so assurance never infers door-ness.
+export type DoubtType = 'rebutting' | 'undermining' | 'undercutting'; // ASPIC+ (Modgil & Prakken 2014) attack kinds
+export type Provenance = 'person' | 'compiler' | 'model';
+// FDA 2018 "Data Integrity and Compliance With Drug CGMP" + MHRA 2018 "'GXP' Data Integrity Guidance":
+// ALCOA (attributable, legible, contemporaneous, original, accurate) + Complete, Consistent, Enduring, Available.
+export const ALCOA_PLUS_ATTRS = ['attributable', 'legible', 'contemporaneous', 'original', 'accurate', 'complete', 'consistent', 'enduring', 'available'] as const;
+export type AlcoaAttr = (typeof ALCOA_PLUS_ATTRS)[number];
+
+/** One per-link doubt/provenance/re-verification record, written by a person into a decision record's
+ * `assurance:` front-matter list (one item per linked target `to`). Never inferred. */
+export interface AssuranceLink extends Loc {
+  to: string; // the linked decision/record id this entry's doubt+provenance applies to
+  doubt?: DoubtType;
+  provenance?: Provenance;
+  author?: string;
+  approver?: string;
+  /** the subset of ALCOA_PLUS_ATTRS the author attests is satisfied for this link */
+  alcoa: AlcoaAttr[];
+  reverifyBy?: string; // YYYY-MM-DD
+}
+
+export interface AssuranceOverdue {
+  decisionId: string;
+  to: string;
+  reverifyBy: string;
+  file: string;
+  line: number;
+}
+
+export interface AssuranceFolder {
+  folder: string;
+  oneWayDoors: number; // decision records with door: one-way in this folder
+  links: number; // assurance slots: one per assurance: item, or 1 unassured slot per door with none
+  assured: number;
+  assuredShare: number; // assured / links, 0 when links === 0
+  overdue: AssuranceOverdue[];
+}
+
+export interface AssuranceReport {
+  root: string;
+  generatedAt: string;
+  folders: AssuranceFolder[];
+  totalOneWayDoors: number;
+  totalLinks: number;
+  totalAssured: number;
+  assuredShare: number;
+}
