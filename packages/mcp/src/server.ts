@@ -7,6 +7,7 @@ import { registerCollisionsTool } from './collisions-tool.js';
 import { registerCompileAndCascadeTools } from './compile-cascade-tool.js'; // T46: compile-at-capture approve/reject + cascade check
 import { registerOneOnOneTool } from './oneonone-tool.js'; // T31: 1:1 prep + read-back, grouped by folder, never by person
 import { registerReasoningTools } from './reasoning-tools.js'; // T61: priorities, incident suggestions, proposals (read-only)
+import { registerHotspotsTool } from './hotspots-tool.js'; // T70: churn x complexity x decision volatility x fix density, ranked (read-only)
 import { executeTool, GEN_AI } from '@mole/telemetry';
 import type { Change } from '@mole/history';
 import { resolve } from 'node:path';
@@ -124,6 +125,7 @@ export function createServer(opts: MoleMcpOptions): McpServer {
   );
   registerCollisionsTool(server, opts); // T21: parallel-agent collisions
   registerReasoningTools(server, opts); // T61: T60 priorities, T58 incident suggest, T56 proposals compare -- read-only
+  registerHotspotsTool(server, opts); // T70: D68 hotspot ranking -- read-only
   // T39: external agent-session memory (Entire Checkpoints, git-ai Authorship Logs, Agent Trace v0.1.0) mapped
   // onto the function it touched, re-checked against the function's current body like a T11 note.
   server.registerTool(

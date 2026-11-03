@@ -23,6 +23,7 @@
     "@mole/verify": "*",
     "@mole/coverage": "*",
     "@mole/intake": "*",
-    "@mole/proposals": "*"
+    "@mole/proposals": "*",
+    "@mole/hotspots": "*"
   }
 }

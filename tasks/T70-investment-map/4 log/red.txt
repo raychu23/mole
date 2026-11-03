@@ -1,0 +1,122 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T70-investment-map
+
+ ❯ packages/hotspots/test/hotspots.test.ts (12 tests | 5 failed) 4832ms
+   ✓ indentComplexity (T70: Tornhill indentation-based complexity) > sums logical-indent depth over non-blank lines, ignoring blank lines 189ms
+   ✓ indentComplexity (T70: Tornhill indentation-based complexity) > flat code has near-zero complexity 245ms
+   ✓ computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > ranks the file with high churn+complexity above a flat file (review-1 HIGH 1: no any-zero gate)  837ms
+   ✓ computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > every rank carries its own four raw inputs and their normalized [0,1] scores (never a bare score)  456ms
+   ✓ computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > respects --top / top option 295ms
+   × computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 HIGH 1: a repo with no decisions and no fix commits still ranks by churn x complexity 320ms
+     → expected 0 to be greater than 0
+   ✓ computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 HIGH 1: --by volatility / --by fixes resort without changing the raw inputs  834ms
+   × computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 HIGH 2: lockfiles are excluded from the default (source-only) ranking 248ms
+     → expected true to be false // Object.is equality
+   × computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 HIGH 2: *.json/*.md/*.yaml and generated dirs are excluded unless --all 276ms
+     → expected [ 'config.json', …(3) ] to deeply equal [ 'src.ts' ]
+   × computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 HIGH 2: binary files are skipped (never ranked, never crash complexity) 172ms
+     → expected true to be false // Object.is equality
+   × computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 MED 3: a rename merges churn/incidents under the current name, not split across old/new 336ms
+     → expected 2 to be 4 // Object.is equality
+   ✓ computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 MED 3: timed on this fixture -- must stay well under the 10s budget  551ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/hotspots/test/hotspots.test.ts > computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 HIGH 1: a repo with no decisions and no fix commits still ranks by churn x complexity
+AssertionError: expected 0 to be greater than 0
+ ❯ packages/hotspots/test/hotspots.test.ts:139:32
+    137|     // first purely on churn x complexity, with volatility=0 and incid…
+    138|     expect(r.ranked[0]!.file).toBe('hot.ts');
+    139|     expect(r.ranked[0]!.score).toBeGreaterThan(0);
+       |                                ^
+    140|     expect(r.ranked[0]!.volatility).toBe(0);
+    141|     expect(r.ranked[0]!.incidents).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  packages/hotspots/test/hotspots.test.ts > computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 HIGH 2: lockfiles are excluded from the default (source-only) ranking
+AssertionError: expected true to be false // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ packages/hotspots/test/hotspots.test.ts:162:66
+    160|     commit(root, 'chore: bump lockfile');
+    161|     const r = await computeHotspots(root, { top: 10 });
+    162|     expect(r.ranked.some((h) => h.file === 'package-lock.json')).toBe(…
+       |                                                                  ^
+    163|     expect(r.ranked.some((h) => h.file === 'src.ts')).toBe(true);
+    164|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  packages/hotspots/test/hotspots.test.ts > computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 HIGH 2: *.json/*.md/*.yaml and generated dirs are excluded unless --all
+AssertionError: expected [ 'config.json', …(3) ] to deeply equal [ 'src.ts' ]
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[31m+   "config.json",[39m
+[31m+   "dist/bundle.js",[39m
+[31m+   "notes.md",[39m
+[2m    "src.ts",[22m
+[2m  ][22m
+
+ ❯ packages/hotspots/test/hotspots.test.ts:174:41
+    172|     commit(root, 'feat: mixed files');
+    173|     const r = await computeHotspots(root, { top: 10 });
+    174|     expect(r.ranked.map((h) => h.file)).toEqual(['src.ts']);
+       |                                         ^
+    175|     const all = await computeHotspots(root, { top: 10, all: true });
+    176|     expect(all.ranked.some((h) => h.file === 'notes.md')).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  packages/hotspots/test/hotspots.test.ts > computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 HIGH 2: binary files are skipped (never ranked, never crash complexity)
+AssertionError: expected true to be false // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ packages/hotspots/test/hotspots.test.ts:190:57
+    188|     commit(root, 'chore: update binary');
+    189|     const r = await computeHotspots(root, { top: 10, all: true }); // …
+    190|     expect(r.ranked.some((h) => h.file === 'logo.png')).toBe(false);
+       |                                                         ^
+    191|     expect(r.ranked.some((h) => h.file === 'src.ts')).toBe(true);
+    192|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  packages/hotspots/test/hotspots.test.ts > computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 MED 3: a rename merges churn/incidents under the current name, not split across old/new
+AssertionError: expected 2 to be 4 // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 4[39m
+[31m+ 2[39m
+
+ ❯ packages/hotspots/test/hotspots.test.ts:208:26
+    206|     const merged = r.ranked.find((h) => h.file === 'new-name.ts')!;
+    207|     expect(merged).toBeDefined();
+    208|     expect(merged.churn).toBe(4); // all 4 commits (2 pre-rename + ren…
+       |                          ^
+    209|     expect(merged.incidents).toBe(2); // both fix commits merged under…
+    210|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 7 passed (12)
+   Start at  02:32:41
+   Duration  6.32s (transform 437ms, setup 0ms, collect 1.08s, tests 4.83s, environment 0ms, prepare 80ms)
+
