@@ -22,9 +22,13 @@ import { loadGraph } from '@mole/decisions';
 import { indentComplexity, indentComplexityFromText } from './complexity.js';
 import { catFileBatch } from './batch-git.js';
 import { isRankableFile, looksBinary } from './filters.js';
+import { walkCommits } from './commits.js';
 
 export { indentComplexity, indentComplexityFromText } from './complexity.js';
 export type { IndentComplexity } from './complexity.js';
+export { isRankableFile, looksBinary, extOf } from './filters.js';
+export { walkCommits } from './commits.js';
+export type { CommitFiles } from './commits.js';
 
 export interface HotspotInputs {
   /** commits touching this file, renames merged under the current name (code-maat `revisions`;
@@ -95,57 +99,20 @@ function compileFixRule(rule: RegExp | string): RegExp {
   return new RegExp(rule, 'i');
 }
 
-/** follow a chain of rename aliases (old name -> ... -> current name) to its end */
-function resolveAlias(alias: Map<string, string>, name: string): string {
-  let cur = name;
-  const seen = new Set<string>();
-  while (alias.has(cur) && !seen.has(cur)) {
-    seen.add(cur);
-    cur = alias.get(cur)!;
-  }
-  return cur;
-}
-
-/** per file: commit count (churn) and fix-commit count (incidents), one `git log --name-status -M`
- * walk. review-1 MED 3: `-M` (rename detection) + an alias map means a file renamed partway through
- * its history is counted once, under its current name, not split across old and new paths. */
+/** per file: commit count (churn) and fix-commit count (incidents), from one shared `walkCommits`
+ * walk (T77: factored out so @mole/coupling's co-change counting reuses the exact same `git log
+ * --name-status -M` parse + rename-alias resolution, not a second implementation). review-1 MED 3:
+ * a file renamed partway through its history is counted once, under its current name. */
 async function churnAndIncidents(root: string, since: string | undefined, fixRule: RegExp): Promise<Map<string, { churn: number; incidents: number }>> {
-  const args = ['log', '--name-status', '-M', '--format=%x01%H%x02%s'];
-  if (since) args.push(`--since=${since}`);
-  const raw = await git(root, args);
+  const commits = await walkCommits(root, since);
   const out = new Map<string, { churn: number; incidents: number }>();
-  const alias = new Map<string, string>();
-  let isFix = false;
-
-  const bump = (file: string): void => {
-    const canonical = resolveAlias(alias, file);
-    const e = out.get(canonical) ?? { churn: 0, incidents: 0 };
-    e.churn += 1;
-    if (isFix) e.incidents += 1;
-    out.set(canonical, e);
-  };
-
-  for (const line of raw.split('\n')) {
-    if (line.startsWith('\x01')) {
-      const subject = line.slice(1).split('\x02')[1] ?? '';
-      isFix = fixRule.test(subject);
-      continue;
-    }
-    if (!line.trim()) continue;
-    const parts = line.split('\t');
-    const status = parts[0] ?? '';
-    if (status.startsWith('R') || status.startsWith('C')) {
-      // rename/copy: "R100\told\tnew" / "C100\tsrc\tdst" -- attribute this commit's churn once, to
-      // the destination path, and (for renames) alias the old path to it for earlier commits
-      const oldPath = parts[1];
-      const newPath = parts[2];
-      if (!newPath) continue;
-      const canonicalNew = resolveAlias(alias, newPath);
-      if (status.startsWith('R') && oldPath) alias.set(oldPath, canonicalNew);
-      bump(canonicalNew);
-    } else {
-      const file = parts[1];
-      if (file) bump(file);
+  for (const c of commits) {
+    const isFix = fixRule.test(c.subject);
+    for (const file of c.files) {
+      const e = out.get(file) ?? { churn: 0, incidents: 0 };
+      e.churn += 1;
+      if (isFix) e.incidents += 1;
+      out.set(file, e);
     }
   }
   return out;

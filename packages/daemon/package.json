@@ -25,6 +25,7 @@
     "@mole/coverage": "*",
     "@mole/intake": "*",
     "@mole/proposals": "*",
-    "@mole/hotspots": "*"
+    "@mole/hotspots": "*",
+    "@mole/coupling": "*"
   }
 }

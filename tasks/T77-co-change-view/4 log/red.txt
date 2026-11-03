@@ -1,0 +1,123 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T77-co-change-view
+
+ ❯ packages/coupling/test/coupling.test.ts (11 tests | 11 failed) 15964ms
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > finds the a.ts/b.ts pair with its shared-commit evidence 1788ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > never returns a pair below min-shared-revs (a.ts/e.ts co-changed only once) 2129ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > maps CODEOWNERS teams and flags the cross-team pair (a/b: @team-a vs @team-b) 1792ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > sorts cross-team pairs first (Cataldo & Herbsleb: surface the under-coordinated coupling) 1769ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > attaches the decision whose scope covers both a.ts and b.ts, not c.ts/d.ts 2018ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > respects --top 1495ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > STOP clause: every returned pair carries non-empty shared-commit evidence (never a bare pair) 1142ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > reports the CODEOWNERS path found at HEAD 1014ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > a repo with no CODEOWNERS still returns pairs, honestly with empty owner arrays (never fabricated) 507ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > formatCoupling renders a human-readable summary that names the evidence 1031ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > timed on this fixture -- well under a 10s budget 1107ms
+     → not implemented (RED fixture)
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 11 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > finds the a.ts/b.ts pair with its shared-commit evidence
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:71:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > never returns a pair below min-shared-revs (a.ts/e.ts co-changed only once)
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:81:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > maps CODEOWNERS teams and flags the cross-team pair (a/b: @team-a vs @team-b)
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:87:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > sorts cross-team pairs first (Cataldo & Herbsleb: surface the under-coordinated coupling)
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:98:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > attaches the decision whose scope covers both a.ts and b.ts, not c.ts/d.ts
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:107:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > respects --top
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:116:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > STOP clause: every returned pair carries non-empty shared-commit evidence (never a bare pair)
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:122:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > reports the CODEOWNERS path found at HEAD
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:135:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > a repo with no CODEOWNERS still returns pairs, honestly with empty owner arrays (never fabricated)
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:146:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > formatCoupling renders a human-readable summary that names the evidence
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:158:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > timed on this fixture -- well under a 10s budget
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:166:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/11]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  11 failed (11)
+   Start at  05:44:10
+   Duration  16.54s (transform 131ms, setup 0ms, collect 81ms, tests 15.96s, environment 0ms, prepare 134ms)
+
