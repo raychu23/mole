@@ -35,3 +35,7 @@ export { comparePhases, evaluatePhase, phaseAt, phaseInForce, PrioritiesError, r
 export type { FlippedAttack, Phase, PhaseComparison, PhaseEvaluation } from './priorities.js';
 export { argumentDefinitions } from './argdown/definitions.js';
 export type { ArgumentDefinition } from './argdown/definitions.js';
+// T72: `mole export --format okf` -- Open Knowledge Format v0.2 bundle of the decision graph
+export { buildOkfBundle, OKF_VERSION } from './export/okf.js';
+export type { OkfBundle, OkfFile } from './export/okf.js';
+export { exportCli } from './export/cli.js';
