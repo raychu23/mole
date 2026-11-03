@@ -79,3 +79,49 @@ describe('recallSimilar: RPD contract -- "resembles", never asserts causation (d
     expect(r.note.toLowerCase()).not.toMatch(/because of/);
   });
 });
+
+// Review-1 finding #2: an empty repo (no .mole/decisions, no .mole/incidents at all) must return an empty
+// case list, never throw -- a brand-new project with zero decisions recorded yet is the normal starting
+// state, not an error state.
+describe('recallSimilar: empty repo (no decisions/incidents at all)', () => {
+  it('returns an empty case list, not a throw, for a text query against an empty repo', () => {
+    const root = mkdtempSync(join(tmpdir(), 'mole-recall-empty-'));
+    dirs.push(root);
+    const r = recallSimilar(root, { text: 'anything at all' });
+    expect(r.cases).toEqual([]);
+    expect(r.note).toBe(RECALL_NOTE);
+  });
+
+  it('returns an empty case list for a text query against a repo with an empty .mole/decisions dir', () => {
+    const root = mkdtempSync(join(tmpdir(), 'mole-recall-empty-'));
+    dirs.push(root);
+    mkdirSync(join(root, '.mole/decisions'), { recursive: true });
+    mkdirSync(join(root, '.mole/incidents'), { recursive: true });
+    const r = recallSimilar(root, { text: 'anything at all' });
+    expect(r.cases).toEqual([]);
+  });
+});
+
+// Review-1 finding #2: recall must stay fast as the case base grows -- 1000 synthetic decision/incident
+// records (the scale a long-lived project's .mole/ could realistically reach) must answer in < 2s, since
+// recall runs on every `mole recall`/`mole_recall` call, not as a background job.
+describe('recallSimilar: performance at scale (done-when-adjacent, review-1 finding #2)', () => {
+  it('answers in under 2s with 1000 synthetic decision records', () => {
+    const root = mkdtempSync(join(tmpdir(), 'mole-recall-perf-'));
+    dirs.push(root);
+    const topics = ['job queue', 'postgres database', 'redis cache', 'load balancer', 'dns zone', 'terraform module', 'kubernetes cluster', 'message broker', 'ssl certificate', 'logging pipeline'];
+    for (let i = 0; i < 1000; i++) {
+      const topic = topics[i % topics.length]!;
+      write(
+        root,
+        `.mole/decisions/d${i}.md`,
+        ['---', `id: D${i}`, `title: Decision ${i} about ${topic}`, 'status: accepted', '---', '', '## Decision', '', `We decided to use a particular approach to ${topic} in record ${i}, with some supporting rationale text to give BM25 something to rank on.`].join('\n'),
+      );
+    }
+    const start = Date.now();
+    const r = recallSimilar(root, { text: 'we are evaluating options for a job queue and a message broker' });
+    const elapsed = Date.now() - start;
+    expect(elapsed).toBeLessThan(2000);
+    expect(r.cases.length).toBeGreaterThan(0);
+  });
+});
