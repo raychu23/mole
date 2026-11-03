@@ -212,9 +212,50 @@ export function isCommentOnlyHunk(add: string[]): boolean {
 
 /** title -> generic IR trigger: true when the record's OWN title is itself about the export/named-export convention
  *  (same titleTermsOf extraction as option 3, no new data). Scopes the option-4 detector below to records that are
- *  actually about exports, so it never fires for an unrelated scope:[] convention record. */
+ *  actually about exports, so it never fires for an unrelated scope:[] convention record.
+ *
+ *  Deliberately BROAD (any title term merely starting with "export"): this only decides whether the record becomes
+ *  a prCheck candidate and gets an `export-convention` AST hit at all (routing). A record titled "Audit every data
+ *  export" also passes this -- on purpose, same as a `match:` content anchor would route it -- because dropping a
+ *  routing hit silently removes the decision from `governed` entirely (T49's recall-ceiling finding). Whether that
+ *  hit is CRISP enough to decide alone with no judge is a separate, narrower question: see isModuleExportTitle. */
 export function isExportConventionTitle(title: string): boolean {
   return titleTermsOf(title).some((t) => t.startsWith('export'));
+}
+
+/** T66 review-1: narrower than isExportConventionTitle -- true only when the title uses actual JS/TS module-export
+ *  vocabulary (default/named exports, module export structure, barrel/index/re-export, conventions, entry point,
+ *  public API surface), not merely a title term that happens to start with "export" (e.g. "Audit every data export"
+ *  is about a data/report export, not the language construct). Grounded in real-world wording (prior-art.md #4):
+ *  Backstage's ADR003 "Avoid Default Exports and Prefer Named Exports" and ADR004 "Module Export Structure"
+ *  (bs-adr003/004, the bench's own motivating cases); eslint-plugin-import's `no-default-export`,
+ *  `prefer-default-export`, `no-named-export`, `no-anonymous-default-export` and `group-exports` rule names/
+ *  descriptions; and public ADRs titled "Barrel Export Boundaries" / "Barrel Export Pattern". Review-1 (HIGH) found
+ *  the first cut missed genuine module-export titles that use "convention(s)" with no other listed word (e.g.
+ *  "Export conventions") or pair "barrel" with a hyphenated "re-exporting" that the old `\bre-?export\b` word-
+ *  boundary test couldn't match (e.g. "Barrel files re-exporting") -- both now pass via the wider vocabulary list
+ *  and a dedicated `re-?export(?:s|ing)?` alternative outside the `\b...\b` wrapping.
+ *
+ *  Three-part test, in order:
+ *   1. the title must mention "export" at all (substring, so "exporting"/"exporter"/"exports" all count) --
+ *      otherwise there is nothing to be a module-export title about;
+ *   2. it must then contain module/code-structure vocabulary (default, named, module(s), barrel(s), index,
+ *      convention(s), entry point, public api / api surface, or a re-export form);
+ *   3. it must NOT also contain data/business-export vocabulary (data, csv, report(s), download(s), endpoint(s),
+ *      job(s), pipeline(s), user(s), excel, pdf) -- a safety net for a title that mixes both registers (e.g.
+ *      "Default export of CSV report data"), which stays non-crisp because the data-export reading dominates.
+ *      Deliberately excludes "file"/"files" from that data list: "Barrel files re-exporting" and "index files" are
+ *      genuine module-structure phrasing (ADR004's own body: "only index files will have re-exports"), and no real
+ *      motivating data-export title in this repo's bench corpora needs "file" to be caught (none contain it).
+ *  Used by cascade.ts's isCrisp to gate whether an `export-convention` hit decides outright (no judge) or must
+ *  escalate; it never affects routing (isExportConventionTitle, above, is unchanged and still broad). */
+export function isModuleExportTitle(title: string): boolean {
+  const lw = title.toLowerCase();
+  if (!/export/.test(lw)) return false;
+  const moduleVocab = /\b(default|named|module|modules|barrel|barrels|index|convention|conventions|entry point|public api|api surface)\b|re-?export(?:s|ing)?/;
+  if (!moduleVocab.test(lw)) return false;
+  const dataVocab = /\b(data|csv|report|reports|download|downloads|endpoint|endpoints|job|jobs|pipeline|pipelines|user|users|excel|pdf)\b/;
+  return !dataVocab.test(lw);
 }
 
 const scriptKindOf = (path: string) => (/\.tsx$/.test(path) ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
