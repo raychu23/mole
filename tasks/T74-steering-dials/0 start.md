@@ -1,22 +1,22 @@
 ---
-state: submitted
+state: verified
 owner: hermes-build
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t74-steering-dials
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T74-steering-dials
 base:
-reviewer:
-updated: 2026-11-03 05:15
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+reviewer: hermes-subagent deleg_6b03cdb7 FAIL, deleg_42f30ebe FAIL, deleg_0997e558 PASS (fresh, claude-sonnet-5); main dogfood check caught decision 0014 -> T75
+updated: 2026-11-03 05:17
+status: ledger verified
+next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
 claimed: 2026-11-03 02:53
 ---
 ```notes
 T74-steering-dials      ledger task (rules.md §3 code features)      project tasks
     goal                    Live agent steering: a small signal/update/query contract over the existing hooks transport so a person (or Mole) can steer a running agent: query = what is the agent doing (intent, files, decisions in play), signal = a note the agent sees on its next tool call, update = a validated change (e.g. 'stop touching X', 'decision D now superseded') that is checked before it is accepted. Built on Temporal's signal/update/query semantics, delivered via PreToolUse/UserPromptSubmit additionalContext.
     done-when               1 prior-art note (Temporal workflow signals/updates/queries docs; Claude Code hooks; LangGraph interrupts/human-in-the-loop) · 2 tests first · 3 `mole steer signal|update|query --session S` (CLI) writes to a per-session inbox; hooks deliver once; update validators reject invalid updates with a reason · 4 query returns the agent state from agentstate (T18) · 5 never blocks the agent; plugin + agentstate tests pass
-    status                  2026-11-03 submitted      report: tasks/T74-steering-dials/2 insights.md, proof 4 log/bench/review1-high2-latency.txt, worktree fast-forwarded to
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    status                  2026-11-03 verified      reviewer hermes-subagent deleg_6b03cdb7 FAIL, deleg_42f30ebe FAIL, deleg_0997e558 PASS (fresh, claude-sonnet-5), main do
+    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
     pinned
     mode                    one worker
     boundary                packages/agentstate (steer/), plugins/claude-code/scripts (deliver), daemon cli, tests
