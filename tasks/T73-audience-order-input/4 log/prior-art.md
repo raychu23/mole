@@ -113,3 +113,47 @@ already analyzed this exact gap)   CODE for evaluatePhase(root, {}) does NOT imp
   "don't repeat existing functionality" and this surface's own established pattern (T34 notes/questions).
 - No change to how `evaluatePhase`'s OWN default behaves, or to `mole priorities`'s CLI default: T60's test for
   that ("done-when 2: no priorities file -> labels identical to the plain engine") still passes unmodified.
+
+## Review 1 (deleg) HIGH 1 + HIGH 2 fixes — added prior art (2026-11-03)
+
+```notes
+source                             what it says                                        we borrow
+git, Documentation/technical/       "`index.lock`... an atomic create of a lock file;    the mutex itself: O_EXCL
+index-format.txt + widely           on success the process holds the lock. It then       create of `<file>.lock`,
+documented `index.lock` convention  writes the new index content, then atomically        write-then-rename to publish,
+(re-fetched 2026-11-03, see also    RENAMES `index.lock` to `index`" (git-cola #1438,     a crashed holder's lock left
+github.com/git-cola/git-cola/       Stack Overflow 9282632: a crashed git leaves          behind -- WHY setPriorities
+issues/1438, stackoverflow.com/     `index.lock` behind, requiring manual `rm`)           needs a STALE-lock escape
+questions/9282632)                                                                       hatch, not just O_EXCL alone
+moxystudio/node-proper-lockfile     "lockfile's `mtime` is periodically updated... this    the STALENESS convention: a
+README (re-fetched 2026-11-03,      allows to effectively check if a lock is stale by     lock whose mtime exceeds the
+github.com/moxystudio/              checking its `mtime` against a stale threshold";      bound is reclaimed (same
+node-proper-lockfile)               default `stale` option is 10000ms (10s), "any crash   10s bound as proper-lockfile's
+                                     or process kill... will leave the lock active         own default); we do NOT take
+                                     forever" if stale defaults to 0 (their own argument    its `mkdir`-over-`open+O_EXCL`
+                                     for a non-zero default); retries via an options        NFS point (Mole's lock lives
+                                     object, exponential backoff is the caller's own        on a local repo checkout,
+                                     concern (not in the core lock loop shown)              never NFS) or its periodic
+                                                                                            mtime-refresh (setPriorities
+                                                                                            holds the lock only for one
+                                                                                            short synchronous read+write,
+                                                                                            not a long-lived session)
+```
+
+- **The mutex is `O_EXCL` create, not `mkdir`.** proper-lockfile deliberately avoids `open(..., O_EXCL)` because
+  it is unreliable on NFS; Mole's `.mole/priorities.md.lock` lives on a local git checkout, never a network
+  filesystem, so git's own simpler `index.lock` convention (an exclusive create, not a directory) fits here
+  without inheriting a problem neither Mole nor git's own index actually has.
+- **Stale-lock reclaim by mtime age, same bound proper-lockfile itself defaults to (10s).** `setPriorities` holds
+  its lock only across one synchronous read + edit + write (milliseconds in practice, bounded even with the
+  test's own artificial 300 ms worst case), so a lock that is still present after 10s can only mean its holder
+  crashed or was killed before reaching the `finally` release — reclaiming it is strictly a liveness fix, never
+  a correctness risk a live holder could be confused by (its `mtime` would be fresh).
+- **Retry with exponential backoff up to a bound, not proper-lockfile's own default of zero retries.** A CLI
+  `set` run by a person (never a long-lived server) can reasonably wait up to LOCK_TIMEOUT_MS (5s) for a sibling
+  `set` to finish instead of failing immediately; PrioritiesError on timeout is the SAME error type every other
+  `setPriorities` validation failure already throws (file:line-style consistency the CLI's own exit-2 handling
+  expects, packages/decisions/src/cli.ts).
+- **Write via temp file + rename (git's own index.lock-to-index step), not an in-place `writeFileSync`.** A
+  reader (`readPriorities`, any other `priorities` invocation) can never observe a half-written file; a process
+  that crashes mid-write leaves only an orphaned `.NNN.tmp` file next to `priorities.md`, never a corrupt one.

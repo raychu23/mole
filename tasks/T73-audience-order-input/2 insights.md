@@ -3,14 +3,17 @@
 ## Summary
 `mole priorities set --phase P --order a,b,c` now writes `.mole/priorities.md` (a person's CLI act, never MCP),
 updating an existing phase's order in place or appending a new one dated today; the write is re-read through
-T60's own parser before returning, so a malformed write is caught there, not by the next call. A pure, never-
-writing what-if (`evaluateOrder`/`compareWithOrder` in `@mole/decisions`, `sel.order` in `@mole/proposals`,
-`mole priorities whatif --order ...`) judges the graph under any tenet order without touching the file. The VS
-Code Reasoning section shows the order in force and a "compare with order X" input+button that renders the
-same comparison shape the phase-vs-phase diff already uses, proved with a real panel screenshot (git status
-clean before/after). `mole_priorities`'s bare MCP default (backlog `priorities-default`, T68 left it alone on
-purpose) now matches its own doc: the phase in force today, not plain Dung — `mole priorities` (CLI) and
-`evaluatePhase`'s own default are unchanged.
+T60's own parser before returning, so a malformed write is caught there, not by the next call. Review 1 found
+two HIGHs in that write path, both now fixed: it rewrites ONLY the numbered tenet-list lines (every hand
+comment/prose/blank line in the phase, and the file's own CRLF/LF ending, survives), and it is guarded by a
+git-index.lock-style file lock (O_EXCL create, exponential backoff, stale-lock reclaim, temp-file + rename) so
+concurrent `set` calls never lose an edit. A pure, never-writing what-if (`evaluateOrder`/`compareWithOrder` in
+`@mole/decisions`, `sel.order` in `@mole/proposals`, `mole priorities whatif --order ...`) judges the graph
+under any tenet order without touching the file. The VS Code Reasoning section shows the order in force and a
+"compare with order X" input+button that renders the same comparison shape the phase-vs-phase diff already
+uses, proved with a real panel screenshot (git status clean before/after). `mole_priorities`'s bare MCP default
+(backlog `priorities-default`, T68 left it alone on purpose) now matches its own doc: the phase in force today,
+not plain Dung — `mole priorities` (CLI) and `evaluatePhase`'s own default are unchanged.
 
 ```notes
 code       packages/decisions/src/priorities.ts: setPriorities (write) · evaluateOrder/compareWithOrder (what-if,
@@ -64,3 +67,34 @@ limits     INFERENCE: a new phase name with no existing file/phases is dated tod
 NOT RUN    nothing: every change here was exercised by a real test or the real Extension Development Host; no
            model calls, no account/quota blockers applied to this task
 ```
+
+## Review 1 fixes
+- **HIGH 1 — `setPriorities` (priorities.ts:258-264) replaced EVERYTHING between a phase's heading and the next
+  heading, deleting hand comments/notes/blank-line formatting inside the edited phase.** Fix: a new
+  `rewritePhaseList` helper scans the phase body for ITEM-regex lines only; it splices the new numbered list in
+  at the position of the FIRST existing item line and keeps every other line (comments, prose, blank lines)
+  exactly where it was, in order; a phase with no list yet gets one inserted right after the heading, same rest-
+  of-phase untouched. The whole-file write also now preserves the file's own line ending (CRLF vs LF), detected
+  once from the read and reused for every line written, instead of always joining with `\n`. Proof: red at
+  `4 log/red.txt` ("T73 review 1 fixes" — 3 failing: comments/prose/blank lines deleted, a comment-only phase
+  wiped, CRLF collapsed to LF), green after the fix (`packages/decisions/test/priorities.test.ts`, same 3 tests,
+  including a hand-annotated fixture with HTML comments before/inside/after the list, prose, extra blank lines,
+  and a separate CRLF-only fixture asserting every untouched line still ends `\r`).
+- **HIGH 2 — concurrent `priorities set` on different phases lost one edit (plain read-modify-write, no lock).**
+  Fix: `acquireLock`/`writeFileAtomic` in priorities.ts, the git `index.lock` / npm `proper-lockfile` pattern
+  (4 log/prior-art.md "Review 1 ... added prior art"): `<file>.lock` created with `open(..., 'wx')` (O_EXCL),
+  exponential backoff (10ms → 200ms cap) up to a 5s bound, a lock whose `mtime` is older than 10s (proper-
+  lockfile's own default stale bound) is reclaimed as abandoned; the file is re-read ONLY after the lock is
+  held (never before, so no read can go stale waiting for the lock); the new content is written to a
+  `<file>.<pid>.<ts>.tmp` and renamed into place, so a reader never observes a half-written file; the lock is
+  released in a `finally`. Proof: red at `4 log/red.txt` ("N concurrent writes to DIFFERENT phases" — launch's
+  own edit clobbered by scale's write, reproduced reliably by forcing the race window open with
+  `MOLE_PRIORITIES_TEST_DELAY_MS` so 3 real child processes under `vite-node` genuinely interleave instead of
+  hoping for a lucky collision), green after the fix (same test, plus a same-phase concurrency test asserting
+  last-writer-wins with the file still parseable — never corrupt — and a stale-lock test that writes a lock
+  file with an `mtime` 60s old and confirms `setPriorities` still succeeds instead of timing out).
+- **Scope held**: no change to the what-if path (`evaluateOrder`/`compareWithOrder`), which still never writes;
+  no change to `mole_priorities`'s MCP read-only contract; the lock lives only inside `setPriorities` itself.
+- **Full re-run after both fixes**: `npx tsc -b` clean; `npx vitest run packages/decisions packages/proposals
+  packages/mcp apps/vscode` — 59 test files, 510 tests, all passing (incl. `apps/vscode/test/render.test.ts`,
+  no debounce flake on this run).

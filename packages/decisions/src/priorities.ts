@@ -7,8 +7,9 @@
 //   comparePhases          every argument whose label differs, with the attacks whose success flipped (both tenets,
 //                          both ranks) or the changed attackers it moved through, plus decisions resting on them
 // Read-only. Records are never written except by setPriorities (T73: a person's CLI act, never MCP).
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { closeSync, existsSync, openSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import process from 'node:process';
 import { evaluate, type Label } from '@mole/reasoning';
 import { argumentDefinitions } from './argdown/definitions.js';
 import { argumentFramework } from './argdown/framework.js';
@@ -235,12 +236,82 @@ function diffPhases(l: Loaded, pa: { name: string; order: string[] }, pb: { name
   return { from: pa.name, to: pb.name, arguments: argumentsChanged, decisions };
 }
 
+const LOCK_SUFFIX = '.lock';
+const LOCK_STALE_MS = 10_000; // review 1 HIGH 2: proper-lockfile's own default stale bound (mtime-based)
+const LOCK_RETRY_INITIAL_MS = 10;
+const LOCK_RETRY_MAX_MS = 200;
+const LOCK_TIMEOUT_MS = 5_000;
+
+/** Synchronous sleep: Node (unlike browsers) permits Atomics.wait on the main thread, so a sync function like
+ *  setPriorities can back off between lock attempts without an async/await rewrite of its whole call chain. */
+function sleepMs(ms: number): void {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/** review 1 HIGH 2: git's `index.lock` / npm's `proper-lockfile` pattern -- an exclusive `O_EXCL` create of
+ *  `<file>.lock` is the mutex (atomic on a local filesystem; two processes racing to `open(..., 'wx')` can only
+ *  have one winner). Retries with exponential backoff up to LOCK_TIMEOUT_MS; a lock whose mtime is older than
+ *  LOCK_STALE_MS is assumed abandoned (crashed holder) and reclaimed, same staleness convention proper-lockfile
+ *  documents (its own default `stale` option is also 10s). Returns a release function (always call in `finally`). */
+function acquireLock(lockPath: string): () => void {
+  const deadline = Date.now() + LOCK_TIMEOUT_MS;
+  let backoff = LOCK_RETRY_INITIAL_MS;
+  for (;;) {
+    try {
+      closeSync(openSync(lockPath, 'wx'));
+      return () => { try { unlinkSync(lockPath); } catch { /* already gone: nothing to release */ } };
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
+      try {
+        if (Date.now() - statSync(lockPath).mtimeMs > LOCK_STALE_MS) {
+          unlinkSync(lockPath); // stale: reclaim immediately, no backoff
+          continue;
+        }
+      } catch { /* lock vanished between EEXIST and stat (another process just released it): retry now */ }
+      if (Date.now() >= deadline) throw new PrioritiesError(`timed out waiting for the lock on ${lockPath} (another 'priorities set' is running or crashed holding it)`);
+      sleepMs(Math.min(backoff, deadline - Date.now()));
+      backoff = Math.min(backoff * 2, LOCK_RETRY_MAX_MS);
+    }
+  }
+}
+
+/** Write-then-rename (same directory, same filesystem): a reader never observes a half-written file, and a
+ *  process crashing mid-write leaves only an orphaned `.tmp` file, never a corrupt `priorities.md`. */
+function writeFileAtomic(path: string, content: string): void {
+  const tmp = `${path}.${process.pid}.${Date.now()}.tmp`;
+  writeFileSync(tmp, content);
+  renameSync(tmp, path);
+}
+
+/** review 1 HIGH 1: rewrite ONLY the numbered tenet-list lines inside a phase's body (from just after its
+ *  heading to just before the next heading or EOF); every other line -- HTML comments, prose, blank lines --
+ *  is kept in place, in order. New items are spliced in at the position of the FIRST existing item line (any
+ *  non-item lines between old item lines, e.g. a comment interleaved with the list, stay exactly where they
+ *  were). If the phase has no list yet, the new items are inserted immediately after the heading. */
+function rewritePhaseList(body: string[], items: string[]): string[] {
+  const itemIdxs: number[] = [];
+  body.forEach((l, i) => { if (ITEM.test(l)) itemIdxs.push(i); });
+  if (itemIdxs.length === 0) return [...items, ...body];
+  const first = itemIdxs[0]!;
+  const itemSet = new Set(itemIdxs);
+  const out: string[] = [];
+  body.forEach((l, i) => {
+    if (i === first) out.push(...items);
+    else if (!itemSet.has(i)) out.push(l);
+    // else: an old item line other than the first -- dropped, replaced as a block at `first`
+  });
+  return out;
+}
+
 /** T73: `mole priorities set --phase P --order a,b,c` -- a person's act (never over MCP, which stays read-only,
- *  T61). Updates an existing phase's order in place (same `from` date, same position in the file) or, for a
- *  phase name not yet in the file, appends a new phase dated today, after the latest one (same ordering
- *  invariant readPriorities already enforces). Every tenet must exist and be ranked once, like readPriorities.
- *  Re-reads the written file through readPriorities before returning, so a malformed write is caught HERE
- *  (round trip, T73 done-when 3), not by the next CLI call. */
+ *  T61). Updates an existing phase's order in place (same `from` date, same position in the file, every other
+ *  line in that phase untouched -- review 1 HIGH 1) or, for a phase name not yet in the file, appends a new
+ *  phase dated today, after the latest one (same ordering invariant readPriorities already enforces). Every
+ *  tenet must exist and be ranked once, like readPriorities. Guarded by a file lock (review 1 HIGH 2: concurrent
+ *  `set` on different -- or the same -- phase used to be a lost-update read-modify-write race) and written via
+ *  a temp-file + rename so a reader never sees a half-written file. Re-reads the written file through
+ *  readPriorities before returning, so a malformed write is caught HERE (round trip, T73 done-when 3), not by
+ *  the next CLI call. */
 export function setPriorities(root: string, phase: string, order: string[], graph: DecisionGraph = loadGraph(root)): Phase[] {
   if (order.length === 0) throw new PrioritiesError('order must list at least one tenet');
   const tenets = tenetIds(graph);
@@ -251,24 +322,37 @@ export function setPriorities(root: string, phase: string, order: string[], grap
     seen.add(t);
   }
   const path = join(root, FILE);
-  const text = existsSync(path) ? readFileSync(path, 'utf8') : '# Priorities\n';
-  const lines = text.split(/\r?\n/);
-  const items = order.map((t, i) => `${i + 1}. ${t}`);
-  const headingIdx = lines.findIndex((l) => { const h = /^##\s/.test(l) ? HEADING.exec(l) : null; return !!h && h[1] === phase; });
-  if (headingIdx !== -1) {
-    let nextHeadingIdx = lines.length;
-    for (let i = headingIdx + 1; i < lines.length; i++) {
-      if (/^##\s/.test(lines[i]!)) { nextHeadingIdx = i; break; }
+  const release = acquireLock(`${path}${LOCK_SUFFIX}`);
+  try {
+    // review 1 HIGH 2: re-read AFTER the lock is held, never before -- a read taken before acquiring the lock
+    // could already be stale by the time this process gets its turn to write.
+    const text = existsSync(path) ? readFileSync(path, 'utf8') : '# Priorities\n';
+    // review 1 HIGH 2 test seam: widen the critical section on demand so a concurrency test can force a real
+    // interleave deterministically. Inert unless MOLE_PRIORITIES_TEST_DELAY_MS is set (test/priorities-lock-worker.ts).
+    const testDelayMs = Number(process.env.MOLE_PRIORITIES_TEST_DELAY_MS ?? 0);
+    if (testDelayMs > 0) sleepMs(testDelayMs);
+    const eol = text.includes('\r\n') ? '\r\n' : '\n'; // review 1 HIGH 1: preserve the file's own line ending
+    const lines = text.split(/\r?\n/);
+    const items = order.map((t, i) => `${i + 1}. ${t}`);
+    const headingIdx = lines.findIndex((l) => { const h = /^##\s/.test(l) ? HEADING.exec(l) : null; return !!h && h[1] === phase; });
+    if (headingIdx !== -1) {
+      let nextHeadingIdx = lines.length;
+      for (let i = headingIdx + 1; i < lines.length; i++) {
+        if (/^##\s/.test(lines[i]!)) { nextHeadingIdx = i; break; }
+      }
+      const body = rewritePhaseList(lines.slice(headingIdx + 1, nextHeadingIdx), items);
+      const out = [...lines.slice(0, headingIdx + 1), ...body, ...lines.slice(nextHeadingIdx)];
+      writeFileAtomic(path, out.join(eol));
+    } else {
+      const existing = readPriorities(root, graph); // validates the EXISTING file first (file:line errors as usual)
+      const last = existing[existing.length - 1];
+      const from = today();
+      if (last && from <= last.from) throw new PrioritiesError(`a new phase must start after ${last.name} (${last.from}); today (${from}) is not after it`);
+      const out = [text.replace(/\s+$/, ''), '', `## ${phase} · from ${from}`, '', ...items, ''];
+      writeFileAtomic(path, out.join(eol));
     }
-    const out = [...lines.slice(0, headingIdx + 1), '', ...items, '', ...lines.slice(nextHeadingIdx)];
-    writeFileSync(path, out.join('\n'));
-  } else {
-    const existing = readPriorities(root, graph); // validates the EXISTING file first (file:line errors as usual)
-    const last = existing[existing.length - 1];
-    const from = today();
-    if (last && from <= last.from) throw new PrioritiesError(`a new phase must start after ${last.name} (${last.from}); today (${from}) is not after it`);
-    const out = [text.replace(/\s+$/, ''), '', `## ${phase} · from ${from}`, '', ...items, ''];
-    writeFileSync(path, out.join('\n'));
+  } finally {
+    release();
   }
   return readPriorities(root, graph); // round trip: the write this function just made, re-parsed
 }

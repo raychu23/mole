@@ -1,11 +1,29 @@
 // T60: tenets reranked as priorities shift (launch → scale). Tests first. Temp repos only, never a live .mole.
-import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync, spawn } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 import { evaluate } from '@mole/reasoning';
 import { afterEach, describe, expect, it } from 'vitest';
 import { argumentFramework, comparePhases, compareWithOrder, evaluateOrder, evaluatePhase, loadGraph, phaseAt, prioritiesCli, PrioritiesError, readPriorities, setPriorities } from '../src/index.js';
+
+// review 1 (deleg) HIGH 2: concurrency tests spawn REAL child processes (one Node process can't race itself --
+// the event loop is single-threaded) running priorities-lock-worker.ts under vite-node (already a vitest dep).
+const VITE_NODE = fileURLToPath(new URL('../../../node_modules/.bin/vite-node', import.meta.url));
+const LOCK_WORKER = fileURLToPath(new URL('./priorities-lock-worker.ts', import.meta.url));
+function runWorker(root: string, phase: string, order: string[], delayMs?: number, testDelayMs?: number): Promise<{ code: number | null; stderr: string }> {
+  const args = [LOCK_WORKER, root, phase, order.join(',')];
+  if (delayMs !== undefined) args.push(String(delayMs));
+  return new Promise((resolve) => {
+    const env = { ...process.env, ...(testDelayMs !== undefined ? { MOLE_PRIORITIES_TEST_DELAY_MS: String(testDelayMs) } : {}) };
+    const child = spawn(VITE_NODE, args, { stdio: ['ignore', 'ignore', 'pipe'], env });
+    let stderr = '';
+    child.stderr.on('data', (d: Buffer) => { stderr += d.toString(); });
+    child.on('close', (code) => resolve({ code, stderr }));
+  });
+}
 
 const roots: string[] = [];
 afterEach(() => roots.splice(0).forEach((r) => rmSync(r, { recursive: true, force: true })));
@@ -261,5 +279,102 @@ describe('mole priorities CLI', () => {
     } finally {
       [console.log, console.error] = [log, err];
     }
+  });
+});
+
+describe('T73 review 1 fixes', () => {
+  // HIGH 1: setPriorities used to replace EVERYTHING between the phase heading and the next heading, deleting
+  // hand comments/notes/blank-line formatting. Now it rewrites only the numbered tenet-list lines.
+  it('rewriting a phase keeps every other line in place: comments, prose and blank lines survive, in order', () => {
+    const root = repo();
+    write(root, '.mole/tenets.md', ['# Tenets', '', '## tenet-speed · Ship fast', '', '## tenet-cost · Drive down cost per request', ''].join('\n'));
+    const hand = [
+      '# Priorities', '',
+      '<!-- launch notes: decided in the kickoff -->',
+      '## launch · from 2026-01-01', '',
+      '<!-- before the list -->',
+      '1. tenet-speed',
+      '<!-- between items, keep speed in mind -->',
+      '2. tenet-cost',
+      '<!-- after the list -->', '',
+      'Some prose explaining the launch phase.', '',
+      '## scale · from 2026-09-01', '',
+      '1. tenet-cost', '2. tenet-speed', '',
+    ].join('\n');
+    write(root, '.mole/priorities.md', hand);
+    const path = join(root, '.mole/priorities.md');
+    setPriorities(root, 'launch', ['tenet-cost', 'tenet-speed']);
+    const after = readFileSync(path, 'utf8');
+    const isItem = (l: string) => /^\s*(?:\d+[.)]|[-*])\s+\S+\s*$/.test(l);
+    expect(after.split('\n').filter((l) => !isItem(l))).toEqual(hand.split('\n').filter((l) => !isItem(l)));
+    expect(readPriorities(root).find((p) => p.name === 'launch')!.order).toEqual(['tenet-cost', 'tenet-speed']);
+    // the other phase, and everything outside the edited phase, untouched byte for byte
+    expect(after.slice(after.indexOf('## scale'))).toBe(hand.slice(hand.indexOf('## scale')));
+  });
+
+  it('a phase with no list yet gets one inserted right after the heading, rest of the phase untouched', () => {
+    const root = repo();
+    write(root, '.mole/tenets.md', ['# Tenets', '', '## tenet-speed · Ship fast', '', '## tenet-cost · Drive down cost per request', ''].join('\n'));
+    const hand = ['# Priorities', '', '## launch · from 2026-01-01', '', '<!-- no list yet, still deciding -->', '', '## scale · from 2026-09-01', '', '1. tenet-cost', '2. tenet-speed', ''].join('\n');
+    write(root, '.mole/priorities.md', hand);
+    setPriorities(root, 'launch', ['tenet-speed', 'tenet-cost']);
+    const after = readFileSync(join(root, '.mole/priorities.md'), 'utf8');
+    expect(after).toContain('<!-- no list yet, still deciding -->');
+    expect(readPriorities(root).find((p) => p.name === 'launch')!.order).toEqual(['tenet-speed', 'tenet-cost']);
+  });
+
+  it('preserves CRLF line endings: no byte in an untouched line is altered', () => {
+    const root = repo();
+    write(root, '.mole/tenets.md', ['# Tenets', '', '## tenet-speed · Ship fast', '', '## tenet-cost · Drive down cost per request', ''].join('\n'));
+    const hand = ['# Priorities', '', '<!-- crlf file -->', '## launch · from 2026-01-01', '', '1. tenet-speed', '2. tenet-cost', '',
+      '## scale · from 2026-09-01', '', '1. tenet-cost', '2. tenet-speed', ''].join('\r\n');
+    write(root, '.mole/priorities.md', hand);
+    const path = join(root, '.mole/priorities.md');
+    setPriorities(root, 'launch', ['tenet-cost', 'tenet-speed']);
+    const after = readFileSync(path, 'utf8');
+    expect(after).toContain('\r\n');
+    expect(after.split('\n').every((l) => l === '' || l.endsWith('\r'))).toBe(true); // every line still CRLF-terminated
+    expect(after).toContain('<!-- crlf file -->\r\n');
+    expect(readPriorities(root).find((p) => p.name === 'launch')!.order).toEqual(['tenet-cost', 'tenet-speed']);
+  });
+
+  // HIGH 2: concurrent `priorities set` on different phases used to lose one edit (read-modify-write, no lock).
+  it('N concurrent writes to DIFFERENT phases: every edit lands, none lost', async () => {
+    const root = repo(['# Priorities', '', '## launch · from 2026-01-01', '', '1. tenet-speed', '2. tenet-cost', '',
+      '## scale · from 2026-09-01', '', '1. tenet-cost', '2. tenet-speed', '', '## ga · from 2026-10-01', '', '1. tenet-speed', '2. tenet-cost', ''].join('\n'));
+    const results = await Promise.all([
+      runWorker(root, 'launch', ['tenet-cost', 'tenet-speed'], 0, 300),
+      runWorker(root, 'scale', ['tenet-speed', 'tenet-cost'], 0, 300),
+      runWorker(root, 'ga', ['tenet-cost', 'tenet-speed'], 0, 300),
+    ]);
+    for (const r of results) expect(r.code, r.stderr).toBe(0);
+    const phases = readPriorities(root);
+    expect(phases.find((p) => p.name === 'launch')!.order).toEqual(['tenet-cost', 'tenet-speed']);
+    expect(phases.find((p) => p.name === 'scale')!.order).toEqual(['tenet-speed', 'tenet-cost']);
+    expect(phases.find((p) => p.name === 'ga')!.order).toEqual(['tenet-cost', 'tenet-speed']);
+  }, 20_000);
+
+  it('N concurrent writes to the SAME phase: last writer wins, the file is never corrupt', async () => {
+    const root = repo(PHASES);
+    const results = await Promise.all([
+      runWorker(root, 'scale', ['tenet-speed', 'tenet-cost'], 0, 300),
+      runWorker(root, 'scale', ['tenet-cost', 'tenet-speed'], 10, 300),
+    ]);
+    for (const r of results) expect(r.code, r.stderr).toBe(0);
+    // never corrupt: readPriorities parses it without throwing, and scale ends up as ONE of the two orders, whole
+    const phases = readPriorities(root);
+    const scale = phases.find((p) => p.name === 'scale')!;
+    expect([['tenet-speed', 'tenet-cost'], ['tenet-cost', 'tenet-speed']]).toContainEqual(scale.order);
+    expect(phases.find((p) => p.name === 'launch')!.order).toEqual(['tenet-speed', 'tenet-cost']); // untouched
+  }, 20_000);
+
+  it('a stale lock older than the bound is reclaimed, the write still succeeds', async () => {
+    const root = repo(PHASES);
+    const lockPath = join(root, '.mole/priorities.md.lock');
+    writeFileSync(lockPath, String(process.pid));
+    const old = Date.now() - 60_000; // well past any reasonable staleness bound
+    utimesSync(lockPath, old / 1000, old / 1000);
+    const phases = setPriorities(root, 'scale', ['tenet-speed', 'tenet-cost']);
+    expect(phases.find((p) => p.name === 'scale')!.order).toEqual(['tenet-speed', 'tenet-cost']);
   });
 });

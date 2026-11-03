@@ -202,3 +202,31 @@ AssertionError: expected 2 to be +0 // Object.is equality
    Start at  03:03:44
    Duration  3.38s (transform 853ms, setup 0ms, collect 2.06s, tests 316ms, environment 0ms, prepare 261ms)
 
+
+## Review 1 fixes — RED before the fix (deleg_* review 1, 2026-11-03)
+HIGH 1 (setPriorities deletes hand comments/notes/blank lines in the edited phase) and HIGH 2 (concurrent
+`priorities set` on different phases loses one edit, no lock) red before the fix:
+
+$ npx vitest run packages/decisions/test/priorities.test.ts
+ × T73 review 1 fixes > rewriting a phase keeps every other line in place: comments, prose and blank lines survive, in order
+   → expected [...7 lines] to deeply equal [...12 lines] -- every HTML comment/prose line inside the phase body was gone
+ × T73 review 1 fixes > a phase with no list yet gets one inserted right after the heading, rest of the phase untouched
+   → expected '...' to contain '<!-- no list yet, still deciding -->' -- the WHOLE phase body (comment included) was wiped
+ × T73 review 1 fixes > preserves CRLF line endings: no byte in an untouched line is altered
+   → expected '...' to contain '\r\n' -- CRLF file written back as bare LF throughout
+ × T73 review 1 fixes > N concurrent writes to DIFFERENT phases: every edit lands, none lost
+   → expected [ 'tenet-cost', 'tenet-speed' ] to deeply equal [ 'tenet-speed', 'tenet-cost' ] -- launch's edit
+     clobbered by scale's read-modify-write (forced to interleave via MOLE_PRIORITIES_TEST_DELAY_MS=300, 3 real
+     child processes under vite-node; reproduced reliably across repeated runs pre-fix, see 2 insights.md)
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 30 passed (34)
+
+## Review 1 fixes — GREEN after the fix
+$ npx vitest run packages/decisions/test/priorities.test.ts
+ Test Files  1 passed (1)
+      Tests  34 passed (34)
+$ npx tsc -b   (clean)
+$ npx vitest run packages/decisions packages/proposals packages/mcp apps/vscode
+ Test Files  59 passed (59)
+      Tests  510 passed (510)   (includes apps/vscode/test/render.test.ts, no debounce flake this run)
