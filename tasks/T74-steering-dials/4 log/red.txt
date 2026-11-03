@@ -1,0 +1,37 @@
+RED (before implementation): `npx vitest run packages/agentstate/test/steer.test.ts` with packages/agentstate/src/steer/
+removed (mv'd aside) -- confirms the test file only passes once the steer/ module exists.
+
+RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T74-steering-dials
+
+FAIL  packages/agentstate/test/steer.test.ts [ packages/agentstate/test/steer.test.ts ]
+Error: Cannot find module '../src/steer/index.js' imported from
+'/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T74-steering-dials/packages/agentstate/test/steer.test.ts'
+Caused by: Error: Failed to load url ../src/steer/index.js (resolved id: ../src/steer/index.js) in
+.../packages/agentstate/test/steer.test.ts. Does the file exist?
+
+ Test Files  1 failed (1)
+      Tests  no tests
+
+----------------------------------------------------------------------------------------------------
+
+RED (before implementation): `npx vitest run plugins/claude-code/test/steer-hook.test.ts` with
+plugins/claude-code/scripts/lib.mjs, pre-tool-use.mjs, user-prompt-submit.mjs and hooks/hooks.json reverted to their
+pre-T74 state (git stash of just those 4 files) -- confirms the hook-delivery tests fail without the wiring, not by
+coincidence.
+
+ ❯ plugins/claude-code/test/steer-hook.test.ts (6 tests | 3 failed) 1668ms
+   × PreToolUse ... a Read tool call gets the signal as additionalContext; a second call gets nothing new
+     → expected '' to contain 'stop editing a.ts for now'
+   × PreToolUse ... an accepted update is delivered once on a tool call with no path at all (e.g. Bash)
+     → expected '' to contain 'stop touching a.ts, it is frozen'
+   ✓ PreToolUse ... never blocks: no permissionDecision/decision field even when steering is delivered
+   × UserPromptSubmit ... a queued signal reaches the next prompt as additionalContext, then is gone
+     → expected '' to contain 'the plan changed: focus on tests only'
+   ✓ UserPromptSubmit ... silent (exit 0, no output) with an empty prompt and nothing queued
+   ✓ never blocks or fails the session (T74 stop condition) ... malformed stdin, an unknown session, or no mole CLI: exit 0, no crash
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 3 passed (6)
+
+(the 3 passing tests here are the "never blocks" / "silent" cases, which hold with or without the T74 wiring --
+expected, since they assert absence of bad behavior, not presence of the new feature.)

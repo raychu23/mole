@@ -611,3 +611,23 @@ export function saveAddedDecisions(sessionId, set) {
     // best effort: a decision may be re-added once more next call, never a crash
   }
 }
+
+// ---------------------------------------------------------------- T74: steering dials (signal / update / query)
+/**
+ * PreToolUse/UserPromptSubmit: pending steering signals + accepted updates for this session, delivered exactly once
+ * (`mole steer deliver`, @mole/agentstate's steer/ -- the per-session inbox lives under .mole/local/steer/, never
+ * CLAUDE_PLUGIN_DATA, so it works the same whether a human or another agent sent the signal). '' when nothing is
+ * pending, on any CLI failure, or on a repo with no mole CLI: delivery never blocks or fails the session (T74 stop
+ * condition). A short budget (default 10s, well under the hooks' own 15/30s timeouts) so a stuck daemon-less CLI
+ * call can't eat the hook's whole timeout.
+ */
+export function steerDeliverText(mole, root, sessionId, timeoutMs = 10_000) {
+  if (!mole || !sessionId) return '';
+  const r = moleJson(mole, root, ['steer', 'deliver', '--session', String(sessionId), '--json'], timeoutMs);
+  if (!r || (!r.signals?.length && !r.updates?.length)) return '';
+  const lines = [
+    ...(r.signals ?? []).map((s) => `- signal${s.from ? ` (from ${s.from})` : ''}: ${s.text}`),
+    ...(r.updates ?? []).map((u) => `- update (${u.kind}${u.target ? ` ${u.target}` : ''})${u.from ? ` (from ${u.from})` : ''}: ${u.text}`),
+  ];
+  return `mole: steering for this session (mole steer, delivered once):\n${lines.join('\n')}`;
+}
