@@ -1,21 +1,22 @@
 ---
-state: ready
+state: running
 owner: hermes-build
-repo:
-branch:
-worktree:
+repo: /Users/a1/Desktop/CS Code/Project/Mole
+branch: ledger/t68-incident-under-phase
+worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T68-incident-under-phase
 base:
 reviewer:
 updated: 2026-11-03 01:54
-status: ledger ready
-next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+status: ledger running
+next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+claimed: 2026-11-03 01:54
 ---
 ```notes
 T68-incident-under-phase      ledger task (rules.md §3 code features)      project tasks
     goal                    Incident suggestions and proposal comparison respect the phase in force (T60 priorities) instead of plain Dung, so a revival real under the current phase is found; which phase applies and whether accept freezes it is chosen from prior art and recorded as a reversible default (D93).
     done-when               1 tests first · 2 the T61 replay case (best-effort vs parallel tags) finds the revival under the phase in force, plain-Dung result shown beside it · 3 mole incident suggest / proposals compare / MCP tools take --at/--phase, default today's phase · 4 decisions + mcp + proposals tests pass
-    status                  2026-11-03 ready      owner hermes-build
-    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+    status                  2026-11-03 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T68-incident-under-phase · branch ledger/t68-incident-under-ph
+    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
     pinned
     mode                    one worker
     boundary                packages/decisions/src/{incidents,priorities.ts}, packages/proposals, packages/mcp/src/reasoning-tools.ts, tests
