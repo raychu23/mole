@@ -219,3 +219,9 @@ verified  everything else in review 2 passed: webhook → pg-boss → temporal e
           divergence, PR-check path diff empty, /health contract, compose (postgres start race documented)
 limit     issuer is the repo's local HS256 test issuer standing in for real OAuth (as T33/mcpServer); a production IdP is separate work
 ```
+
+## Review 3 (deleg_81365281) PASS
+```notes
+verified  /reconcile: anon/garbage/expired/alg-none/other-secret 401 · other org 404, no timing difference (0.56 vs 0.54 ms) · case/unicode/traversal orgIds fail closed · SQL parameterised · 3 routes total, only /reconcile new
+LOW fixed deploy/README.md now documents MOLE_AUTH_SECRET, TEMPORAL_DATABASE_URL, /health 503, compose cold-start race
+```
