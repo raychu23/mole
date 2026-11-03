@@ -46,6 +46,8 @@ services:
       # values without editing this file.
       WEBHOOK_SECRET: ${MOLE_WEBHOOK_SECRET:-change-me-webhook-secret}
       ORG_REPO_DIRS: ${MOLE_ORG_REPO_DIRS:-{}}
+      # bearer-token secret for /reconcile (unset = endpoint closed, 401); no default on purpose
+      MOLE_AUTH_SECRET: ${MOLE_AUTH_SECRET:-}
       PORT: "3000"
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       MLFLOW_TRACKING_URI: http://mlflow:5000

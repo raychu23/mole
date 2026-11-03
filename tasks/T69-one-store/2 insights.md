@@ -205,3 +205,17 @@ strings use bare `postgres:///<db>` (host/port via `PGHOST`/`PGPORT` env, not a 
 because `packages/temporal/test/*.ts`'s own admin-URL helper does
 `adminUrl.replace(/\/[^/]*$/, '')` to swap in a per-test database name — a `?host=/path`
 query parameter in the URL breaks that regex (it strips mid-path, not just the db name).
+
+## Review 2 (deleg_f93d50cf) FAIL (HIGH) → fixed
+```notes
+HIGH      GET /reconcile/:orgId answered anyone (IDOR: any caller could read any org's decision ids)
+fix       bearer token from the team server's own issuer (oauth.ts, as mcpServer.ts) · caller org must equal :orgId, else 404 (never
+          confirms the org) · bad/missing token 401 · no MOLE_AUTH_SECRET = closed (401) · compose passes MOLE_AUTH_SECRET, no default
+          prior art: OWASP API Security Top 10 2023 API1 (BOLA), MCP 2025-06-18 authorization (bearer + org claim, already used here)
+tests     e2e red first (anon 200 → expected 401, 2 fail) → green: anon 401, forged 401, other org 404 (no id leak), own org 200,
+          no secret 401 · server + temporal 256 pass, 2 fail = the pre-existing pg-boss index.spec + outbox flakes (both reviewers
+          reproduced on main)
+verified  everything else in review 2 passed: webhook → pg-boss → temporal e2e, org B null, reconcile missing/extra/changed on crafted
+          divergence, PR-check path diff empty, /health contract, compose (postgres start race documented)
+limit     issuer is the repo's local HS256 test issuer standing in for real OAuth (as T33/mcpServer); a production IdP is separate work
+```

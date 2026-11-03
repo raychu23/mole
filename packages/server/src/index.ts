@@ -17,6 +17,7 @@ import { initTelemetry } from './telemetry.js';
 import { rebuildIndexFromGit } from './rebuild.js';
 import { computeCheckRun } from './checkrun.js';
 import { reconcileDecisions } from './reconcile.js';
+import { createTestIssuer } from './oauth.js';
 
 export interface ServerHandle {
   close(): Promise<void>;
@@ -104,8 +105,22 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env) {
 
   // T69 review-1 #4: read-only divergence check, exposed so an operator (or a future CLI) can
   // inspect reconciliation state without a direct DB connection. Never writes.
-  app.get('/reconcile/:orgId', async (req) => {
+  // T69 review-2 HIGH: never anonymous. Bearer token from the same issuer + `org` claim as the team MCP server
+  // (oauth.ts / mcpServer.ts, OAuth 2.1 bearer per the MCP 2025-06-18 auth spec); a token for another org gets 404
+  // (never confirms the org exists, never returns its ids -- OWASP API1:2023 BOLA). No MOLE_AUTH_SECRET = closed (401).
+  const authIssuer = env.MOLE_AUTH_SECRET ? createTestIssuer(env.MOLE_AUTH_SECRET) : undefined;
+  app.get('/reconcile/:orgId', async (req, reply) => {
     const { orgId } = req.params as { orgId: string };
+    const header = String(req.headers.authorization ?? '');
+    const token = /^Bearer\s+(.+)$/i.exec(header)?.[1];
+    if (!authIssuer || !token) return reply.code(401).send({ error: 'unauthorized' });
+    let caller: string;
+    try {
+      caller = (await authIssuer.verifyToken(token)).org;
+    } catch {
+      return reply.code(401).send({ error: 'unauthorized' });
+    }
+    if (caller !== orgId) return reply.code(404).send({ error: 'not found' });
     return reconcileDecisions(pool, temporalPool, orgId);
   });
 

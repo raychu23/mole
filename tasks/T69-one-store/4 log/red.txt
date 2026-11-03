@@ -18,3 +18,11 @@ packages/server/test/index-temporal-e2e.spec.ts(49,26): error TS2339: Property '
 not exist on type '{ app: FastifyInstance<...>; pool: Pool; boss: PgBoss; telemetry: Telemetry }'.
 (buildApp() does not yet construct/return a temporalPool; /reconcile and /health-with-temporal-check
 do not exist yet either.)
+   ✓ T69 review-1 #3: an approved decision is readable via temporal current+asOf for its tenant only, END TO END THROUGH THE SERVER > a webhook-triggered rebuild through the real app makes the decision current+asOf for orgA, and null for orgB (RLS, same decision id)  2658ms
+   × T69 review-1 #3: an approved decision is readable via temporal current+asOf for its tenant only, END TO END THROUGH THE SERVER > a read-only reconcile endpoint reports no divergence for the org just rebuilt 35ms
+     → expected 200 to be 401 // Object.is equality
+   × T69 review-1 #3: an approved decision is readable via temporal current+asOf for its tenant only, END TO END THROUGH THE SERVER > /reconcile is closed (401) when the server has no MOLE_AUTH_SECRET 91ms
+     → expected 200 to be 401 // Object.is equality
+   ✓ T69 review-1 #3: an approved decision is readable via temporal current+asOf for its tenant only, END TO END THROUGH THE SERVER > /health reports 200 (and temporal reachability) when temporal is reachable 4ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 2 passed (4)
