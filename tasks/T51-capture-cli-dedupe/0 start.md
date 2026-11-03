@@ -1,7 +1,7 @@
 ---
 state: verified
 owner: codex-capture
-repo:
+repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: build/t51-capture-1102
 worktree: /Users/a1/.hermes/cache/scratch/mole-build/T51
 base: 0029416
