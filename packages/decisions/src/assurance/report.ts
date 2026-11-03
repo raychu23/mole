@@ -51,6 +51,11 @@ export function parseAssurance(text: string, file: string, decisionId: string): 
   const field = fm.fields.get('assurance');
   const links: AssuranceLink[] = [];
   const malformed: AssuranceMalformed[] = [];
+  // `assurance:` written as a mapping (one entry without the leading `-`) is an attempted entry, not "none":
+  // report it instead of treating the record as having no assurance block (T78 review 2).
+  if (field && !field.items && field.map) {
+    malformed.push({ decisionId, to: field.map.to ?? '(missing)', field: 'assurance', value: '(mapping)', reason: 'assurance must be a list of entries (`- to: ...`), not a mapping', file, line: field.line });
+  }
   for (const item of field?.items ?? []) {
     const m = item.map;
     if (!m?.to) {

@@ -285,3 +285,12 @@ describe('assuranceReport', () => {
     expect(code).toBe(0);
   });
 });
+
+describe('T78 review 2: assurance written as a mapping', () => {
+  it('is reported as malformed, not treated as "no entries"', () => {
+    const root = repo();
+    write(root, '.mole/decisions/obj.md', ['---', 'id: objval', 'door: one-way', 'assurance:', '  to: other', '  doubt: rebutting', '---', 'body', ''].join('\n'));
+    const r = assuranceReport(root);
+    expect(r.malformed.some((m) => m.decisionId === 'objval' && m.field === 'assurance')).toBe(true);
+  });
+});
