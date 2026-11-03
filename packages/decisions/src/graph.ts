@@ -279,7 +279,7 @@ function loadIncidents(b: Builder): void {
     if (attacks.length) {
       const argId = `incident-${id}`;
       const at = f.get('attacks')!.line;
-      b.node({ id: argId, kind: 'argument', title: str(f.get('title')) ?? id, status: 'recorded', format: 'mole', file, line: f.get('title')?.line ?? at, scope: [], evidence: [], fields: { attacks: at } });
+      b.node({ id: argId, kind: 'argument', title: str(f.get('title')) || id, status: 'recorded', format: 'mole', file, line: f.get('title')?.line ?? at, scope: [], evidence: [], fields: { attacks: at } });
       for (const t of attacks) b.edge({ from: argId, to: t.value, type: 'attacks', file, line: t.line });
     }
   }

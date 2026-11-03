@@ -55,3 +55,11 @@ limits          INFERENCE: reinstating = attacking ALL in-attackers, which can k
 - held per reviewer: limit 20 never blocks accepting #21+ · alsoReinstates = real diff on 15 seeds · 10k 348 ms, 50k 2.0 s
 - INFERENCE lesson: 3 rounds on crash recovery for a 2-file write → make it 1 write. Same shape as T54 (remove, don't guard)
 - 19 T58 tests · decisions 328 · replay: ADR-0002 holds → defeated, one file changed
+
+## 11-02 19:05 review 4 (deleg_0f06e1fc) PASS
+- stop condition held by probe: hand-added revives w/o attacks = no-op · later attackers never attacked · stray
+  *.mole-tmp-* never read (loader reads *.md only) · CRLF kept · main repo's own incident graph identical
+- agreed: hand-written `attacks:` = explicit authoring, like an .argdown edit (noted in revive.ts header)
+- LOW fixed: empty incident title → argument title falls back to the id
+- LOW-MEDIUM → backlog incident-argument-collision: an .argdown `<incident-x>` is silently dropped when incident x has
+  attacks: (argdown/loader.ts:69 first-id-wins, pre-existing rule, no problem reported)

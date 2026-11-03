@@ -10,6 +10,8 @@
 //             writes and no completion path (review 3).
 //   dismiss   records `dismissed: [arg]` in the incident record only.
 // Decision records are never written: a decision turns contested/defeated only because the engine re-labels its arguments.
+// A person may also write `attacks:` in an incident record by hand: that is an explicit authoring act, like editing an
+// .argdown file (review 4 agreed); the tool's own paths only ever write it through accept.
 import { readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { evaluate, type Label } from '@mole/reasoning';
