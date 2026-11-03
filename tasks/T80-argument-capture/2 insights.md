@@ -165,3 +165,12 @@ are actually built (the loader), not with another targeted patch:
 - Stop condition ("a draft argument changes a verdict") was never observed; the dedicated test suite
   proves the mechanism (draft = no graph node = invisible to evaluate()) rather than just asserting the
   outcome once.
+
+```notes
+review 4 (deleg_66708b2a)   PASS: cross-record names keyed by decision, renames drop approval, draft targets get no
+                            edge, argdown titles never resolve captured names; 561 pass
+    MEDIUM (pre-existing)   options keyed by FULL bullet text but resolved by bare name: a decorated MADR bullet
+                            (`**Use a database** - adds ...`) left its pros/cons with no target, silently
+                            → fixed: both keys = sameName(optionNameOf(...)); red 1 → 527/527 (decisions+reasoning+verify)
+    stale                   4 log/real-run-5-madr-records.json predates this fix (target counts may rise on decorated records)
+```

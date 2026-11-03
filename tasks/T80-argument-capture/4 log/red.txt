@@ -139,3 +139,7 @@ by the full-scope run below both being green with no code difference to the stre
 Full target scope `npx vitest run packages/decisions packages/reasoning packages/daemon packages/verify
 packages/mcp/test/tool-annotations-schema.test.ts` -- 556 passed, 0 failed, 53 test files (156s). `npx tsc
 -b` clean; `node packages/daemon/dist/cli.js rules --root .` -- 0 violations.
+   × T80 review 4 MEDIUM: decorated MADR option bullets > a Pros-and-Cons subsection finds its option when the Considered Options bullet is `**Name** - description` 9ms
+     → expected [] to deeply equal [ 'D-dec::option:1' ]
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 23 passed (24)

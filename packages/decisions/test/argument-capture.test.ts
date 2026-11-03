@@ -843,3 +843,33 @@ describe("review 3 HIGH 2: a deleted option's stale rows never defeat the argume
     }
   });
 });
+
+describe('T80 review 4 MEDIUM: decorated MADR option bullets', () => {
+  it('a Pros-and-Cons subsection finds its option when the Considered Options bullet is `**Name** - description`', () => {
+    const adr = [
+      '# Store the cache',
+      '',
+      '## Considered Options',
+      '',
+      '* **Use a database** - adds an operational dependency',
+      '* **Use files** - simplest',
+      '',
+      '## Decision Outcome',
+      '',
+      'Chosen option: "Use files", because it is simplest.',
+      '',
+      '## Pros and Cons of the Options',
+      '',
+      '### Use a database',
+      '',
+      '* Bad, because it needs a server',
+      '',
+    ].join('\n');
+    const rows = captureAdrArguments('D-dec', 'docs/adr/0001.md', adr);
+    const opt = rows.find((r) => r.role === 'considered-option' && r.text.includes('Use a database'))!;
+    const con = rows.find((r) => r.role === 'con')!;
+    expect(opt).toBeDefined();
+    expect(con.attacks).toEqual([opt.id]);
+    expect(con.attacksNames).toEqual([sameName(optionNameOf(opt.text))]);
+  });
+});

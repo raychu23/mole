@@ -197,7 +197,7 @@ function extractProsCons(decisionId: string, file: string, rawLines: string[], o
     if (inFence) continue;
     const sub = SUBHEADING.exec(raw.trim());
     if (sub) {
-      const norm = sameName(sub[1]!);
+      const norm = sameName(optionNameOf(sub[1]!));
       const dup = ambiguousNames.get(norm);
       if (dup && dup.length > 1) {
         currentOptionId = undefined;
@@ -268,7 +268,10 @@ export function captureAdrArguments(decisionId: string, file: string, adrText: s
   };
   for (const a of derived.arguments) {
     if (a.role === 'considered-option') {
-      const norm = sameName(a.text);
+      // review 4 MEDIUM: key by the bare option NAME (`**Use a database** - adds ...` -> "use a database"), the
+      // same formula nameOf() and the Pros-and-Cons subsection heading use -- full-text keys never matched a
+      // decorated MADR bullet, so its pros/cons silently got no target
+      const norm = sameName(optionNameOf(a.text));
       if (!optionIdByName.has(norm)) optionIdByName.set(norm, a.id);
       const texts = optionTextsByName.get(norm) ?? [];
       texts.push(a.text);
