@@ -18,6 +18,7 @@
     "@mole/history": "*",
     "@mole/questions": "*",
     "@mole/agentstate": "*",
+    "@mole/steer": "*",
     "@mole/telemetry": "*",
     "@mole/decisions": "*",
     "@mole/verify": "*",

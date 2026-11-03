@@ -38,6 +38,9 @@ export * from './importers/index.js';
 export { defaultSources } from './sources.js';
 export { agentCli } from './cli.js';
 export * from './collisions.js';
+// T75: `query` is read-only (built on getRun above) so it stays here, never in @mole/steer (decision 0014: agent
+// states are read-only -- @mole/steer owns the write side, the per-session inbox, and re-exports this).
+export { queryAgentState, type AgentStateSnapshot } from './steer/query.js';
 export { exportLangGraph, runGraph, runValues, RunState, type LangGraphExport, type RunValues } from './langgraph.js';
 
 const srcOf = (o: Sources): Required<Sources> => ({ ...defaultSources(), ...Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) });

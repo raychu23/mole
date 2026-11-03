@@ -1,5 +1,8 @@
-// T74 steering dials: signal / update / query over the existing hooks transport, modeled on Temporal's workflow
-// message-passing semantics (prior art: tasks/T74-steering-dials/4 log/prior-art.md).
+// T74 steering dials (signal / update / query over the existing hooks transport), modeled on Temporal's workflow
+// message-passing semantics (prior art: tasks/T74-steering-dials/4 log/prior-art.md). T75: this is the write-side
+// package (decision 0014: agent states are read-only over the harness transcripts) -- @mole/agentstate itself
+// performs no write calls; `query` is read-only and stays there (T18 run graph), re-exported here so callers of
+// @mole/steer get signal/update/query/deliver from one place without needing to know the split.
 //   mole steer signal --session S "text"            -> queued, delivered once on the agent's next tool call/prompt
 //   mole steer update --session S --kind K --target T "text"  -> validated; accepted ones are queued, rejected ones
 //                                                                  are told why right away and never delivered
@@ -13,7 +16,7 @@ import { validateUpdate } from './validate.js';
 export * from './types.js';
 export { validateUpdate, KNOWN_UPDATE_KINDS, decisionExists, decisionsDirExists } from './validate.js';
 export { inboxFile, readInbox } from './store.js';
-export { queryAgentState } from './query.js';
+export { queryAgentState, type AgentStateSnapshot } from '@mole/agentstate';
 import type { SteerDelivery, SteerSignal, SteerUpdateRequest, SteerUpdateResult } from './types.js';
 
 /** `mole steer signal --session S "text"`: queued for the agent's next tool call or prompt, seen at most once.

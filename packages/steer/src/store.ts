@@ -2,6 +2,10 @@
 // packages/memory/src/seen.ts's .mole/local/seen.jsonl) -- the folder gets a `.gitignore` with `*` so it is never
 // committed even in a repo that never listed .mole/local.
 //
+// T75: this is the write side of steering (decision 0014: agent states are read-only over the harness transcripts)
+// -- it lives in its own package, @mole/steer, precisely because of the mkdirSync/writeFileSync/unlinkSync/
+// renameSync calls below; @mole/agentstate (T18, read-only run graphs) must never perform a write call.
+//
 // Review 2 (HIGH): Review 1's `withInboxClaim` used a hand-rolled claim-by-rename scheme (rename the canonical
 // inbox to a unique per-process name, mutate, rename back). The reviewer found a real data-loss bug in it: on
 // ENOENT the old code could not tell "no inbox yet" (first ever write) from "inbox currently claimed by ANOTHER

@@ -1,6 +1,6 @@
 // Update validators (Temporal's "Update Validator": a read-only check that accepts or rejects before the write is
 // applied -- see tasks/T74-steering-dials/4 log/prior-art.md). Kept dependency-free of @mole/decisions on purpose
-// (same reasoning as plugins/claude-code/scripts/lib.mjs's own decision parsing: agentstate must not gain a
+// (same reasoning as plugins/claude-code/scripts/lib.mjs's own decision parsing: this package must not gain a
 // dependency on the decisions package just to spell a decision id, and the check here is intentionally light --
 // existence, not the full citator graph).
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
