@@ -1,22 +1,22 @@
 ---
-state: submitted
+state: verified
 owner: t54-builder
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t54-engine-in-check
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T54-engine-in-check
 base: f6d9af5
-reviewer:
-updated: 2026-11-02 18:22
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+reviewer: hermes-subagents deleg_15f56175, deleg_e17ab4d3, deleg_e03f57e3, deleg_48978bd8 (FAIL rounds, fixed) + deleg_0df50eb1 adjudication PASS (fresh, claude-sonnet-5)
+updated: 2026-11-02 18:24
+status: ledger verified
+next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
 claimed: 2026-11-02 10:50
 ---
 ```notes
 T54-engine-in-check      ledger task (rules.md §3 code features)      project tasks
     goal                    Put the reasoning engine (packages/reasoning, T42) and the argument links (T48: supports/attacks/undercuts, Argdown) into the change-check path, so a flagged change is judged against the decision's argument chain (objections answered/standing, team value order) rather than its text alone; makes resume B2's 're-runs the team's argument chain' true. Prior art first: Carneades proof standards (Gordon & Walton), ASPIC+ / abstract argumentation for requirements & design rationale (e.g. argumentation-based design rationale checking), ArgLLMs (arXiv 2405.02079).
     done-when               1 prior-art note · 2 failing tests first · 3 cascade verdict carries the engine's labels for the decision's arguments (which still stand) and uses them in the judge prompt or rules · 4 M2 v2 re-run (dev tuned, held-out once): recall and false alarms no worse than T53 (0.96 / 0.05 all-61), report any change · 5 npm run check
-    status                  2026-11-02 submitted      report: tasks/T54-engine-in-check/2 insights.md · checks exit 0 · note: worktree fast-forwarded to main 3a0f2d1, gitigno
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    status                  2026-11-02 verified      reviewer hermes-subagents deleg_15f56175, deleg_e17ab4d3, deleg_e03f57e3, deleg_48978bd8 (FAIL rounds, fixed) + deleg_0d
+    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
     pinned
     mode                    one worker
     boundary                packages/decisions/src/cascade/** + packages/decisions/src/argdown/** (new derive module) + reasoning wiring + tests
