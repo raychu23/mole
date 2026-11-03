@@ -78,6 +78,21 @@ describe('mole-proposals lesson (T59)', () => {
     expect(git(root, ['branch', '--list', 'mole/proposal/*'])).toBe('');
   });
 
+  // review 1 (deleg_6e3ca1c0) HIGH: .mole gitignored -> validation read the working tree, the branch was built from a
+  // HEAD without .mole, the tenet write threw ENOENT after the branch + worktree existed
+  it('refuses records that are not committed at the baseline (.mole gitignored), leaving no branch or worktree', () => {
+    const root = repo();
+    git(root, ['rm', '-rq', '--cached', '.mole']);
+    write(root, '.gitignore', '.mole/\n');
+    git(root, ['add', '.gitignore']);
+    git(root, ['commit', '-qm', 'ignore .mole']);
+    const path = join(tmp('mole-t59-wt-'), 'draft');
+    expect(() => proposeTenetRevision({ repo: root, lesson: 'L1', path })).toThrow(/not committed/);
+    expect(existsSync(path)).toBe(false);
+    expect(git(root, ['branch', '--list', 'mole/proposal/*'])).toBe('');
+    expect(git(root, ['worktree', 'list']).split('\n')).toHaveLength(1);
+  });
+
   it('refuses an uncommitted lesson (the draft must come from the pinned baseline)', () => {
     const root = repo();
     write(root, '.mole/lessons/l1.md', readFileSync(join(root, '.mole/lessons/l1.md'), 'utf8').replace('owner: raymond', 'owner: someone'));

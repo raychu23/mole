@@ -1,3 +1,6 @@
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
  FAIL  packages/proposals/test/lesson.test.ts > mole-proposals lesson (T59) > drafts the tenet on a proposal branch, lists decisions to re-review, leaves the approved checkout untouched
  FAIL  packages/proposals/test/lesson.test.ts > mole-proposals lesson (T59) > refuses a lesson with no owner, writing nothing
+   × mole-proposals lesson (T59) > refuses records that are not committed at the baseline (.mole gitignored), leaving no branch or worktree 340ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 7 passed (8)

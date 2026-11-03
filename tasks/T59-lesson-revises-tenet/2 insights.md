@@ -19,3 +19,13 @@ replay          4 log/replay.txt · /Users/a1/.hermes/cache/scratch/t59-replay (
 limits          INFERENCE: `check:` is recorded, not enforced (human graph "lesson without a mechanism is flagged" = later)
                 · tenet text is the person's, never generated · approval/merge is plain git
 ```
+
+## 11-02 19:20 review 1 (deleg_6e3ca1c0) FAIL → fixed tests-first (1 red → green, proposals 16)
+- HIGH .mole gitignored: validation read the working tree, `git status -- .mole` was empty, the branch was built from
+  a HEAD with no .mole, the tenet write threw ENOENT after branch + worktree existed → (1) every record the draft needs
+  (lesson, tenets.md, learned_from incidents) must exist at HEAD (`git cat-file -e`), else "not committed at HEAD";
+  (2) any failure after createProposal removes the worktree + branch it made. (2) proven separately with (1) switched
+  off: crash → clean error, 0 branches, 1 worktree, no folder
+- MEDIUM noted, not changed: a "## " heading inside the Proposed tenet text ends the section (same rule as tenets.md)
+- held per reviewer: tenet-1 vs tenet-10 · retired refused · CRLF + last section · invalid branch names refused
+  before writes · missing git identity → Mole <mole@localhost> · re-review = every traces_to edge (decisions + intent)

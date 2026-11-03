@@ -108,6 +108,14 @@ export function proposeTenetRevision(opts: LessonOptions): TenetRevision {
   const tenet = graph.nodes.find((n) => n.kind === 'tenet' && n.id === lesson.revises);
   if (!tenet) throw new ProposalError(`lesson ${lesson.id}: revises ${lesson.revises}, which is not a tenet in ${TENETS}`);
   if (tenet.retired) throw new ProposalError(`lesson ${lesson.id}: ${tenet.id} is retired; propose a new tenet instead`);
+  // review 1 HIGH: the draft is built from HEAD, so every record it needs must be committed there, not just present
+  // on disk (a gitignored .mole passed `git status` and the write failed after the branch existed)
+  const needed = [lesson.file, TENETS, ...lesson.learnedFrom.map((inc) => graph.nodes.find((n) => n.kind === 'incident' && n.id === inc)!.file)];
+  for (const file of needed) {
+    if (spawnSync('git', ['-C', repo, 'cat-file', '-e', `HEAD:${file}`], { stdio: 'ignore' }).status !== 0) {
+      throw new ProposalError(`${file} is not committed at HEAD (gitignored or never added): the draft is made from the pinned baseline`);
+    }
+  }
   const reReview = graph.edges
     .filter((e) => e.type === 'traces_to' && e.to === tenet.id)
     .map((e) => {
@@ -119,25 +127,34 @@ export function proposeTenetRevision(opts: LessonOptions): TenetRevision {
   // 2 the proposal branch + worktree (all createProposal checks run before its first write)
   const proposal = createProposal({ repo, name: opts.name ?? `lesson-${lesson.id.toLowerCase()}`, path: opts.path });
 
-  // 3 rewrite only the tenet's section, in the proposal worktree, and commit there
-  const tenetsPath = join(opts.path, TENETS);
-  const text = readFileSync(tenetsPath, 'utf8');
-  const nl = text.includes('\r\n') ? '\r\n' : '\n';
-  const lines = text.split(/\r?\n/);
-  const [start, end] = tenetSection(lines, tenet.id)!;
-  const section = [
-    `## ${tenet.id} · ${lesson.proposedTitle}`,
-    '',
-    ...(lesson.proposedBody ? [lesson.proposedBody, ''] : []),
-    `Draft revision from lesson ${lesson.id} (learned from ${lesson.learnedFrom.join(', ')}; owner ${lesson.owner}${lesson.check ? `; check ${lesson.check}` : ''}). Was: "${tenet.title}".`,
-    '',
-  ];
-  lines.splice(start, end - start, ...section);
-  writeFileSync(tenetsPath, lines.join(nl).replace(/\n{3,}$/, '\n'));
-  const identity = git(opts.path, ['config', '--default', '', 'user.email']) ? [] : ['-c', 'user.name=Mole', '-c', 'user.email=mole@localhost'];
-  git(opts.path, ['add', '--', TENETS]);
-  git(opts.path, [...identity, 'commit', '-q', '-m', `draft: lesson ${lesson.id} revises ${tenet.id} (learned from ${lesson.learnedFrom.join(', ')})`, '--', TENETS]);
-  const commit = git(opts.path, ['rev-parse', 'HEAD']);
+  // 3 rewrite only the tenet's section, in the proposal worktree, and commit there. Any failure from here on undoes
+  //   exactly what this call created (the worktree + branch), so a refusal never leaves anything behind (review 1)
+  let commit: string;
+  try {
+    // 3 rewrite only the tenet's section, in the proposal worktree, and commit there
+    const tenetsPath = join(opts.path, TENETS);
+    const text = readFileSync(tenetsPath, 'utf8');
+    const nl = text.includes('\r\n') ? '\r\n' : '\n';
+    const lines = text.split(/\r?\n/);
+    const [start, end] = tenetSection(lines, tenet.id)!;
+    const section = [
+      `## ${tenet.id} · ${lesson.proposedTitle}`,
+      '',
+      ...(lesson.proposedBody ? [lesson.proposedBody, ''] : []),
+      `Draft revision from lesson ${lesson.id} (learned from ${lesson.learnedFrom.join(', ')}; owner ${lesson.owner}${lesson.check ? `; check ${lesson.check}` : ''}). Was: "${tenet.title}".`,
+      '',
+    ];
+    lines.splice(start, end - start, ...section);
+    writeFileSync(tenetsPath, lines.join(nl).replace(/\n{3,}$/, '\n'));
+    const identity = git(opts.path, ['config', '--default', '', 'user.email']) ? [] : ['-c', 'user.name=Mole', '-c', 'user.email=mole@localhost'];
+    git(opts.path, ['add', '--', TENETS]);
+    git(opts.path, [...identity, 'commit', '-q', '-m', `draft: lesson ${lesson.id} revises ${tenet.id} (learned from ${lesson.learnedFrom.join(', ')})`, '--', TENETS]);
+    commit = git(opts.path, ['rev-parse', 'HEAD']);
+  } catch (e) {
+    spawnSync('git', ['-C', repo, 'worktree', 'remove', '--force', opts.path], { stdio: 'ignore' });
+    spawnSync('git', ['-C', repo, 'branch', '-D', proposal.branch], { stdio: 'ignore' });
+    throw e instanceof ProposalError ? e : new ProposalError(`could not write the draft tenet: ${(e as Error).message}`);
+  }
 
   return {
     proposal,
