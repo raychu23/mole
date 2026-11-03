@@ -33,3 +33,14 @@ limits          INFERENCE: reinstating = attacking ALL in-attackers, which can k
 - held: no label/status change without accept · suggest read-only · unicode id refused before writes · dotted ids ·
   '>' in titles inert · two incidents on one dissent (2nd refused) · attacked incident re-labels normally ·
   alsoReinstates = real diff · CRLF kept · 14 tests, decisions 323
+
+## 11-02 18:55 review 2 (deleg_21ad1cbf) FAIL → fixed tests-first (5 red → green)
+- HIGH my round-1 crash shortcut ("incident already attacks one attacker → record revives") recorded arguments nobody
+  accepted: a knock-on sibling, an unrelated decision's dissent, a hand-written attack → shortcut removed; accept
+  now (1) requires a CURRENT candidate, (2) writes `revives:` first, (3) then the attack. A crash leaves `revives:`
+  without the attack; a re-run sees the person's record and writes only the missing attack. No guessing
+- HIGH no hop limit made suggest O(N·E) + one dry-run evaluation per candidate: 10k chain 71 s → adjacency BFS,
+  attacker index, file-line cache, dry run only for the top 20 shown (Graphiti `limit`) or the one accepted: 450 ms
+- LOW blank/comment lines inside a block list broke the duplicate check → scanned through
+- not ours (pre-existing loader, follow-up): mixed indentation in a block list drops the whole incident record
+- 18 T58 tests · decisions 327 · replay unchanged (ADR-0002 holds → defeated, abandon shown as knock-on)

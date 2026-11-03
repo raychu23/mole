@@ -10,3 +10,10 @@ TypeError: (0 , suggestRevivals) is not a function
    × T58 review 1 (deleg_27342d20) findings > LOW: appends to a block-style YAML list instead of refusing it 4ms
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
       Tests  3 failed | 11 passed (14)
+   × T58 review 1 (deleg_27342d20) findings > HIGH: a crash after `revives:` but before the attack write is completed by re-running accept 12ms
+   × T58 review 1 (deleg_27342d20) findings > HIGH (review 2): never records an argument the person did not accept as a candidate 6ms
+   × T58 review 1 (deleg_27342d20) findings > HIGH (review 2): a hand-written incident attack is not taken as a pending accept 4ms
+   × T58 review 1 (deleg_27342d20) findings > HIGH (review 2): suggest on a 10,000-argument attack chain stays fast (adjacency BFS, was 71 s) 70972ms
+   × T58 review 1 (deleg_27342d20) findings > LOW (review 2): a blank line inside a block list does not break the duplicate check 5ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  5 failed | 13 passed (18)

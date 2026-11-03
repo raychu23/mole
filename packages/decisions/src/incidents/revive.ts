@@ -81,9 +81,10 @@ function readIncident(root: string, graph: DecisionGraph, id: string): IncidentR
 }
 
 /** '<id>: text' on the argument's own definition line (the parser keys items by title only). */
-function argumentText(root: string, n: GraphNode): string {
+function argumentText(root: string, n: GraphNode, cache: Map<string, string[]> = new Map()): string {
   try {
-    const l = readFileSync(join(root, n.file), 'utf8').split(/\r?\n/)[n.line - 1] ?? '';
+    if (!cache.has(n.file)) cache.set(n.file, readFileSync(join(root, n.file), 'utf8').split(/\r?\n/));
+    const l = cache.get(n.file)![n.line - 1] ?? '';
     return /[>\]]\s*:\s*(.*)$/.exec(l)?.[1]?.trim() ?? '';
   } catch {
     return '';
@@ -128,15 +129,13 @@ function evaluated(root: string): Evaluated {
  *  Review 1 MEDIUM: a 3-hop limit silently dropped a real dissent 5 steps away. */
 function neighbourhood(ev: Evaluated, decisionId: string): Set<string> {
   const isArg = new Set(ev.graph.nodes.filter((n) => n.kind === 'argument').map((n) => n.id));
-  let frontier = ev.graph.edges.filter((e) => e.type === 'cites' && e.from === decisionId && isArg.has(e.to)).map((e) => e.to);
-  const seen = new Set(frontier);
-  while (frontier.length) {
-    const next: string[] = [];
-    for (const [a, b] of ev.attacks) {
-      for (const [x, y] of [[a, b], [b, a]] as const) if (frontier.includes(x) && !seen.has(y)) (seen.add(y), next.push(y));
-    }
-    frontier = next;
-  }
+  const adj = new Map<string, string[]>();
+  const link = (x: string, y: string) => (adj.get(x) ?? adj.set(x, []).get(x)!).push(y);
+  for (const [a, b] of ev.attacks) (link(a, b), link(b, a));
+  // review 2: adjacency index + queue (was a full attack scan per level: 10k-argument chain 71 s)
+  const queue = ev.graph.edges.filter((e) => e.type === 'cites' && e.from === decisionId && isArg.has(e.to)).map((e) => e.to);
+  const seen = new Set(queue);
+  for (let i = 0; i < queue.length; i++) for (const y of adj.get(queue[i]!) ?? []) if (!seen.has(y)) (seen.add(y), queue.push(y));
   return seen;
 }
 
@@ -153,6 +152,10 @@ function candidates(root: string, ev: Evaluated, inc: IncidentRecord): RevivalCa
   const incText = trigrams(inc.text);
   const nodes = new Map(ev.graph.nodes.map((n) => [n.id, n] as const));
   const byArg = new Map<string, RevivalCandidate>();
+  const files = new Map<string, string[]>();
+  const attackersOf = new Map<string, string[]>();
+  for (const [a, b] of ev.attacks) (attackersOf.get(b) ?? attackersOf.set(b, []).get(b)!).push(a);
+  const hitByIncident = new Set(ev.attacks.filter(([a]) => a.startsWith('incident-')).map(([, b]) => b));
   for (const d of ev.graph.nodes.filter((n) => n.kind === 'decision').sort((a, b) => a.id.localeCompare(b.id))) {
     const ties: RevivalEvidence[] = [];
     const named = inc.decisions.find((x) => x.value === d.id);
@@ -162,14 +165,13 @@ function candidates(root: string, ev: Evaluated, inc: IncidentRecord): RevivalCa
     // a dissent is a losing argument that is NOT one the decision itself rests on (an incident knocking out the
     // decision's own argument is the result of an accept, not a new candidate) and not already hit by an incident
     const own = new Set(ev.graph.edges.filter((e) => e.type === 'cites' && e.from === d.id).map((e) => e.to));
-    const hitByIncident = new Set(ev.attacks.filter(([a]) => a.startsWith('incident-')).map(([, b]) => b));
     for (const arg of [...neighbourhood(ev, d.id)].sort()) {
       if (ev.labels[arg] !== 'out' || decided.has(arg) || byArg.has(arg) || own.has(arg) || hitByIncident.has(arg)) continue;
       const n = nodes.get(arg)!;
-      const text = argumentText(root, n);
+      const text = argumentText(root, n, files);
       const score = Math.round(jaccard(incText, trigrams(text)) * 1000) / 1000;
-      const attackers = ev.attacks.filter(([a, b]) => b === arg && ev.labels[a] === 'in').map(([a]) => a).sort();
-      const alsoReinstates = dryRun(ev, incidentArgumentId(inc.id), attackers).filter((x) => x !== arg);
+      const attackers = [...new Set((attackersOf.get(arg) ?? []).filter((a) => ev.labels[a] === 'in'))].sort();
+      const alsoReinstates: string[] = []; // filled by withKnockOn for the candidates actually shown/accepted
       byArg.set(arg, {
         incident: inc.id,
         argument: arg,
@@ -186,9 +188,18 @@ function candidates(root: string, ev: Evaluated, inc: IncidentRecord): RevivalCa
   return [...byArg.values()].sort((a, b) => b.score - a.score || a.argument.localeCompare(b.argument));
 }
 
-export function suggestRevivals(root: string, incidentId: string): RevivalCandidate[] {
+/** the dry run is one full evaluation per candidate: done only for what is shown (Graphiti `limit`) or accepted */
+function withKnockOn(ev: Evaluated, inc: IncidentRecord, c: RevivalCandidate): RevivalCandidate {
+  return { ...c, alsoReinstates: dryRun(ev, incidentArgumentId(inc.id), c.attackers).filter((x) => x !== c.argument) };
+}
+
+export const DEFAULT_SUGGEST_LIMIT = 20;
+
+/** Top `limit` candidates by score (default 20), each with its dry-run knock-on. Read-only. */
+export function suggestRevivals(root: string, incidentId: string, opts: { limit?: number } = {}): RevivalCandidate[] {
   const ev = evaluated(root);
-  return candidates(root, ev, readIncident(root, ev.graph, incidentId));
+  const inc = readIncident(root, ev.graph, incidentId);
+  return candidates(root, ev, inc).slice(0, opts.limit ?? DEFAULT_SUGGEST_LIMIT).map((c) => withKnockOn(ev, inc, c));
 }
 
 /** Add `item` to the front-matter list `key` of the record (creating `key: [item]` before the closing ---). */
@@ -206,7 +217,14 @@ function addToList(root: string, file: string, key: string, item: string): boole
     // block-style list (review 1 LOW): `key:` then `  - x` lines
     let end = at + 1;
     const items: string[] = [];
-    while (end < close && /^\s+-\s+/.test(lines[end]!)) items.push(lines[end++]!.replace(/^\s+-\s+/, '').trim().replace(/^['"]|['"]$/g, ''));
+    // items may be separated by blank or comment lines (review 2 LOW); the list ends at the first other line
+    let last = at;
+    for (let i = at + 1; i < close; i++) {
+      const l = lines[i]!;
+      if (/^\s+-\s+/.test(l)) (items.push(l.replace(/^\s+-\s+/, '').replace(/\s+#.*$/, '').trim().replace(/^['"]|['"]$/g, '')), (last = i));
+      else if (!/^\s*(#.*)?$/.test(l)) break;
+    }
+    end = last + 1;
     if (items.includes(item)) return false;
     const indent = /^(\s+)-/.exec(lines[at + 1] ?? '')?.[1] ?? '  ';
     lines.splice(end, 0, `${indent}- ${item}`);
@@ -231,42 +249,47 @@ export interface IncidentWrite {
   alsoReinstates?: string[];
 }
 
+function writeAttack(root: string, inc: IncidentRecord, attackers: string[]): void {
+  const argId = incidentArgumentId(inc.id);
+  const argPath = join(root, ARG_FILE);
+  const existing = existsSync(argPath) ? readFileSync(argPath, 'utf8') : '';
+  const have = new Set([...existing.matchAll(new RegExp(`^\\s+-> <([^>]+)>`, 'gm'))].map((m) => m[1]));
+  const head = new RegExp(`^<${argId.replace(/[.]/g, '\\.')}>`, 'm').test(existing);
+  const block = [
+    ...(head ? [`<${argId}>`] : [`<${argId}>: ${inc.title.replace(/\s+/g, ' ').trim()}`]),
+    ...attackers.filter((a) => !(head && have.has(a))).map((a) => `  -> <${a}>`),
+    '',
+  ];
+  writeFileSync(argPath, `${existing}${existing && !existing.endsWith('\n') ? '\n' : ''}${existing ? '\n' : ''}${block.join('\n')}`);
+}
+
 export function acceptIncident(root: string, incidentId: string, argumentId: string): IncidentWrite {
   const ev = evaluated(root);
   const inc = readIncident(root, ev.graph, incidentId);
   if (!ARG_ID.test(inc.id)) throw new IncidentError(`incident id '${inc.id}' cannot be an Argdown argument title`);
   if (inc.dismissed.includes(argumentId)) throw new IncidentError(`${argumentId} was already dismissed for ${inc.id}`);
-  const written: string[] = [];
-  let alsoReinstates: string[] = [];
-  if (!inc.revives.includes(argumentId)) {
-    const c = candidates(root, ev, inc).find((x) => x.argument === argumentId);
+  const inAttackers = ev.attacks.filter(([a, b]) => b === argumentId && ev.labels[a] === 'in').map(([a]) => a).sort();
+
+  if (inc.revives.includes(argumentId)) {
+    // already accepted by the person (`revives:` is the record of that). Crash recovery (review 2): the record is
+    // written FIRST, so a crash leaves `revives:` without the attack; if the argument is still out and nothing from
+    // this incident attacks its attackers, write the attack now. Otherwise nothing to do (idempotent).
     const argId = incidentArgumentId(inc.id);
-    // crash recovery (review 1 HIGH): the attack is already written (so the dissent is no longer 'out' and not a
-    // candidate) but `revives:` is missing -> only complete the record
-    const attackersOfArg = new Set(ev.attacks.filter(([, b]) => b === argumentId).map(([a]) => a));
-    const alreadyWritten = ev.attacks.some(([a, b]) => a === argId && attackersOfArg.has(b));
-    if (!c && alreadyWritten) {
-      addToList(root, inc.file, 'revives', argumentId);
-      return { incident: inc.id, argument: argumentId, written: [inc.file], alsoReinstates: [] };
-    }
-    if (!c) throw new IncidentError(`${argumentId} is not a candidate for ${inc.id} (run: mole incident suggest ${inc.id})`);
-    alsoReinstates = c.alsoReinstates;
-    // the argument first: a crash after it leaves an attack with no `revives:` line, and re-running accept completes it
-    const argPath = join(root, ARG_FILE);
-    const existing = existsSync(argPath) ? readFileSync(argPath, 'utf8') : '';
-    const have = new Set([...existing.matchAll(new RegExp(`^\\s+-> <([^>]+)>`, 'gm'))].map((m) => m[1]));
-    const head = new RegExp(`^<${argId.replace(/[.]/g, '\\.')}>`, 'm').test(existing);
-    const block = [
-      ...(head ? [`<${argId}>`] : [`<${argId}>: ${inc.title.replace(/\s+/g, ' ').trim()}`]),
-      ...c.attackers.filter((a) => !(head && have.has(a))).map((a) => `  -> <${a}>`),
-      '',
-    ];
-    writeFileSync(argPath, `${existing}${existing && !existing.endsWith('\n') ? '\n' : ''}${existing ? '\n' : ''}${block.join('\n')}`);
-    written.push(ARG_FILE);
-    addToList(root, inc.file, 'revives', argumentId);
-    written.push(inc.file);
+    const pending = ev.labels[argumentId] === 'out' && !ev.attacks.some(([a, b]) => a === argId && inAttackers.includes(b));
+    if (!pending || inAttackers.length === 0) return { incident: inc.id, argument: argumentId, written: [], alsoReinstates: [] };
+    const alsoReinstates = dryRun(ev, argId, inAttackers).filter((x) => x !== argumentId);
+    writeAttack(root, inc, inAttackers);
+    return { incident: inc.id, argument: argumentId, written: [ARG_FILE], alsoReinstates };
   }
-  return { incident: inc.id, argument: argumentId, written, alsoReinstates };
+
+  // the person's accept: only for a CURRENT candidate (review 2: a knock-on, an unrelated decision's dissent or a
+  // hand-written attack is never recorded as accepted). Record first, then the attack.
+  const c = candidates(root, ev, inc).find((x) => x.argument === argumentId);
+  if (!c) throw new IncidentError(`${argumentId} is not a candidate for ${inc.id} (run: mole incident suggest ${inc.id})`);
+  const { alsoReinstates } = withKnockOn(ev, inc, c);
+  addToList(root, inc.file, 'revives', argumentId);
+  writeAttack(root, inc, c.attackers);
+  return { incident: inc.id, argument: argumentId, written: [inc.file, ARG_FILE], alsoReinstates };
 }
 
 export function dismissIncident(root: string, incidentId: string, argumentId: string): IncidentWrite {

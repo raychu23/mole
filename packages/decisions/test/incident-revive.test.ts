@@ -153,16 +153,55 @@ describe('mole incident CLI', () => {
 });
 
 describe('T58 review 1 (deleg_27342d20) findings', () => {
-  it('HIGH: a crash after the argument write but before `revives:` is completed by re-running accept', () => {
+  // review 2 (deleg_21ad1cbf): the round-1 "attack already written" shortcut recorded arguments nobody accepted.
+  // Now accept records `revives:` FIRST (only after the candidate check), then writes the attack; a re-run with
+  // `revives:` present and the attack missing completes the attack.
+  it('HIGH: a crash after `revives:` but before the attack write is completed by re-running accept', () => {
     const root = repo();
     acceptIncident(root, 'inc-42', 'stale');
-    const rec = join(root, '.mole/incidents/inc-42.md');
-    writeFileSync(rec, readFileSync(rec, 'utf8').replace(/^revives: \[stale\]\n/m, '')); // simulated crash
+    rmSync(join(root, '.mole/arguments/incidents.argdown')); // simulated crash: record written, attack not
+    expect(labels(root)).toEqual(expect.objectContaining({ stale: 'out' }));
     const r = acceptIncident(root, 'inc-42', 'stale');
-    expect(r.written).toEqual(['.mole/incidents/inc-42.md']);
-    expect(readFileSync(rec, 'utf8')).toMatch(/^revives: \[stale\]$/m);
-    expect(readFileSync(join(root, '.mole/arguments/incidents.argdown'), 'utf8').match(/<incident-inc-42>:/g)).toHaveLength(1);
+    expect(r.written).toEqual(['.mole/arguments/incidents.argdown']);
+    expect(labels(root)).toEqual(expect.objectContaining({ stale: 'in', fast: 'out' }));
+    expect(readFileSync(join(root, '.mole/incidents/inc-42.md'), 'utf8').match(/revives/g)).toHaveLength(1);
   });
+
+  it('HIGH (review 2): never records an argument the person did not accept as a candidate', () => {
+    // knock-on sibling: stale2 comes back only because accepting stale knocked out <fast>
+    const root = repo();
+    write(root, '.mole/arguments/case.argdown', [
+      '<fast>: Cache reads are fast and safe enough.', '  -> <stale>: Cached reads can serve stale prices.', '  -> <stale2>: Cached reads hide failed writes.', '',
+    ].join('\n'));
+    write(root, '.mole/decisions/d2.md', ['---', 'id: D2', 'title: Log in JSON', 'status: accepted', 'cites: [other]', '---', ''].join('\n'));
+    write(root, '.mole/arguments/d2.argdown', ['<other>: JSON logs are easy to query.', '  -> <d2dissent>: Plain text logs are easier to read.', ''].join('\n'));
+    acceptIncident(root, 'inc-42', 'stale');
+    expect(() => acceptIncident(root, 'inc-42', 'stale2')).toThrow(/not a candidate/);
+    expect(() => acceptIncident(root, 'inc-42', 'd2dissent')).toThrow(/not a candidate/);
+    expect(readFileSync(join(root, '.mole/incidents/inc-42.md'), 'utf8')).toMatch(/^revives: \[stale\]$/m);
+  });
+
+  it('HIGH (review 2): a hand-written incident attack is not taken as a pending accept', () => {
+    const root = repo();
+    write(root, '.mole/arguments/incidents.argdown', ['<incident-inc-42>: written by hand', '  -> <fast>', ''].join('\n'));
+    expect(() => acceptIncident(root, 'inc-42', 'stale')).toThrow(/not a candidate/);
+    expect(readFileSync(join(root, '.mole/incidents/inc-42.md'), 'utf8')).not.toMatch(/revives/);
+  });
+
+  it('HIGH (review 2): suggest on a 10,000-argument attack chain stays fast (adjacency BFS, was 71 s)', () => {
+    const root = repo();
+    const n = 10_000;
+    const lines = ['<fast>: Cache reads are fast.', '  -> <a1>: a1.', ''];
+    for (let i = 1; i < n; i++) lines.push(`<a${i}>`, `  -> <a${i + 1}>: a${i + 1}.`, '');
+    write(root, '.mole/arguments/case.argdown', lines.join('\n'));
+    const t0 = Date.now();
+    const s = suggestRevivals(root, 'inc-42');
+    expect(Date.now() - t0).toBeLessThan(15_000);
+    expect(s.length).toBe(20); // shown list is capped (DEFAULT_SUGGEST_LIMIT); accept still checks all 5,000 losers
+    expect(s.every((c) => Array.isArray(c.alsoReinstates))).toBe(true);
+    const far = `a${n - (n % 2 === 0 ? 1 : 0)}`; // a losing argument at the far end of the chain
+    expect(() => acceptIncident(root, 'inc-42', far)).not.toThrow();
+  }, 60_000);
 
   it('MEDIUM: a dissent 5 attack steps from the decision is still found (no hop limit)', () => {
     const root = repo();
@@ -171,6 +210,12 @@ describe('T58 review 1 (deleg_27342d20) findings', () => {
       '<h3>', '  -> <h4>: h4.', '', '<h4>', '  -> <stale>: Cached reads can serve stale prices.', '',
     ].join('\n'));
     expect(suggestRevivals(root, 'inc-42').map((c) => c.argument)).toContain('stale');
+  });
+
+  it('LOW (review 2): a blank line inside a block list does not break the duplicate check', () => {
+    const root = repo(['decisions: [D1]', 'dismissed:', '  - other', '', '  - stale']);
+    expect(dismissIncident(root, 'inc-42', 'stale').written).toEqual([]);
+    expect(readFileSync(join(root, '.mole/incidents/inc-42.md'), 'utf8').match(/- stale/g)).toHaveLength(1);
   });
 
   it('LOW: appends to a block-style YAML list instead of refusing it', () => {
