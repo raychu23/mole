@@ -1,5 +1,5 @@
 ---
-state: proposed
+state: ready
 owner: hermes-build
 repo:
 branch:
@@ -7,15 +7,15 @@ worktree:
 base:
 reviewer:
 updated: 2026-11-02 18:21
-status: ledger proposed
-next: fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+status: ledger ready
+next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
 ---
 ```notes
 T58-incident-dissent-revival      ledger task (rules.md §3 code features)      project tasks
     goal                    Incidents revive recorded dissent (plan update 11-01 §6 steps 1-5, backlog incident-reopen): mole incident suggest <id> lists the losing arguments (label out) an incident may vindicate, with evidence (shared decision/scope + text similarity, Graphiti get_edge_invalidation_candidates idea, no LLM); mole incident accept|dismiss <id> --argument <A> records the person's choice in the incident record; an accepted incident becomes an Argdown argument attacking the dissent's attackers, so the engine reinstates the dissent and the decision turns contested/defeated. Never changes a decision's status by itself.
     done-when               1 tests first (red) · 2 suggest is read-only, deterministic, each candidate carries the evidence (decision, scope or text overlap) · 3 accept writes only .mole/incidents/<id>.md + .mole/arguments/incidents.argdown, dismiss writes only the incident record; both idempotent · 4 after accept, evaluate shows the dissent in and the decision contested or defeated, with the incident as the reason · 5 real-ADR replay: one python-tuf or log4brains decision with a recorded rejected option + a written incident goes holds -> contested · 6 npm run check
-    status                  2026-11-02 proposed
-    next                    fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+    status                  2026-11-02 ready      owner hermes-build
+    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
     pinned
     mode                    one worker
     boundary                packages/decisions/src/incidents/** (new), packages/decisions/src/graph.ts loadIncidents (read new fields), decisions cli.ts + index.ts exports, one line in packages/daemon/src/cli.ts, tests
