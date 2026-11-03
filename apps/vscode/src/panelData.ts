@@ -60,6 +60,8 @@ export interface Runners {
   prioritiesList(): Promise<Phase[]>;
   priorities(): Promise<PhaseEvaluation>;
   prioritiesCompare(a: string, b: string): Promise<PhaseComparison>;
+  /** T73: compares the phase in force against an arbitrary order (a what-if) -- never writes .mole/priorities.md */
+  prioritiesWhatIf(order: string[]): Promise<PhaseComparison>;
   /** `mole incident list` (T58 suggestions, read-only) */
   incidents(): Promise<IncidentEntry[]>;
   /** `mole proposals` (T56, same JSON as the MCP tool) */

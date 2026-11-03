@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { afterEach, describe, expect, it } from 'vitest';
-import { comparePhases, evaluatePhase, suggestRevivals } from '@mole/decisions';
+import { comparePhases, evaluatePhase, suggestRevivals, today } from '@mole/decisions';
 import { compareProposals, createProposal, evaluateProposal } from '@mole/proposals';
 import { createServer } from '../src/server.js';
 
@@ -80,6 +80,18 @@ describe('T61 mole_priorities', () => {
     const r = await call(client, 'mole_priorities', { phase: 'growth' });
     expect(r.isError).toBe(true);
     expect((r.content as Array<{ text: string }>)[0]!.text).toMatch(/growth/);
+  });
+
+  // T73 backlog priorities-default: the tool's own doc says "none = the phase in force today" (reasoning-tools.ts),
+  // but evaluatePhase(root, {}) was plain Dung (T68 prior-art.md #8, left out of that task's own boundary). Fixed
+  // here so the doc and the behaviour finally agree, using the SAME selector (phaseInForce) T68 gave the other two.
+  it('T73: the bare call (no phase/at/compare) defaults to the phase in force today, matching its own doc', async () => {
+    const root = repo();
+    const client = await connect(root);
+    const bare = await call(client, 'mole_priorities', {});
+    expect(bare.isError).toBeFalsy();
+    expect((bare.structuredContent as { phase?: string }).phase).toBe('scale'); // repo()'s priorities.md: scale from 2026-09-01, today is well after
+    expect(bare.structuredContent).toEqual(JSON.parse(JSON.stringify(evaluatePhase(root, { at: today() }))));
   });
 });
 

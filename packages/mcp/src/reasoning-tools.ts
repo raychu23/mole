@@ -7,7 +7,7 @@
 // --read-only (write tools left out). Writes are a person's act in Mole (T58/T59), so none are exposed here.
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { comparePhases, evaluatePhase, suggestRevivals } from '@mole/decisions';
+import { comparePhases, evaluatePhase, phaseInForce, suggestRevivals } from '@mole/decisions';
 import { listProposals, summarizeProposals } from '@mole/proposals';
 import { READ_ONLY_ANNOTATIONS, sc } from './annotations.js';
 
@@ -43,7 +43,12 @@ export function registerReasoningTools(server: McpServer, opts: Opts): void {
       try {
         if (compare && (phase || at)) throw new Error('give `compare`, or `phase`/`at`, not both');
         if (compare) return ok(comparePhases(opts.root, compare[0]!, compare[1]!));
-        return ok(evaluatePhase(opts.root, { ...(phase ? { phase } : {}), ...(at ? { at } : {}) }));
+        // T73 backlog priorities-default: this tool's own doc says "none = the phase in force today" -- make
+        // that true (phaseInForce, the same selector T68 already gave incident-suggest/proposals-compare)
+        // instead of evaluatePhase's own plain-Dung default, which is `mole priorities`'s unchanged CLI default.
+        const explicit = phase || at;
+        const resolved = explicit ? { ...(phase ? { phase } : {}), ...(at ? { at } : {}) } : (() => { const p = phaseInForce(opts.root, {}); return p ? { phase: p.name } : {}; })();
+        return ok(evaluatePhase(opts.root, resolved));
       } catch (e) {
         return fail('mole_priorities', e);
       }

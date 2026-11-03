@@ -184,13 +184,28 @@ interface Evaluated {
   phase?: string;
 }
 
+export interface PhaseSelector {
+  phase?: string;
+  at?: string;
+  /** T73: a what-if tenet order -- NEVER read from or written to .mole/priorities.md; overrides phase/at
+   *  when given (the panel's/CLI's "compare with order X"). */
+  order?: string[];
+}
+
 /** T68: `sel` ({ phase, at }) is resolved against THIS root's own `.mole/priorities.md` (phaseInForce,
- *  @mole/decisions) -- absent both, the phase in force today, same selector incident suggest uses (D93); no
- *  file on this side = no audience, T60's existing fallback. */
-function evaluateRecords(root: string, sel: { phase?: string; at?: string } = {}): Evaluated {
+ * @mole/decisions) -- absent both, the phase in force today, same selector incident suggest uses (D93); no
+ * file on this side = no audience, T60's existing fallback. T73: `sel.order`, when given, wins over phase/at
+ * and is never read from or written to priorities.md on either side (the what-if). */
+function evaluateRecords(root: string, sel: PhaseSelector = {}): Evaluated {
   const graph = loadGraph(root);
   const { framework } = argumentFramework(graph);
   const plainLabels = evaluate(framework).labels;
+  if (sel.order) {
+    const values = tenetValues(graph);
+    const args = framework.args.map((a) => ({ ...a, ...(values.has(a.id) ? { value: values.get(a.id)! } : {}) }));
+    const labels = evaluate({ args, attacks: framework.attacks }, sel.order).labels;
+    return { graph, plainLabels, labels, phase: 'what-if' };
+  }
   const phase = phaseInForce(root, sel, graph);
   if (!phase) return { graph, plainLabels, labels: plainLabels };
   const values = tenetValues(graph);
@@ -260,11 +275,6 @@ function changedFiles(worktree: string, rev: string): string[] {
   const tracked = git(worktree, ['diff', '--name-only', rev, '--']).split('\n');
   const untracked = git(worktree, ['ls-files', '--others', '--exclude-standard']).split('\n');
   return [...new Set([...tracked, ...untracked].filter(Boolean))].sort();
-}
-
-export interface PhaseSelector {
-  phase?: string;
-  at?: string;
 }
 
 /** `sel` picks the phase (T60) each side (baseline snapshot, worktree) is independently evaluated under; absent

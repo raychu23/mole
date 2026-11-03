@@ -109,6 +109,12 @@ function render(model: Model): void {
     if (out) out.textContent = ' running…';
     vscode.postMessage({ type: 'runTests' });
   });
+  app.querySelector('[data-whatif-run]')?.addEventListener('click', () => {
+    const input = app.querySelector('[data-whatif-order]') as HTMLInputElement | null;
+    const out = app.querySelector('[data-whatif-result]');
+    if (out) out.textContent = 'comparing…';
+    vscode.postMessage({ type: 'reasoningWhatIf', order: input?.value ?? '' });
+  });
 }
 
 window.addEventListener('message', (ev) => {
@@ -122,6 +128,13 @@ window.addEventListener('message', (ev) => {
   } else if (m.type === 'runResult') {
     const out = app.querySelector('[data-run-result]');
     if (out) out.textContent = ` ${String(m.summary)}`;
+  } else if (m.type === 'selftestWhatIf') {
+    // M26 check proof only (apps/vscode/src/panelView.ts triggerWhatIf): same deterministic-click idiom
+    // webview/main.ts's selftestClick uses -- fill the input, then dispatch a REAL click so the listener
+    // above runs unchanged, instead of posting 'reasoningWhatIf' directly.
+    const input = app.querySelector('[data-whatif-order]') as HTMLInputElement | null;
+    if (input) input.value = String(m.order);
+    app.querySelector('[data-whatif-run]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   }
 });
 

@@ -29,7 +29,7 @@ export { deriveAdrArgumentFramework } from './argdown/derive-adr.js';
 export type { AdrArgument, AdrArgumentFramework, AdrArgumentRole } from './argdown/derive-adr.js';
 export { acceptIncident, dismissIncident, IncidentError, incidentArgumentId, incidentSummary, suggestRevivals } from './incidents/revive.js';
 export type { IncidentWrite, PhaseSelector, RevivalCandidate, RevivalEvidence } from './incidents/revive.js';
-export { comparePhases, evaluatePhase, phaseAt, phaseInForce, PrioritiesError, readPriorities, selectPhase, tenetValues, today } from './priorities.js';
+export { comparePhases, compareWithOrder, evaluateOrder, evaluatePhase, phaseAt, phaseInForce, PrioritiesError, readPriorities, selectPhase, setPriorities, tenetValues, today } from './priorities.js';
 export type { FlippedAttack, Phase, PhaseComparison, PhaseEvaluation } from './priorities.js';
 export { argumentDefinitions } from './argdown/definitions.js';
 export type { ArgumentDefinition } from './argdown/definitions.js';

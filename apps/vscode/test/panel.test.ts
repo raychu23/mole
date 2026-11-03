@@ -31,6 +31,7 @@ const okRunners = (): Runners => ({
   prioritiesList: async () => [],
   priorities: async () => ({ labels: {}, decisions: [] }) as never,
   prioritiesCompare: async () => ({ from: '', to: '', arguments: [], decisions: [] }) as never,
+  prioritiesWhatIf: async () => ({ from: '', to: '', arguments: [], decisions: [] }) as never,
   incidents: async () => [],
   proposals: async () => ({ proposals: [] }) as never,
 });

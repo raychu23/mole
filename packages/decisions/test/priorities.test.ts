@@ -1,10 +1,11 @@
 // T60: tenets reranked as priorities shift (launch → scale). Tests first. Temp repos only, never a live .mole.
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { evaluate } from '@mole/reasoning';
 import { afterEach, describe, expect, it } from 'vitest';
-import { argumentFramework, comparePhases, evaluatePhase, loadGraph, phaseAt, prioritiesCli, readPriorities } from '../src/index.js';
+import { argumentFramework, comparePhases, compareWithOrder, evaluateOrder, evaluatePhase, loadGraph, phaseAt, prioritiesCli, PrioritiesError, readPriorities, setPriorities } from '../src/index.js';
 
 const roots: string[] = [];
 afterEach(() => roots.splice(0).forEach((r) => rmSync(r, { recursive: true, force: true })));
@@ -140,6 +141,94 @@ describe('mole priorities (T60)', () => {
   });
 });
 
+describe('T73 setPriorities: a person writes the order, never MCP', () => {
+  it('updates an existing phase in place: same from date, new order, the other phase untouched, round trip', () => {
+    const root = repo(PHASES);
+    const phases = setPriorities(root, 'scale', ['tenet-speed', 'tenet-cost']);
+    expect(phases.map((p) => [p.name, p.from, p.order])).toEqual([
+      ['launch', '2026-01-01', ['tenet-speed', 'tenet-cost']],
+      ['scale', '2026-09-01', ['tenet-speed', 'tenet-cost']],
+    ]);
+    // done-when 3: re-read by T60's own parser gives the identical result (round trip)
+    expect(readPriorities(root)).toEqual(phases);
+  });
+
+  it('a brand-new phase name is appended dated today, after the latest phase, round trip', () => {
+    const root = repo(PHASES);
+    const today = new Date().toISOString().slice(0, 10);
+    const phases = setPriorities(root, 'ga', ['tenet-cost', 'tenet-speed']);
+    expect(phases.map((p) => p.name)).toEqual(['launch', 'scale', 'ga']);
+    const ga = phases[2]!;
+    expect(ga.from).toBe(today);
+    expect(ga.order).toEqual(['tenet-cost', 'tenet-speed']);
+    expect(readPriorities(root)).toEqual(phases);
+  });
+
+  it('a brand-new phase name on an empty (no file) repo creates the file, round trip', () => {
+    const root = repo();
+    const phases = setPriorities(root, 'launch', ['tenet-speed', 'tenet-cost']);
+    expect(phases).toEqual([expect.objectContaining({ name: 'launch', order: ['tenet-speed', 'tenet-cost'] })]);
+    expect(readPriorities(root)).toEqual(phases);
+  });
+
+  it('refuses an unknown tenet or a duplicate rank, same as readPriorities, nothing written', () => {
+    const root = repo(PHASES);
+    const before = readFileSync(join(root, '.mole/priorities.md'), 'utf8');
+    expect(() => setPriorities(root, 'scale', ['tenet-nope'])).toThrow(/tenet-nope.*not a tenet/);
+    expect(() => setPriorities(root, 'scale', ['tenet-speed', 'tenet-speed'])).toThrow(/tenet-speed.*ranked twice/);
+    expect(() => setPriorities(root, 'scale', [])).toThrow(/at least one tenet/);
+    expect(readFileSync(join(root, '.mole/priorities.md'), 'utf8')).toBe(before);
+  });
+
+  it('a new phase that would not start after the last one is refused, nothing written', () => {
+    const future = ['# Priorities', '', `## later · from 2099-01-01`, '', '1. tenet-speed', ''].join('\n');
+    const root = repo(future);
+    const before = readFileSync(join(root, '.mole/priorities.md'), 'utf8');
+    expect(() => setPriorities(root, 'sooner', ['tenet-cost'])).toThrow(PrioritiesError);
+    expect(readFileSync(join(root, '.mole/priorities.md'), 'utf8')).toBe(before);
+  });
+});
+
+describe('T73 what-if: an order NOT read from or written to .mole/priorities.md', () => {
+  it('evaluateOrder judges the graph under an arbitrary order, writing nothing', () => {
+    const root = repo(PHASES);
+    const before = readFileSync(join(root, '.mole/priorities.md'), 'utf8');
+    const ev = evaluateOrder(root, ['tenet-cost', 'tenet-speed']);
+    expect(ev.labels).toEqual({ 'ship-fast': 'out', 'use-kafka': 'in' }); // same as the 'scale' phase's order
+    expect(readFileSync(join(root, '.mole/priorities.md'), 'utf8')).toBe(before);
+  });
+
+  it('compareWithOrder: the phase in force vs the what-if order, identical to comparePhases for the same orders', () => {
+    const root = repo(PHASES);
+    const viaPhases = comparePhases(root, 'launch', 'scale');
+    const viaWhatIf = compareWithOrder(root, ['tenet-cost', 'tenet-speed'], { phase: 'launch' });
+    expect(viaWhatIf.arguments).toEqual(viaPhases.arguments);
+    expect(viaWhatIf.decisions).toEqual(viaPhases.decisions);
+  });
+
+  it('no priorities file: the baseline is plain Dung (empty order), the what-if is still evaluated', () => {
+    const root = repo();
+    const c = compareWithOrder(root, ['tenet-speed', 'tenet-cost']);
+    expect(c.arguments.map((a) => a.id).sort()).toEqual(['ship-fast', 'use-kafka']);
+  });
+
+  it('CLI whatif never touches .mole/priorities.md (git status stays clean)', () => {
+    const root = repo(PHASES);
+    execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: root });
+    execFileSync('git', ['add', '.'], { cwd: root });
+    execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'baseline'], { cwd: root });
+    const [log] = [console.log];
+    console.log = () => undefined;
+    try {
+      expect(prioritiesCli(['whatif'], { order: 'tenet-cost,tenet-speed' }, root)).toBe(0);
+    } finally {
+      console.log = log;
+    }
+    const status = execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' });
+    expect(status).toBe('');
+  });
+});
+
 describe('mole priorities CLI', () => {
   it('is registered in the daemon CLI with one line', () => {
     const daemon = readFileSync(new URL('../../daemon/src/cli.ts', import.meta.url), 'utf8');
@@ -154,6 +243,21 @@ describe('mole priorities CLI', () => {
       expect(prioritiesCli(['compare', 'launch', 'scale'], {}, root)).toBe(0);
       expect(prioritiesCli(['compare', 'launch'], {}, root)).toBe(2);
       expect(prioritiesCli([], { phase: 'growth' }, root)).toBe(2);
+    } finally {
+      [console.log, console.error] = [log, err];
+    }
+  });
+
+  it('T73: `set` writes, missing flags/unknown tenet are exit 2, `whatif` needs --order', () => {
+    const root = repo(PHASES);
+    const [log, err] = [console.log, console.error];
+    console.log = console.error = () => undefined;
+    try {
+      expect(prioritiesCli(['set'], { phase: 'scale', order: 'tenet-speed,tenet-cost' }, root)).toBe(0);
+      expect(prioritiesCli(['set'], { order: 'tenet-speed' }, root)).toBe(2);
+      expect(prioritiesCli(['set'], { phase: 'scale', order: 'tenet-nope' }, root)).toBe(2);
+      expect(prioritiesCli(['whatif'], {}, root)).toBe(2);
+      expect(prioritiesCli(['whatif'], { order: 'tenet-speed,tenet-cost' }, root)).toBe(0);
     } finally {
       [console.log, console.error] = [log, err];
     }

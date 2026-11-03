@@ -118,4 +118,17 @@ describe('T68: evaluateProposal under the phase in force (done-when 1, 2, STOP)'
     expect(r.phase).toEqual({});
     expect(r.changes).toEqual(r.plainDung);
   });
+
+  // T73: the panel's/CLI's "compare with order X" what-if, applied to proposals too -- an order never read
+  // from, or written to, either side's .mole/priorities.md (STOP clause: a what-if never writes).
+  it('sel.order overrides phase/at: judges both sides under the given order, writing neither priorities.md', () => {
+    const root = baseline(LAUNCH_FIRST);
+    const before = execFileSync('git', ['-C', root, 'status', '--porcelain'], { encoding: 'utf8' });
+    const p = ltsWindowProposal(root);
+    const r = evaluateProposal(p, { order: ['tenet-users', 'tenet-focus'], phase: 'launch' }); // order wins over phase
+    expect(r.phase).toEqual({ before: 'what-if', after: 'what-if' });
+    expect(r.changes.decisions).toEqual([]); // same as 'scale' (tenet-users first): already defeated, no-op
+    const after = execFileSync('git', ['-C', root, 'status', '--porcelain'], { encoding: 'utf8' });
+    expect(after).toBe(before);
+  });
 });

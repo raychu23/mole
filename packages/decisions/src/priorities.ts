@@ -6,8 +6,8 @@
 //   evaluatePhase          the engine (@mole/reasoning evaluate) under that phase's audience; no phase = no audience
 //   comparePhases          every argument whose label differs, with the attacks whose success flipped (both tenets,
 //                          both ranks) or the changed attackers it moved through, plus decisions resting on them
-// Read-only. Records are never written; reordering priorities is a person editing .mole/priorities.md.
-import { existsSync, readFileSync } from 'node:fs';
+// Read-only. Records are never written except by setPriorities (T73: a person's CLI act, never MCP).
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { evaluate, type Label } from '@mole/reasoning';
 import { argumentDefinitions } from './argdown/definitions.js';
@@ -203,8 +203,13 @@ export function comparePhases(root: string, a: string, b: string): PhaseComparis
   const l = load(root);
   const pa = pick(l, { phase: a })!;
   const pb = pick(l, { phase: b })!;
-  const ea = run(l, pa);
-  const eb = run(l, pb);
+  return diffPhases(l, pa, pb);
+}
+
+/** Shared by comparePhases (two named phases) and compareWithOrder (T73: a what-if order, never a named phase). */
+function diffPhases(l: Loaded, pa: { name: string; order: string[] }, pb: { name: string; order: string[] }): PhaseComparison {
+  const ea = run(l, pa as Phase);
+  const eb = run(l, pb as Phase);
   const changed = l.args.filter((id) => ea.labels[id] !== eb.labels[id]).sort();
   const changedSet = new Set(changed);
   const rank = (order: string[], v: string) => order.indexOf(v) + 1; // 1-based, 0 = unranked
@@ -228,4 +233,64 @@ export function comparePhases(root: string, a: string, b: string): PhaseComparis
     .filter(({ d, e }) => d.state !== e.state)
     .map(({ d, e }) => ({ id: d.id, title: d.title, before: d.state, after: e.state, because: d.cites.filter((c) => changedSet.has(c)), file: d.file, line: d.line }));
   return { from: pa.name, to: pb.name, arguments: argumentsChanged, decisions };
+}
+
+/** T73: `mole priorities set --phase P --order a,b,c` -- a person's act (never over MCP, which stays read-only,
+ *  T61). Updates an existing phase's order in place (same `from` date, same position in the file) or, for a
+ *  phase name not yet in the file, appends a new phase dated today, after the latest one (same ordering
+ *  invariant readPriorities already enforces). Every tenet must exist and be ranked once, like readPriorities.
+ *  Re-reads the written file through readPriorities before returning, so a malformed write is caught HERE
+ *  (round trip, T73 done-when 3), not by the next CLI call. */
+export function setPriorities(root: string, phase: string, order: string[], graph: DecisionGraph = loadGraph(root)): Phase[] {
+  if (order.length === 0) throw new PrioritiesError('order must list at least one tenet');
+  const tenets = tenetIds(graph);
+  const seen = new Set<string>();
+  for (const t of order) {
+    if (!tenets.has(t)) throw new PrioritiesError(`${t} is not a tenet in .mole/tenets.md`);
+    if (seen.has(t)) throw new PrioritiesError(`${t} is ranked twice`);
+    seen.add(t);
+  }
+  const path = join(root, FILE);
+  const text = existsSync(path) ? readFileSync(path, 'utf8') : '# Priorities\n';
+  const lines = text.split(/\r?\n/);
+  const items = order.map((t, i) => `${i + 1}. ${t}`);
+  const headingIdx = lines.findIndex((l) => { const h = /^##\s/.test(l) ? HEADING.exec(l) : null; return !!h && h[1] === phase; });
+  if (headingIdx !== -1) {
+    let nextHeadingIdx = lines.length;
+    for (let i = headingIdx + 1; i < lines.length; i++) {
+      if (/^##\s/.test(lines[i]!)) { nextHeadingIdx = i; break; }
+    }
+    const out = [...lines.slice(0, headingIdx + 1), '', ...items, '', ...lines.slice(nextHeadingIdx)];
+    writeFileSync(path, out.join('\n'));
+  } else {
+    const existing = readPriorities(root, graph); // validates the EXISTING file first (file:line errors as usual)
+    const last = existing[existing.length - 1];
+    const from = today();
+    if (last && from <= last.from) throw new PrioritiesError(`a new phase must start after ${last.name} (${last.from}); today (${from}) is not after it`);
+    const out = [text.replace(/\s+$/, ''), '', `## ${phase} · from ${from}`, '', ...items, ''];
+    writeFileSync(path, out.join('\n'));
+  }
+  return readPriorities(root, graph); // round trip: the write this function just made, re-parsed
+}
+
+/** T73: the panel's/CLI's \"compare with order X\" what-if -- the engine judged under an arbitrary tenet order
+ *  that is NEVER read from or written to .mole/priorities.md (STOP clause: a what-if never writes). `name`
+ *  labels the result (default 'what-if'); every tenet in `order` must exist, like a stored phase's order. */
+export function evaluateOrder(root: string, order: string[], name = 'what-if'): PhaseEvaluation {
+  const l = load(root);
+  const tenets = tenetIds(l.graph);
+  for (const t of order) if (!tenets.has(t)) throw new PrioritiesError(`${t} is not a tenet in .mole/tenets.md`);
+  return run(l, { name, from: '', order, file: FILE, line: 0 });
+}
+
+/** T73: the phase in force (or a named/`--at` phase, same selector evaluatePhase/phaseInForce use) compared
+ *  against a what-if order -- never read from or written to .mole/priorities.md. No phase in force (or no
+ *  priorities file) compares against plain Dung (empty order), T60's existing no-audience fallback. */
+export function compareWithOrder(root: string, order: string[], sel: { phase?: string; at?: string } = {}): PhaseComparison {
+  const l = load(root);
+  const tenets = tenetIds(l.graph);
+  for (const t of order) if (!tenets.has(t)) throw new PrioritiesError(`${t} is not a tenet in .mole/tenets.md`);
+  const current = pick(l, sel);
+  const a = current ? { name: current.name, order: current.order } : { name: 'no phase', order: [] };
+  return diffPhases(l, a, { name: 'what-if', order });
 }

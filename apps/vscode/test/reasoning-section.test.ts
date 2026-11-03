@@ -50,6 +50,7 @@ const base = (): Runners => ({
   prioritiesList: async () => PHASES,
   priorities: async () => EVAL_LAUNCH,
   prioritiesCompare: async (a: string, b: string) => ({ ...COMPARE, from: a, to: b }),
+  prioritiesWhatIf: async () => COMPARE as never,
   incidents: async () => INCIDENTS,
   proposals: async () => PROPOSALS,
 });
@@ -150,7 +151,9 @@ describe('T62 webview/reasoning.ts renderReasoning', () => {
     expect(html).toContain('inc-legacy-users');
     expect(html).toContain('parallel');
     expect(html).toContain('mole incident accept inc-legacy-users --argument parallel');
-    expect(html).not.toMatch(/<button/);
+    // accepting an incident stays a person's CLI act, never a button (unlike T73's what-if compare control below)
+    const incidentsPart = html.slice(html.indexOf('<h4>Incidents'));
+    expect(incidentsPart).not.toMatch(/<button/);
   });
 
   it('proposals: each proposal with the decisions it changes, or "no decision changes"', () => {
@@ -176,5 +179,35 @@ describe('T62 webview/reasoning.ts renderReasoning', () => {
   it('no priorities file: says decisions are judged without a phase order', () => {
     const html = renderReasoning({ ...DATA, phase: { evaluation: { labels: {}, decisions: [] } as never } });
     expect(html).toMatch(/no \.mole\/priorities\.md/i);
+  });
+
+  // T73: the panel's/CLI's "compare with order X" what-if -- a text input + button, pre-filled with the
+  // current order, never a write; this IS allowed to be a button (unlike the incidents 'accept', which stays
+  // a person's CLI act because accepting commits a record -- comparing never does).
+  it('T73: shows a what-if control pre-filled with the current order, pending result empty until run', () => {
+    const html = renderReasoning(DATA);
+    expect(html).toMatch(/data-whatif-order/);
+    expect(html).toMatch(/value="tenet-focus,tenet-users"/);
+    expect(html).toMatch(/<button data-whatif-run>Compare<\/button>/);
+    expect(html).toMatch(/<div data-whatif-result><\/div>/);
+  });
+
+  it('T73: once run, the what-if result renders the order tried and the same comparison shape as the phase diff', () => {
+    const html = renderReasoning({ ...DATA, whatIf: { order: ['tenet-users', 'tenet-focus'], comparison: COMPARE as never } });
+    expect(html).toMatch(/what-if order: 1\. tenet-users.*2\. tenet-focus/s);
+    expect(html).toContain('ADR-0002');
+    expect(html).toMatch(/holds\s*→\s*defeated/);
+  });
+
+  it('T73: a failed what-if shows its one-line error, not a comparison', () => {
+    const html = renderReasoning({ ...DATA, whatIf: { order: ['tenet-nope'], comparison: { error: 'tenet-nope is not a tenet' } } });
+    expect(html).toContain('tenet-nope is not a tenet');
+    const resultPart = /<div data-whatif-result>([\s\S]*?)<\/div><\/div>/.exec(html)![1]!;
+    expect(resultPart).not.toContain('ADR-0002');
+  });
+
+  it('T73: no priorities file -> no what-if control (nothing to compare against)', () => {
+    const html = renderReasoning({ ...DATA, phase: { evaluation: { labels: {}, decisions: [] } as never } });
+    expect(html).not.toMatch(/data-whatif/);
   });
 });

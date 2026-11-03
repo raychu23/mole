@@ -1,0 +1,204 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T73-audience-order-input
+
+stderr | packages/decisions/test/priorities.test.ts > T73 what-if: an order NOT read from or written to .mole/priorities.md > CLI whatif never touches .mole/priorities.md (git status stays clean)
+usage: mole priorities [--phase P | --at YYYY-MM-DD] | list | compare <A> <B>
+
+ ❯ packages/decisions/test/priorities.test.ts (28 tests | 10 failed) 316ms
+   ✓ mole priorities (T60) > done-when 2: no priorities file -> labels identical to the plain engine 17ms
+   ✓ mole priorities (T60) > reads phases in order with their ranks and file:line 7ms
+   ✓ mole priorities (T60) > each phase gives its own labels and decision state 5ms
+   ✓ mole priorities (T60) > --at picks the latest phase starting on or before the date 8ms
+   ✓ mole priorities (T60) > done-when 3: compare explains every changed label with the flipped attack, both tenets and both ranks 5ms
+   ✓ mole priorities (T60) > done-when 4: refuses an unknown tenet with file:line 5ms
+   ✓ mole priorities (T60) > done-when 4: refuses a duplicate rank with file:line 4ms
+   ✓ mole priorities (T60) > done-when 4: refuses a bad date with file:line 5ms
+   ✓ mole priorities (T60) > done-when 4: refuses phases out of date order with file:line 4ms
+   ✓ mole priorities (T60) > refuses an argument tagged with an unknown tenet, with file:line 3ms
+   ✓ mole priorities (T60) > reads the tag from the definition line even when the argument is referenced earlier 2ms
+   ✓ mole priorities (T60) > refuses one argument defined twice with different tags, naming both lines 3ms
+   ✓ mole priorities (T60) > ignores definition-like prose, link references and code outside argdown fences in a decision .md 3ms
+   ✓ mole priorities (T60) > reads a definition inline after an arrow with no space (-><id>: text), as the parser does 3ms
+   ✓ mole priorities (T60) > refuses an impossible calendar date (review 1 LOW) 2ms
+   ✓ mole priorities (T60) > an unknown phase name is refused 3ms
+   × T73 setPriorities: a person writes the order, never MCP > updates an existing phase in place: same from date, new order, the other phase untouched, round trip 6ms
+     → (0 , setPriorities) is not a function
+   × T73 setPriorities: a person writes the order, never MCP > a brand-new phase name is appended dated today, after the latest phase, round trip 3ms
+     → (0 , setPriorities) is not a function
+   × T73 setPriorities: a person writes the order, never MCP > a brand-new phase name on an empty (no file) repo creates the file, round trip 2ms
+     → (0 , setPriorities) is not a function
+   × T73 setPriorities: a person writes the order, never MCP > refuses an unknown tenet or a duplicate rank, same as readPriorities, nothing written 4ms
+     → expected [Function] to throw error matching /tenet-nope.*not a tenet/ but got '(0 , setPriorit…'
+   × T73 setPriorities: a person writes the order, never MCP > a new phase that would not start after the last one is refused, nothing written 4ms
+     → expected error to be instance of PrioritiesError
+   × T73 what-if: an order NOT read from or written to .mole/priorities.md > evaluateOrder judges the graph under an arbitrary order, writing nothing 2ms
+     → (0 , evaluateOrder) is not a function
+   × T73 what-if: an order NOT read from or written to .mole/priorities.md > compareWithOrder: the phase in force vs the what-if order, identical to comparePhases for the same orders 5ms
+     → (0 , compareWithOrder) is not a function
+   × T73 what-if: an order NOT read from or written to .mole/priorities.md > no priorities file: the baseline is plain Dung (empty order), the what-if is still evaluated 4ms
+     → (0 , compareWithOrder) is not a function
+   × T73 what-if: an order NOT read from or written to .mole/priorities.md > CLI whatif never touches .mole/priorities.md (git status stays clean) 191ms
+     → expected 2 to be +0 // Object.is equality
+   ✓ mole priorities CLI > is registered in the daemon CLI with one line 2ms
+   ✓ mole priorities CLI > exit codes: compare 0, missing phase arg 2, unknown phase 2 12ms
+   × mole priorities CLI > T73: `set` writes, missing flags/unknown tenet are exit 2, `whatif` needs --order 2ms
+     → expected 2 to be +0 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/decisions/test/priorities.test.ts > T73 setPriorities: a person writes the order, never MCP > updates an existing phase in place: same from date, new order, the other phase untouched, round trip
+TypeError: (0 , setPriorities) is not a function
+ ❯ packages/decisions/test/priorities.test.ts:147:20
+    145|   it('updates an existing phase in place: same from date, new order, t…
+    146|     const root = repo(PHASES);
+    147|     const phases = setPriorities(root, 'scale', ['tenet-speed', 'tenet…
+       |                    ^
+    148|     expect(phases.map((p) => [p.name, p.from, p.order])).toEqual([
+    149|       ['launch', '2026-01-01', ['tenet-speed', 'tenet-cost']],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  packages/decisions/test/priorities.test.ts > T73 setPriorities: a person writes the order, never MCP > a brand-new phase name is appended dated today, after the latest phase, round trip
+TypeError: (0 , setPriorities) is not a function
+ ❯ packages/decisions/test/priorities.test.ts:159:20
+    157|     const root = repo(PHASES);
+    158|     const today = new Date().toISOString().slice(0, 10);
+    159|     const phases = setPriorities(root, 'ga', ['tenet-cost', 'tenet-spe…
+       |                    ^
+    160|     expect(phases.map((p) => p.name)).toEqual(['launch', 'scale', 'ga'…
+    161|     const ga = phases[2]!;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  packages/decisions/test/priorities.test.ts > T73 setPriorities: a person writes the order, never MCP > a brand-new phase name on an empty (no file) repo creates the file, round trip
+TypeError: (0 , setPriorities) is not a function
+ ❯ packages/decisions/test/priorities.test.ts:169:20
+    167|   it('a brand-new phase name on an empty (no file) repo creates the fi…
+    168|     const root = repo();
+    169|     const phases = setPriorities(root, 'launch', ['tenet-speed', 'tene…
+       |                    ^
+    170|     expect(phases).toEqual([expect.objectContaining({ name: 'launch', …
+    171|     expect(readPriorities(root)).toEqual(phases);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  packages/decisions/test/priorities.test.ts > T73 setPriorities: a person writes the order, never MCP > refuses an unknown tenet or a duplicate rank, same as readPriorities, nothing written
+AssertionError: expected [Function] to throw error matching /tenet-nope.*not a tenet/ but got '(0 , setPriorit…'
+
+[32m- Expected:[39m 
+/tenet-nope.*not a tenet/
+
+[31m+ Received:[39m 
+"(0 , __vite_ssr_import_6__.setPriorities) is not a function"
+
+ ❯ packages/decisions/test/priorities.test.ts:177:64
+    175|     const root = repo(PHASES);
+    176|     const before = readFileSync(join(root, '.mole/priorities.md'), 'ut…
+    177|     expect(() => setPriorities(root, 'scale', ['tenet-nope'])).toThrow…
+       |                                                                ^
+    178|     expect(() => setPriorities(root, 'scale', ['tenet-speed', 'tenet-s…
+    179|     expect(() => setPriorities(root, 'scale', [])).toThrow(/at least o…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  packages/decisions/test/priorities.test.ts > T73 setPriorities: a person writes the order, never MCP > a new phase that would not start after the last one is refused, nothing written
+AssertionError: expected error to be instance of PrioritiesError
+
+[32m- Expected:[39m 
+[Function PrioritiesError]
+
+[31m+ Received:[39m 
+TypeError {
+  "message": "(0 , __vite_ssr_import_6__.setPriorities) is not a function",
+}
+
+ ❯ packages/decisions/test/priorities.test.ts:187:65
+    185|     const root = repo(future);
+    186|     const before = readFileSync(join(root, '.mole/priorities.md'), 'ut…
+    187|     expect(() => setPriorities(root, 'sooner', ['tenet-cost'])).toThro…
+       |                                                                 ^
+    188|     expect(readFileSync(join(root, '.mole/priorities.md'), 'utf8')).to…
+    189|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+ FAIL  packages/decisions/test/priorities.test.ts > T73 what-if: an order NOT read from or written to .mole/priorities.md > evaluateOrder judges the graph under an arbitrary order, writing nothing
+TypeError: (0 , evaluateOrder) is not a function
+ ❯ packages/decisions/test/priorities.test.ts:196:16
+    194|     const root = repo(PHASES);
+    195|     const before = readFileSync(join(root, '.mole/priorities.md'), 'ut…
+    196|     const ev = evaluateOrder(root, ['tenet-cost', 'tenet-speed']);
+       |                ^
+    197|     expect(ev.labels).toEqual({ 'ship-fast': 'out', 'use-kafka': 'in' …
+    198|     expect(readFileSync(join(root, '.mole/priorities.md'), 'utf8')).to…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯
+
+ FAIL  packages/decisions/test/priorities.test.ts > T73 what-if: an order NOT read from or written to .mole/priorities.md > compareWithOrder: the phase in force vs the what-if order, identical to comparePhases for the same orders
+TypeError: (0 , compareWithOrder) is not a function
+ ❯ packages/decisions/test/priorities.test.ts:204:23
+    202|     const root = repo(PHASES);
+    203|     const viaPhases = comparePhases(root, 'launch', 'scale');
+    204|     const viaWhatIf = compareWithOrder(root, ['tenet-cost', 'tenet-spe…
+       |                       ^
+    205|     expect(viaWhatIf.arguments).toEqual(viaPhases.arguments);
+    206|     expect(viaWhatIf.decisions).toEqual(viaPhases.decisions);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/10]⎯
+
+ FAIL  packages/decisions/test/priorities.test.ts > T73 what-if: an order NOT read from or written to .mole/priorities.md > no priorities file: the baseline is plain Dung (empty order), the what-if is still evaluated
+TypeError: (0 , compareWithOrder) is not a function
+ ❯ packages/decisions/test/priorities.test.ts:211:15
+    209|   it('no priorities file: the baseline is plain Dung (empty order), th…
+    210|     const root = repo();
+    211|     const c = compareWithOrder(root, ['tenet-speed', 'tenet-cost']);
+       |               ^
+    212|     expect(c.arguments.map((a) => a.id).sort()).toEqual(['ship-fast', …
+    213|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯
+
+ FAIL  packages/decisions/test/priorities.test.ts > T73 what-if: an order NOT read from or written to .mole/priorities.md > CLI whatif never touches .mole/priorities.md (git status stays clean)
+AssertionError: expected 2 to be +0 // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ 2[39m
+
+ ❯ packages/decisions/test/priorities.test.ts:223:84
+    221|     console.log = () => undefined;
+    222|     try {
+    223|       expect(prioritiesCli(['whatif'], { order: 'tenet-cost,tenet-spee…
+       |                                                                                    ^
+    224|     } finally {
+    225|       console.log = log;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/10]⎯
+
+ FAIL  packages/decisions/test/priorities.test.ts > mole priorities CLI > T73: `set` writes, missing flags/unknown tenet are exit 2, `whatif` needs --order
+AssertionError: expected 2 to be +0 // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ 2[39m
+
+ ❯ packages/decisions/test/priorities.test.ts:256:97
+    254|     console.log = console.error = () => undefined;
+    255|     try {
+    256|       expect(prioritiesCli(['set'], { phase: 'scale', order: 'tenet-sp…
+       |                                                                                                 ^
+    257|       expect(prioritiesCli(['set'], { order: 'tenet-speed' }, root)).t…
+    258|       expect(prioritiesCli(['set'], { phase: 'scale', order: 'tenet-no…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/10]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  10 failed | 18 passed (28)
+   Start at  03:03:44
+   Duration  3.38s (transform 853ms, setup 0ms, collect 2.06s, tests 316ms, environment 0ms, prepare 261ms)
+
