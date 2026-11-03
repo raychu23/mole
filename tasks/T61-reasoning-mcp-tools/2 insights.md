@@ -29,3 +29,9 @@ mcp tests       9 files, 22 tests
 - confirmed OK by the reviewer: temp snapshot dirs removed, JSON round-trip loses nothing, compare+phase isError,
   different baselines isError, non-git root, prunable worktrees skipped, stdio tools/list, nothing written
 - left: mole_priorities outputSchema is passthrough (validates anything) · mcp 24 tests
+
+## 11-02 22:30 review 2 (deleg_cdaae854) PASS
+- detached / renamed proposal worktree → not listed (live branch line checked) · locked, spaces, bare root (isError),
+  main block, same name in two repos isolated · mcp 24 tests
+- known limit, documented in repoProposals: a complete forged meta on a mole/proposal/<name> branch is not
+  distinguishable (meta is trusted data, not a signature; same boundary as hand-editing .mole/)

@@ -30,7 +30,9 @@ const real = (p: string): string => {
 
 /** proposal worktrees of this repo, sorted by name. Never takes a path from the caller. A worktree counts only if its
  *  metadata names this repo AND it has the branch createProposal gives it, `mole/proposal/<name>`, checked out (review 1:
- *  a hand-written meta file in an unrelated linked worktree was trusted). One branch per worktree, so names are unique. */
+ *  a hand-written meta file in an unrelated linked worktree was trusted). One branch per worktree, so names are unique.
+ *  Known limit (review 2): mole-proposal.json is trusted data, not a signature; someone with write access to a worktree
+ *  can still forge a complete one on a mole/proposal/<name> branch -- the same trust boundary as hand-editing .mole/. */
 export function repoProposals(root: string): Array<{ path: string; meta: ProposalMeta }> {
   const top = real(execFileSync('git', ['-C', root, 'rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim());
   const listing = execFileSync('git', ['-C', root, 'worktree', 'list', '--porcelain'], { encoding: 'utf8' });
