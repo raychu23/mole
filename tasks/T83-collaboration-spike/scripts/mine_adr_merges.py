@@ -175,7 +175,22 @@ def blob_exists(repo: str, commit: str, path: str) -> bool:
 
 def merge_file_clean(repo: str, base: str, p1: str, p2: str, path: str, tmpdir: Path) -> tuple[bool, bool]:
     """Returns (ran_ok, clean). ran_ok False means one side added/removed the
-    file (not a like-for-like 3-way text merge)."""
+    file (not a like-for-like 3-way text merge).
+
+    CAVEAT: git's 3-way merge is line-based, not field-based. Two edits are
+    flagged as a real conflict whenever they touch overlapping or ADJACENT
+    diff hunks, even when the edits are logically independent — e.g. one
+    side changes the `Status:` line and the other appends a new paragraph
+    directly below it. Because `Status:` and the body text sit on adjacent
+    lines in most ADR templates, such a pair conflicts under `git merge-file`
+    even though no field's *value* actually collides. So `merge_file_clean`
+    (and any rate derived from it) measures line-adjacency conflicts, not
+    semantic/field conflicts; classify_event()'s same_field/different_fields
+    split is the more meaningful signal for "did two edits actually touch the
+    same decision," and still undercounts adjacency-only conflicts as
+    different_fields or body_only even when git itself would refuse to
+    auto-merge them.
+    """
     base_txt = git_text(["git", "cat-file", "-p", f"{base}:{path}"], repo)
     p1_txt = git_text(["git", "cat-file", "-p", f"{p1}:{path}"], repo)
     p2_txt = git_text(["git", "cat-file", "-p", f"{p2}:{path}"], repo)
@@ -255,6 +270,23 @@ def near_miss_pairs(repo_cfg: dict, window_days: int = 14) -> list[dict]:
                 continue
             gap = (t2 - t1).total_seconds() / 86400
             if a1 != a2 and gap <= window_days:
+                # Linearity check (previously only asserted in prose): is
+                # commit_a a direct ancestor of commit_b? `git merge-base
+                # --is-ancestor A B` exits 0 iff A is an ancestor of B, i.e.
+                # B's line of history already contains A — a strictly
+                # sequential edit, not a concurrent branch. exit 1 means NOT
+                # an ancestor (true overlap candidate); any other exit code
+                # (e.g. 128, missing commit) is recorded as "error" rather
+                # than silently counted as linear.
+                anc = run(
+                    ["git", "merge-base", "--is-ancestor", h1, h2], repo, check=False
+                )
+                if anc.returncode == 0:
+                    linear = "true"
+                elif anc.returncode == 1:
+                    linear = "false"
+                else:
+                    linear = "error"
                 pairs.append(
                     {
                         "repo": name,
@@ -266,6 +298,7 @@ def near_miss_pairs(repo_cfg: dict, window_days: int = 14) -> list[dict]:
                         "author_b": a2,
                         "date_b": d2,
                         "gap_days": round(gap, 2),
+                        "linear": linear,
                     }
                 )
     return pairs
@@ -353,7 +386,7 @@ def main() -> int:
 
     near_csv_path = out_dir / "near_miss_pairs.csv"
     with near_csv_path.open("w", newline="") as fh:
-        near_fields = ["repo", "file", "commit_a", "author_a", "date_a", "commit_b", "author_b", "date_b", "gap_days"]
+        near_fields = ["repo", "file", "commit_a", "author_a", "date_a", "commit_b", "author_b", "date_b", "gap_days", "linear"]
         w2 = csv.DictWriter(fh, fieldnames=near_fields)
         w2.writeheader()
         for p in all_near_misses:

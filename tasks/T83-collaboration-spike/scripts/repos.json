@@ -1,8 +1,8 @@
 [
   {"name": "backstage/backstage", "path": "/Users/a1/.hermes/cache/scratch/t83/backstage", "dirs": ["docs/architecture-decisions"]},
   {"name": "alphagov/govuk-aws", "path": "/Users/a1/.hermes/cache/scratch/t83/govuk-aws", "dirs": ["docs/architecture/decisions", "doc/architecture/decisions"]},
-  {"name": "npryce/adr-tools", "path": "/Users/a1/.hermes/cache/scratch/t83/adr-tools", "dirs": ["doc/adr"]},
-  {"name": "cloudfoundry/korifi", "path": "/Users/a1/.hermes/cache/scratch/t83/korifi", "dirs": ["docs/architecture-decisions"]},
-  {"name": "cloudfoundry/cli", "path": "/Users/a1/.hermes/cache/scratch/t83/cli", "dirs": ["doc/adr"]},
-  {"name": "dapr/dapr", "path": "/Users/a1/.hermes/cache/scratch/t83/dapr", "dirs": ["docs/decision_records"]}
+  {"name": "npryce/adr-tools", "path": "/Users/a1/.hermes/cache/scratch/t83/adr-tools", "dirs": ["doc/adr"], "github": "npryce/adr-tools", "squash": true},
+  {"name": "cloudfoundry/korifi", "path": "/Users/a1/.hermes/cache/scratch/t83/korifi", "dirs": ["docs/architecture-decisions"], "github": "cloudfoundry/korifi", "squash": true},
+  {"name": "cloudfoundry/cli", "path": "/Users/a1/.hermes/cache/scratch/t83/cli", "dirs": ["doc/adr"], "github": "cloudfoundry/cli", "squash": true},
+  {"name": "dapr/dapr", "path": "/Users/a1/.hermes/cache/scratch/t83/dapr", "dirs": ["docs/decision_records"], "github": "dapr/dapr", "squash": true}
 ]
