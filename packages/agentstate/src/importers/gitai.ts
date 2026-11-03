@@ -81,13 +81,35 @@ export function parseGitAiNote(note: string): { files: GitAiFileEntry[]; meta: G
   return { files, meta };
 }
 
+// git_ai_standard_v3.0.0.md §1.2.3.1 "Attestation Key Formats": three key prefixes route to three maps --
+//   `s_` -> metadata.sessions (composite `s_<id>::t_<trace>`, split on `::` and look up the base `s_<id>`)
+//   `h_` -> metadata.humans (bare `h_<id>`, never composite)
+//   (no prefix) -> metadata.prompts (legacy, pre-v1.4.0, bare 16-hex)
+// A row whose id is an `h_` key is ALWAYS a known-human attestation, never agent work (§1.2.3.1 "Human Keys":
+// "Human keys: MUST correspond to an entry in `metadata.humans`"). T76 review (2026-11-03): the original fix
+// only excluded `s.sessionId in parsed.meta.humans` -- an exact-string lookup. Two real cases that check missed:
+//  1. the BASE of a composite `base::sub` id is the humans key (not the full composite string) -- can't happen
+//     with a spec-compliant `h_` key (never composite), but a malformed/future note could still carry one, and
+//     checking the base, not just the full id, costs nothing and closes the gap either way.
+//  2. an `h_`-prefixed id shows up with `meta.humans` absent entirely (older note, or a parser that dropped the
+//     map) -- the prefix itself identifies it as human per the spec, independent of whether the map confirms
+//     it; treating a bare prefix match as "unknown, import it" would be the wrong-link class this task exists
+//     to catch, so an h_-prefixed id with no humans map is still excluded (treated as human / skipped).
+function isHumanRow(sessionId: string, humans: GitAiMetadata['humans']): boolean {
+  if (sessionId.startsWith('h_')) return true; // spec: h_ prefix always identifies a human key, map or not
+  const baseId = sessionId.split('::')[0]!;
+  if (humans && (sessionId in humans || baseId in humans)) return true;
+  return false;
+}
+
 export function gitAiToRawIntents(parsed: { files: GitAiFileEntry[]; meta: GitAiMetadata }): RawIntent[] {
   const out: RawIntent[] = [];
   for (const f of parsed.files) {
     for (const s of f.sessions) {
-      // A row whose id is a key in meta.humans is a known_human checkpoint, not agent work -- importing it would
-      // be a wrong link (T76 real-samples/gitai/note-3-multi-file-mixed-human-ai.txt, fileB.js rows).
-      if (parsed.meta.humans && s.sessionId in parsed.meta.humans) continue;
+      // A row whose id is a key in meta.humans (or h_-prefixed at all, per the spec) is a known_human
+      // checkpoint, not agent work -- importing it would be a wrong link (T76 real-samples/gitai/
+      // note-3-multi-file-mixed-human-ai.txt, fileB.js rows).
+      if (isHumanRow(s.sessionId, parsed.meta.humans)) continue;
       const legacyPrompt = parsed.meta.prompts?.[s.sessionId]; // docs' shape: prompts keyed by the bare sessionId
       // Real shape: an AI row's id is "<base_session_id>::<sub_session_id>"; meta.sessions is keyed by the base.
       const baseId = s.sessionId.split('::')[0]!;

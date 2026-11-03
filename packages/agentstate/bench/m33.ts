@@ -8,7 +8,7 @@ import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFile
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { agentTraceToRawIntents, anchorIntents, entireToRawIntents, gitAiToRawIntents, parseAgentTrace, parseEntireCheckpoint, parseGitAiNote, recheckIntents, type RawIntent, type SessionIntent } from '../src/importers/index.js';
+import { agentTraceToRawIntents, anchorIntents, entireLegacyFixtureToRawIntents, gitAiToRawIntents, parseAgentTrace, parseEntireCheckpointLegacyFixture, parseGitAiNote, recheckIntents, type RawIntent, type SessionIntent } from '../src/importers/index.js';
 
 interface KeyFn {
   tail: string;
@@ -37,6 +37,11 @@ const appendTo = (() => {
   return i >= 0 ? args[i + 1] : undefined;
 })();
 
+// T76 (2026-11-03): this builder still uses the LEGACY hand-built fileRanges shape (never a real Entire wire
+// format -- see src/importers/entire.ts) because the bench key's per-function line ranges have no real-data
+// equivalent (real Entire data is file-level only). entireLegacyFixtureToRawIntents/parseEntireCheckpointLegacyFixture
+// are the renamed legacy functions; the production entireToRawIntents (file-level, real format) is exercised by
+// packages/agentstate/test/t76-real-entire.test.ts against actual fetched checkpoints instead.
 function buildEntireRaw(repo: KeyRepo): RawIntent[] {
   const sessions = repo.functions.map((f, i) => ({
     sessionId: `entire-s${i}`,
@@ -46,8 +51,8 @@ function buildEntireRaw(repo: KeyRepo): RawIntent[] {
     fileRanges: [{ file: repo.file, startLine: f.start, endLine: f.end }],
   }));
   const meta = { checkpointId: 'ckpt-t39-fixture', commitSha: 'deadbeef', filesTouched: [repo.file], sessions };
-  const text = JSON.stringify(meta); // entire/checkpoints/v1 metadata.json shape
-  return entireToRawIntents(parseEntireCheckpoint(text));
+  const text = JSON.stringify(meta); // LEGACY hand-built shape, not a real entire/checkpoints wire format
+  return entireLegacyFixtureToRawIntents(parseEntireCheckpointLegacyFixture(text));
 }
 
 function buildGitAiRaw(repo: KeyRepo): RawIntent[] {

@@ -4,11 +4,11 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { agentTraceToRawIntents, anchorIntents, entireToRawIntents, gitAiToRawIntents, parseAgentTrace, parseEntireCheckpoint, parseGitAiNote, recheckIntents } from '../src/importers/index.js';
+import { agentTraceToRawIntents, anchorIntents, entireLegacyFixtureToRawIntents, gitAiToRawIntents, parseAgentTrace, parseEntireCheckpointLegacyFixture, parseGitAiNote, recheckIntents } from '../src/importers/index.js';
 
 describe('T39 importers: parse per the documented format', () => {
-  it('entire checkpoint metadata.json -> sessions with file ranges', () => {
-    const meta = parseEntireCheckpoint(
+  it('LEGACY/HAND-BUILT fixture: entire checkpoint metadata.json -> sessions with file ranges (T76 2026-11-03: Entire never writes this shape; see src/importers/entire.ts and 4 log/real-samples/entire/)', () => {
+    const meta = parseEntireCheckpointLegacyFixture(
       JSON.stringify({
         checkpointId: 'c1',
         commitSha: 'abc123',
@@ -16,13 +16,13 @@ describe('T39 importers: parse per the documented format', () => {
         sessions: [{ sessionId: 's1', agentType: 'claude-code', model: 'claude-sonnet-5', prompt: 'do x', fileRanges: [{ file: 'src/a.ts', startLine: 1, endLine: 3 }] }],
       }),
     );
-    const raw = entireToRawIntents(meta);
+    const raw = entireLegacyFixtureToRawIntents(meta);
     expect(raw).toHaveLength(1);
     expect(raw[0]).toMatchObject({ source: 'entire', sessionId: 's1', file: 'src/a.ts', startLine: 1, endLine: 3, commitSha: 'abc123' });
   });
 
-  it('rejects an entire checkpoint missing sessions[]', () => {
-    expect(() => parseEntireCheckpoint(JSON.stringify({ checkpointId: 'c1' }))).toThrow();
+  it('LEGACY/HAND-BUILT fixture: rejects an entire checkpoint missing sessions[]', () => {
+    expect(() => parseEntireCheckpointLegacyFixture(JSON.stringify({ checkpointId: 'c1' }))).toThrow();
   });
 
   it('git-ai Authorship Log (table + --- + JSON, usegitai.com "Git Note Format")', () => {

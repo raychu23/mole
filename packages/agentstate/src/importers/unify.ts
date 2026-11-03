@@ -33,6 +33,20 @@ export function anchorIntents(root: string, raw: RawIntent[]): AnchorResult {
   const misses: AnchorMiss[] = [];
   const cache = new Map<string, CodeSymbol[]>();
   for (const r of raw) {
+    if (r.granularity === 'file') {
+      // T76: a file-level claim (e.g. real Entire `files_touched`) has no real line range to anchor -- report
+      // it as an explicit miss rather than silently anchor to whatever symbol sits at the [1,1] sentinel,
+      // which would fabricate a precision the source data never provided.
+      misses.push({
+        source: r.source,
+        sessionId: r.sessionId,
+        file: r.file,
+        startLine: r.startLine,
+        endLine: r.endLine,
+        reason: 'file-level claim only (source has no per-session line range); cannot anchor to a single function',
+      });
+      continue;
+    }
     const symbols = symbolsCached(root, r.file, cache);
     const sym = bestSymbol(symbols, r.startLine, r.endLine);
     if (!sym) {
