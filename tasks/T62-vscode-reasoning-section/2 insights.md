@@ -27,3 +27,10 @@ tests           apps/vscode reasoning-section 12 · proposals list 2 · decision
 gap             INFERENCE: incidents (0 candidates) and proposals (contested → defeated) use plain Dung, not the phase
                 in force · backlog incident-under-phase widened to proposals
 ```
+
+## 11-02 23:10 review 1 (deleg_b945a465) PASS
+- real CLI JSON → render checked: 3 phases with current in the middle, via-only flip, two because args, escaping
+  through real data, unreadable incident (own line), unknown proposal, different baselines, runner throw / bad JSON /
+  hang (15 s execFile timeout) → one-line errors · no writes · MCP output identical after the move · 485 tests
+- notes kept: panel.test title says "8 sections" (stale, assertions use SECTION_IDS) · a hang's fallback message
+  echoes the invoked command line (local paths)
