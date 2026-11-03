@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-11-02 18:13      checks ran: npm run check in /Users/a1/.hermes/cache/scratch/mole-build/T51 → exit 0 (at new Promise (<anonymous>))
     2026-11-02 18:14      submitted → verified      reviewer hermes-subagent deleg_aea3aa68 (fresh, claude-sonnet-5) · findings: PASS: traversal, overwrite, crash+recover, injection, idempotent link, graph edges, 0/151 LSH misses, low open: CRLF normalised on relation wri
     2026-11-02 18:14      checks ran: npm run check in /Users/a1/.hermes/cache/scratch/mole-build/T51 → exit 0 (at new Promise (<anonymous>))
+    2026-11-02 18:15      verified → integrated      merge 68a0af7 (main check 925 pass, /Users/a1/.hermes/cache/scratch/mole-build/main-check-t51-r2.txt) · combined checks exit 0
+    2026-11-02 18:15      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (at new Promise (<anonymous>))
 ```
