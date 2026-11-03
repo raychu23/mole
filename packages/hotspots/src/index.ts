@@ -1,38 +1,46 @@
-// @mole/hotspots: rank code areas to pay down (T70, D68) by combining four inputs Mole already
-// computes elsewhere -- churn, indentation-based complexity, decision volatility and incident/fix
-// density -- into one ranked list, each rank explained by its four inputs (never a bare score).
+// @mole/hotspots: rank code areas to pay down (T70, D68) by churn x complexity (Tornhill/code-maat's
+// hotspot method), with decision volatility and incident/fix density reported as separate
+// explanatory columns and optional sort keys -- never multiplied into the score (review-1 HIGH 1).
 //
 // Prior art (tasks/T70-investment-map/4 log/prior-art.md):
 //   - hotspot = frequency-of-change x complexity (Tornhill, "Your Code as a Crime Scene"; code-maat
 //     https://github.com/adamtornhill/code-maat)
 //   - complexity = indentation-based ("whitespace") complexity, not a per-language AST walk
 //     (Tornhill, same book p.25; Hindle/Godfrey/Holt ICPC 2008 "indentation as a proxy for complexity")
-//   - churn = commits-per-file (code-maat's `revisions` analysis)
+//   - churn = commits-per-file (code-maat's `revisions` analysis), renames merged (git-log(1) `-M`)
 //   - normalize each input before combining (Nagappan & Ball ICSE 2005: relative churn measures beat
 //     absolute ones as predictors)
 //   - decision volatility and incident/fix density reuse Mole's own data: @mole/decisions'
 //     loadGraph() (decision scope + overrides edges) and @mole/history's DEFAULT_FIX_RULE, rather than
-//     a second implementation of either (AGENTS.md: one source of truth).
-import { EMPTY_TREE, git } from '@mole/history/dist/src/git.js';
+//     a second implementation of either (AGENTS.md: one source of truth) -- reported, never gating
+//   - rank source code only by default; lockfiles/*.json/*.md/*.yaml/generated dirs/binaries excluded
+//     (CodeScene "Exclude Files from an Analysis" practice, code-maat's own noise exclusions)
+//   - read every blob once via `git cat-file --batch`, not one `git show` per file (review-1 MED 3)
+import { git } from '@mole/history/dist/src/git.js';
 import { DEFAULT_FIX_RULE } from '@mole/history';
 import { loadGraph } from '@mole/decisions';
-import { indentComplexity } from './complexity.js';
+import { indentComplexity, indentComplexityFromText } from './complexity.js';
+import { catFileBatch } from './batch-git.js';
+import { isRankableFile, looksBinary } from './filters.js';
 
-export { indentComplexity } from './complexity.js';
+export { indentComplexity, indentComplexityFromText } from './complexity.js';
 export type { IndentComplexity } from './complexity.js';
 
 export interface HotspotInputs {
-  /** commits touching this file (code-maat `revisions`; Nagappan & Ball: churn, un-normalized) */
+  /** commits touching this file, renames merged under the current name (code-maat `revisions`;
+   * Nagappan & Ball: churn, un-normalized) */
   churn: number;
   /** sum of per-line logical-indent depth over the file's current content (Tornhill) */
   complexity: number;
   /** decisions whose `scope` touches this file, plus `overrides` edges among them (revisions of the
    * team's stance on this code) -- read from @mole/decisions' loadGraph(), not @mole/temporal
    * (INFERENCE, see prior-art.md "Decisions taken": temporal's Postgres/RLS store is out of T70's
-   * boundary; .mole/decisions/*.md is the lighter, already-read-only equivalent) */
+   * boundary; .mole/decisions/*.md is the lighter, already-read-only equivalent). Explanatory column
+   * / `--by volatility` sort key only -- review-1 HIGH 1: never multiplied into `score`. */
   volatility: number;
-  /** commits touching this file whose subject matches the fix rule (@mole/history's DEFAULT_FIX_RULE,
-   * the same rule `mole check`/`mole_check` use for "this commit is a fix") */
+  /** commits touching this file (renames merged) whose subject matches the fix rule (@mole/history's
+   * DEFAULT_FIX_RULE, the same rule `mole check`/`mole_check` use for "this commit is a fix").
+   * Explanatory column / `--by fixes` sort key only -- review-1 HIGH 1: never multiplied into `score`. */
   incidents: number;
 }
 
@@ -41,12 +49,15 @@ export interface HotspotRank extends HotspotInputs {
   /** each raw input divided by the max of that input across every ranked file (0 when the file has
    * none; a file with the single largest raw value in some input scores 1 on that input) */
   normalized: { churn: number; complexity: number; volatility: number; incidents: number };
-  /** product of the four normalized scores (Nagappan & Ball: normalize before combining).
-   * 0 if ANY input is 0 for this file -- a hotspot by this definition needs all four signals
-   * (a file nobody ever revised a decision about, or that never broke, is not ranked above one
-   * that did, no matter how large its churn x complexity is). */
+  /** the hotspot score: product of normalized churn x normalized complexity only (Tornhill/code-maat's
+   * method, Nagappan & Ball: normalize before combining). review-1 HIGH 1: decision volatility and
+   * incident/fix density are reported alongside but never multiplied in -- a file with zero decisions
+   * or zero fixes is still ranked purely on how often and how complex its changes are; `score` is 0
+   * only when churn or complexity itself is 0 for that file, never because of the other two columns. */
   score: number;
 }
+
+export type HotspotSortKey = 'hotspot' | 'volatility' | 'fixes';
 
 export interface HotspotsOptions {
   /** max files to return, ranked by score desc (default 10, per T70's done-when) */
@@ -58,13 +69,24 @@ export interface HotspotsOptions {
   /** spaces counted as one logical indent (Tornhill's indent-complexity-proxy default is 4; Mole's
    * own source is 2-space indented, so 2 is this package's default -- configurable, not hardcoded) */
   spacesPerIndent?: number;
+  /** sort key (review-1 HIGH 1): 'hotspot' (default, churn x complexity), 'volatility' (raw decision
+   * volatility desc) or 'fixes' (raw incident count desc) -- the four raw/normalized inputs are
+   * always returned on every rank regardless of sort key, only the order changes */
+  by?: HotspotSortKey;
+  /** review-1 HIGH 2: include non-source files (lockfiles, *.json/*.md/*.yaml, generated dirs,
+   * binaries) that are excluded by default. Generated dirs, lockfiles and binary blobs stay excluded
+   * even with `all: true` -- they are never source to pay down. Default false. */
+  all?: boolean;
 }
 
 export interface HotspotsResult {
   ranked: HotspotRank[];
-  /** every file considered (tracked text files with >=1 commit), before truncating to `top` */
+  /** every rankable file considered (tracked, not excluded, not binary, with >=1 commit), before
+   * truncating to `top` */
   filesConsidered: number;
   fixRule: string;
+  by: HotspotSortKey;
+  all: boolean;
   ms: number;
 }
 
@@ -73,25 +95,58 @@ function compileFixRule(rule: RegExp | string): RegExp {
   return new RegExp(rule, 'i');
 }
 
-/** per file: commit count (churn) and fix-commit count (incidents), one `git log --name-only` walk */
+/** follow a chain of rename aliases (old name -> ... -> current name) to its end */
+function resolveAlias(alias: Map<string, string>, name: string): string {
+  let cur = name;
+  const seen = new Set<string>();
+  while (alias.has(cur) && !seen.has(cur)) {
+    seen.add(cur);
+    cur = alias.get(cur)!;
+  }
+  return cur;
+}
+
+/** per file: commit count (churn) and fix-commit count (incidents), one `git log --name-status -M`
+ * walk. review-1 MED 3: `-M` (rename detection) + an alias map means a file renamed partway through
+ * its history is counted once, under its current name, not split across old and new paths. */
 async function churnAndIncidents(root: string, since: string | undefined, fixRule: RegExp): Promise<Map<string, { churn: number; incidents: number }>> {
-  const args = ['log', '--name-only', '--format=%x01%H%x02%s'];
+  const args = ['log', '--name-status', '-M', '--format=%x01%H%x02%s'];
   if (since) args.push(`--since=${since}`);
   const raw = await git(root, args);
   const out = new Map<string, { churn: number; incidents: number }>();
+  const alias = new Map<string, string>();
   let isFix = false;
+
+  const bump = (file: string): void => {
+    const canonical = resolveAlias(alias, file);
+    const e = out.get(canonical) ?? { churn: 0, incidents: 0 };
+    e.churn += 1;
+    if (isFix) e.incidents += 1;
+    out.set(canonical, e);
+  };
+
   for (const line of raw.split('\n')) {
     if (line.startsWith('\x01')) {
       const subject = line.slice(1).split('\x02')[1] ?? '';
       isFix = fixRule.test(subject);
       continue;
     }
-    const file = line.trim();
-    if (!file) continue;
-    const e = out.get(file) ?? { churn: 0, incidents: 0 };
-    e.churn += 1;
-    if (isFix) e.incidents += 1;
-    out.set(file, e);
+    if (!line.trim()) continue;
+    const parts = line.split('\t');
+    const status = parts[0] ?? '';
+    if (status.startsWith('R') || status.startsWith('C')) {
+      // rename/copy: "R100\told\tnew" / "C100\tsrc\tdst" -- attribute this commit's churn once, to
+      // the destination path, and (for renames) alias the old path to it for earlier commits
+      const oldPath = parts[1];
+      const newPath = parts[2];
+      if (!newPath) continue;
+      const canonicalNew = resolveAlias(alias, newPath);
+      if (status.startsWith('R') && oldPath) alias.set(oldPath, canonicalNew);
+      bump(canonicalNew);
+    } else {
+      const file = parts[1];
+      if (file) bump(file);
+    }
   }
   return out;
 }
@@ -120,29 +175,46 @@ function decisionVolatility(root: string): Map<string, number> {
   return out;
 }
 
-/** every file git currently tracks (HEAD's tree): what `indentComplexity` can be computed for */
-async function trackedFiles(root: string): Promise<string[]> {
-  const raw = await git(root, ['ls-tree', '-r', '--name-only', 'HEAD']).catch(() => '');
-  return raw.split('\n').filter(Boolean);
+/** every file git currently tracks (HEAD's tree) with its blob sha: what the batch cat-file read
+ * needs, and what `isRankableFile`/`looksBinary` filter down to */
+async function trackedFiles(root: string): Promise<Array<{ file: string; sha: string }>> {
+  const raw = await git(root, ['ls-tree', '-r', 'HEAD']).catch(() => '');
+  const out: Array<{ file: string; sha: string }> = [];
+  for (const line of raw.split('\n')) {
+    if (!line.trim()) continue;
+    // "<mode> <type> <sha>\t<path>"
+    const tab = line.indexOf('\t');
+    if (tab === -1) continue;
+    const meta = line.slice(0, tab).split(' ');
+    const sha = meta[2];
+    const type = meta[1];
+    if (type !== 'blob' || !sha) continue;
+    out.push({ file: line.slice(tab + 1), sha });
+  }
+  return out;
 }
 
 export async function computeHotspots(root: string, opts: HotspotsOptions = {}): Promise<HotspotsResult> {
   const t0 = performance.now();
   const fixRule = compileFixRule(opts.fixRule ?? DEFAULT_FIX_RULE);
   const spacesPerIndent = opts.spacesPerIndent ?? 2;
+  const by = opts.by ?? 'hotspot';
+  const all = opts.all ?? false;
 
   const [ci, volatility, tracked] = await Promise.all([churnAndIncidents(root, opts.since, fixRule), Promise.resolve(decisionVolatility(root)), trackedFiles(root)]);
-  const trackedSet = new Set(tracked);
 
-  // only files that both exist now (so complexity is computable) and have >=1 commit (so churn is
-  // meaningful) are ranked -- a file git never touched, or one history has but is since deleted, has
-  // no complete four-input story and would need a fabricated 0 that this package refuses to invent.
-  const files = [...ci.keys()].filter((f) => trackedSet.has(f));
+  // review-1 HIGH 2: rank source code only by default (lockfiles/*.json/*.md/*.yaml/generated dirs
+  // excluded unless `all`); review-1 MED 3: read every surviving blob in ONE `git cat-file --batch`
+  // call instead of one `git show` per file.
+  const rankable = tracked.filter((t) => ci.has(t.file) && isRankableFile(t.file, all));
+  const blobs = await catFileBatch(root, rankable.map((t) => t.sha));
 
   const rows: Array<{ file: string } & HotspotInputs> = [];
-  for (const file of files) {
+  for (const { file, sha } of rankable) {
+    const content = blobs.get(sha);
+    if (!content || looksBinary(content)) continue; // review-1 HIGH 2: binary files never ranked
     const churnRow = ci.get(file)!;
-    const complexity = await indentComplexity(root, file, spacesPerIndent).catch(() => 0);
+    const complexity = indentComplexityFromText(content.toString('utf8'), spacesPerIndent);
     rows.push({ file, churn: churnRow.churn, complexity, volatility: volatility.get(file) ?? 0, incidents: churnRow.incidents });
   }
 
@@ -152,23 +224,31 @@ export async function computeHotspots(root: string, opts: HotspotsOptions = {}):
   const maxVolatility = maxOf('volatility');
   const maxIncidents = maxOf('incidents');
 
-  const ranked: HotspotRank[] = rows
-    .map((r) => {
-      const normalized = { churn: r.churn / maxChurn, complexity: r.complexity / maxComplexity, volatility: r.volatility / maxVolatility, incidents: r.incidents / maxIncidents };
-      const score = normalized.churn * normalized.complexity * normalized.volatility * normalized.incidents;
-      return { ...r, normalized, score };
-    })
-    .sort((a, b) => b.score - a.score || b.churn - a.churn || a.file.localeCompare(b.file));
+  const scored: HotspotRank[] = rows.map((r) => {
+    const normalized = { churn: r.churn / maxChurn, complexity: r.complexity / maxComplexity, volatility: r.volatility / maxVolatility, incidents: r.incidents / maxIncidents };
+    // review-1 HIGH 1: score = churn x complexity ONLY (Tornhill/code-maat's hotspot method).
+    // volatility and incidents are reported above but never multiplied in -- no any-zero->0 gate.
+    const score = normalized.churn * normalized.complexity;
+    return { ...r, normalized, score };
+  });
 
-  return { ranked: ranked.slice(0, opts.top ?? 10), filesConsidered: rows.length, fixRule: fixRule.source, ms: Math.round(performance.now() - t0) };
+  const sortKey: Record<HotspotSortKey, (r: HotspotRank) => number> = {
+    hotspot: (r) => r.score,
+    volatility: (r) => r.volatility,
+    fixes: (r) => r.incidents,
+  };
+  const keyFn = sortKey[by];
+  const ranked = scored.sort((a, b) => keyFn(b) - keyFn(a) || b.score - a.score || b.churn - a.churn || a.file.localeCompare(b.file));
+
+  return { ranked: ranked.slice(0, opts.top ?? 10), filesConsidered: rows.length, fixRule: fixRule.source, by, all, ms: Math.round(performance.now() - t0) };
 }
 
 export function formatHotspots(r: HotspotsResult): string {
-  if (r.ranked.length === 0) return `mole hotspots: no file has all four inputs (churn, complexity, decision volatility, a fix commit) -- nothing ranked (${r.filesConsidered} file(s) considered)`;
-  const out = [`mole hotspots (fix rule /${r.fixRule}/i, ${r.filesConsidered} file(s) considered)`];
+  if (r.ranked.length === 0) return `mole hotspots: no source file has any commit history (${r.filesConsidered} file(s) considered, --by ${r.by}${r.all ? ', --all' : ''})`;
+  const out = [`mole hotspots (fix rule /${r.fixRule}/i, --by ${r.by}${r.all ? ' --all' : ''}, ${r.filesConsidered} file(s) considered)`];
   r.ranked.forEach((h, i) => {
-    out.push(`${i + 1}. ${h.file}  score=${h.score.toFixed(3)}`);
-    out.push(`   churn=${h.churn} (${h.normalized.churn.toFixed(2)})  complexity=${h.complexity} (${h.normalized.complexity.toFixed(2)})  decision volatility=${h.volatility} (${h.normalized.volatility.toFixed(2)})  fix commits=${h.incidents} (${h.normalized.incidents.toFixed(2)})`);
+    out.push(`${i + 1}. ${h.file}  score=${h.score.toFixed(3)}  (churn x complexity, normalized)`);
+    out.push(`   churn=${h.churn} (${h.normalized.churn.toFixed(2)})  complexity=${h.complexity} (${h.normalized.complexity.toFixed(2)})  |  decision volatility=${h.volatility} (${h.normalized.volatility.toFixed(2)})  fix commits=${h.incidents} (${h.normalized.incidents.toFixed(2)})`);
   });
   return out.join('\n');
 }

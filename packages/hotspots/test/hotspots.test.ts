@@ -1,6 +1,11 @@
-// T70 red tests (written before packages/hotspots/src/*): a fixture repo where each of the four
-// inputs is deliberately shaped (one file with high churn+fixes+complexity+decision volatility,
-// one with none) so the top rank is predictable and each rank carries its own four inputs.
+// T70 tests (red before review-1 fixes, see tasks/T70-investment-map/4 log/red.txt): a fixture
+// repo where each signal is deliberately shaped so the top rank is predictable and each rank
+// carries its own raw inputs, plus review-1's four findings:
+//  HIGH 1: score = churn x complexity only (no any-zero->0 gate); volatility/incidents are
+//          explanatory columns and `--by hotspot|volatility|fixes` sort keys, never a gate.
+//  HIGH 2: non-source files (lockfiles, *.json/*.md/*.yaml, generated dirs, binaries) are excluded
+//          by default; `all: true` lifts the extension filter only.
+//  MED 3:  renames are merged (churn not split across old/new name).
 import { afterAll, describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -24,6 +29,10 @@ function write(root: string, file: string, text: string): void {
   mkdirSync(dirname(join(root, file)), { recursive: true });
   writeFileSync(join(root, file), text);
 }
+function writeBinary(root: string, file: string, bytes: Buffer): void {
+  mkdirSync(dirname(join(root, file)), { recursive: true });
+  writeFileSync(join(root, file), bytes);
+}
 function commit(root: string, msg: string): string {
   git(root, 'add', '-A');
   git(root, 'commit', '-q', '-m', msg);
@@ -38,8 +47,7 @@ const COLD = ['export const flat = 1;', ''].join('\n');
  * repo with two files:
  *  - hot.ts: 3 commits (1 base + 2 fixes matching the fix rule), deeply indented -> high churn,
  *    high complexity, high incident density; a decision in .mole/decisions scopes it, overridden
- *    by a second decision -> decision volatility 2 (1 decision touching it + 1 overrides edge... in
- *    this fixture both decisions touch it, so volatility = 2 decisions + 1 overrides edge = 3)
+ *    by a second decision -> decision volatility 3 (2 decisions touching it + 1 overrides edge)
  *  - cold.ts: 1 commit, flat, no decision, no fix -> every input at or near its minimum
  */
 function fixtureRepo(): { root: string } {
@@ -84,16 +92,13 @@ describe('indentComplexity (T70: Tornhill indentation-based complexity)', () => 
   });
 });
 
-describe('computeHotspots (T70 done-when: ranking, each rank explained by its four inputs)', () => {
-  it('ranks the file with high churn+complexity+volatility+incidents above a flat untouched-by-decisions file', async () => {
+describe('computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs)', () => {
+  it('ranks the file with high churn+complexity above a flat file (review-1 HIGH 1: no any-zero gate)', async () => {
     const { root } = fixtureRepo();
     const r = await computeHotspots(root, { top: 10 });
     expect(r.ranked.length).toBeGreaterThan(0);
     expect(r.ranked[0]!.file).toBe('hot.ts');
     expect(r.ranked[0]!.score).toBeGreaterThan(0);
-    // cold.ts has no decision and no fix commit -> its product is 0, so it is either absent or last with score 0
-    const cold = r.ranked.find((h) => h.file === 'cold.ts');
-    if (cold) expect(cold.score).toBe(0);
   });
 
   it('every rank carries its own four raw inputs and their normalized [0,1] scores (never a bare score)', async () => {
@@ -108,7 +113,8 @@ describe('computeHotspots (T70 done-when: ranking, each rank explained by its fo
       expect(hot.normalized[k]).toBeGreaterThanOrEqual(0);
       expect(hot.normalized[k]).toBeLessThanOrEqual(1);
     }
-    expect(hot.score).toBeCloseTo(hot.normalized.churn * hot.normalized.complexity * hot.normalized.volatility * hot.normalized.incidents, 10);
+    // review-1 HIGH 1: score is churn x complexity only -- volatility/incidents never gate it
+    expect(hot.score).toBeCloseTo(hot.normalized.churn * hot.normalized.complexity, 10);
   });
 
   it('respects --top / top option', async () => {
@@ -117,11 +123,95 @@ describe('computeHotspots (T70 done-when: ranking, each rank explained by its fo
     expect(r.ranked.length).toBe(1);
   });
 
-  it('a repo with no fix commits and no decisions ranks nothing (STOP: no ranking without all four inputs)', async () => {
+  it('review-1 HIGH 1: a repo with no decisions and no fix commits still ranks by churn x complexity', async () => {
     const root = tmpRepo();
-    write(root, 'only.ts', HOT_V1);
-    commit(root, 'feat: only file, never fixed, no decision');
+    write(root, 'hot.ts', HOT_V1);
+    commit(root, 'feat: hot, never fixed, no decision');
+    write(root, 'hot.ts', HOT_V1 + '  // tweak\n');
+    commit(root, 'feat: another touch, still never fixed');
+    write(root, 'cold.ts', COLD);
+    commit(root, 'feat: cold, one commit only');
     const r = await computeHotspots(root, { top: 10 });
-    expect(r.ranked.every((h) => h.score === 0)).toBe(true);
+    expect(r.ranked.length).toBe(2);
+    // hot.ts has 2 commits + nonzero complexity, cold.ts 1 commit + zero complexity -> hot.ts ranks
+    // first purely on churn x complexity, with volatility=0 and incidents=0 for BOTH (not a gate)
+    expect(r.ranked[0]!.file).toBe('hot.ts');
+    expect(r.ranked[0]!.score).toBeGreaterThan(0);
+    expect(r.ranked[0]!.volatility).toBe(0);
+    expect(r.ranked[0]!.incidents).toBe(0);
+  });
+
+  it('review-1 HIGH 1: --by volatility / --by fixes resort without changing the raw inputs', async () => {
+    const { root } = fixtureRepo();
+    const byHotspot = await computeHotspots(root, { top: 10, by: 'hotspot' });
+    const byVolatility = await computeHotspots(root, { top: 10, by: 'volatility' });
+    const byFixes = await computeHotspots(root, { top: 10, by: 'fixes' });
+    expect(byHotspot.ranked[0]!.file).toBe('hot.ts');
+    expect(byVolatility.ranked[0]!.file).toBe('hot.ts'); // only file with any decision volatility
+    expect(byFixes.ranked[0]!.file).toBe('hot.ts'); // only file with any fix commit
+  });
+
+  it('review-1 HIGH 2: lockfiles are excluded from the default (source-only) ranking', async () => {
+    const root = tmpRepo();
+    write(root, 'package-lock.json', JSON.stringify({ a: 1, deps: Array.from({ length: 50 }, (_, i) => i) }, null, 2));
+    write(root, 'src.ts', HOT_V1);
+    commit(root, 'feat: lockfile + source');
+    write(root, 'package-lock.json', JSON.stringify({ a: 2, deps: Array.from({ length: 60 }, (_, i) => i) }, null, 2));
+    commit(root, 'chore: bump lockfile');
+    const r = await computeHotspots(root, { top: 10 });
+    expect(r.ranked.some((h) => h.file === 'package-lock.json')).toBe(false);
+    expect(r.ranked.some((h) => h.file === 'src.ts')).toBe(true);
+  });
+
+  it('review-1 HIGH 2: *.json/*.md/*.yaml and generated dirs are excluded unless --all', async () => {
+    const root = tmpRepo();
+    write(root, 'notes.md', '# notes\n\nlots of words here to churn\n');
+    write(root, 'config.json', '{"a":1}\n');
+    write(root, 'dist/bundle.js', 'console.log(1);\n');
+    write(root, 'src.ts', HOT_V1);
+    commit(root, 'feat: mixed files');
+    const r = await computeHotspots(root, { top: 10 });
+    expect(r.ranked.map((h) => h.file)).toEqual(['src.ts']);
+    const all = await computeHotspots(root, { top: 10, all: true });
+    expect(all.ranked.some((h) => h.file === 'notes.md')).toBe(true);
+    expect(all.ranked.some((h) => h.file === 'config.json')).toBe(true);
+    // generated dirs stay excluded even with --all (never source to pay down)
+    expect(all.ranked.some((h) => h.file === 'dist/bundle.js')).toBe(false);
+  });
+
+  it('review-1 HIGH 2: binary files are skipped (never ranked, never crash complexity)', async () => {
+    const root = tmpRepo();
+    writeBinary(root, 'logo.png', Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0x01, 0x02, 0x03, 0x00, 0x00]));
+    write(root, 'src.ts', HOT_V1);
+    commit(root, 'feat: binary + source');
+    writeBinary(root, 'logo.png', Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0x09, 0x08, 0x07, 0x00, 0x00]));
+    commit(root, 'chore: update binary');
+    const r = await computeHotspots(root, { top: 10, all: true }); // even with --all, binary is skipped
+    expect(r.ranked.some((h) => h.file === 'logo.png')).toBe(false);
+    expect(r.ranked.some((h) => h.file === 'src.ts')).toBe(true);
+  });
+
+  it('review-1 MED 3: a rename merges churn/incidents under the current name, not split across old/new', async () => {
+    const root = tmpRepo();
+    write(root, 'old-name.ts', HOT_V1);
+    commit(root, 'feat: add old-name.ts');
+    write(root, 'old-name.ts', HOT_V2);
+    commit(root, 'fix: off by one before rename');
+    git(root, 'mv', 'old-name.ts', 'new-name.ts');
+    commit(root, 'refactor: rename old-name.ts to new-name.ts');
+    write(root, 'new-name.ts', HOT_V2.replace('x -= 1', 'x = x - 1'));
+    commit(root, 'fix: regression after rename');
+    const r = await computeHotspots(root, { top: 10 });
+    expect(r.ranked.some((h) => h.file === 'old-name.ts')).toBe(false);
+    const merged = r.ranked.find((h) => h.file === 'new-name.ts')!;
+    expect(merged).toBeDefined();
+    expect(merged.churn).toBe(4); // all 4 commits (2 pre-rename + rename + 1 post-rename) merged
+    expect(merged.incidents).toBe(2); // both fix commits merged under the current name
+  });
+
+  it('review-1 MED 3: timed on this fixture -- must stay well under the 10s budget', async () => {
+    const { root } = fixtureRepo();
+    const r = await computeHotspots(root, { top: 10 });
+    expect(r.ms).toBeLessThan(10_000);
   });
 });

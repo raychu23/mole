@@ -109,3 +109,64 @@ Fetched 2026-11-03.
   statistical claim this task makes.
 - **Human spot-check of the top 10 stays OPEN** per the contract ("Human spot-check of the top 10 is
   Raymond's, record as OPEN") — not performed by this task.
+
+## Review 1 fixes — additional prior art (fetched 2026-11-03)
+
+## 4. CodeScene, "Project Configuration" docs, "Exclude Files from an Analysis"
+   (https://codescene.io/docs/configuration/project-config/index.html, fetched 2026-11-03).
+   - "An analysis will include all textual content in your repository. That means: you get an
+     analysis of your build scripts, resource files, configuration files, test data, etc. While
+     it's a good practice to run an analysis of all content every now and then, there's also the
+     risk that you get too much noise in the analysis results... you typically want to exclude auto
+     generated content." CodeScene ships a default extension-exclusion list plus a whitelist/exclude
+     glob mechanism for whole folders, explicitly naming third-party/auto-generated code as the
+     usual target.
+     **Borrowed:** rank source code only by default — a known-source-extension allowlist plus an
+     explicit exclude list for lockfiles, generic config/doc/data extensions (`*.json`/`*.md`/
+     `*.yaml`/`*.yml`) and generated/vendored directories (`dist/`, `build/`, `coverage/`,
+     `node_modules/`, plus `.next/`/`.turbo/`/`out/`/`target/` for completeness) — with an explicit
+     opt-out (`all: true`) lifting the extension filter, matching CodeScene's "whitelist vs. exclude,
+     with an escape hatch" shape rather than a single hardcoded list nobody can widen.
+     **What doesn't fit:** CodeScene's exclusion is a user-editable glob/extension list in a GUI;
+     T70's fixed defaults are close analogues (source-extension allowlist + explicit lockfile/
+     data-extension/generated-dir denylist) without building a config-file mechanism, out of scope
+     for this review-1 fix.
+
+## 5. git-cat-file(1), "Batch Output" (https://git-scm.com/docs/git-cat-file, fetched 2026-11-03).
+   - `git cat-file --batch` reads object identifiers from stdin and, per object, writes
+     `<sha1> SP <type> SP <size> LF` followed by `<size>` bytes of content and a trailing LF — the
+     exact size-delimited framing this task's `batch-git.ts` parses from a single spawned process's
+     stdout, replacing one `git show HEAD:<file>` child process per file.
+     **Borrowed as-is:** one `--batch` call for every ranked file's blob, parsed by byte length (not
+     a line-based string split, which would break on content containing literal newlines inside the
+     declared size) — this is why the batch reader works on a raw `Buffer`, not `execFile`'s
+     utf8-decoded string.
+   - Also used (via existing `git log -M --name-status`, not a new tool): git-log(1)'s `-M` rename
+     detection — "If generating a diff, detect and report renames for each commit" — so the churn
+     and incident counters for a renamed file are attributed once, to its current name, instead of
+     split across old and new paths across the rename boundary.
+
+## Decisions taken in review 1 (superseding the matching lines above, evidence as cited)
+- **HIGH 1 — score = churn × complexity only** (Tornhill/code-maat's literal hotspot definition,
+  source 1 above), not the four-way product. Decision volatility and incident/fix density are
+  reported on every rank as explanatory columns and exposed as `--by volatility`/`--by fixes` sort
+  keys (default `--by hotspot`), but are never multiplied into `score` and never zero it out. The
+  original "score = 0 if ANY input is 0" STOP clause is retracted: it is not in Tornhill/code-maat's
+  method, and on Mole's own repo (no file both decision-scoped AND ever fixed, at the time of the
+  first run) it zeroed all 2287 files — a result that cannot distinguish any hotspot from any other
+  file, i.e. it provides no ranking at all. Superseded line: the "combination" row and the "Score = 0
+  if ANY input is 0" sentence under "inputs"/"Decisions taken" above.
+- **HIGH 2 — rank source code only by default** (source 4 above): known source-extension allowlist;
+  lockfiles, `*.json`/`*.md`/`*.yaml`/`*.yml`, and generated/vendored directories excluded; binary
+  blobs skipped via NUL-byte detection on the already-read content. `all: true` lifts the
+  source-extension allowlist and the data-extension exclusion only — lockfiles, generated dirs and
+  binaries stay excluded even with `all: true` (never "source to pay down" regardless of flag).
+- **MED 3 — one `git cat-file --batch` for every ranked file's blob** (source 5 above), replacing the
+  per-file `git show HEAD:<file>` loop; complexity computed in-process from the batch-read `Buffer`
+  (`indentComplexityFromText`, complexity.ts) rather than re-shelling per file. Mole's own repo:
+  69.5s (review-1 finding, old code) → 492ms (this fix, `hotspots-top10-mole.txt`'s timing line),
+  466 files considered after the HIGH 2 filter narrowed 2303 tracked files (git ls-tree -r HEAD) to
+  the ranked set, well
+  under the 10s target. Renames tracked via `git log -M --name-status` + an alias map (resolved
+  through chained renames) instead of plain `--name-only`, so a renamed file's churn/incidents merge
+  under its current name (tested: `hotspots.test.ts` "a rename merges churn/incidents...").
