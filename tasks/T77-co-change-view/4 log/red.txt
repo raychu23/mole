@@ -1,0 +1,152 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T77-co-change-view
+
+ ❯ packages/coupling/test/coupling.test.ts (11 tests | 11 failed) 15964ms
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > finds the a.ts/b.ts pair with its shared-commit evidence 1788ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > never returns a pair below min-shared-revs (a.ts/e.ts co-changed only once) 2129ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > maps CODEOWNERS teams and flags the cross-team pair (a/b: @team-a vs @team-b) 1792ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > sorts cross-team pairs first (Cataldo & Herbsleb: surface the under-coordinated coupling) 1769ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > attaches the decision whose scope covers both a.ts and b.ts, not c.ts/d.ts 2018ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > respects --top 1495ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > STOP clause: every returned pair carries non-empty shared-commit evidence (never a bare pair) 1142ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > reports the CODEOWNERS path found at HEAD 1014ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > a repo with no CODEOWNERS still returns pairs, honestly with empty owner arrays (never fabricated) 507ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > formatCoupling renders a human-readable summary that names the evidence 1031ms
+     → not implemented (RED fixture)
+   × computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > timed on this fixture -- well under a 10s budget 1107ms
+     → not implemented (RED fixture)
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 11 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > finds the a.ts/b.ts pair with its shared-commit evidence
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:71:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > never returns a pair below min-shared-revs (a.ts/e.ts co-changed only once)
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:81:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > maps CODEOWNERS teams and flags the cross-team pair (a/b: @team-a vs @team-b)
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:87:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > sorts cross-team pairs first (Cataldo & Herbsleb: surface the under-coordinated coupling)
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:98:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > attaches the decision whose scope covers both a.ts and b.ts, not c.ts/d.ts
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:107:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > respects --top
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:116:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > STOP clause: every returned pair carries non-empty shared-commit evidence (never a bare pair)
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:122:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > reports the CODEOWNERS path found at HEAD
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:135:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > a repo with no CODEOWNERS still returns pairs, honestly with empty owner arrays (never fabricated)
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:146:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > formatCoupling renders a human-readable summary that names the evidence
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:158:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/11]⎯
+
+ FAIL  packages/coupling/test/coupling.test.ts > computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > timed on this fixture -- well under a 10s budget
+Error: not implemented (RED fixture)
+ ❯ computeCoupling packages/coupling/src/index.ts:6:9
+
+ ❯ packages/coupling/test/coupling.test.ts:166:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/11]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  11 failed (11)
+   Start at  05:44:10
+   Duration  16.54s (transform 131ms, setup 0ms, collect 81ms, tests 15.96s, environment 0ms, prepare 134ms)
+
+---------------------------------------------------------------------------
+T77 review-1 fix (2026-11-03): 4 new tests added against the OLD (buggy)
+packages/coupling/src/index.ts (HIGH: degree from ceiled average instead of
+raw; HIGH: max-coupling compared against raw degree instead of floor(degree);
+MED: min-revs filtered per-file before pairing instead of the pair's
+average-revs after pairing; MED: max-changeset-size, no dedicated test).
+3 of 4 RED against the old code (the max-changeset-size test already passed
+-- the `good` filter was already correct, it just had no dedicated test):
+
+ ❯ packages/coupling/test/coupling.test.ts (15 tests | 3 failed) 15130ms
+   × T77 review-1 HIGH: degree from the RAW average, not the ceiled one (code-maat logical_coupling.clj) > revsA=17 revsB=24 shared=12 -> degree 58 (58.54% raw truncated), not 57 (ceil-average would give 57.14 -> 57) 1569ms
+     → expected undefined to be close to 58.536585, received difference is NaN, but expected 0.000049999999999999996
+   × T77 review-1 HIGH: max-coupling filters floor(coupling) <= max (code-maat coupling_algos.clj within-threshold?) > raw coupling 52.63% (floor 52): kept at --max-coupling 52, dropped at --max-coupling 51 847ms
+     → expected undefined to be close to 52.631578, received difference is NaN, but expected 0.000049999999999999996
+   × T77 review-1 MED: min-revs filters the PAIR's average-revs after pairing, not per-file before (code-maat coupling_algos.clj within-threshold?) > --min-revs 10 --min-shared-revs 5: pair revsA=6 revsB=20 shared=6 is KEPT (average-revs=13 >= 10) even though file A alone has only 6 revisions 1147ms
+     → expected undefined to be defined
+   ✓ T77 review-1 MED: max-changeset-size drops an oversized commit entirely, not only from pairing > a 31-file commit (> default max-changeset-size=30) must not manufacture coupling between any of its files 564ms
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 12 passed (15)
+
+After the fix (degree computed from the raw average(revsA, revsB); averageRevs
+column still ceil()'d separately; max-coupling compared against
+floor(degreeExact); min-revs filter moved to post-pairing average-revs; degree
+now the code-maat `(int coupling)` truncated value with degreeExact kept for
+callers that want it): all 15 coupling tests pass (GREEN), see this task's
+insights.md.
+
+
