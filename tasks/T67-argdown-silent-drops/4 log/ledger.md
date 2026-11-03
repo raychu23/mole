@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-11-03 03:54      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T67-argdown-silent-drops → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
     2026-11-03 03:56      submitted → verified      reviewer hermes-subagent deleg_34eee310 PASS (fresh, claude-sonnet-5) · findings: PASS: self-attacker UNDEC under grounded verified (contract corrected), duplicates reported with both locations, ADR self-loops still drop
     2026-11-03 03:56      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T67-argdown-silent-drops → exit 0 (at new Promise (<anonymous>))
+    2026-11-03 03:58      verified → integrated      merge 77a1746, main 91aec47 full check 1133 pass 0 fail (/Users/a1/.hermes/cache/scratch/mole-build/main-check-waveA.txt) · combined checks exit 0
+    2026-11-03 03:58      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (at new Promise (<anonymous>))
 ```
