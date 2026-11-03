@@ -16,11 +16,11 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { deliverPending, inboxFile, sendSignal } from '../src/steer/index.js';
+import { deliverPending, inboxFile, sendSignal } from '../src/index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const distIndex = resolve(here, '../dist/src/steer/index.js');
-const distStore = resolve(here, '../dist/src/steer/store.js');
+const distIndex = resolve(here, '../dist/src/index.js');
+const distStore = resolve(here, '../dist/src/store.js');
 
 let root: string;
 const git = (args: string[]): string => execFileSync('git', ['-C', root, '-c', 'user.name=Fixture', '-c', 'user.email=f@example.com', '-c', 'commit.gpgsign=false', ...args], { encoding: 'utf8' }).trim();

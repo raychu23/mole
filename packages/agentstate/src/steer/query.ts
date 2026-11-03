@@ -4,7 +4,24 @@
 // so a plain `mole steer signal|update` never pays for it (same reasoning as claims/cli.ts's light-entry comment).
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import type { AgentStateSnapshot } from './types.js';
+
+/** Query: what the agent is doing right now, read from @mole/agentstate's own run graph (T18) -- never from the
+ * steer inbox (now @mole/steer, T75), which is a different concern (query is read-only and carries no steering
+ * state). Defined here (not in @mole/steer) because @mole/agentstate must stay the sole owner of query, per
+ * decision 0014 (agent states are read-only) -- @mole/steer re-exports this type, it does not define it. */
+export interface AgentStateSnapshot {
+  session: string;
+  found: boolean; // false when no source (hermes/claude-code/codex) has this run
+  harness?: string;
+  cwd?: string | null;
+  start?: string;
+  end?: string | null;
+  steps?: number;
+  intent?: string | null; // a short description of the run's last step, or its title
+  filesInPlay?: string[]; // files this run has edited so far
+  decisionsInPlay?: Array<{ id: string; title: string }>; // .mole/decisions whose scope covers filesInPlay
+  lastStep?: { time: string; operation: string; kind: string; tool: string | null; command: string | null } | null;
+}
 
 function parseId(text: string): string | undefined {
   return /^id:\s*'?([^'\n]*)'?\s*$/m.exec(text)?.[1]?.trim();

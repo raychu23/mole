@@ -7,6 +7,10 @@
 // State lives in a per-session, file-based inbox under .mole/local/steer/ (never committed, same convention as
 // packages/memory/src/seen.ts's .mole/local/seen.jsonl) -- not under the Claude-Code-specific plugin data dir, so
 // `mole steer` works for any session id regardless of which harness (or no harness at all) is steering it.
+//
+// T75: this inbox is the write side of steering (decision 0014: agent states are read-only over the harness
+// transcripts) -- it lives in its own package, @mole/steer, so @mole/agentstate itself never performs a write call.
+// `query` (read-only, built on agentstate's own run graph) stays in @mole/agentstate; see index.ts's re-export.
 
 /** A one-shot note: delivered to the agent at most once (PreToolUse or UserPromptSubmit, whichever fires first). */
 export interface SteerSignal {
@@ -51,20 +55,4 @@ export interface SteerDelivery {
   session: string;
   signals: SteerSignal[];
   updates: SteerUpdateResult[]; // accepted only: a rejected update was never queued for delivery
-}
-
-/** Query: what the agent is doing right now, read from @mole/agentstate's own run graph (T18) -- never from the
- * steer inbox, which is a different concern (query is read-only and carries no steering state). */
-export interface AgentStateSnapshot {
-  session: string;
-  found: boolean; // false when no source (hermes/claude-code/codex) has this run
-  harness?: string;
-  cwd?: string | null;
-  start?: string;
-  end?: string | null;
-  steps?: number;
-  intent?: string | null; // a short description of the run's last step, or its title
-  filesInPlay?: string[]; // files this run has edited so far
-  decisionsInPlay?: Array<{ id: string; title: string }>; // .mole/decisions whose scope covers filesInPlay
-  lastStep?: { time: string; operation: string; kind: string; tool: string | null; command: string | null } | null;
 }

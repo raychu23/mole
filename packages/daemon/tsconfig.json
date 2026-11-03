@@ -27,6 +27,9 @@
       "path": "../agentstate"
     },
     {
+      "path": "../steer"
+    },
+    {
       "path": "../telemetry"
     },
     {

@@ -1,0 +1,23 @@
+packages/agentstate/src/steer/store.ts:51  call mkdirSync  breaks 0014 "Agent states are read-only over the harness transcripts" (green accepted)
+    why: harness transcripts are opened read-only; the write paths are the explicit LangGraph export (langgraph.ts), into a file the user names, and T21's own temp tsconfig in collisions.ts (never a transcript)
+    rule mole-0014-1 at .mole/decisions/0014-agent-states-read-only.md:15
+packages/agentstate/src/steer/store.ts:55  call writeFileSync  breaks 0014 "Agent states are read-only over the harness transcripts" (green accepted)
+    why: harness transcripts are opened read-only; the write paths are the explicit LangGraph export (langgraph.ts), into a file the user names, and T21's own temp tsconfig in collisions.ts (never a transcript)
+    rule mole-0014-1 at .mole/decisions/0014-agent-states-read-only.md:15
+packages/agentstate/src/steer/store.ts:74  call writeFileSync  breaks 0014 "Agent states are read-only over the harness transcripts" (green accepted)
+    why: harness transcripts are opened read-only; the write paths are the explicit LangGraph export (langgraph.ts), into a file the user names, and T21's own temp tsconfig in collisions.ts (never a transcript)
+    rule mole-0014-1 at .mole/decisions/0014-agent-states-read-only.md:15
+packages/agentstate/src/steer/store.ts:111  call unlinkSync  breaks 0014 "Agent states are read-only over the harness transcripts" (green accepted)
+    why: harness transcripts are opened read-only; the write paths are the explicit LangGraph export (langgraph.ts), into a file the user names, and T21's own temp tsconfig in collisions.ts (never a transcript)
+    rule mole-0014-1 at .mole/decisions/0014-agent-states-read-only.md:15
+packages/agentstate/src/steer/store.ts:144  call writeFileSync  breaks 0014 "Agent states are read-only over the harness transcripts" (green accepted)
+    why: harness transcripts are opened read-only; the write paths are the explicit LangGraph export (langgraph.ts), into a file the user names, and T21's own temp tsconfig in collisions.ts (never a transcript)
+    rule mole-0014-1 at .mole/decisions/0014-agent-states-read-only.md:15
+packages/agentstate/src/steer/store.ts:184  call writeFileSync  breaks 0014 "Agent states are read-only over the harness transcripts" (green accepted)
+    why: harness transcripts are opened read-only; the write paths are the explicit LangGraph export (langgraph.ts), into a file the user names, and T21's own temp tsconfig in collisions.ts (never a transcript)
+    rule mole-0014-1 at .mole/decisions/0014-agent-states-read-only.md:15
+packages/agentstate/src/steer/store.ts:185  call renameSync  breaks 0014 "Agent states are read-only over the harness transcripts" (green accepted)
+    why: harness transcripts are opened read-only; the write paths are the explicit LangGraph export (langgraph.ts), into a file the user names, and T21's own temp tsconfig in collisions.ts (never a transcript)
+    rule mole-0014-1 at .mole/decisions/0014-agent-states-read-only.md:15
+3 rules (2 import, 1 call) from 3 decisions: 7 violations (889 ms)
+(mole rules exit code: 1)

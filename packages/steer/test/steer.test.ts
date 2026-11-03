@@ -13,7 +13,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { deliverPending, inboxFile, queryAgentState, readInbox, requestUpdate, sendSignal, validateUpdate } from '../src/steer/index.js';
+import { deliverPending, inboxFile, queryAgentState, readInbox, requestUpdate, sendSignal, validateUpdate } from '../src/index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const cli = resolve(here, '../../daemon/dist/cli.js');

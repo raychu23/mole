@@ -29,6 +29,9 @@
       "path": "packages/agentstate"
     },
     {
+      "path": "packages/steer"
+    },
+    {
       "path": "packages/verify"
     },
     {
