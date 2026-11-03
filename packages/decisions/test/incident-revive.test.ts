@@ -1,6 +1,6 @@
 // T58: incidents revive recorded dissent (plan update 11-01 §6 steps 1-5). Tests first (red before src/incidents/).
 // Every test builds its own temp repo: never write into the live .mole/ (other tests read it).
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { evaluate } from '@mole/reasoning';
@@ -71,10 +71,11 @@ describe('mole incident accept / dismiss (done-when 3, 4)', () => {
     const root = repo();
     expect(labels(root)).toEqual(expect.objectContaining({ fast: 'in', stale: 'out' }));
     const r = acceptIncident(root, 'inc-42', 'stale');
-    expect(r.written.sort()).toEqual(['.mole/arguments/incidents.argdown', '.mole/incidents/inc-42.md']);
+    expect(r.written).toEqual(['.mole/incidents/inc-42.md']); // review 3: one atomic write, attack targets frozen in the record
     const l = labels(root);
     expect(l).toEqual(expect.objectContaining({ 'incident-inc-42': 'in', fast: 'out', stale: 'in', other: 'in' }));
     expect(readFileSync(join(root, '.mole/incidents/inc-42.md'), 'utf8')).toMatch(/^revives: \[stale\]$/m);
+    expect(readFileSync(join(root, '.mole/incidents/inc-42.md'), 'utf8')).toMatch(/^attacks: \[fast\]$/m);
     expect(readFileSync(join(root, '.mole/decisions/d1.md'), 'utf8')).toMatch(/status: accepted/); // never flips status
     expect(suggestRevivals(root, 'inc-42')).toEqual([]); // already decided
   });
@@ -156,15 +157,24 @@ describe('T58 review 1 (deleg_27342d20) findings', () => {
   // review 2 (deleg_21ad1cbf): the round-1 "attack already written" shortcut recorded arguments nobody accepted.
   // Now accept records `revives:` FIRST (only after the candidate check), then writes the attack; a re-run with
   // `revives:` present and the attack missing completes the attack.
-  it('HIGH: a crash after `revives:` but before the attack write is completed by re-running accept', () => {
+  // review 3 (deleg_9d69be3e): a re-run "completion" path could attack for a hand-added revives entry, and against
+  // attackers that appeared after the accept. Now there is no completion path: one atomic record write holds both
+  // `revives:` and the frozen `attacks:` targets; `revives:` alone carries no attack.
+  it('HIGH (review 3): a hand-added revives entry without attacks changes no label, and accept does not complete it', () => {
+    const root = repo(['decisions: [D1]', 'revives: [text-logs]']);
+    const before = labels(root);
+    expect(acceptIncident(root, 'inc-42', 'text-logs').written).toEqual([]);
+    expect(labels(root)).toEqual(before);
+    expect(existsSync(join(root, '.mole/arguments/incidents.argdown'))).toBe(false);
+  });
+
+  it('HIGH (review 3): attack targets are frozen at accept; an attacker added later is never attacked by a re-run', () => {
     const root = repo();
     acceptIncident(root, 'inc-42', 'stale');
-    rmSync(join(root, '.mole/arguments/incidents.argdown')); // simulated crash: record written, attack not
-    expect(labels(root)).toEqual(expect.objectContaining({ stale: 'out' }));
-    const r = acceptIncident(root, 'inc-42', 'stale');
-    expect(r.written).toEqual(['.mole/arguments/incidents.argdown']);
-    expect(labels(root)).toEqual(expect.objectContaining({ stale: 'in', fast: 'out' }));
-    expect(readFileSync(join(root, '.mole/incidents/inc-42.md'), 'utf8').match(/revives/g)).toHaveLength(1);
+    write(root, '.mole/arguments/later.argdown', ['<newevidence>: A later benchmark.', '  -> <stale>', ''].join('\n'));
+    expect(acceptIncident(root, 'inc-42', 'stale').written).toEqual([]);
+    expect(readFileSync(join(root, '.mole/incidents/inc-42.md'), 'utf8')).toMatch(/^attacks: \[fast\]$/m);
+    expect(labels(root)).toEqual(expect.objectContaining({ newevidence: 'in', stale: 'out' })); // engine re-labels normally
   });
 
   it('HIGH (review 2): never records an argument the person did not accept as a candidate', () => {

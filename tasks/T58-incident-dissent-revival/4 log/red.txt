@@ -17,3 +17,8 @@ TypeError: (0 , suggestRevivals) is not a function
    × T58 review 1 (deleg_27342d20) findings > LOW (review 2): a blank line inside a block list does not break the duplicate check 5ms
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
       Tests  5 failed | 13 passed (18)
+   × mole incident accept / dismiss (done-when 3, 4) > accept reinstates the dissent: stale in, the decision's own argument out, incident is the reason; only 2 files written 12ms
+   × T58 review 1 (deleg_27342d20) findings > HIGH (review 3): a hand-added revives entry without attacks changes no label, and accept does not complete it 5ms
+   × T58 review 1 (deleg_27342d20) findings > HIGH (review 3): attack targets are frozen at accept; an attacker added later is never attacked by a re-run 4ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  3 failed | 16 passed (19)

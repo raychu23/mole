@@ -1,16 +1,15 @@
-# T58 replay — real python-tuf ADR 0002 (docs/adr/0002-pre-1-0-deprecation-strategy.md) as .mole records + an ILLUSTRATIVE incident (not a real python-tuf event). Repo: /Users/a1/.hermes/cache/scratch/t58-replay/r
+# T58 replay — real python-tuf ADR 0002 (docs/adr/0002-pre-1-0-deprecation-strategy.md) as .mole records + an ILLUSTRATIVE incident (not a real python-tuf event). Repo: /Users/a1/.hermes/cache/scratch/t58-replay/r · after review 3 (one atomic record write)
 ## before
 {"best-effort":"in","finite":"in","parallel":"out","abandon":"out"}
 ADR-0002 rests on [ 'best-effort' ] -> holds
-## mole incident suggest inc-legacy-users (argument · label · attackers · alsoReinstates · score · evidence)
-parallel out ['best-effort', 'finite'] ['abandon'] 0.259 ['scope:tuf/client/', 'text:char-3gram Jaccard 0.259']
-abandon out ['best-effort', 'finite'] ['parallel'] 0.09 ['scope:tuf/client/', 'text:char-3gram Jaccard 0.09']
+## mole incident suggest inc-legacy-users (argument · attackers · alsoReinstates · score · evidence)
+parallel ['best-effort', 'finite'] ['abandon'] 0.259 ['scope:tuf/client/', 'text:char-3gram Jaccard 0.259']
+abandon ['best-effort', 'finite'] ['parallel'] 0.09 ['scope:tuf/client/', 'text:char-3gram Jaccard 0.09']
 ## mole incident accept inc-legacy-users --argument parallel
 {
   "incident": "inc-legacy-users",
   "argument": "parallel",
   "written": [
-    ".mole/arguments/incidents.argdown",
     ".mole/incidents/inc-legacy-users.md"
   ],
   "alsoReinstates": [
@@ -18,15 +17,19 @@ abandon out ['best-effort', 'finite'] ['parallel'] 0.09 ['scope:tuf/client/', 't
   ]
 }
 ## after
-{"best-effort":"out","finite":"out","parallel":"in","abandon":"in","incident-inc-legacy-users":"in"}
+{"incident-inc-legacy-users":"in","best-effort":"out","finite":"out","parallel":"in","abandon":"in"}
 ADR-0002 rests on [ 'best-effort' ] -> defeated
--- .mole/arguments/incidents.argdown
-<incident-inc-legacy-users>: Downstream users stuck on the legacy client hit an unpatched security bug for weeks after the release
-  -> <best-effort>
-  -> <finite>
+-- incident record front matter
+---
+id: inc-legacy-users
+title: Downstream users stuck on the legacy client hit an unpatched security bug for weeks after the release
+date: 2026-11-02
+scope: [tuf/client/]
 revives: [parallel]
+attacks: [best-effort, finite]
+---
+
 ## decision record status untouched
 status: accepted
 ## what accept wrote (git status)
  M .mole/incidents/inc-legacy-users.md
-?? .mole/arguments/incidents.argdown

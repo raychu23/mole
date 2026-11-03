@@ -44,3 +44,14 @@ limits          INFERENCE: reinstating = attacking ALL in-attackers, which can k
 - LOW blank/comment lines inside a block list broke the duplicate check → scanned through
 - not ours (pre-existing loader, follow-up): mixed indentation in a block list drops the whole incident record
 - 18 T58 tests · decisions 327 · replay unchanged (ADR-0002 holds → defeated, abandon shown as knock-on)
+
+## 11-02 19:00 review 3 (deleg_9d69be3e) FAIL → redesigned (2 red → green), not patched again
+- both HIGHs, one root cause: a 2-file accept needs a "complete it on re-run" path, and no re-run can prove what the
+  person approved (a hand-added `revives:` earned an attack on an unrelated decision; a re-run attacked attackers that
+  appeared after the accept)
+- now ONE atomic write (temp + rename) of the incident record: `revives: [A]` + `attacks: [frozen IN attackers]`;
+  graph.ts loadIncidents turns `attacks:` into the argument `incident-<id>`. `revives:` alone carries no attack;
+  incidents.argdown is gone. No crash window, no completion path
+- held per reviewer: limit 20 never blocks accepting #21+ · alsoReinstates = real diff on 15 seeds · 10k 348 ms, 50k 2.0 s
+- INFERENCE lesson: 3 rounds on crash recovery for a 2-file write → make it 1 write. Same shape as T54 (remove, don't guard)
+- 19 T58 tests · decisions 328 · replay: ADR-0002 holds → defeated, one file changed

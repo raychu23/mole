@@ -4,11 +4,13 @@
 //             decision the incident shares a node with: named in its `decisions:` list, or whose `scope:` overlaps the
 //             incident's `scope:` (Graphiti get_edge_invalidation_candidates: must share a node; similarity only ranks).
 //             Ranked by char-3gram Jaccard between the incident text and the argument text. No LLM.
-//   accept    the person's step. Writes `<incident>: title` attacking every IN attacker of the dissent into
-//             .mole/arguments/incidents.argdown (Dung reinstatement) and `revives: [arg]` into the incident record.
+//   accept    the person's step, only for a current candidate. ONE atomic write of the incident record: `revives: [arg]`
+//             + `attacks: [its IN attackers]`, frozen at accept time. The loader (graph.ts loadIncidents) turns
+//             `attacks:` into the argument `incident-<id>` (Dung reinstatement). No second file, so no crash between
+//             writes and no completion path (review 3).
 //   dismiss   records `dismissed: [arg]` in the incident record only.
 // Decision records are never written: a decision turns contested/defeated only because the engine re-labels its arguments.
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { evaluate, type Label } from '@mole/reasoning';
 import { argumentFramework } from '../argdown/framework.js';
@@ -41,7 +43,6 @@ export interface RevivalCandidate {
   evidence: RevivalEvidence[];
 }
 
-const ARG_FILE = '.mole/arguments/incidents.argdown';
 /** the incident's argument id: the record id itself is already taken by the incident node (the loader keeps the first id) */
 export const incidentArgumentId = (incidentId: string): string => `incident-${incidentId}`;
 
@@ -203,9 +204,7 @@ export function suggestRevivals(root: string, incidentId: string, opts: { limit?
 }
 
 /** Add `item` to the front-matter list `key` of the record (creating `key: [item]` before the closing ---). */
-function addToList(root: string, file: string, key: string, item: string): boolean {
-  const path = join(root, file);
-  const text = readFileSync(path, 'utf8');
+function addToListText(text: string, file: string, key: string, item: string): string {
   const nl = text.includes('\r\n') ? '\r\n' : '\n';
   const lines = text.split(/\r?\n/);
   const close = lines.indexOf('---', 1);
@@ -225,21 +224,28 @@ function addToList(root: string, file: string, key: string, item: string): boole
       else if (!/^\s*(#.*)?$/.test(l)) break;
     }
     end = last + 1;
-    if (items.includes(item)) return false;
+    if (items.includes(item)) return text;
     const indent = /^(\s+)-/.exec(lines[at + 1] ?? '')?.[1] ?? '  ';
     lines.splice(end, 0, `${indent}- ${item}`);
   } else {
     const m = /^[^:]+:\s*\[(.*)\]\s*$/.exec(lines[at]!);
     if (!m) throw new IncidentError(`${file}:${at + 1}: ${key} must be a [list] to add to it`);
     const items = m[1]!.split(',').map((s) => s.trim().replace(/^['"]|['"]$/g, '')).filter(Boolean);
-    if (items.includes(item)) return false;
+    if (items.includes(item)) return text;
     lines[at] = `${key}: [${[...items, item].join(', ')}]`;
   }
-  writeFileSync(path, lines.join(nl));
+  return lines.join(nl);
+}
+
+function addToList(root: string, file: string, key: string, item: string): boolean {
+  const path = join(root, file);
+  const text = readFileSync(path, 'utf8');
+  const next = addToListText(text, file, key, item);
+  if (next === text) return false;
+  writeFileSync(path, next);
   return true;
 }
 
-const ARG_ID = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 export interface IncidentWrite {
   incident: string;
@@ -249,47 +255,26 @@ export interface IncidentWrite {
   alsoReinstates?: string[];
 }
 
-function writeAttack(root: string, inc: IncidentRecord, attackers: string[]): void {
-  const argId = incidentArgumentId(inc.id);
-  const argPath = join(root, ARG_FILE);
-  const existing = existsSync(argPath) ? readFileSync(argPath, 'utf8') : '';
-  const have = new Set([...existing.matchAll(new RegExp(`^\\s+-> <([^>]+)>`, 'gm'))].map((m) => m[1]));
-  const head = new RegExp(`^<${argId.replace(/[.]/g, '\\.')}>`, 'm').test(existing);
-  const block = [
-    ...(head ? [`<${argId}>`] : [`<${argId}>: ${inc.title.replace(/\s+/g, ' ').trim()}`]),
-    ...attackers.filter((a) => !(head && have.has(a))).map((a) => `  -> <${a}>`),
-    '',
-  ];
-  writeFileSync(argPath, `${existing}${existing && !existing.endsWith('\n') ? '\n' : ''}${existing ? '\n' : ''}${block.join('\n')}`);
-}
-
 export function acceptIncident(root: string, incidentId: string, argumentId: string): IncidentWrite {
   const ev = evaluated(root);
   const inc = readIncident(root, ev.graph, incidentId);
-  if (!ARG_ID.test(inc.id)) throw new IncidentError(`incident id '${inc.id}' cannot be an Argdown argument title`);
   if (inc.dismissed.includes(argumentId)) throw new IncidentError(`${argumentId} was already dismissed for ${inc.id}`);
-  const inAttackers = ev.attacks.filter(([a, b]) => b === argumentId && ev.labels[a] === 'in').map(([a]) => a).sort();
-
-  if (inc.revives.includes(argumentId)) {
-    // already accepted by the person (`revives:` is the record of that). Crash recovery (review 2): the record is
-    // written FIRST, so a crash leaves `revives:` without the attack; if the argument is still out and nothing from
-    // this incident attacks its attackers, write the attack now. Otherwise nothing to do (idempotent).
-    const argId = incidentArgumentId(inc.id);
-    const pending = ev.labels[argumentId] === 'out' && !ev.attacks.some(([a, b]) => a === argId && inAttackers.includes(b));
-    if (!pending || inAttackers.length === 0) return { incident: inc.id, argument: argumentId, written: [], alsoReinstates: [] };
-    const alsoReinstates = dryRun(ev, argId, inAttackers).filter((x) => x !== argumentId);
-    writeAttack(root, inc, inAttackers);
-    return { incident: inc.id, argument: argumentId, written: [ARG_FILE], alsoReinstates };
-  }
-
-  // the person's accept: only for a CURRENT candidate (review 2: a knock-on, an unrelated decision's dissent or a
-  // hand-written attack is never recorded as accepted). Record first, then the attack.
+  // already accepted (or hand-recorded): nothing to complete. `revives:` is the record; the attack comes ONLY from the
+  // `attacks:` list written with it (review 3: no completion path, no attackers re-derived later)
+  if (inc.revives.includes(argumentId)) return { incident: inc.id, argument: argumentId, written: [], alsoReinstates: [] };
+  // the person's accept: only for a CURRENT candidate (review 2)
   const c = candidates(root, ev, inc).find((x) => x.argument === argumentId);
   if (!c) throw new IncidentError(`${argumentId} is not a candidate for ${inc.id} (run: mole incident suggest ${inc.id})`);
   const { alsoReinstates } = withKnockOn(ev, inc, c);
-  addToList(root, inc.file, 'revives', argumentId);
-  writeAttack(root, inc, c.attackers);
-  return { incident: inc.id, argument: argumentId, written: [inc.file, ARG_FILE], alsoReinstates };
+  // ONE atomic write (temp file + rename): `revives: [A]` and the frozen `attacks:` targets together
+  const path = join(root, inc.file);
+  let text = readFileSync(path, 'utf8');
+  text = addToListText(text, inc.file, 'revives', argumentId);
+  for (const t of c.attackers) text = addToListText(text, inc.file, 'attacks', t);
+  const tmp = `${path}.mole-tmp-${process.pid}`;
+  writeFileSync(tmp, text);
+  renameSync(tmp, path);
+  return { incident: inc.id, argument: argumentId, written: [inc.file], alsoReinstates };
 }
 
 export function dismissIncident(root: string, incidentId: string, argumentId: string): IncidentWrite {
