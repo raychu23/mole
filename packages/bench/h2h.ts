@@ -59,28 +59,49 @@ function h1(): void {
 }
 
 // ---------- H2: hand-back test selection vs vitest related / run-all / run-none ----------
+// D52 (tasks/T79-h2-test-selection-number): the old version of this row quoted a "run all ... at 1347.5% of
+// the suite" number. That 1347.5% was the OLD bench's reach-relative share formula (fullSuiteTests /
+// reach.tests, averaged over the 10 frozen rows) mislabelled as a suite percentage; a run-all baseline runs
+// the WHOLE suite, so its true selection size is 100% by construction (Rothermel & Harrold 1996 / Ekstazi /
+// STARTS; see tasks/T79-h2-test-selection-number/4 log/prior-art.md). Fixed here by computing the standard
+// "selection size % of the full suite" straight from the frozen, read-only m14-key.json (H2_m14_key, never
+// edited, R2) instead of re-labelling the reach-relative share. The reach-relative share (Mole vs the
+// `vitest related` baseline) is kept as its own, clearly-named secondary number.
 function h2(): void {
   const runs = readJSONL<any>(root, src('H2_m14_runs'));
   const last = [...runs].reverse().find((r) => r.metrics && r.metrics.M14);
   const m = String(last.metrics.M14);
   const caught = /caught (\d+)\/(\d+)/.exec(m);
   const ranShare = /ran ([\d.]+)% of reaching tests/.exec(m);
-  const runAll = /run all (\d+)\/(\d+) at ([\d.]+)%/.exec(m);
+  const aggregateReach = /aggregate ([\d.]+)%, (\d+)\/(\d+)/.exec(m);
   const runNone = /run none (\d+)\/(\d+)/.exec(m);
+
+  const key = readJSON<any>(root, src('H2_m14_key'));
+  const frozenRows = (key.frozen as string[]).map((id) => (key.regressions as any[]).find((r) => r.id === id));
+  const suiteTotal = frozenRows.reduce((s, r) => s + r.fullSuiteTests, 0);
+  const reachTotal = frozenRows.reduce((s, r) => s + r.reach.tests, 0);
+  // R2 cross-check: the key's own reach total must match the frozen run's aggregate reach denominator.
+  if (aggregateReach && Number(aggregateReach[3]) !== reachTotal) {
+    throw new Error(`H2: key reach total ${reachTotal} != frozen run's aggregate reach ${aggregateReach[3]} — key or frozen log changed`);
+  }
+  const ranTotal = aggregateReach ? Number(aggregateReach[2]) : 0;
+  const suiteSharePct = pct(suiteTotal > 0 ? ranTotal / suiteTotal : 0);
+  const reachOfSuitePct = pct(suiteTotal > 0 ? reachTotal / suiteTotal : 0);
+
   rows.push({
     claim: 'H2 hand-back test selection: regressions caught vs tests run',
-    mole: `caught ${caught?.[1]}/${caught?.[2]} while running ${ranShare?.[1]}% of the tests that reach the change (mean)`,
-    baseline_best: `run-all catches ${runAll?.[1]}/${runAll?.[2]} but at ${runAll?.[3]}% of the suite — Mole gets the same catch rate at ~1/73 the tests`,
+    mole: `caught ${caught?.[1]}/${caught?.[2]}; selection size ${suiteSharePct} of the full suite (${ranTotal}/${suiteTotal} tests, aggregate across the 10 regressions) — ${ranShare?.[1]}% of reach (mean), a secondary comparison against the vitest-related baseline below, not a suite share`,
+    baseline_best: `run-all catches ${caught?.[2]}/${caught?.[2]} by construction, running 100% of the suite (trivial) — Mole catches the same ${caught?.[1]}/${caught?.[2]} while running ${suiteSharePct} of the suite`,
     baseline_tool: 'run-all (full suite)',
     all_baselines: {
-      'vitest related (reach set, upper bound)': `the denominator itself: tests whose module graph contains the edited file (vitest\u2019s own changed-file query), mean ${ranShare?.[1]}% of the full suite`,
-      'run-all': `${runAll?.[1]}/${runAll?.[2]} caught at ${runAll?.[3]}% of the suite`,
-      'run-none': `${runNone?.[1]}/${runNone?.[2]} caught at 0% (baseline floor)`,
+      'vitest related (reach set, a coarser dynamic-dependency baseline)': `the denominator for Mole\u2019s secondary reach-share number: tests whose module graph contains the edited file; itself ${reachOfSuitePct} of the full suite in aggregate (${reachTotal}/${suiteTotal}) — the module graph already pulls in most of Excalidraw\u2019s suite, so this baseline is a weak filter there`,
+      'run-all': `${caught?.[2]}/${caught?.[2]} caught, 100% of the suite (by construction — it runs everything)`,
+      'run-none': `${runNone?.[1]}/${runNone?.[2]} caught, 0% of the suite (by construction)`,
     },
-    metric: 'regressions caught / tests run as % of the full suite, 10 planted regressions (5 Mole + 5 Excalidraw)',
-    n: '10 planted regressions, Mole 36.0% mean reach share, Excalidraw 1.1%',
+    metric: 'selection size % of the full suite (standard RTS metric, Rothermel & Harrold 1996 / Ekstazi / STARTS) and regressions caught (safety proxy), 10 planted regressions (5 Mole + 5 Excalidraw)',
+    n: '10 planted regressions, aggregate 14,065 full-suite tests, 12,159 reach-set tests, 163 tests actually run by Mole\u2019s selection',
     key_path: src('H2_m14_key'),
-    how_baseline_ran: 'real: vitest 3.2.7 `vitest related <files> --run` (the reach denominator) and the same repos\u2019 real full-suite runs (run-all / run-none)',
+    how_baseline_ran: 'real: vitest 3.2.7 `vitest related <files> --run` (the reach baseline) and the same repos\u2019 real full-suite runs (run-all / run-none); suite totals read from the frozen m14-key.json, not recomputed',
     amazon_jd_line: JD2,
   });
 }

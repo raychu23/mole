@@ -1,5 +1,5 @@
 ```notes
-T41 scoreboard      M35 head-to-head vs recognizable tools      written 2026-10-30T03:04:03.700Z
+T41 scoreboard      M35 head-to-head vs recognizable tools      written 2026-11-03T13:14:21.893Z
     rule                a loss or a tie is reported with the same prominence as a win (R7); every row names a real Amazon JD line it supports
 ```
 
@@ -24,16 +24,16 @@ n: 215 sampled / 7020 truth call sites, 362-file TS fixture · key: `generated d
 
 Amazon JD line: Amazon AWS Database SDE Intern (10565667): "Work in an agile environment practicing CI/CD principles while participating in operational responsibilities including on-call duties."
 
-Mole: caught 10/10 while running 18.5% of the tests that reach the change (mean)
+Mole: caught 10/10; selection size 1.2% of the full suite (163/14065 tests, aggregate across the 10 regressions) — 18.5% of reach (mean), a secondary comparison against the vitest-related baseline below, not a suite share
 
-Best baseline (run-all (full suite)): run-all catches 10/10 but at 1347.5% of the suite — Mole gets the same catch rate at ~1/73 the tests
+Best baseline (run-all (full suite)): run-all catches 10/10 by construction, running 100% of the suite (trivial) — Mole catches the same 10/10 while running 1.2% of the suite
 
-All baselines (real: vitest 3.2.7 `vitest related <files> --run` (the reach denominator) and the same repos’ real full-suite runs (run-all / run-none)):
-- vitest related (reach set, upper bound): the denominator itself: tests whose module graph contains the edited file (vitest’s own changed-file query), mean 18.5% of the full suite
-- run-all: 10/10 caught at 1347.5% of the suite
-- run-none: 0/10 caught at 0% (baseline floor)
+All baselines (real: vitest 3.2.7 `vitest related <files> --run` (the reach baseline) and the same repos’ real full-suite runs (run-all / run-none); suite totals read from the frozen m14-key.json, not recomputed):
+- vitest related (reach set, a coarser dynamic-dependency baseline): the denominator for Mole’s secondary reach-share number: tests whose module graph contains the edited file; itself 86.4% of the full suite in aggregate (12159/14065) — the module graph already pulls in most of Excalidraw’s suite, so this baseline is a weak filter there
+- run-all: 10/10 caught, 100% of the suite (by construction — it runs everything)
+- run-none: 0/10 caught, 0% of the suite (by construction)
 
-n: 10 planted regressions, Mole 36.0% mean reach share, Excalidraw 1.1% · key: `packages/verify/bench/keys/m14-key.json`
+n: 10 planted regressions, aggregate 14,065 full-suite tests, 12,159 reach-set tests, 163 tests actually run by Mole’s selection · key: `packages/verify/bench/keys/m14-key.json`
 
 ---
 
@@ -105,7 +105,7 @@ n: 40 final answers (32 Hermes + 8 Claude Code), 120 claims, 9 flagged · key: `
 
 Amazon JD line: Amazon Redshift DB Intern (10590290): "Participate in performance benchmarking and testing of database workloads."
 
-Mole: as-of 100.0% (64 q, +10 .mole/decisions git-history facts loaded) vs latest-only 45.3% · overlaps 0/1000 (1 committed, 999 rejected by the database, bounded-concurrency writers) · p95 0.44 ms indexed vs 15.40 ms seq (34.9x) at 100000 · model calls 0
+Mole: as-of 100.0% (64 q, +10 .mole/decisions git-history facts loaded) vs latest-only 45.3% · overlaps 0/1000 (1 committed, 999 rejected by the database, bounded-concurrency writers) · p95 0.79 ms indexed vs 19.35 ms seq (24.4x) at 100000 · model calls 0
 
 Best baseline (latest-only (single current value per record)): latest-only store (wiki/ADR folder style): 45.3%
 

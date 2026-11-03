@@ -1,0 +1,33 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T79-h2-test-selection-number
+
+(node:39994) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:39992) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:39993) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/bench/test/h2h.test.ts (9 tests) 22ms
+ ✓ packages/verify/test/m14-summary.test.ts (4 tests) 4ms
+ ✓ packages/bench/test/h2-suite-share.test.ts (1 test) 2ms
+ ✓ packages/verify/test/review-1.test.ts (3 tests) 12404ms
+   ✓ T22 review-1 P1-1: titles containing " > " are run, not skipped > a broken add() fails the selected tests "ranks a > b" and "outer > inner > adds > again"; the CLI exits 1  7992ms
+   ✓ T22 review-1 P1-1: titles containing " > " are run, not skipped > a selected test the runner did not run is an error line and fails the run  3088ms
+   ✓ T22 review-1 P2-3: nearest guarding test by import > an edit no test calls names the test file that imports the edited file, not the first file in the repo  1197ms
+ ✓ packages/verify/test/verify.test.ts (5 tests) 16247ms
+   ✓ T22 selection: past-fix lineage + call-graph reachability (done-when 1) > an edit to add() selects its direct test and the guarding test of the fix that wrote the line, not the unrelated ones  2493ms
+   ✓ T22 selection: past-fix lineage + call-graph reachability (done-when 1) > a call inside beforeEach selects every test of that describe block, and nothing outside it  1428ms
+   ✓ T22 selection: past-fix lineage + call-graph reachability (done-when 1) > runs only the selected tests with vitest and reports pass/fail beside the past-fix lines  3472ms
+   ✓ T22 failure case: no test reaches the change (done-when 3) > says so, suggests the nearest guarding test and the CLI exits 0  4125ms
+   ✓ T22 CLI: mole check --run-tests > runs the selection and exits 1 on a failing selected test; plain `mole check` is unchanged (no test run)  4489ms
+ ✓ packages/verify/test/review-2.test.ts (5 tests) 19121ms
+   ✓ T22 review-2 P1-A: tests the test file skips on purpose are "skipped by the test file", not an error > a harmless mul edit: skip / todo / describe.skip / skipIf / runIf tests are reported skipped, exit 0  8146ms
+   ✓ T22 review-2 P1-A: tests the test file skips on purpose are "skipped by the test file", not an error > a selected test that did not run for another reason stays an error, beside skipped ones  3054ms
+   ✓ T22 review-2 P2-A: non-literal titles run without a name filter > a harmless add edit runs it(name) and it("concat " + "title"): pass, exit 0; a broken add fails them, exit 1  7140ms
+   ✓ T22 review-2 P2-B: docs-only change > says "no code change to test", exit 0  516ms
+
+ Test Files  6 passed (6)
+      Tests  27 passed (27)
+   Start at  07:18:16
+   Duration  20.25s (transform 424ms, setup 0ms, collect 3.22s, tests 47.80s, environment 1ms, prepare 509ms)
+
