@@ -1,0 +1,27 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T71-case-recall/packages/decisions
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/recall.test.ts [ test/recall.test.ts ]
+Error: Cannot find module '../src/recall/recall.js' imported from '/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T71-case-recall/packages/decisions/test/recall.test.ts'
+ ❯ test/recall.test.ts:9:1
+      7| import { dirname, join } from 'node:path';
+      8| import { afterEach, describe, expect, it } from 'vitest';
+      9| import { RECALL_NOTE, RecallError, recallSimilar } from '../src/recall…
+       | ^
+     10| 
+     11| const dirs: string[] = [];
+
+Caused by: Error: Failed to load url ../src/recall/recall.js (resolved id: ../src/recall/recall.js) in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T71-case-recall/packages/decisions/test/recall.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../../../../CS%20Code/Project/Mole-worktrees/T71-case-recall/node_modules/vite/dist/node/chunks/config.js:22907:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  03:01:38
+   Duration  1.08s (transform 134ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 230ms)
+

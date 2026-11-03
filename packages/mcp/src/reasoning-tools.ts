@@ -7,7 +7,7 @@
 // --read-only (write tools left out). Writes are a person's act in Mole (T58/T59), so none are exposed here.
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { comparePhases, evaluatePhase, suggestRevivals } from '@mole/decisions';
+import { comparePhases, evaluatePhase, recallSimilar, suggestRevivals } from '@mole/decisions';
 import { listProposals, summarizeProposals } from '@mole/proposals';
 import { READ_ONLY_ANNOTATIONS, sc } from './annotations.js';
 
@@ -105,6 +105,35 @@ export function registerReasoningTools(server: McpServer, opts: Opts): void {
         return ok(r);
       } catch (e) {
         return fail('mole_proposals_compare', e);
+      }
+    },
+  );
+
+  server.registerTool(
+    'mole_recall',
+    {
+      title: 'Mole recall',
+      description:
+        'Past decisions/incidents that resemble a new proposal/decision draft (`text`) or an existing record (`record`), nearest first -- Klein ' +
+        "recognition-primed decision's \"resembles\" relation: each hit is a SIMILAR CASE to check whether it applies, never a claim that it does, " +
+        'never a causal claim about what will happen. Candidates are every decision/incident Mole already knows (.mole/decisions, .mole/incidents, ' +
+        'plus any `adrDirs`); scored by BM25 lexical overlap (route/bm25.ts, zero model calls). Same JSON as `mole recall`. Read-only.',
+      inputSchema: {
+        text: z.string().optional().describe('a new proposal/decision draft to recall similar past cases for'),
+        record: z.string().optional().describe('an existing decision/incident id to use as the query instead of text (excluded from its own results)'),
+        limit: z.number().int().positive().optional().describe('max cases returned (default 5)'),
+        adrDirs: z.array(z.string()).optional().describe('plain ADR folders to include as candidates, same as `mole decisions --adr-dir`'),
+      },
+      annotations: { ...READ_ONLY_ANNOTATIONS, title: 'Mole recall' },
+      outputSchema: z.object({ query: z.string(), cases: z.array(z.unknown()), note: z.string() }).passthrough(),
+    },
+    async ({ text, record, limit, adrDirs }) => {
+      try {
+        if (!text && !record) throw new Error("mole_recall: give `text` or `record`");
+        if (text && record) throw new Error('mole_recall: give `text` or `record`, not both');
+        return ok(recallSimilar(opts.root, record ? { record } : { text }, { ...(limit !== undefined ? { limit } : {}), ...(adrDirs ? { adrDirs } : {}) }));
+      } catch (e) {
+        return fail('mole_recall', e);
       }
     },
   );

@@ -114,6 +114,7 @@ async function main(): Promise<number> {
   if (cmd === 'decision') return (await import('@mole/decisions')).decisionCli(pos, flags, root); // write records: new / supersede / link / suggest / recover (T51)
   if (cmd === 'incident') return (await import('@mole/decisions')).incidentCli(pos, flags, root); // incident revives dissent: suggest / accept / dismiss (T58)
   if (cmd === 'priorities') return (await import('@mole/decisions')).prioritiesCli(pos, flags, root); // tenet order per phase, launch -> scale (T60)
+  if (cmd === 'recall') return (await import('@mole/decisions')).recallCli(pos, flags, root); // T71: similar past decisions/incidents, Klein RPD "resembles", read-only
   if (cmd === 'proposals') { // this repo's what-if proposals vs their baseline, same JSON as mole_proposals_compare (T62); read-only
     try {
       console.log(JSON.stringify((await import('@mole/proposals')).summarizeProposals(root, pos.length ? pos : undefined, { ...(typeof flags.phase === 'string' ? { phase: flags.phase } : {}), ...(typeof flags.at === 'string' ? { at: flags.at } : {}) }), null, 2)); // T68 review: forward --phase/--at
