@@ -38,3 +38,12 @@ limits          INFERENCE: `check:` is recorded, not enforced (human graph "less
 - INFERENCE: rounds 1+2 = one root cause, "validate one source, build from another"; the fix is one source
 - held: cleanup never deletes a pre-existing branch/worktree (createProposal refuses both first) · rename/deleted
   incident fail safe · replay re-run: same tenet-2 draft, 4 records, approved checkout clean
+
+## 11-02 19:35 review 3 (deleg_359c3a22) FAIL on 2 message-only findings → fixed + parent-verified
+- rounds 1-2 fixes confirmed by reproducer: gitignored .mole, skip-worktree tenets/lesson/incident, detached HEAD,
+  one rev for snapshot + createProposal, snapshot removed on every validation throw, T56 cli tests unchanged
+- HIGH (literal stop rule, message-only): on a missing lesson the catch re-read the WORKING TREE to pick the message →
+  removed; one message covers both cases. Now only `snap` is read (readLesson(snap), loadGraph(snap))
+- MEDIUM empty repo → raw git error → clean "repository has no commits yet" (test added)
+- parent check: proposals 18 · no mole-proposal-base-* left in TMPDIR · no 4th reviewer: both fixes change only
+  error text/guards, no write path changed (skill rule: a P1-only fix may be parent-verified)

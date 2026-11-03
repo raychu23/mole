@@ -98,6 +98,10 @@ export function proposeTenetRevision(opts: LessonOptions): TenetRevision {
   }
   // review 2 HIGH: validate the SAME records the draft is pinned to. Read HEAD's .mole from a `git archive` snapshot
   // (as T56 evaluate does), never the working tree: skip-worktree / assume-unchanged / ignored files cannot diverge.
+  // review 3 MEDIUM: an empty repository is a clean refusal, not a raw git error
+  if (spawnSync('git', ['-C', repo, 'rev-parse', '--verify', '--quiet', 'HEAD^{commit}'], { stdio: 'ignore' }).status !== 0) {
+    throw new ProposalError(`repository has no commits yet: commit the .mole records first (${repo})`);
+  }
   const rev = git(repo, ['rev-parse', '--verify', 'HEAD^{commit}']);
   const snap = baselineSnapshot(repo, rev);
   let lesson: Lesson;
@@ -107,10 +111,8 @@ export function proposeTenetRevision(opts: LessonOptions): TenetRevision {
     try {
       lesson = readLesson(snap, opts.lesson);
     } catch (e) {
-      let onDisk = false;
-      try { readLesson(repo, opts.lesson); onDisk = true; } catch { /* not on disk either */ }
-      if (onDisk) throw new ProposalError(`lesson ${opts.lesson} is not committed at HEAD (gitignored or never added): the draft is made from the pinned baseline`);
-      throw e;
+      // review 3: only the pinned rev is read; the message covers both cases instead of peeking at the working tree
+      throw new ProposalError(`no lesson record with id '${opts.lesson}' in ${LESSON_DIR} at HEAD (not committed? the draft is made from the pinned baseline)`);
     }
     if (!lesson.owner) throw new ProposalError(`lesson ${lesson.id} has no owner (a lesson needs someone who carries it through, ${lesson.file})`);
     if (lesson.learnedFrom.length === 0) throw new ProposalError(`lesson ${lesson.id} has no learned_from incident (${lesson.file})`);

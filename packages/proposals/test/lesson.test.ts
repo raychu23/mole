@@ -108,6 +108,12 @@ describe('mole-proposals lesson (T59)', () => {
     expect(git(root, ['branch', '--list', 'mole/proposal/*'])).toBe('');
   });
 
+  it('refuses a repository with no commits cleanly (review 3)', () => {
+    const root = tmp('mole-t59-empty-');
+    git(root, ['init', '-q', '-b', 'main']);
+    expect(() => proposeTenetRevision({ repo: root, lesson: 'L1', path: join(tmp('w-'), 'x') })).toThrow(/no commits yet/);
+  });
+
   it('refuses an uncommitted lesson (the draft must come from the pinned baseline)', () => {
     const root = repo();
     write(root, '.mole/lessons/l1.md', readFileSync(join(root, '.mole/lessons/l1.md'), 'utf8').replace('owner: raymond', 'owner: someone'));
