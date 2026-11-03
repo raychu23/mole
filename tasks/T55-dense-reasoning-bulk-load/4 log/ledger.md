@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-11-02 18:06      checks ran: npm run check in /Users/a1/.hermes/cache/scratch/mole-build/T55 → exit 0 (at new Promise (<anonymous>))
     2026-11-02 18:07      submitted → verified      reviewer hermes-subagent deleg_221062b4 (fresh, claude-sonnet-5) · findings: PASS: 40 random graphs + 100-step edits = evaluate(), 1,500/20k 23.8 ms vs 23.5 s, low: why.defeatedBy witness order (pre-existing) · checks ex
     2026-11-02 18:07      checks ran: npm run check in /Users/a1/.hermes/cache/scratch/mole-build/T55 → exit 0 (at new Promise (<anonymous>))
+    2026-11-02 18:09      verified → integrated      merge 1606126 (main check after T51 too: 925 pass, /Users/a1/.hermes/cache/scratch/mole-build/main-check-t51-r2.txt) · combined checks exit 0
+    2026-11-02 18:09      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (at new Promise (<anonymous>))
 ```
