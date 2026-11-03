@@ -78,6 +78,68 @@ body
     else expect(g.problems.some((p) => p.file === '.mole/incidents/inc-2.md')).toBe(true);
   });
 
+  it('false positive guard: a plain scalar field whose continuation line merely looks like a list item, but is not itself a sequence item, must not be flagged (reviewer reproducer)', () => {
+    const fm = frontMatter(
+      `---
+id: inc-6
+title: prose with dash continuation
+description: root cause was X
+  - this happened because of Y
+---
+body
+`,
+      '.mole/incidents/inc-6.md',
+    );
+    expect(fm && 'error' in fm).toBe(false); // valid prose, no list anywhere: must not be reported
+  });
+
+  it('false positive guard: a map value inside a seq item whose continuation starts with "-" is folded into that VALUE, not a lost list item, so it must not be flagged', () => {
+    const fm = frontMatter(
+      `---
+id: inc-7
+title: map value inside seq item
+things:
+  - key: hello
+      - world
+---
+body
+`,
+      '.mole/incidents/inc-7.md',
+    );
+    expect(fm && 'error' in fm).toBe(false);
+  });
+
+  it('false positive guard: a block scalar (|) field with a dash-looking line in its body must not be flagged', () => {
+    const fm = frontMatter(
+      `---
+id: inc-8
+title: block scalar body
+description: |
+  root cause was X
+  - this happened because of Y
+---
+body
+`,
+      '.mole/incidents/inc-8.md',
+    );
+    expect(fm && 'error' in fm).toBe(false);
+  });
+
+  it('false positive guard: a quoted scalar field with a dash-looking continuation must not be flagged', () => {
+    const fm = frontMatter(
+      `---
+id: inc-9
+title: quoted scalar
+description: "root cause was X
+  - this happened because of Y"
+---
+body
+`,
+      '.mole/incidents/inc-9.md',
+    );
+    expect(fm && 'error' in fm).toBe(false);
+  });
+
   it('sibling lists at genuinely different (self-consistent) indentation still load fine, unchanged', () => {
     const root = mkRoot(
       `---
