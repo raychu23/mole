@@ -1,0 +1,20 @@
+# T65 replay 2026-11-03 00:06:52 · dcbench 9f507ce + 15 unscoped records (arms/M) · MOLE_STOP_VERIFY_LLM=0 (quota 429 until 08:59; model-judged pass after)
+## sanity: export route without withAuditLog (D-002)
+ M src/app/api/analytics/export/route.ts
+?? .mole/
+{"systemMessage":"Mole verifier: 1 decision may govern your change (routed by meaning, not judged: no model for this check):\n- D-010 API route validation pattern"}
+
+real	0m1.814s
+user	0m1.100s
+sys	0m0.391s
+
+## clean: unmodified repo
+
+real	0m1.228s
+user	0m0.980s
+sys	0m0.211s
+(empty = silent)
+## status after
+ M src/app/api/analytics/export/route.ts
+?? .mole/
+?? .mole/
