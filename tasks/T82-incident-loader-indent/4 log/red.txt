@@ -1,0 +1,36 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T82-incident-loader-indent
+
+ ❯ packages/decisions/test/incident-loader-indent.test.ts (3 tests | 1 failed) 14ms
+   ✓ T82: incident loader vs. mixed-indentation block lists > decreasing indent within one list (4-space then 2-space) is a real YAML error: reported, not dropped silently 6ms
+   × T82: incident loader vs. mixed-indentation block lists > increasing indent within one list (2-space then 4-space) folds into one scalar with no YAML error: must be reported, items must not silently vanish 6ms
+     → expected false to be true // Object.is equality
+   ✓ T82: incident loader vs. mixed-indentation block lists > sibling lists at genuinely different (self-consistent) indentation still load fine, unchanged 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/decisions/test/incident-loader-indent.test.ts > T82: incident loader vs. mixed-indentation block lists > increasing indent within one list (2-space then 4-space) folds into one scalar with no YAML error: must be reported, items must not silently vanish
+AssertionError: expected false to be true // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+ ❯ packages/decisions/test/incident-loader-indent.test.ts:68:33
+     66|       '.mole/incidents/inc-2.md',
+     67|     );
+     68|     expect(fm && 'error' in fm).toBe(true); // reported, not silently …
+       |                                 ^
+     69| 
+     70|     const g = loadGraph(root);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  07:12:56
+   Duration  526ms (transform 91ms, setup 0ms, collect 156ms, tests 14ms, environment 0ms, prepare 68ms)
+

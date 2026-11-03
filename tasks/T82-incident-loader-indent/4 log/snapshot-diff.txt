@@ -1,0 +1,2 @@
+(no vendored corpus or fixture record changed its frontMatter() result: the fix only changes records that
+fold a list item into the previous one, and none of the vendored records do that)
