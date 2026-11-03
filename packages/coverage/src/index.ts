@@ -94,9 +94,13 @@ interface AgentMark {
  * `Project/Mole[-worktrees/<task>]/` prefix by project convention, strip up to and including that prefix as a
  * fallback so attribution survives worktree cleanup; this is path normalization, not transcript parsing. */
 const WORKTREE_PREFIX = /\/Mole(?:-worktrees\/[^/]+)?\/(.+)$/;
+const MOLE_ROOT = /\/Mole(?:-worktrees\/[^/]+)?$/;
 function toRepoRel(root: string, abs: string): string | undefined {
   const direct = relPath(root, abs);
   if (direct && !direct.startsWith('..') && !direct.startsWith('/')) return direct;
+  // only for a root that is itself a Mole checkout/worktree: applied to any root it attributed Mole's own sessions to
+  // every other repo (11-03: 807 foreign files on a 7-file repo)
+  if (!MOLE_ROOT.test(root.replace(/\/+$/, ''))) return undefined;
   const m = WORKTREE_PREFIX.exec(abs);
   return m?.[1];
 }

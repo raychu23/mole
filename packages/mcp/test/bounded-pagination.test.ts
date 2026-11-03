@@ -127,6 +127,20 @@ describe('mole_coverage: a whole-repo scan is bounded + paginated', () => {
   it('limit/offset page the files array on a whole-repo scan', async () => {
     const n = 7;
     const root = manyFilesCoverageRepo(n);
+    // hermetic (11-03): one fixture Claude session that read each file; never the machine's real agent logs, which
+    // made this test scan every session on the machine (38 s, then a 90 s timeout under load)
+    const logs = mkdtempSync(join(tmpdir(), 'mole-mcp-page-cov-logs-'));
+    dirs.push(logs);
+    mkdirSync(join(logs, 'proj'));
+    const at = (i: number) => `2026-11-01T10:00:0${i}.000Z`;
+    const lines = [{ type: 'user', sessionId: 's1', cwd: root, timestamp: at(0), message: { role: 'user', content: 'go' } }];
+    for (let i = 0; i < n; i++) lines.push({ type: 'assistant', sessionId: 's1', cwd: root, timestamp: at(i + 1), message: { role: 'assistant', content: [{ type: 'tool_use', id: `t${i}`, name: 'Read', input: { file_path: join(root, `src/f${i}.ts`) } }] } } as never);
+    writeFileSync(join(logs, 'proj/s1.jsonl'), lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
+    const saved = { c: process.env.MOLE_CLAUDE_DIR, h: process.env.MOLE_HERMES_DB, x: process.env.MOLE_CODEX_DIR };
+    process.env.MOLE_CLAUDE_DIR = logs;
+    process.env.MOLE_HERMES_DB = join(logs, 'none.db');
+    process.env.MOLE_CODEX_DIR = join(logs, 'none-codex');
+    try {
     const client = await connect(root);
     const res = await client.callTool({ name: 'mole_coverage', arguments: { limit: 3 } });
     const j = JSON.parse((res.content as Array<{ text: string }>)[0]?.text ?? '{}') as { files: unknown[]; hasMore?: boolean; total?: number; nextOffset?: number };
@@ -138,6 +152,12 @@ describe('mole_coverage: a whole-repo scan is bounded + paginated', () => {
     const jRest = JSON.parse((rest.content as Array<{ text: string }>)[0]?.text ?? '{}') as { files: unknown[]; hasMore?: boolean };
     expect(jRest.hasMore).toBe(false);
     await client.close();
+    } finally {
+      for (const [k, v] of [['MOLE_CLAUDE_DIR', saved.c], ['MOLE_HERMES_DB', saved.h], ['MOLE_CODEX_DIR', saved.x]] as const) {
+        if (v === undefined) delete process.env[k];
+        else process.env[k] = v;
+      }
+    }
     // two real whole-repo coverage scans: ~2 s idle, 26 s at load average 18 (T50 integrate check timed out at 30 s
     // while the M-C v3 agent runs shared the machine) -- same shared-load mitigation as vitest.config.ts
   }, 90_000);
