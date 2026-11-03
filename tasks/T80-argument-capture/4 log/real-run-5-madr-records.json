@@ -1,0 +1,2361 @@
+[
+  {
+    "file": "0008-add-status-field.md",
+    "count": 34,
+    "rows": [
+      {
+        "id": "0008-add-status-field::claim",
+        "decisionId": "0008-add-status-field",
+        "role": "claim",
+        "text": "Chosen option: \"Use YAML front matter\", because comes out best (see below).",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Chosen option: \"Use YAML front matter\", because comes out best (see below).",
+          "startLine": 24,
+          "endLine": 24,
+          "startChar": 0,
+          "endChar": 75
+        },
+        "attacks": [],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::option:1",
+        "decisionId": "0008-add-status-field",
+        "role": "considered-option",
+        "text": "Use badge",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Use badge",
+          "prefix": "* ",
+          "startLine": 16,
+          "endLine": 16,
+          "startChar": 2,
+          "endChar": 11
+        },
+        "attacks": [
+          "0008-add-status-field::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::option:2",
+        "decisionId": "0008-add-status-field",
+        "role": "considered-option",
+        "text": "Use text line",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Use text line",
+          "prefix": "* ",
+          "startLine": 17,
+          "endLine": 17,
+          "startChar": 2,
+          "endChar": 15
+        },
+        "attacks": [
+          "0008-add-status-field::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::option:3",
+        "decisionId": "0008-add-status-field",
+        "role": "considered-option",
+        "text": "Use separate heading",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Use separate heading",
+          "prefix": "* ",
+          "startLine": 18,
+          "endLine": 18,
+          "startChar": 2,
+          "endChar": 22
+        },
+        "attacks": [
+          "0008-add-status-field::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::option:4",
+        "decisionId": "0008-add-status-field",
+        "role": "considered-option",
+        "text": "Use table",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Use table",
+          "prefix": "* ",
+          "startLine": 19,
+          "endLine": 19,
+          "startChar": 2,
+          "endChar": 11
+        },
+        "attacks": [
+          "0008-add-status-field::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::option:5",
+        "decisionId": "0008-add-status-field",
+        "role": "considered-option",
+        "text": "Do not add status",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Do not add status",
+          "prefix": "* ",
+          "startLine": 20,
+          "endLine": 20,
+          "startChar": 2,
+          "endChar": 19
+        },
+        "attacks": [
+          "0008-add-status-field::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::pro:1",
+        "decisionId": "0008-add-status-field",
+        "role": "pro",
+        "text": "Good, because YAML front matter is supported by most Markdown parsers",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Good, because YAML front matter is supported by most Markdown parsers",
+          "prefix": "* ",
+          "startLine": 41,
+          "endLine": 41,
+          "startChar": 2,
+          "endChar": 71
+        },
+        "attacks": [],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::pro:2",
+        "decisionId": "0008-add-status-field",
+        "role": "pro",
+        "text": "Good, because plain markdown",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Good, because plain markdown",
+          "prefix": "* ",
+          "startLine": 52,
+          "endLine": 52,
+          "startChar": 2,
+          "endChar": 30
+        },
+        "attacks": [],
+        "supports": [
+          "0008-add-status-field::option:1"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::pro:3",
+        "decisionId": "0008-add-status-field",
+        "role": "pro",
+        "text": "Good, because looks good",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Good, because looks good",
+          "prefix": "* ",
+          "startLine": 53,
+          "endLine": 53,
+          "startChar": 2,
+          "endChar": 26
+        },
+        "attacks": [],
+        "supports": [
+          "0008-add-status-field::option:1"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::con:1",
+        "decisionId": "0008-add-status-field",
+        "role": "con",
+        "text": "Bad, because hard to read in markdown source",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Bad, because hard to read in markdown source",
+          "prefix": "* ",
+          "startLine": 54,
+          "endLine": 54,
+          "startChar": 2,
+          "endChar": 46
+        },
+        "attacks": [
+          "0008-add-status-field::option:1"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::con:2",
+        "decisionId": "0008-add-status-field",
+        "role": "con",
+        "text": "Bad, because relies on the online service <https://shields.io> or [local badges have to be generated](https://github.com/badges/shields#using-the-badge-library)",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Bad, because relies on the online service <https://shields.io> or [local badges have to be generated](https://github.com/badges/shields#using-the-badge-library)",
+          "prefix": "* ",
+          "startLine": 55,
+          "endLine": 55,
+          "startChar": 2,
+          "endChar": 162
+        },
+        "attacks": [
+          "0008-add-status-field::option:1"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::con:3",
+        "decisionId": "0008-add-status-field",
+        "role": "con",
+        "text": "Bad, because at local usages, many badges have to be generated (superseeded-by-ADR-0006, for each ADR number)",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Bad, because at local usages, many badges have to be generated (superseeded-by-ADR-0006, for each ADR number)",
+          "prefix": "* ",
+          "startLine": 56,
+          "endLine": 56,
+          "startChar": 2,
+          "endChar": 111
+        },
+        "attacks": [
+          "0008-add-status-field::option:1"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::con:4",
+        "decisionId": "0008-add-status-field",
+        "role": "con",
+        "text": "Bad, because not easy to write",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Bad, because not easy to write",
+          "prefix": "* ",
+          "startLine": 57,
+          "endLine": 57,
+          "startChar": 2,
+          "endChar": 32
+        },
+        "attacks": [
+          "0008-add-status-field::option:1"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::pro:4",
+        "decisionId": "0008-add-status-field",
+        "role": "pro",
+        "text": "Good, because plain markdown",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Good, because plain markdown",
+          "prefix": "* ",
+          "startLine": 63,
+          "endLine": 63,
+          "startChar": 2,
+          "endChar": 30
+        },
+        "attacks": [],
+        "supports": [
+          "0008-add-status-field::option:2"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::pro:5",
+        "decisionId": "0008-add-status-field",
+        "role": "pro",
+        "text": "Good, because easy to read",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Good, because easy to read",
+          "prefix": "* ",
+          "startLine": 64,
+          "endLine": 64,
+          "startChar": 2,
+          "endChar": 28
+        },
+        "attacks": [],
+        "supports": [
+          "0008-add-status-field::option:2"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::pro:6",
+        "decisionId": "0008-add-status-field",
+        "role": "pro",
+        "text": "Good, because easy to write",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Good, because easy to write",
+          "prefix": "* ",
+          "startLine": 65,
+          "endLine": 65,
+          "startChar": 2,
+          "endChar": 29
+        },
+        "attacks": [],
+        "supports": [
+          "0008-add-status-field::option:2"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::pro:7",
+        "decisionId": "0008-add-status-field",
+        "role": "pro",
+        "text": "Good, because looks OK in both markdown-source (MD) and in rendered versions (HTML, PDF)",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Good, because looks OK in both markdown-source (MD) and in rendered versions (HTML, PDF)",
+          "prefix": "* ",
+          "startLine": 66,
+          "endLine": 66,
+          "startChar": 2,
+          "endChar": 90
+        },
+        "attacks": [],
+        "supports": [
+          "0008-add-status-field::option:2"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::pro:8",
+        "decisionId": "0008-add-status-field",
+        "role": "pro",
+        "text": "Good, because no dependencies on external tools",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Good, because no dependencies on external tools",
+          "prefix": "* ",
+          "startLine": 67,
+          "endLine": 67,
+          "startChar": 2,
+          "endChar": 49
+        },
+        "attacks": [],
+        "supports": [
+          "0008-add-status-field::option:2"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::pro:9",
+        "decisionId": "0008-add-status-field",
+        "role": "pro",
+        "text": "Good, because single line indicates the current state",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Good, because single line indicates the current state",
+          "prefix": "* ",
+          "startLine": 68,
+          "endLine": 68,
+          "startChar": 2,
+          "endChar": 55
+        },
+        "attacks": [],
+        "supports": [
+          "0008-add-status-field::option:2"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::con:5",
+        "decisionId": "0008-add-status-field",
+        "role": "con",
+        "text": "Bad, because \"Status\" line needs to be maintained",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Bad, because \"Status\" line needs to be maintained",
+          "prefix": "* ",
+          "startLine": 69,
+          "endLine": 69,
+          "startChar": 2,
+          "endChar": 51
+        },
+        "attacks": [
+          "0008-add-status-field::option:2"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::con:6",
+        "decisionId": "0008-add-status-field",
+        "role": "con",
+        "text": "Bad, because uses space at the beginning. When users read MADR, they should directly dive into the context and problem and not into the status",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Bad, because uses space at the beginning. When users read MADR, they should directly dive into the context and problem and not into the status",
+          "prefix": "* ",
+          "startLine": 70,
+          "endLine": 70,
+          "startChar": 2,
+          "endChar": 144
+        },
+        "attacks": [
+          "0008-add-status-field::option:2"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::pro:10",
+        "decisionId": "0008-add-status-field",
+        "role": "pro",
+        "text": "Good, because plain markdown",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Good, because plain markdown",
+          "prefix": "* ",
+          "startLine": 76,
+          "endLine": 76,
+          "startChar": 2,
+          "endChar": 30
+        },
+        "attacks": [],
+        "supports": [
+          "0008-add-status-field::option:3"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::pro:11",
+        "decisionId": "0008-add-status-field",
+        "role": "pro",
+        "text": "Good, because easy to write",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Good, because easy to write",
+          "prefix": "* ",
+          "startLine": 77,
+          "endLine": 77,
+          "startChar": 2,
+          "endChar": 29
+        },
+        "attacks": [],
+        "supports": [
+          "0008-add-status-field::option:3"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::con:7",
+        "decisionId": "0008-add-status-field",
+        "role": "con",
+        "text": "Bad, because it uses much space: At least three lines: heading, status, separating empty line",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Bad, because it uses much space: At least three lines: heading, status, separating empty line",
+          "prefix": "* ",
+          "startLine": 78,
+          "endLine": 78,
+          "startChar": 2,
+          "endChar": 95
+        },
+        "attacks": [
+          "0008-add-status-field::option:3"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::pro:12",
+        "decisionId": "0008-add-status-field",
+        "role": "pro",
+        "text": "Good, because history can be included",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Good, because history can be included",
+          "prefix": "* ",
+          "startLine": 84,
+          "endLine": 84,
+          "startChar": 2,
+          "endChar": 39
+        },
+        "attacks": [],
+        "supports": [
+          "0008-add-status-field::option:4"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::pro:13",
+        "decisionId": "0008-add-status-field",
+        "role": "pro",
+        "text": "Good, because multiple entries can be made",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Good, because multiple entries can be made",
+          "prefix": "* ",
+          "startLine": 85,
+          "endLine": 85,
+          "startChar": 2,
+          "endChar": 44
+        },
+        "attacks": [],
+        "supports": [
+          "0008-add-status-field::option:4"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::pro:14",
+        "decisionId": "0008-add-status-field",
+        "role": "pro",
+        "text": "Good, because already implemented in `adr-tools` fork",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Good, because already implemented in `adr-tools` fork",
+          "prefix": "* ",
+          "startLine": 86,
+          "endLine": 86,
+          "startChar": 2,
+          "endChar": 55
+        },
+        "attacks": [],
+        "supports": [
+          "0008-add-status-field::option:4"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::con:8",
+        "decisionId": "0008-add-status-field",
+        "role": "con",
+        "text": "Bad, because not covered by the [CommonMark specification 0.28 (2017-08-01)](http://spec.commonmark.org/0.28/)",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Bad, because not covered by the [CommonMark specification 0.28 (2017-08-01)](http://spec.commonmark.org/0.28/)",
+          "prefix": "* ",
+          "startLine": 87,
+          "endLine": 87,
+          "startChar": 2,
+          "endChar": 112
+        },
+        "attacks": [
+          "0008-add-status-field::option:4"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::con:9",
+        "decisionId": "0008-add-status-field",
+        "role": "con",
+        "text": "Bad, because hard to read",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Bad, because hard to read",
+          "prefix": "* ",
+          "startLine": 88,
+          "endLine": 88,
+          "startChar": 2,
+          "endChar": 27
+        },
+        "attacks": [
+          "0008-add-status-field::option:4"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::con:10",
+        "decisionId": "0008-add-status-field",
+        "role": "con",
+        "text": "Bad, because outdated entries cannot be easily identified",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Bad, because outdated entries cannot be easily identified",
+          "prefix": "* ",
+          "startLine": 89,
+          "endLine": 89,
+          "startChar": 2,
+          "endChar": 59
+        },
+        "attacks": [
+          "0008-add-status-field::option:4"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::con:11",
+        "decisionId": "0008-add-status-field",
+        "role": "con",
+        "text": "Bad, because needs more markdown training",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Bad, because needs more markdown training",
+          "prefix": "* ",
+          "startLine": 90,
+          "endLine": 90,
+          "startChar": 2,
+          "endChar": 43
+        },
+        "attacks": [
+          "0008-add-status-field::option:4"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::pro:15",
+        "decisionId": "0008-add-status-field",
+        "role": "pro",
+        "text": "Good, because MADR is kept lean",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Good, because MADR is kept lean",
+          "prefix": "* ",
+          "startLine": 94,
+          "endLine": 94,
+          "startChar": 2,
+          "endChar": 33
+        },
+        "attacks": [],
+        "supports": [
+          "0008-add-status-field::option:5"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::con:12",
+        "decisionId": "0008-add-status-field",
+        "role": "con",
+        "text": "Bad, because users demand state field",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Bad, because users demand state field",
+          "prefix": "* ",
+          "startLine": 95,
+          "endLine": 95,
+          "startChar": 2,
+          "endChar": 39
+        },
+        "attacks": [
+          "0008-add-status-field::option:5"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0008-add-status-field::con:13",
+        "decisionId": "0008-add-status-field",
+        "role": "con",
+        "text": "Bad, because not in line with other ADR templates",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0008-add-status-field.md",
+          "exact": "Bad, because not in line with other ADR templates",
+          "prefix": "* ",
+          "startLine": 96,
+          "endLine": 96,
+          "startChar": 2,
+          "endChar": 51
+        },
+        "attacks": [
+          "0008-add-status-field::option:5"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      }
+    ]
+  },
+  {
+    "file": "0009-support-links-between-adrs-inside-an-adrs.md",
+    "count": 29,
+    "rows": [
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::claim",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "claim",
+        "text": "Chosen option: \"Include in section 'More Information'\", because comes out best (see below).",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Chosen option: \"Include in section 'More Information'\", because comes out best (see below).",
+          "startLine": 26,
+          "endLine": 26,
+          "startChar": 0,
+          "endChar": 91
+        },
+        "attacks": [],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::option:1",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "considered-option",
+        "text": "Include in section \"More Information\"",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Include in section \"More Information\"",
+          "prefix": "* ",
+          "startLine": 17,
+          "endLine": 17,
+          "startChar": 2,
+          "endChar": 39
+        },
+        "attacks": [
+          "0009-support-links-between-adrs-inside-an-adrs::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::option:2",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "considered-option",
+        "text": "Use tables",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Use tables",
+          "prefix": "* ",
+          "startLine": 18,
+          "endLine": 18,
+          "startChar": 2,
+          "endChar": 12
+        },
+        "attacks": [
+          "0009-support-links-between-adrs-inside-an-adrs::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::option:3",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "considered-option",
+        "text": "Use heading together with a bullet list directly after status",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Use heading together with a bullet list directly after status",
+          "prefix": "* ",
+          "startLine": 19,
+          "endLine": 19,
+          "startChar": 2,
+          "endChar": 63
+        },
+        "attacks": [
+          "0009-support-links-between-adrs-inside-an-adrs::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::option:4",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "considered-option",
+        "text": "Use heading together with a bullet list directly after \"Decision Outcome\"",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Use heading together with a bullet list directly after \"Decision Outcome\"",
+          "prefix": "* ",
+          "startLine": 20,
+          "endLine": 20,
+          "startChar": 2,
+          "endChar": 75
+        },
+        "attacks": [
+          "0009-support-links-between-adrs-inside-an-adrs::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::option:5",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "considered-option",
+        "text": "Use heading together with a bullet list at the end",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Use heading together with a bullet list at the end",
+          "prefix": "* ",
+          "startLine": 21,
+          "endLine": 21,
+          "startChar": 2,
+          "endChar": 52
+        },
+        "attacks": [
+          "0009-support-links-between-adrs-inside-an-adrs::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::option:6",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "considered-option",
+        "text": "Do not add links",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Do not add links",
+          "prefix": "* ",
+          "startLine": 22,
+          "endLine": 22,
+          "startChar": 2,
+          "endChar": 18
+        },
+        "attacks": [
+          "0009-support-links-between-adrs-inside-an-adrs::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::pro:1",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "pro",
+        "text": "Good, because provides freedom to the user",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Good, because provides freedom to the user",
+          "prefix": "* ",
+          "startLine": 40,
+          "endLine": 40,
+          "startChar": 2,
+          "endChar": 44
+        },
+        "attacks": [],
+        "supports": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:1"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::con:1",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "con",
+        "text": "Bad, because parsing gets harder",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Bad, because parsing gets harder",
+          "prefix": "* ",
+          "startLine": 41,
+          "endLine": 41,
+          "startChar": 2,
+          "endChar": 34
+        },
+        "attacks": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:1"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::pro:2",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "pro",
+        "text": "Good, because easy to write",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Good, because easy to write",
+          "prefix": "* ",
+          "startLine": 45,
+          "endLine": 45,
+          "startChar": 2,
+          "endChar": 29
+        },
+        "attacks": [],
+        "supports": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:2"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::pro:3",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "pro",
+        "text": "Good, because history is shown (enabled by concept)",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Good, because history is shown (enabled by concept)",
+          "prefix": "* ",
+          "startLine": 46,
+          "endLine": 46,
+          "startChar": 2,
+          "endChar": 53
+        },
+        "attacks": [],
+        "supports": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:2"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::pro:4",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "pro",
+        "text": "Good, because [current `adr-tools`' support](https://github.com/npryce/adr-tools/pull/43) uses tables to describe links.",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Good, because [current `adr-tools`' support](https://github.com/npryce/adr-tools/pull/43) uses tables to describe links.",
+          "prefix": "* ",
+          "startLine": 47,
+          "endLine": 47,
+          "startChar": 2,
+          "endChar": 122
+        },
+        "attacks": [],
+        "supports": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:2"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::con:2",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "con",
+        "text": "Bad, because not supported by the CommonMark spec",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Bad, because not supported by the CommonMark spec",
+          "prefix": "* ",
+          "startLine": 48,
+          "endLine": 48,
+          "startChar": 2,
+          "endChar": 51
+        },
+        "attacks": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:2"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::con:3",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "con",
+        "text": "Bad, because unclear whether a link was super seeded by another one",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Bad, because unclear whether a link was super seeded by another one",
+          "prefix": "* ",
+          "startLine": 49,
+          "endLine": 49,
+          "startChar": 2,
+          "endChar": 69
+        },
+        "attacks": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:2"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::con:4",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "con",
+        "text": "Bad, because valid links not clear at first sight (there might be outdated links shown)",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Bad, because valid links not clear at first sight (there might be outdated links shown)",
+          "prefix": "* ",
+          "startLine": 50,
+          "endLine": 50,
+          "startChar": 2,
+          "endChar": 89
+        },
+        "attacks": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:2"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::pro:5",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "pro",
+        "text": "Good, because easy to write",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Good, because easy to write",
+          "prefix": "* ",
+          "startLine": 57,
+          "endLine": 57,
+          "startChar": 2,
+          "endChar": 29
+        },
+        "attacks": [],
+        "supports": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:3"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::pro:6",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "pro",
+        "text": "Good, because supported by the CommonMark spec",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Good, because supported by the CommonMark spec",
+          "prefix": "* ",
+          "startLine": 58,
+          "endLine": 58,
+          "startChar": 2,
+          "endChar": 48
+        },
+        "attacks": [],
+        "supports": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:3"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::con:5",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "con",
+        "text": "Bad, because not consistent with the status label (refs <https://github.com/adr/madr/issues/2>)",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Bad, because not consistent with the status label (refs <https://github.com/adr/madr/issues/2>)",
+          "prefix": "* ",
+          "startLine": 59,
+          "endLine": 59,
+          "startChar": 2,
+          "endChar": 97
+        },
+        "attacks": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:3"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::pro:7",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "pro",
+        "text": "Good, because easy to write",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Good, because easy to write",
+          "prefix": "* ",
+          "startLine": 63,
+          "endLine": 63,
+          "startChar": 2,
+          "endChar": 29
+        },
+        "attacks": [],
+        "supports": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:4"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::pro:8",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "pro",
+        "text": "Good, because supported by the CommonMark spec",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Good, because supported by the CommonMark spec",
+          "prefix": "* ",
+          "startLine": 64,
+          "endLine": 64,
+          "startChar": 2,
+          "endChar": 48
+        },
+        "attacks": [],
+        "supports": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:4"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::pro:9",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "pro",
+        "text": "Good, because the options are first introduced and then the links",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Good, because the options are first introduced and then the links",
+          "prefix": "* ",
+          "startLine": 65,
+          "endLine": 65,
+          "startChar": 2,
+          "endChar": 67
+        },
+        "attacks": [],
+        "supports": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:4"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::pro:10",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "pro",
+        "text": "Good, because consistent with position of \"Decision Outcome\"",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Good, because consistent with position of \"Decision Outcome\"",
+          "prefix": "* ",
+          "startLine": 66,
+          "endLine": 66,
+          "startChar": 2,
+          "endChar": 62
+        },
+        "attacks": [],
+        "supports": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:4"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::con:6",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "con",
+        "text": "Bad, because reader might get distracted: He might expect explanation of the options instead of links to something else",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Bad, because reader might get distracted: He might expect explanation of the options instead of links to something else",
+          "prefix": "* ",
+          "startLine": 67,
+          "endLine": 67,
+          "startChar": 2,
+          "endChar": 121
+        },
+        "attacks": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:4"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::con:7",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "con",
+        "text": "Bad, because not consistent with scientific papers, where related work and future work are coming after the discussion of the content.",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Bad, because not consistent with scientific papers, where related work and future work are coming after the discussion of the content.",
+          "prefix": "* ",
+          "startLine": 68,
+          "endLine": 68,
+          "startChar": 2,
+          "endChar": 136
+        },
+        "attacks": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:4"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::pro:11",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "pro",
+        "text": "Good, because easy to write",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Good, because easy to write",
+          "prefix": "* ",
+          "startLine": 72,
+          "endLine": 72,
+          "startChar": 2,
+          "endChar": 29
+        },
+        "attacks": [],
+        "supports": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:5"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::pro:12",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "pro",
+        "text": "Good, because supported by the CommonMark spec",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Good, because supported by the CommonMark spec",
+          "prefix": "* ",
+          "startLine": 73,
+          "endLine": 73,
+          "startChar": 2,
+          "endChar": 48
+        },
+        "attacks": [],
+        "supports": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:5"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::pro:13",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "pro",
+        "text": "Good, because the options and pros/cons are kept together with the option list.",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Good, because the options and pros/cons are kept together with the option list.",
+          "prefix": "* ",
+          "startLine": 74,
+          "endLine": 74,
+          "startChar": 2,
+          "endChar": 81
+        },
+        "attacks": [],
+        "supports": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:5"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::pro:14",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "pro",
+        "text": "Good, because consistent with pattern format",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Good, because consistent with pattern format",
+          "prefix": "* ",
+          "startLine": 75,
+          "endLine": 75,
+          "startChar": 2,
+          "endChar": 46
+        },
+        "attacks": [],
+        "supports": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:5"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0009-support-links-between-adrs-inside-an-adrs::pro:15",
+        "decisionId": "0009-support-links-between-adrs-inside-an-adrs",
+        "role": "pro",
+        "text": "Good, because template stays minimal",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0009-support-links-between-adrs-inside-an-adrs.md",
+          "exact": "Good, because template stays minimal",
+          "prefix": "* ",
+          "startLine": 79,
+          "endLine": 79,
+          "startChar": 2,
+          "endChar": 38
+        },
+        "attacks": [],
+        "supports": [
+          "0009-support-links-between-adrs-inside-an-adrs::option:6"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      }
+    ]
+  },
+  {
+    "file": "0012-use-curly-braces-to-denote-placeholder.md",
+    "count": 16,
+    "rows": [
+      {
+        "id": "0012-use-curly-braces-to-denote-placeholder::claim",
+        "decisionId": "0012-use-curly-braces-to-denote-placeholder",
+        "role": "claim",
+        "text": "Chosen option: \"Use curly braces\", because comes out best (see below).\nException: In the `bare` templates, we use the HTML comment option, because these templates are used by pro users, who are not investigating the HTML for the template, but directly read Markdown.",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0012-use-curly-braces-to-denote-placeholder.md",
+          "exact": "Chosen option: \"Use curly braces\", because comes out best (see below).",
+          "startLine": 21,
+          "endLine": 21,
+          "startChar": 0,
+          "endChar": 70
+        },
+        "attacks": [],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0012-use-curly-braces-to-denote-placeholder::option:1",
+        "decisionId": "0012-use-curly-braces-to-denote-placeholder",
+        "role": "considered-option",
+        "text": "Use square brackets",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0012-use-curly-braces-to-denote-placeholder.md",
+          "exact": "Use square brackets",
+          "prefix": "* ",
+          "startLine": 15,
+          "endLine": 15,
+          "startChar": 2,
+          "endChar": 21
+        },
+        "attacks": [
+          "0012-use-curly-braces-to-denote-placeholder::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0012-use-curly-braces-to-denote-placeholder::option:2",
+        "decisionId": "0012-use-curly-braces-to-denote-placeholder",
+        "role": "considered-option",
+        "text": "Use less-than and greater-than",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0012-use-curly-braces-to-denote-placeholder.md",
+          "exact": "Use less-than and greater-than",
+          "prefix": "* ",
+          "startLine": 16,
+          "endLine": 16,
+          "startChar": 2,
+          "endChar": 32
+        },
+        "attacks": [
+          "0012-use-curly-braces-to-denote-placeholder::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0012-use-curly-braces-to-denote-placeholder::option:3",
+        "decisionId": "0012-use-curly-braces-to-denote-placeholder",
+        "role": "considered-option",
+        "text": "Use HTML comments",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0012-use-curly-braces-to-denote-placeholder.md",
+          "exact": "Use HTML comments",
+          "prefix": "* ",
+          "startLine": 17,
+          "endLine": 17,
+          "startChar": 2,
+          "endChar": 19
+        },
+        "attacks": [
+          "0012-use-curly-braces-to-denote-placeholder::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0012-use-curly-braces-to-denote-placeholder::pro:1",
+        "decisionId": "0012-use-curly-braces-to-denote-placeholder",
+        "role": "pro",
+        "text": "Good, because [consistent to mustache templates](https://krasimirtsonev.com/blog/article/markdown-smart-placeholders).",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0012-use-curly-braces-to-denote-placeholder.md",
+          "exact": "Good, because [consistent to mustache templates](https://krasimirtsonev.com/blog/article/markdown-smart-placeholders).",
+          "prefix": "* ",
+          "startLine": 30,
+          "endLine": 30,
+          "startChar": 2,
+          "endChar": 120
+        },
+        "attacks": [],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0012-use-curly-braces-to-denote-placeholder::pro:2",
+        "decisionId": "0012-use-curly-braces-to-denote-placeholder",
+        "role": "pro",
+        "text": "Good, because no confusion with markdown notation for links.",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0012-use-curly-braces-to-denote-placeholder.md",
+          "exact": "Good, because no confusion with markdown notation for links.",
+          "prefix": "* ",
+          "startLine": 31,
+          "endLine": 31,
+          "startChar": 2,
+          "endChar": 62
+        },
+        "attacks": [],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0012-use-curly-braces-to-denote-placeholder::pro:3",
+        "decisionId": "0012-use-curly-braces-to-denote-placeholder",
+        "role": "pro",
+        "text": "Good, because clear distinction between comments on the template usage and placeholders.",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0012-use-curly-braces-to-denote-placeholder.md",
+          "exact": "Good, because clear distinction between comments on the template usage and placeholders.",
+          "prefix": "* ",
+          "startLine": 32,
+          "endLine": 32,
+          "startChar": 2,
+          "endChar": 90
+        },
+        "attacks": [],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0012-use-curly-braces-to-denote-placeholder::pro:4",
+        "decisionId": "0012-use-curly-braces-to-denote-placeholder",
+        "role": "pro",
+        "text": "Good, because used in MADR 1.x and MADR 2.x.",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0012-use-curly-braces-to-denote-placeholder.md",
+          "exact": "Good, because used in MADR 1.x and MADR 2.x.",
+          "prefix": "* ",
+          "startLine": 38,
+          "endLine": 38,
+          "startChar": 2,
+          "endChar": 46
+        },
+        "attacks": [],
+        "supports": [
+          "0012-use-curly-braces-to-denote-placeholder::option:1"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0012-use-curly-braces-to-denote-placeholder::pro:5",
+        "decisionId": "0012-use-curly-braces-to-denote-placeholder",
+        "role": "pro",
+        "text": "Good, because clear distinction between comments on the template usage and placeholders.",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0012-use-curly-braces-to-denote-placeholder.md",
+          "exact": "Good, because clear distinction between comments on the template usage and placeholders.",
+          "prefix": "* ",
+          "startLine": 39,
+          "endLine": 39,
+          "startChar": 2,
+          "endChar": 90
+        },
+        "attacks": [],
+        "supports": [
+          "0012-use-curly-braces-to-denote-placeholder::option:1"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0012-use-curly-braces-to-denote-placeholder::con:1",
+        "decisionId": "0012-use-curly-braces-to-denote-placeholder",
+        "role": "con",
+        "text": "Bad, because confusion with markdown notation for links.",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0012-use-curly-braces-to-denote-placeholder.md",
+          "exact": "Bad, because confusion with markdown notation for links.",
+          "prefix": "* ",
+          "startLine": 40,
+          "endLine": 40,
+          "startChar": 2,
+          "endChar": 58
+        },
+        "attacks": [
+          "0012-use-curly-braces-to-denote-placeholder::option:1"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0012-use-curly-braces-to-denote-placeholder::con:2",
+        "decisionId": "0012-use-curly-braces-to-denote-placeholder",
+        "role": "con",
+        "text": "Bad, because some users did not remove the brackets. Example: `Date: [2021-03-12]` or `Good, because [user no longer activatess shortcut accidently when entering task]`.",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0012-use-curly-braces-to-denote-placeholder.md",
+          "exact": "Bad, because some users did not remove the brackets. Example: `Date: [2021-03-12]` or `Good, because [user no longer activatess shortcut accidently when entering task]`.",
+          "prefix": "* ",
+          "startLine": 41,
+          "endLine": 41,
+          "startChar": 2,
+          "endChar": 171
+        },
+        "attacks": [
+          "0012-use-curly-braces-to-denote-placeholder::option:1"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0012-use-curly-braces-to-denote-placeholder::pro:6",
+        "decisionId": "0012-use-curly-braces-to-denote-placeholder",
+        "role": "pro",
+        "text": "Good, because kept in Markdown as is",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0012-use-curly-braces-to-denote-placeholder.md",
+          "exact": "Good, because kept in Markdown as is",
+          "prefix": "* ",
+          "startLine": 49,
+          "endLine": 49,
+          "startChar": 2,
+          "endChar": 38
+        },
+        "attacks": [],
+        "supports": [
+          "0012-use-curly-braces-to-denote-placeholder::option:2"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0012-use-curly-braces-to-denote-placeholder::pro:7",
+        "decisionId": "0012-use-curly-braces-to-denote-placeholder",
+        "role": "pro",
+        "text": "Good, because clear distinction between comments on the template usage and placeholders.",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0012-use-curly-braces-to-denote-placeholder.md",
+          "exact": "Good, because clear distinction between comments on the template usage and placeholders.",
+          "prefix": "* ",
+          "startLine": 50,
+          "endLine": 50,
+          "startChar": 2,
+          "endChar": 90
+        },
+        "attacks": [],
+        "supports": [
+          "0012-use-curly-braces-to-denote-placeholder::option:2"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0012-use-curly-braces-to-denote-placeholder::con:3",
+        "decisionId": "0012-use-curly-braces-to-denote-placeholder",
+        "role": "con",
+        "text": "Bad, because could be mixed up with an HTML element",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0012-use-curly-braces-to-denote-placeholder.md",
+          "exact": "Bad, because could be mixed up with an HTML element",
+          "prefix": "* ",
+          "startLine": 51,
+          "endLine": 51,
+          "startChar": 2,
+          "endChar": 53
+        },
+        "attacks": [
+          "0012-use-curly-braces-to-denote-placeholder::option:2"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0012-use-curly-braces-to-denote-placeholder::pro:8",
+        "decisionId": "0012-use-curly-braces-to-denote-placeholder",
+        "role": "pro",
+        "text": "Good, because feels \"natural\" in direct Markdown editing",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0012-use-curly-braces-to-denote-placeholder.md",
+          "exact": "Good, because feels \"natural\" in direct Markdown editing",
+          "prefix": "* ",
+          "startLine": 57,
+          "endLine": 57,
+          "startChar": 2,
+          "endChar": 58
+        },
+        "attacks": [],
+        "supports": [
+          "0012-use-curly-braces-to-denote-placeholder::option:3"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0012-use-curly-braces-to-denote-placeholder::con:4",
+        "decisionId": "0012-use-curly-braces-to-denote-placeholder",
+        "role": "con",
+        "text": "Bad, because it does not render in HTML",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0012-use-curly-braces-to-denote-placeholder.md",
+          "exact": "Bad, because it does not render in HTML",
+          "prefix": "* ",
+          "startLine": 58,
+          "endLine": 58,
+          "startChar": 2,
+          "endChar": 41
+        },
+        "attacks": [
+          "0012-use-curly-braces-to-denote-placeholder::option:3"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      }
+    ]
+  },
+  {
+    "file": "0015-include-consulting-informed-of-raci.md",
+    "count": 10,
+    "rows": [
+      {
+        "id": "0015-include-consulting-informed-of-raci::claim",
+        "decisionId": "0015-include-consulting-informed-of-raci",
+        "role": "claim",
+        "text": "Chosen option: \"Include 'Consulted' and 'Informed' of RACI\", because comes out best (see below).",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0015-include-consulting-informed-of-raci.md",
+          "exact": "Chosen option: \"Include 'Consulted' and 'Informed' of RACI\", because comes out best (see below).",
+          "startLine": 28,
+          "endLine": 28,
+          "startChar": 0,
+          "endChar": 96
+        },
+        "attacks": [],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0015-include-consulting-informed-of-raci::option:1",
+        "decisionId": "0015-include-consulting-informed-of-raci",
+        "role": "considered-option",
+        "text": "Include \"Consulted\" and \"Informed\" of RACI",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0015-include-consulting-informed-of-raci.md",
+          "exact": "Include \"Consulted\" and \"Informed\" of RACI",
+          "prefix": "* ",
+          "startLine": 22,
+          "endLine": 22,
+          "startChar": 2,
+          "endChar": 44
+        },
+        "attacks": [
+          "0015-include-consulting-informed-of-raci::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0015-include-consulting-informed-of-raci::option:2",
+        "decisionId": "0015-include-consulting-informed-of-raci",
+        "role": "considered-option",
+        "text": "Include all fields of RACI",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0015-include-consulting-informed-of-raci.md",
+          "exact": "Include all fields of RACI",
+          "prefix": "* ",
+          "startLine": 23,
+          "endLine": 23,
+          "startChar": 2,
+          "endChar": 28
+        },
+        "attacks": [
+          "0015-include-consulting-informed-of-raci::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0015-include-consulting-informed-of-raci::option:3",
+        "decisionId": "0015-include-consulting-informed-of-raci",
+        "role": "considered-option",
+        "text": "Do not include anything of RACI",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0015-include-consulting-informed-of-raci.md",
+          "exact": "Do not include anything of RACI",
+          "prefix": "* ",
+          "startLine": 24,
+          "endLine": 24,
+          "startChar": 2,
+          "endChar": 33
+        },
+        "attacks": [
+          "0015-include-consulting-informed-of-raci::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0015-include-consulting-informed-of-raci::pro:1",
+        "decisionId": "0015-include-consulting-informed-of-raci",
+        "role": "pro",
+        "text": "Good, because these two roles of RACI are well understood.",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0015-include-consulting-informed-of-raci.md",
+          "exact": "Good, because these two roles of RACI are well understood.",
+          "prefix": "* ",
+          "startLine": 34,
+          "endLine": 34,
+          "startChar": 2,
+          "endChar": 60
+        },
+        "attacks": [],
+        "supports": [
+          "0015-include-consulting-informed-of-raci::option:1"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0015-include-consulting-informed-of-raci::pro:2",
+        "decisionId": "0015-include-consulting-informed-of-raci",
+        "role": "pro",
+        "text": "Good, because we make these fields optional, thus it keeps MADR still lightweight.",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0015-include-consulting-informed-of-raci.md",
+          "exact": "Good, because we make these fields optional, thus it keeps MADR still lightweight.",
+          "prefix": "* ",
+          "startLine": 35,
+          "endLine": 35,
+          "startChar": 2,
+          "endChar": 84
+        },
+        "attacks": [],
+        "supports": [
+          "0015-include-consulting-informed-of-raci::option:1"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0015-include-consulting-informed-of-raci::con:1",
+        "decisionId": "0015-include-consulting-informed-of-raci",
+        "role": "con",
+        "text": "Bad, because it adds two additional fields",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0015-include-consulting-informed-of-raci.md",
+          "exact": "Bad, because it adds two additional fields",
+          "prefix": "* ",
+          "startLine": 36,
+          "endLine": 36,
+          "startChar": 2,
+          "endChar": 44
+        },
+        "attacks": [
+          "0015-include-consulting-informed-of-raci::option:1"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0015-include-consulting-informed-of-raci::pro:3",
+        "decisionId": "0015-include-consulting-informed-of-raci",
+        "role": "pro",
+        "text": "Good, because complete RACI would be included",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0015-include-consulting-informed-of-raci.md",
+          "exact": "Good, because complete RACI would be included",
+          "prefix": "* ",
+          "startLine": 42,
+          "endLine": 42,
+          "startChar": 2,
+          "endChar": 47
+        },
+        "attacks": [],
+        "supports": [
+          "0015-include-consulting-informed-of-raci::option:2"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0015-include-consulting-informed-of-raci::con:2",
+        "decisionId": "0015-include-consulting-informed-of-raci",
+        "role": "con",
+        "text": "Bad, because get confused about who is \"accountable\" and who is \"responsible\".",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0015-include-consulting-informed-of-raci.md",
+          "exact": "Bad, because get confused about who is \"accountable\" and who is \"responsible\".",
+          "prefix": "* ",
+          "startLine": 43,
+          "endLine": 43,
+          "startChar": 2,
+          "endChar": 80
+        },
+        "attacks": [
+          "0015-include-consulting-informed-of-raci::option:2"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0015-include-consulting-informed-of-raci::con:3",
+        "decisionId": "0015-include-consulting-informed-of-raci",
+        "role": "con",
+        "text": "Bad, because if decisions are mostly taken by consensus in small committees, then there might not be an \"accountable\" person.",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0015-include-consulting-informed-of-raci.md",
+          "exact": "Bad, because if decisions are mostly taken by consensus in small committees, then there might not be an \"accountable\" person.",
+          "prefix": "* ",
+          "startLine": 44,
+          "endLine": 44,
+          "startChar": 2,
+          "endChar": 127
+        },
+        "attacks": [
+          "0015-include-consulting-informed-of-raci::option:2"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      }
+    ]
+  },
+  {
+    "file": "0016-outcome-before-detailed-pros-cons.md",
+    "count": 9,
+    "rows": [
+      {
+        "id": "0016-outcome-before-detailed-pros-cons::claim",
+        "decisionId": "0016-outcome-before-detailed-pros-cons",
+        "role": "claim",
+        "text": "Chosen option: \"Section 'Pros and Cons of the Options' after 'Decision Outcome'\", because this keeps the available options and the decision outcome close together.\nOne gets the decision outcome above the fold and preserve a nice logical flow.\nHence, one can see the \"Pros and Cons\" section as a sort of \"appendix\" to the considered options section.\nIt is almost like the \"Considered Options\" section implies the following sentence: \"For a more detailed analysis of these options, refer to pros and cons\".\n\n...\n\n...\n```\n\n* Good, because the logical flow is kept\n* Bad, because the decision outcome is not close to the options\n* Bad, because \"small\" MADRs with the list of options and the decision outcome (and not containing the section \"Pros and Cons of the Options\")\n* Bad, because \"small\" MADRs with the list of options and the decision outcome (and not containing the section \"Pros and Cons of the Options\")",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0016-outcome-before-detailed-pros-cons.md",
+          "exact": "Chosen option: \"Section 'Pros and Cons of the Options' after 'Decision Outcome'\", because this keeps the available options and the decision outcome close together.",
+          "startLine": 25,
+          "endLine": 25,
+          "startChar": 0,
+          "endChar": 163
+        },
+        "attacks": [],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0016-outcome-before-detailed-pros-cons::option:1",
+        "decisionId": "0016-outcome-before-detailed-pros-cons",
+        "role": "considered-option",
+        "text": "Section \"Pros and Cons of the Options\" after \"Decision Outcome\"",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0016-outcome-before-detailed-pros-cons.md",
+          "exact": "Section \"Pros and Cons of the Options\" after \"Decision Outcome\"",
+          "prefix": "* ",
+          "startLine": 20,
+          "endLine": 20,
+          "startChar": 2,
+          "endChar": 65
+        },
+        "attacks": [
+          "0016-outcome-before-detailed-pros-cons::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0016-outcome-before-detailed-pros-cons::option:2",
+        "decisionId": "0016-outcome-before-detailed-pros-cons",
+        "role": "considered-option",
+        "text": "Section \"Pros and Cons of the Options\" before \"Decision Outcome\"",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0016-outcome-before-detailed-pros-cons.md",
+          "exact": "Section \"Pros and Cons of the Options\" before \"Decision Outcome\"",
+          "prefix": "* ",
+          "startLine": 21,
+          "endLine": 21,
+          "startChar": 2,
+          "endChar": 66
+        },
+        "attacks": [
+          "0016-outcome-before-detailed-pros-cons::claim"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0016-outcome-before-detailed-pros-cons::pro:1",
+        "decisionId": "0016-outcome-before-detailed-pros-cons",
+        "role": "pro",
+        "text": "Good, because this keeps the available options and the decision outcome close together.",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0016-outcome-before-detailed-pros-cons.md",
+          "exact": "Good, because this keeps the available options and the decision outcome close together.",
+          "prefix": "* ",
+          "startLine": 50,
+          "endLine": 50,
+          "startChar": 2,
+          "endChar": 89
+        },
+        "attacks": [],
+        "supports": [
+          "0016-outcome-before-detailed-pros-cons::option:1"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0016-outcome-before-detailed-pros-cons::con:1",
+        "decisionId": "0016-outcome-before-detailed-pros-cons",
+        "role": "con",
+        "text": "Bad, because readers might be confused, because the logical flow broken: First comes the result, then the detailed arguments.",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0016-outcome-before-detailed-pros-cons.md",
+          "exact": "Bad, because readers might be confused, because the logical flow broken: First comes the result, then the detailed arguments.",
+          "prefix": "* ",
+          "startLine": 51,
+          "endLine": 51,
+          "startChar": 2,
+          "endChar": 127
+        },
+        "attacks": [
+          "0016-outcome-before-detailed-pros-cons::option:1"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0016-outcome-before-detailed-pros-cons::pro:2",
+        "decisionId": "0016-outcome-before-detailed-pros-cons",
+        "role": "pro",
+        "text": "Good, because the logical flow is kept",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0016-outcome-before-detailed-pros-cons.md",
+          "exact": "Good, because the logical flow is kept",
+          "prefix": "* ",
+          "startLine": 71,
+          "endLine": 71,
+          "startChar": 2,
+          "endChar": 40
+        },
+        "attacks": [],
+        "supports": [
+          "0016-outcome-before-detailed-pros-cons::option:2"
+        ],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0016-outcome-before-detailed-pros-cons::con:2",
+        "decisionId": "0016-outcome-before-detailed-pros-cons",
+        "role": "con",
+        "text": "Bad, because the decision outcome is not close to the options",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0016-outcome-before-detailed-pros-cons.md",
+          "exact": "Bad, because the decision outcome is not close to the options",
+          "prefix": "* ",
+          "startLine": 72,
+          "endLine": 72,
+          "startChar": 2,
+          "endChar": 63
+        },
+        "attacks": [
+          "0016-outcome-before-detailed-pros-cons::option:2"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0016-outcome-before-detailed-pros-cons::con:3",
+        "decisionId": "0016-outcome-before-detailed-pros-cons",
+        "role": "con",
+        "text": "Bad, because \"small\" MADRs with the list of options and the decision outcome (and not containing the section \"Pros and Cons of the Options\")",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0016-outcome-before-detailed-pros-cons.md",
+          "exact": "Bad, because \"small\" MADRs with the list of options and the decision outcome (and not containing the section \"Pros and Cons of the Options\")",
+          "prefix": "* ",
+          "startLine": 73,
+          "endLine": 73,
+          "startChar": 2,
+          "endChar": 142
+        },
+        "attacks": [
+          "0016-outcome-before-detailed-pros-cons::option:2"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      },
+      {
+        "id": "0016-outcome-before-detailed-pros-cons::con:4",
+        "decisionId": "0016-outcome-before-detailed-pros-cons",
+        "role": "con",
+        "text": "Bad, because \"small\" MADRs with the list of options and the decision outcome (and not containing the section \"Pros and Cons of the Options\")",
+        "span": {
+          "file": "packages/decisions/bench/corpora/m29-madr/docs/decisions/0016-outcome-before-detailed-pros-cons.md",
+          "exact": "Bad, because \"small\" MADRs with the list of options and the decision outcome (and not containing the section \"Pros and Cons of the Options\")",
+          "prefix": "* ",
+          "startLine": 74,
+          "endLine": 74,
+          "startChar": 2,
+          "endChar": 142
+        },
+        "attacks": [
+          "0016-outcome-before-detailed-pros-cons::option:2"
+        ],
+        "supports": [],
+        "provenance": {
+          "source": "compiler",
+          "detail": "mole-derive-adr-pros-cons"
+        },
+        "status": "draft"
+      }
+    ]
+  }
+]

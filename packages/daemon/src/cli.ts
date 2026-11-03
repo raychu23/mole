@@ -131,6 +131,7 @@ async function main(): Promise<number> {
   if (cmd === 'flows') return (await import('@mole/flows')).flowsCli(pos, flags, root); // runtime call flows recorded from tests (T28), no daemon needed
   if (cmd === 'rules') return (await import('@mole/decisions')).rulesCli(pos, flags, root);
   if (cmd === 'compile') return (await import('@mole/decisions')).compileCli(pos, flags, root); // T46: compile-at-capture (draft/approve/reject/status)
+  if (cmd === 'arguments') return (await import('@mole/decisions')).argumentsCli(pos, flags, root); // T80: captured-argument capture/approve/reject/list
   if (cmd === 'cascade-check') return (await import('@mole/decisions')).cascadeCheckCli(pos, flags, root); // T46: zero-LLM tier then one-call LLM escalation
   if (cmd === 'coverage') return (await import('@mole/coverage/dist/src/cli.js')).coverageCli(pos, flags, root); // which agents cover which files, weak spots (T35)
   if (cmd === 'hotspots') return (await import('@mole/hotspots/dist/src/cli.js')).hotspotsCli(pos, flags, root); // T70/D68: churn x complexity x decision volatility x fix density, ranked

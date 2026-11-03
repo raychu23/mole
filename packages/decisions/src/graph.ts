@@ -4,6 +4,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { isMap, isScalar, isSeq, LineCounter, parseDocument, type Node as YNode } from 'yaml';
 import { loadArgdown } from './argdown/loader.js';
+import { loadCapturedArguments } from './argdown/captured-loader.js';
 import { loadSpecKit } from './import/speckit.js';
 import type { Anchor, DecisionGraph, EdgeType, EvidenceRef, GraphEdge, GraphNode, LoadOptions, Problem } from './types.js';
 
@@ -500,6 +501,7 @@ export function loadGraph(root: string, opts: LoadOptions = {}): DecisionGraph {
   for (const d of opts.adrDirs ?? []) if (d) loadAdrDir(b, d);
   loadSpecKit(b); // T36: .specify/memory/constitution.md + specs/*/research.md, zero config (register importers: one call)
   loadArgdown(b); // T48: .mole/arguments/**/*.argdown + ```argdown fenced blocks (one call, same convention as loadSpecKit)
+  loadCapturedArguments(b); // T80: APPROVED captured arguments only (.mole/arguments/captured/*.json) -- drafts never become nodes
   // review 1 P2-1 / P2-2: an unknown status or a reference to an unknown id is reported at file:line, never dropped silently
   for (const n of b.nodes)
     if (n.kind === 'decision' && n.format === 'mole' && n.status === 'unknown')

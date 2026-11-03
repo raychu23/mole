@@ -79,8 +79,10 @@ function bulletsOf(block: string): string[] {
   return items.map((x) => x.replace(/\s+/g, ' ').trim()).filter((x) => x.length > 0);
 }
 
-/** Compare option names ignoring wrapping whitespace, case and a trailing period. */
-function sameName(s: string): string {
+/** Compare option names ignoring wrapping whitespace, case and a trailing period. Exported (T80):
+ *  capture/arguments.ts matches a MADR `### <option>` Pros-and-Cons subheading back to the SAME
+ *  considered-option id this module already derived, instead of re-implementing the comparison. */
+export function sameName(s: string): string {
   return s.replace(/\*\*/g, '').replace(/["“”]/g, '').replace(/\s+/g, ' ').trim().replace(/\.$/, '').toLowerCase();
 }
 
