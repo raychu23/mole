@@ -195,6 +195,14 @@ function withKnockOn(ev: Evaluated, inc: IncidentRecord, c: RevivalCandidate): R
 export const DEFAULT_SUGGEST_LIMIT = 20;
 
 /** Top `limit` candidates by score (default 20), each with its dry-run knock-on. Read-only. */
+/** T62 `mole incident list`: the incident's own title (from its record, not the graph node, whose title is the id)
+ *  and its top suggestions. Read-only. */
+export function incidentSummary(root: string, incidentId: string, limit = 3): { id: string; title: string; candidates: RevivalCandidate[] } {
+  const ev = evaluated(root);
+  const inc = readIncident(root, ev.graph, incidentId);
+  return { id: incidentId, title: inc.title, candidates: candidates(root, ev, inc).slice(0, limit).map((c) => withKnockOn(ev, inc, c)) };
+}
+
 export function suggestRevivals(root: string, incidentId: string, opts: { limit?: number } = {}): RevivalCandidate[] {
   const ev = evaluated(root);
   const inc = readIncident(root, ev.graph, incidentId);

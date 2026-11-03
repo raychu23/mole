@@ -14,3 +14,4 @@ export {
   type ProposalReport,
 } from './proposals.js';
 export { proposeTenetRevision, type LessonOptions, type TenetRevision } from './lesson.js';
+export { listProposals, summarizeProposals } from './list.js';

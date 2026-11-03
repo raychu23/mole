@@ -27,7 +27,7 @@ export { loadArgdown } from './argdown/loader.js';
 // T54: derive a Dung framework from an ADR's own MADR/Nygard sections (no hand-authored Argdown file)
 export { deriveAdrArgumentFramework } from './argdown/derive-adr.js';
 export type { AdrArgument, AdrArgumentFramework, AdrArgumentRole } from './argdown/derive-adr.js';
-export { acceptIncident, dismissIncident, IncidentError, incidentArgumentId, suggestRevivals } from './incidents/revive.js';
+export { acceptIncident, dismissIncident, IncidentError, incidentArgumentId, incidentSummary, suggestRevivals } from './incidents/revive.js';
 export type { IncidentWrite, RevivalCandidate, RevivalEvidence } from './incidents/revive.js';
 export { comparePhases, evaluatePhase, phaseAt, PrioritiesError, readPriorities } from './priorities.js';
 export type { FlippedAttack, Phase, PhaseComparison, PhaseEvaluation } from './priorities.js';

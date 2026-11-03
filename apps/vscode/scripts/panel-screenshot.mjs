@@ -5,7 +5,7 @@
 // `code --new-window` session is already the frontmost window, so no Automation permission is needed — see
 // tasks/T34-one-panel/2 insights.md for why selftest.mjs's approach doesn't work in this sandboxed run.
 import { execFileSync, spawn } from 'node:child_process';
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,9 +24,12 @@ const extDir = join(SCRATCH, 'ext');
 const cfgPath = join(SCRATCH, 'm26-check.json');
 const resultPath = join(SCRATCH, 'result.json');
 const shotBase = join(SCRATCH, 'shot');
-writeFileSync(cfgPath, JSON.stringify({ out: resultPath, shot: shotBase, files: ['apps/vscode/src/panelData.ts'] }));
+// T62: WORKSPACE / FILES (comma list) / SCROLL_TO (section id) / MODEL_OUT (keep the rendered model) overrides
+const WORKSPACE = process.env.WORKSPACE ?? repoRoot;
+const FILES = process.env.FILES ? process.env.FILES.split(',') : ['apps/vscode/src/panelData.ts'];
+writeFileSync(cfgPath, JSON.stringify({ out: resultPath, shot: shotBase, files: FILES, ...(process.env.SCROLL_TO ? { scrollTo: process.env.SCROLL_TO } : {}) }));
 const env = { ...process.env, MOLE_M26_CHECK: cfgPath, MOLE_STATE_DIR: join(SCRATCH, 'state') };
-const child = spawn(CODE, ['--new-window', '--user-data-dir', ud, '--extensions-dir', extDir, '--extensionDevelopmentPath', extRoot, '--disable-workspace-trust', '--skip-welcome', '--skip-release-notes', repoRoot], { env, stdio: 'ignore' });
+const child = spawn(CODE, ['--new-window', '--user-data-dir', ud, '--extensions-dir', extDir, '--extensionDevelopmentPath', extRoot, '--disable-workspace-trust', '--skip-welcome', '--skip-release-notes', WORKSPACE], { env, stdio: 'ignore' });
 
 const deadline = Date.now() + 120_000;
 let shot = false;
@@ -49,6 +52,7 @@ try {
   // already exited
 }
 await new Promise((r) => setTimeout(r, 1500));
+if (process.env.MODEL_OUT && existsSync(resultPath)) writeFileSync(process.env.MODEL_OUT, readFileSync(resultPath, 'utf8'));
 try {
   rmSync(SCRATCH, { recursive: true, force: true });
 } catch {

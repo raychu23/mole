@@ -236,3 +236,22 @@ describe('T58 review 1 (deleg_27342d20) findings', () => {
     expect(suggestRevivals(root, 'inc-42')).toEqual([]);
   });
 });
+
+// T62: `mole incident list` for the panel -- every incident with its top suggestions, read-only
+describe('mole incident list (T62)', () => {
+  it('lists each incident with its top candidates and writes nothing', () => {
+    const root = repo();
+    const before = snapshot(root);
+    const out: string[] = [];
+    const log = console.log;
+    console.log = (s: string) => void out.push(s);
+    try {
+      expect(incidentCli(['list'], {}, root)).toBe(0);
+    } finally {
+      console.log = log;
+    }
+    const list = JSON.parse(out.join('\n'));
+    expect(list).toEqual([{ id: 'inc-42', title: 'Customers saw stale prices from the cache', candidates: suggestRevivals(root, 'inc-42', { limit: 3 }) }]);
+    expect(snapshot(root)).toEqual(before);
+  });
+});

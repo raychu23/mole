@@ -6,10 +6,12 @@
 // T31: one import, used only for the FolderGroup[] shape this section's runner returns (ask/prep/read-back,
 // grouped by folder, never by person -- @mole/oneonone, M23 code half).
 import type { FolderGroup } from '@mole/oneonone';
+import type { Phase, PhaseComparison, PhaseEvaluation } from '@mole/decisions';
+import type { IncidentEntry, ProposalSummary, ReasoningData } from '../webview/reasoning.js';
 
-export type SectionId = 'decisions' | 'pastFixes' | 'notes' | 'since' | 'questions' | 'tests' | 'agents' | 'blastRadius' | 'oneonone' | 'reviewNotes';
+export type SectionId = 'decisions' | 'pastFixes' | 'notes' | 'since' | 'questions' | 'tests' | 'agents' | 'blastRadius' | 'oneonone' | 'reviewNotes' | 'reasoning';
 
-export const SECTION_IDS: readonly SectionId[] = ['decisions', 'pastFixes', 'notes', 'since', 'questions', 'tests', 'agents', 'blastRadius', 'oneonone', 'reviewNotes'];
+export const SECTION_IDS: readonly SectionId[] = ['decisions', 'pastFixes', 'notes', 'since', 'questions', 'tests', 'agents', 'blastRadius', 'oneonone', 'reviewNotes', 'reasoning'];
 
 export type SectionStatus = 'ok' | 'empty' | 'unavailable' | 'error';
 
@@ -54,6 +56,14 @@ export interface Runners {
   oneonone(): Promise<unknown>;
   /** T40: design review / meeting note drafts + the file-tree delta diagram (@mole/reviews) */
   reviewNotes(): Promise<unknown>;
+  /** T62 Reasoning section: `mole priorities list` / `mole priorities` / `mole priorities compare A B` (T60) */
+  prioritiesList(): Promise<Phase[]>;
+  priorities(): Promise<PhaseEvaluation>;
+  prioritiesCompare(a: string, b: string): Promise<PhaseComparison>;
+  /** `mole incident list` (T58 suggestions, read-only) */
+  incidents(): Promise<IncidentEntry[]>;
+  /** `mole proposals` (T56, same JSON as the MCP tool) */
+  proposals(): Promise<ProposalSummary>;
 }
 
 export interface BuildTarget {
@@ -76,6 +86,9 @@ const CAPTIONS: Record<SectionId, string> = {
   oneonone:
     "1:1 prep + Read-back: questions logged via the hover 'Ask' button, grouped by folder (never by person) with the decision " +
     "record that already answers each one; the folder owner's confirm/reject is the Read-back, stored per folder (@mole/oneonone, T31).",
+  reasoning:
+    'Reasoning: which decisions hold under the phase in force and which flip at the next one (tenet order, T60), the losing ' +
+    'arguments an incident may revive (T58), and what each proposal would change against the approved decisions (T56).',
   reviewNotes: 'Review / meeting notes: sparse notes from a design review expand only around what you flagged into decision drafts pinned to real code, with a delta diagram of what changed (@mole/reviews, T40).',
 };
 
@@ -104,8 +117,55 @@ async function section<T>(id: SectionId, run: () => Promise<T> | T, isEmpty: (v:
 
 const emptyArr = (v: unknown): boolean => Array.isArray(v) && v.length === 0;
 
+/** one sub-source of a section: its value, or its one-line error (T34 failure case b, one level down) */
+async function part<T>(run: () => Promise<T>): Promise<T | { error: string }> {
+  try {
+    return await run();
+  } catch (e) {
+    return { error: toMessage(e) || 'failed to load' };
+  }
+}
+const isFailed = (x: unknown): x is { error: string } => !!x && typeof x === 'object' && typeof (x as { error?: unknown }).error === 'string';
+
+/** T62: phase in force + the adjacent phase's comparison (next if any, else previous), incidents, proposals. */
+async function buildReasoning(r: Runners): Promise<ReasoningData> {
+  const phaseP = part(async () => {
+    const [phases, evaluation] = await Promise.all([r.prioritiesList(), r.priorities()]);
+    const i = phases.findIndex((p) => p.name === evaluation.phase);
+    if (i < 0) return { evaluation };
+    const current = phases[i]!;
+    const adjacent = phases[i + 1] ?? phases[i - 1];
+    if (!adjacent) return { current, evaluation };
+    const direction = phases[i + 1] ? ('next' as const) : ('previous' as const);
+    // always earlier -> later, so a line reads forward in time (next: current -> next; previous: previous -> current)
+    const [a, b] = direction === 'next' ? [current.name, adjacent.name] : [adjacent.name, current.name];
+    const comparison = await part(() => r.prioritiesCompare(a, b));
+    return { current, adjacent, direction, evaluation, comparison };
+  });
+  const [phase, incidents, proposals] = await Promise.all([phaseP, part(() => r.incidents()), part(() => r.proposals())]);
+  return { phase, incidents, proposals };
+}
+
+function reasoningSection(d: ReasoningData): Section<ReasoningData> {
+  const caption = CAPTIONS.reasoning;
+  const parts = [d.phase, d.incidents, d.proposals];
+  const errors = parts.filter(isFailed).map((p) => p.error);
+  if (errors.length === parts.length) {
+    const message = errors[0]!;
+    return { status: UNAVAILABLE_PATTERN.test(message) ? 'unavailable' : 'error', caption, data: d, message };
+  }
+  const hasPhase = !!d.phase && !isFailed(d.phase) && !!d.phase.current;
+  const hasIncidents = Array.isArray(d.incidents) && d.incidents.length > 0;
+  const hasProposals = !!d.proposals && !isFailed(d.proposals) && d.proposals.proposals.length > 0;
+  if (!hasPhase && !hasIncidents && !hasProposals && errors.length === 0) {
+    return { status: 'empty', caption, data: d, message: 'no priorities, incidents or proposals recorded yet (.mole/priorities.md, .mole/incidents/, mole-proposals create)' };
+  }
+  return { status: 'ok', caption, data: d };
+}
+
 export async function buildPanelModel(target: BuildTarget, r: Runners): Promise<PanelModel> {
   const at = target.symbol ? `${target.file}#${target.symbol}` : target.file;
+  const reasoningP = buildReasoning(r); // T62: started alongside the other sections
 
   const [decisions, pastFixes, notes, since, questions, tests, agents, blastRadius, oneonone, reviewNotes] = await Promise.all([
     section('decisions', () => r.decisions(), (v: any) => emptyArr(v?.decisions)),
@@ -125,6 +185,8 @@ export async function buildPanelModel(target: BuildTarget, r: Runners): Promise<
     section('oneonone', () => r.oneonone(), (v: any) => emptyArr(v?.groups as FolderGroup[] | undefined)),
     section('reviewNotes', () => r.reviewNotes(), (v: any) => emptyArr(v?.drafts) && !v?.diagramSvg),
   ]);
+  // T62: built outside section(): its three parts fail independently, so the section status is derived from them
+  const reasoning = reasoningSection(await reasoningP);
 
   // a section whose runner reported a clean "not applicable here" (e.g. not a git repo) reads as one
   // friendly line, same shape as a thrown error, so the view never special-cases it
@@ -141,6 +203,6 @@ export async function buildPanelModel(target: BuildTarget, r: Runners): Promise<
     symbol: target.symbol,
     generatedAt: Date.now(),
     cacheHit: false,
-    sections: { decisions, pastFixes, notes, since, questions, tests, agents, blastRadius, oneonone, reviewNotes },
+    sections: { decisions, pastFixes, notes, since, questions, tests, agents, blastRadius, oneonone, reviewNotes, reasoning },
   };
 }

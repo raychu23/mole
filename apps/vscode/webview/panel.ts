@@ -1,6 +1,8 @@
 // T34 one-panel: runs inside the sidebar webview. Receives one `mole.update` postMessage per refresh (the
 // extension host re-renders the data; this script only patches the DOM — see prior-art.md #1, the same
 // "static HTML, patch on postMessage" idiom GitLens/Copilot/Cody use for fast refresh, M26b).
+import { renderReasoning, type ReasoningData } from './reasoning.js';
+
 declare function acquireVsCodeApi(): { postMessage(m: unknown): void; getState(): unknown; setState(s: unknown): void };
 const vscode = acquireVsCodeApi();
 window.addEventListener('error', (e) => vscode.postMessage({ type: 'error', message: `${e.message} @ ${e.filename}:${e.lineno}` }));
@@ -36,6 +38,7 @@ const ORDER: Array<[string, string]> = [
   ['agents', 'Agents'],
   ['blastRadius', 'Blast radius'],
   ['reviewNotes', 'Review / meeting notes'],
+  ['reasoning', 'Reasoning'],
 ];
 
 function countOf(id: string, data: unknown): number {
@@ -52,6 +55,13 @@ function countOf(id: string, data: unknown): number {
   if (id === 'blastRadius') {
     const b = data as { map?: { nodes?: unknown[] }; flows?: { tests?: unknown[] } };
     return (b.map?.nodes?.length ?? 0) + (b.flows?.tests?.length ?? 0);
+  }
+  if (id === 'reasoning') {
+    const r = data as ReasoningData;
+    const flips = r.phase && !('error' in r.phase) && r.phase.comparison && !('error' in r.phase.comparison) ? r.phase.comparison.decisions.length : 0;
+    const inc = Array.isArray(r.incidents) ? r.incidents.reduce((n, i) => n + (i.candidates?.length ?? 0), 0) : 0;
+    const props = r.proposals && !('error' in r.proposals) ? r.proposals.proposals.length : 0;
+    return flips + inc + props;
   }
   if (id === 'reviewNotes') {
     const r = data as { drafts?: unknown[] };
@@ -77,6 +87,8 @@ function render(model: Model): void {
     if (id === 'questions') parts.push('<div class="explain"><textarea data-explain placeholder="explain it back (saved privately to .mole/local)"></textarea><button data-save-explain>Save</button></div>');
     if (id === 'tests') parts.push('<button data-run-tests>Run</button><span data-run-result></span>');
     // T40: the delta diagram rendered inline -- a deterministic SVG from @mole/reviews, no model, no script.
+    // T62: the reasoning section's lines, rendered from the CLI JSON by the pure webview/reasoning.ts
+    if (id === 'reasoning' && s.data) parts.push(`<div class="reasoning">${renderReasoning(s.data as ReasoningData)}</div>`);
     if (id === 'reviewNotes' && s.status === 'ok') {
       const r = s.data as { diagramSvg?: string } | undefined;
       if (r?.diagramSvg) parts.push(`<div class="diagram">${r.diagramSvg}</div>`);
@@ -105,6 +117,8 @@ window.addEventListener('message', (ev) => {
     const t0 = performance.now();
     render(m.model as Model);
     vscode.postMessage({ type: 'rendered', seq: m.seq, paintMs: performance.now() - t0 });
+  } else if (m.type === 'scrollTo') {
+    app.querySelector(`[data-id="${String(m.id).replace(/[^\w-]/g, '')}"]`)?.scrollIntoView({ block: 'start' });
   } else if (m.type === 'runResult') {
     const out = app.querySelector('[data-run-result]');
     if (out) out.textContent = ` ${String(m.summary)}`;

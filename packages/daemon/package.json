@@ -22,6 +22,7 @@
     "@mole/decisions": "*",
     "@mole/verify": "*",
     "@mole/coverage": "*",
-    "@mole/intake": "*"
+    "@mole/intake": "*",
+    "@mole/proposals": "*"
   }
 }
