@@ -1,5 +1,5 @@
 {
-  "written": "2026-10-30T03:04:03.700Z",
+  "written": "2026-11-03T13:14:21.893Z",
   "rows": [
     {
       "claim": "H1 call graph precision/recall (F1) vs the most recognizable static-analysis tools",
@@ -19,18 +19,18 @@
     },
     {
       "claim": "H2 hand-back test selection: regressions caught vs tests run",
-      "mole": "caught 10/10 while running 18.5% of the tests that reach the change (mean)",
-      "baseline_best": "run-all catches 10/10 but at 1347.5% of the suite — Mole gets the same catch rate at ~1/73 the tests",
+      "mole": "caught 10/10; selection size 1.2% of the full suite (163/14065 tests, aggregate across the 10 regressions) — 18.5% of reach (mean), a secondary comparison against the vitest-related baseline below, not a suite share",
+      "baseline_best": "run-all catches 10/10 by construction, running 100% of the suite (trivial) — Mole catches the same 10/10 while running 1.2% of the suite",
       "baseline_tool": "run-all (full suite)",
       "all_baselines": {
-        "vitest related (reach set, upper bound)": "the denominator itself: tests whose module graph contains the edited file (vitest’s own changed-file query), mean 18.5% of the full suite",
-        "run-all": "10/10 caught at 1347.5% of the suite",
-        "run-none": "0/10 caught at 0% (baseline floor)"
+        "vitest related (reach set, a coarser dynamic-dependency baseline)": "the denominator for Mole’s secondary reach-share number: tests whose module graph contains the edited file; itself 86.4% of the full suite in aggregate (12159/14065) — the module graph already pulls in most of Excalidraw’s suite, so this baseline is a weak filter there",
+        "run-all": "10/10 caught, 100% of the suite (by construction — it runs everything)",
+        "run-none": "0/10 caught, 0% of the suite (by construction)"
       },
-      "metric": "regressions caught / tests run as % of the full suite, 10 planted regressions (5 Mole + 5 Excalidraw)",
-      "n": "10 planted regressions, Mole 36.0% mean reach share, Excalidraw 1.1%",
+      "metric": "selection size % of the full suite (standard RTS metric, Rothermel & Harrold 1996 / Ekstazi / STARTS) and regressions caught (safety proxy), 10 planted regressions (5 Mole + 5 Excalidraw)",
+      "n": "10 planted regressions, aggregate 14,065 full-suite tests, 12,159 reach-set tests, 163 tests actually run by Mole’s selection",
       "key_path": "packages/verify/bench/keys/m14-key.json",
-      "how_baseline_ran": "real: vitest 3.2.7 `vitest related <files> --run` (the reach denominator) and the same repos’ real full-suite runs (run-all / run-none)",
+      "how_baseline_ran": "real: vitest 3.2.7 `vitest related <files> --run` (the reach baseline) and the same repos’ real full-suite runs (run-all / run-none); suite totals read from the frozen m14-key.json, not recomputed",
       "amazon_jd_line": "Amazon AWS Database SDE Intern (10565667): \"Work in an agile environment practicing CI/CD principles while participating in operational responsibilities including on-call duties.\""
     },
     {
@@ -95,7 +95,7 @@
     },
     {
       "claim": "M32 bonus: bitemporal decision graph as-of answers vs a latest-only store",
-      "mole": "as-of 100.0% (64 q, +10 .mole/decisions git-history facts loaded) vs latest-only 45.3% · overlaps 0/1000 (1 committed, 999 rejected by the database, bounded-concurrency writers) · p95 0.44 ms indexed vs 15.40 ms seq (34.9x) at 100000 · model calls 0",
+      "mole": "as-of 100.0% (64 q, +10 .mole/decisions git-history facts loaded) vs latest-only 45.3% · overlaps 0/1000 (1 committed, 999 rejected by the database, bounded-concurrency writers) · p95 0.79 ms indexed vs 19.35 ms seq (24.4x) at 100000 · model calls 0",
       "baseline_best": "latest-only store (wiki/ADR folder style): 45.3%",
       "baseline_tool": "latest-only (single current value per record)",
       "all_baselines": {

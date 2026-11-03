@@ -14,6 +14,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { modelCalls, runTests, selectTests } from '../src/index.js';
+import { summarizeM14, type Detail as SummaryDetail } from './m14-summary.js';
 
 const benchDir = resolve(dirname(fileURLToPath(import.meta.url)), '../../bench');
 const moleRoot = execFileSync('git', ['-C', benchDir, 'rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
@@ -74,6 +75,7 @@ function build(repo: 'mole' | 'excalidraw', dir: string): void {
   const r = spawnSync('npx', ['tsc', '-b'], { cwd: dir, encoding: 'utf8' });
   if (r.status !== 0) throw new Error(`tsc -b failed in ${dir}: ${r.stdout.slice(-1500)}`);
 }
+const pct = (x: number): string => `${(x * 100).toFixed(1)}%`;
 const norm = (s: string): string => s.replace(/ > /g, ' ').trim();
 
 interface Detail {
@@ -84,6 +86,7 @@ interface Detail {
   ran: number;
   failedRun: number;
   reach: number;
+  fullSuiteTests: number;
   ratio: number;
   caught: boolean;
   caughtBy: string[];
@@ -108,7 +111,7 @@ for (const r of rows) {
   }
   const graphDb = join(cache, `graph-${r.repo}-${r.base.slice(0, 9)}.sqlite`);
   execFileSync('git', ['-C', dir, 'apply', patchFile]);
-  const d: Detail = { id: r.id, repo: r.repo, edited: r.editedFiles, selected: 0, ran: 0, failedRun: 0, reach: r.reach.tests, ratio: 0, caught: false, caughtBy: [], keyFailing: r.failing.length, noTestReaches: false, selectMs: 0, runMs: 0, tests: [] };
+  const d: Detail = { id: r.id, repo: r.repo, edited: r.editedFiles, selected: 0, ran: 0, failedRun: 0, reach: r.reach.tests, fullSuiteTests: r.fullSuiteTests, ratio: 0, caught: false, caughtBy: [], keyFailing: r.failing.length, noTestReaches: false, selectMs: 0, runMs: 0, tests: [] };
   try {
     build(r.repo, dir);
     const t0 = performance.now();
@@ -138,26 +141,27 @@ for (const r of rows) {
 }
 for (const repo of prepared) build(repo as 'mole' | 'excalidraw', REPOS[repo as 'mole' | 'excalidraw'].dir);
 
-const caught = details.filter((d) => d.caught).length;
-const meanRatio = details.reduce((s, d) => s + d.ratio, 0) / details.length;
-const ranTotal = details.reduce((s, d) => s + d.ran, 0);
-const reachTotal = rows.reduce((s, r) => s + r.reach.tests, 0);
-const allTotal = rows.reduce((s, r) => s + r.fullSuiteTests, 0);
-const allMean = rows.reduce((s, r) => s + r.fullSuiteTests / r.reach.tests, 0) / rows.length;
-const pct = (x: number): string => `${(x * 100).toFixed(1)}%`;
-console.log('\nrow          caught   tests run   mean share of reaching tests   aggregate share');
-console.log(`selection    ${caught}/10     ${String(ranTotal).padEnd(10)}  ${pct(meanRatio).padEnd(29)}  ${pct(ranTotal / reachTotal)}`);
-console.log(`run all      10/10     ${String(allTotal).padEnd(10)}  ${pct(allMean).padEnd(29)}  ${pct(allTotal / reachTotal)}   (the key's full-suite runs: every valid regression fails there by construction)`);
-console.log(`run none     0/10      0           0.0%                           0.0%`);
+const summary = summarizeM14(
+  rows.map((r) => ({ id: r.id, repo: r.repo, failing: r.failing, fullSuiteTests: r.fullSuiteTests, reach: r.reach, valid: r.valid })),
+  details.map((d): SummaryDetail => ({ id: d.id, ran: d.ran, reach: d.reach, fullSuiteTests: d.fullSuiteTests, caughtBy: d.caughtBy })),
+  modelCalls.count,
+);
+console.log('\nrow          caught   tests run   share of reach (vitest related)   selection size (% of suite)');
+for (const d of details) {
+  const reachShare = d.reach > 0 ? d.ran / d.reach : d.ran > 0 ? Infinity : 0;
+  const suiteShare = d.fullSuiteTests > 0 ? d.ran / d.fullSuiteTests : 0;
+  console.log(`${d.id}          ${d.caught ? 'y' : 'n'}        ${String(d.ran).padEnd(10)}  ${pct(reachShare).padEnd(33)}  ${pct(suiteShare)}`);
+}
+console.log(`\nselection    ${summary.caught}/${summary.n}     ${String(summary.suiteShare.ranTotal).padEnd(10)}  ${pct(summary.reachShare.mean).padEnd(33)}  ${pct(summary.suiteShare.mean)} (mean)`);
+console.log(`run all      ${summary.n}/${summary.n}     ${String(summary.suiteShare.suiteTotal).padEnd(10)}  n/a (by construction every reaching test runs)   100.0%   (the key's full-suite runs: every valid regression fails there by construction)`);
+console.log(`run none     0/${summary.n}      0           n/a                                0.0%`);
 console.log(`model calls: ${modelCalls.count}`);
-const met = caught >= 9 && meanRatio <= 1 / 3 && modelCalls.count === 0;
-const M14 = `caught ${caught}/10 · ran ${pct(meanRatio)} of reaching tests (mean; aggregate ${pct(ranTotal / reachTotal)}, ${ranTotal}/${reachTotal}) · run all 10/10 at ${pct(allMean)} · run none 0/10 · target >= 9/10 at <= 33.3%`;
-console.log(`\nM14 ${M14}  ${met ? 'MET' : 'NOT MET'}`);
+console.log(`\nM14 ${summary.M14}  ${summary.met ? 'MET' : 'NOT MET'}`);
 const mo = arg('--metrics-out');
-if (mo) writeFileSync(mo, JSON.stringify({ M14 }));
+if (mo) writeFileSync(mo, JSON.stringify({ M14: summary.M14 }));
 const det = arg('--details');
 if (det) {
   mkdirSync(dirname(det), { recursive: true });
-  writeFileSync(det, JSON.stringify({ M14, met, details }, null, 2));
+  writeFileSync(det, JSON.stringify({ M14: summary.M14, met: summary.met, details }, null, 2));
 }
-process.exit(met ? 0 : 1);
+process.exit(summary.met ? 0 : 1);
