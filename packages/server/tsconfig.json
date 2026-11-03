@@ -12,6 +12,7 @@
     "bench/**/*.json"
   ],
   "references": [
-    { "path": "../decisions" }
+    { "path": "../decisions" },
+    { "path": "../temporal" }
   ]
 }

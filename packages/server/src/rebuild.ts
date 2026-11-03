@@ -3,7 +3,9 @@
 // git stays the source of truth). Parses a minimal front-matter record format.
 import { execFileSync } from 'node:child_process';
 import crypto from 'node:crypto';
+import type { Pool as TemporalPool } from 'pg';
 import type { Pool } from './db.js';
+import { recordDecisionRevision } from './decisionStore.js';
 
 export interface MoleRecord {
   id: string;
@@ -88,6 +90,13 @@ export function parseMoleRecord(text: string, fallbackId: string): MoleRecord {
 
 export interface RebuildOptions {
   shadow?: boolean; // write to a shadow org id, never touch the live org's rows
+  // T69: also record each decision-kind record as a new @mole/temporal revision (tenant-scoped
+  // current + as-of), the new authoritative store for a decision's content/status. Optional and
+  // additive: the graph index (nodes/relations, read by graph.ts/checkrun.ts on the latency-
+  // critical PR-check path) is written exactly as before regardless of whether this is set --
+  // omitting it (e.g. an older caller, or a deploy that hasn't migrated yet) leaves the git-driven
+  // rebuild's existing behaviour completely unchanged.
+  temporalPool?: TemporalPool;
 }
 
 /**
@@ -151,6 +160,19 @@ export async function rebuildIndexFromGit(
       throw e;
     } finally {
       client.release();
+    }
+    // T69: sync decision-kind records into @mole/temporal (the new authoritative decision
+    // store) AFTER the nodes/relations transaction commits -- a separate failure domain, same
+    // reconciliation-job shape as the STOP rule ("keep separate + reconciliation job"). A
+    // temporal write failure here must never roll back or block the graph index the
+    // latency-critical PR-check path depends on; it surfaces as a thrown error from this
+    // function (same "never swallow silently" rule checkrun.ts's own review history enforces)
+    // but the index itself is already durably committed by this point.
+    if (opts.temporalPool) {
+      for (const rec of records) {
+        if (rec.kind !== 'decision') continue;
+        await recordDecisionRevision(opts.temporalPool, orgId, rec, { source: ref });
+      }
     }
     return snapshotHash(pool, orgId);
   };

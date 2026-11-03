@@ -1,0 +1,86 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T69-one-store
+
+ ✓ packages/server/test/rebuild-git-failure.spec.ts (2 tests) 1511ms
+   ✓ rebuild.ts git-failure handling (M25 regression, review round 2 blocking finding) > listMoleFilesAtRef throws (never returns []) when the ref/dir is unreadable  493ms
+   ✓ rebuild.ts git-failure handling (M25 regression, review round 2 blocking finding) > a real rebuild populates the index, then a stale job for a deleted dir never wipes it  302ms
+{"level":30,"time":1793693793332,"pid":16090,"hostname":"MacBookPro.grinnell.edu","reqId":"req-1","req":{"method":"POST","url":"/webhook","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793693793352,"pid":16090,"hostname":"MacBookPro.grinnell.edu","reqId":"req-1","res":{"statusCode":202},"responseTime":19.476042000000234,"msg":"request completed"}
+ ✓ packages/temporal/test/recordfact-multiversion.test.ts (5 tests) 532ms
+ ✓ packages/server/test/rls.spec.ts (2 tests) 798ms
+ ✓ packages/server/test/rebuild.spec.ts (1 test) 576ms
+ ✓ packages/temporal/test/temporal.test.ts (5 tests) 530ms
+fatal: ambiguous argument 'not-a-real-commit-sha': unknown revision or path not in the working tree.
+Use '--' to separate paths from revisions, like this:
+'git <command> [<revision>...] -- [<file>...]'
+fatal: Needed a single revision
+ ✓ packages/server/test/checkrun.spec.ts (7 tests) 4726ms
+   ✓ computeCheckRun wires prCheck into the live conclusion (T45) > is never the old hardcoded success, and carries no annotation when nothing governs the diff  556ms
+   ✓ computeCheckRun wires prCheck into the live conclusion (T45) > surfaces a real content-anchor match as an annotation instead of discarding it (the T45 gap)  555ms
+   ✓ computeCheckRun uses the push range base, not just the last commit (T45 review 2 P1) > without `before`, falls back to ref^ and misses the violation buried earlier in the push (documents the old gap)  757ms
+   ✓ computeCheckRun uses the push range base, not just the last commit (T45 review 2 P1) > with `before`, diffs the whole push range and catches the violation in the first commit  335ms
+   ✓ computeCheckRun uses the push range base, not just the last commit (T45 review 2 P1) > falls back to ref^ when `before` is all-zero (GitHub's new-branch sentinel)  731ms
+   ✓ computeCheckRun uses the push range base, not just the last commit (T45 review 2 P1) > falls back to ref^ when `before` is not an ancestor of ref (a force push rewrote history)  818ms
+ ✓ packages/server/test/decisionStore.spec.ts (2 tests) 829ms
+   ✓ T69: a server-approved decision revision is readable via @mole/temporal (current + asOf), tenant-scoped > a later re-approval is a new revision: asOf the old instant still returns the old value, current returns the new one  390ms
+ ✓ packages/temporal/test/org-isolation.test.ts (3 tests) 223ms
+ ✓ packages/temporal/test/recordfact-matrix.test.ts (4 tests) 452ms
+ ✓ packages/server/test/telemetry.spec.ts (2 tests) 710ms
+ ✓ packages/temporal/test/contradiction.test.ts (2 tests) 271ms
+ ✓ packages/server/test/questions.spec.ts (3 tests) 422ms
+ ✓ packages/server/test/webhook.spec.ts (3 tests) 279ms
+ ✓ packages/temporal/test/bitemporal-knownat.test.ts (2 tests) 199ms
+ ✓ packages/server/test/outbox.spec.ts (1 test) 42ms
+ ✓ packages/temporal/test/insertfact-backdate.test.ts (1 test) 260ms
+ ✓ packages/server/test/oauth.spec.ts (3 tests) 14ms
+ ✓ packages/server/test/crypto.spec.ts (4 tests) 5ms
+ ✓ packages/temporal/test/recordfact-property.test.ts (200 tests) 11421ms
+ ❯ packages/server/test/index.spec.ts (2 tests | 1 failed) 30800ms
+   × server index.ts is wired to real workers (final-build verification) > a webhook delivery through the real app produces a real outbox check-run row, with no bench-only wiring 30246ms
+     → expected undefined to be defined
+   ✓ server index.ts is wired to real workers (final-build verification) > isMain uses pathToFileURL so a checkout path with a space still matches (regression for the silent-no-op bug) 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/server/test/index.spec.ts > server index.ts is wired to real workers (final-build verification) > a webhook delivery through the real app produces a real outbox check-run row, with no bench-only wiring
+AssertionError: expected undefined to be defined
+ ❯ packages/server/test/index.spec.ts:88:19
+     86|         await new Promise((r) => setTimeout(r, 500));
+     87|       }
+     88|       expect(row).toBeDefined();
+       |                   ^
+     89|       expect((row!.payload as any).governedFiles).toBeGreaterThanOrEqu…
+     90|     },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 19 passed (20)
+      Tests  1 failed | 253 passed (254)
+   Start at  02:16:30
+   Duration  32.88s (transform 924ms, setup 0ms, collect 5.14s, tests 54.60s, environment 3ms, prepare 1.28s)
+
+
+--- Review 1 fixes: green (2026-11-03) ---
+$ npx tsc -b
+(clean, exit 0)
+
+$ npx vitest run packages/server packages/temporal --no-file-parallelism
+Test Files  2 failed | 19 passed (21)
+     Tests  2 failed | 255 passed (257)
+New: packages/server/test/index-temporal-e2e.spec.ts (3/3 passed) -- end-to-end through
+buildApp(): POST /webhook -> real pg-boss rebuild-index drain -> currentDecision/decisionAsOf
+non-null for orgA, null for orgB (RLS) -> GET /reconcile/:orgId clean -> GET /health 200.
+
+Both failures are PRE-EXISTING, reproduced identically with this round's changes `git stash`'d
+out, same unmodified checkout, same local Postgres (port 5544, role `mole`, db `mole_test`):
+  - packages/server/test/index.spec.ts: the pg-boss webhook-wiring flake already recorded in
+    2 insights.md (30s poll timeout, "expected undefined to be defined"). NOT a regression.
+  - packages/server/test/outbox.spec.ts: "a written notification is eventually relayed exactly
+    once" -- also reproduces unmodified. NOT a regression, newly observed this round (not
+    previously recorded) but confirmed pre-existing by the same stash test.
+Under default parallelism (concurrent vitest worker forks contending for the same shared
+Postgres instance), the new e2e test also flakes the same way index.spec.ts's own job-drain
+poll does (0 pgboss job rows visible within 30s under contention) -- this is the SAME
+pre-existing pg-boss-under-contention flake class, not a new one; --no-file-parallelism (or
+running packages/server/test/index-temporal-e2e.spec.ts alone) is reliably green.

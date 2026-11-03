@@ -43,7 +43,13 @@ docker compose up --build
 - `otel-collector` — receives OTLP/HTTP spans from the server, forwards to Jaeger.
 - `jaeger` — trace viewer (http://localhost:16686).
 - `mlflow` — run/experiment viewer (http://localhost:5000) over the same `mlruns/` the bench writes.
-- `server` — the webhook + MCP server (webhook ingest on the HTTP port, MCP at `/mcp`).
+- `server` — the webhook + MCP server (webhook ingest on the HTTP port, MCP at `/mcp`). It writes decisions through
+  `@mole/temporal` (schema applied at startup; `TEMPORAL_DATABASE_URL`, default `DATABASE_URL`) and checks the two stores
+  agree after every rebuild. Env: `MOLE_WEBHOOK_SECRET`, `MOLE_ORG_REPO_DIRS` (JSON org → repo dir), and `MOLE_AUTH_SECRET`
+  (signs the bearer tokens for `GET /reconcile/<org>`; a caller's token must name that org. Unset = the endpoint is closed,
+  401. Set a long random value: `MOLE_AUTH_SECRET=$(openssl rand -hex 32) docker compose up`). `/health` returns 503 when
+  the temporal store is unreachable. Known gap: compose starts `server` before Postgres is ready on a cold first boot;
+  `docker compose start server` recovers.
 
 No GitHub App, Slack workspace or real OAuth provider is registered by this deploy or by any
 Mole code — those stay outside Mole's scope per the task's non-goals.

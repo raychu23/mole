@@ -33,6 +33,22 @@ services:
       dockerfile: deploy/Dockerfile
     environment:
       DATABASE_URL: postgresql://mole:mole@postgres:5432/mole
+      # T69 review-1 #2/#5: @mole/temporal (the authoritative decision store) applies its own
+      # schema at server startup now (buildApp(), src/index.ts) -- no separate init step or
+      # container needed here. TEMPORAL_DATABASE_URL defaults to DATABASE_URL (one Postgres
+      # instance) if unset; override it to point temporal at a separate database/instance.
+      TEMPORAL_DATABASE_URL: ${MOLE_TEMPORAL_DATABASE_URL:-}
+      # T69: this compose previously omitted WEBHOOK_SECRET/ORG_REPO_DIRS, which buildApp()
+      # requires at startup (src/index.ts) -- `docker compose up` crash-looped the server
+      # container before this fix (see 2 insights.md for the actual `docker compose up`
+      # output). Both are env-configured here (override via deploy/.env, docker compose's own
+      # convention, not hardcoded secrets in this committed file) so a real deploy sets its own
+      # values without editing this file.
+      WEBHOOK_SECRET: ${MOLE_WEBHOOK_SECRET:-change-me-webhook-secret}
+      ORG_REPO_DIRS: ${MOLE_ORG_REPO_DIRS:-{}}
+      # bearer-token secret for /reconcile (unset = endpoint closed, 401); no default on purpose
+      MOLE_AUTH_SECRET: ${MOLE_AUTH_SECRET:-}
+      PORT: "3000"
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       MLFLOW_TRACKING_URI: http://mlflow:5000
     ports: ["3000:3000"]
