@@ -134,6 +134,10 @@ class Builder {
     this.ids.add(n.id);
     this.nodes.push(n);
   }
+  addDefinitions(id: string, defs: Array<{ file: string; line: number; text: string }>): void {
+    const n = this.nodes.find((x) => x.id === id);
+    if (n && n.kind === 'argument') n.definitions = [...(n.definitions ?? []), ...defs];
+  }
   edge(e: GraphEdge): void {
     if (!e.from || !e.to || e.from === e.to) return;
     const k = `${e.from}\0${e.to}\0${e.type}`;

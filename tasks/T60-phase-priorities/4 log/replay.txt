@@ -1,0 +1,83 @@
+# T60 replay — real python-tuf ADR 0002 text as records + ILLUSTRATIVE tenets/phases (launch: focus > users, scale: users > focus). Repo /Users/a1/.hermes/cache/scratch/t60-replay/r
+## no phase (plain Dung, today's labels)
+{'best-effort': 'undecided', 'parallel': 'undecided'} [('ADR-0002', 'contested')]
+## --at 2022-06-01
+launch {'best-effort': 'in', 'parallel': 'out'} [('ADR-0002', 'holds')]
+## --at 2025-03-01
+scale {'best-effort': 'out', 'parallel': 'in'} [('ADR-0002', 'defeated')]
+## mole priorities compare launch scale
+{
+  "from": "launch",
+  "to": "scale",
+  "arguments": [
+    {
+      "id": "best-effort",
+      "before": "in",
+      "after": "out",
+      "flipped": [
+        {
+          "from": "parallel",
+          "to": "best-effort",
+          "fromValue": "tenet-users",
+          "toValue": "tenet-focus",
+          "before": {
+            "succeeds": false,
+            "ranks": [
+              2,
+              1
+            ]
+          },
+          "after": {
+            "succeeds": true,
+            "ranks": [
+              1,
+              2
+            ]
+          }
+        }
+      ],
+      "via": []
+    },
+    {
+      "id": "parallel",
+      "before": "out",
+      "after": "in",
+      "flipped": [
+        {
+          "from": "best-effort",
+          "to": "parallel",
+          "fromValue": "tenet-focus",
+          "toValue": "tenet-users",
+          "before": {
+            "succeeds": true,
+            "ranks": [
+              1,
+              2
+            ]
+          },
+          "after": {
+            "succeeds": false,
+            "ranks": [
+              2,
+              1
+            ]
+          }
+        }
+      ],
+      "via": []
+    }
+  ],
+  "decisions": [
+    {
+      "id": "ADR-0002",
+      "title": "Pre-1.0 deprecation strategy (python-tuf docs/adr/0002, real)",
+      "before": "holds",
+      "after": "defeated",
+      "because": [
+        "best-effort"
+      ],
+      "file": ".mole/decisions/adr-0002.md",
+      "line": 1
+    }
+  ]
+}

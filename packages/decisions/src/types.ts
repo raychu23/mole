@@ -71,6 +71,8 @@ export interface GraphNode extends Loc {
   evidence: EvidenceRef[];
   /** 1-based line of each front matter key (or Status section) in the record file */
   fields: Record<string, number>;
+  /** argument nodes: every Argdown definition (file, line, text after the colon), from the parser itself (T60) */
+  definitions?: Array<{ file: string; line: number; text: string }>;
 }
 
 export interface GraphEdge extends Loc {

@@ -53,6 +53,9 @@ export interface ArgdownItem {
   title: string;
   /** 1-based line of the first occurrence (definition or reference) seen. */
   line: number;
+  /** every `<title>: text` definition (top-level or inline after a relation arrow), in order: where the item's own
+   *  text and #tags live (T60 review 2: `line` above can be an earlier bare reference) */
+  definitions: Array<{ line: number; text: string }>;
 }
 
 export interface ArgdownRelation {
@@ -119,8 +122,11 @@ export function parseArgdown(text: string): ParsedArgdown {
 
   const ensure = (kind: ArgdownItemKind, title: string, line: number): string => {
     const id = title;
-    if (!items.has(id)) items.set(id, { id, kind, title, line });
+    if (!items.has(id)) items.set(id, { id, kind, title, line, definitions: [] });
     return id;
+  };
+  const define = (id: string, line: number, text: string): void => {
+    items.get(id)!.definitions.push({ line, text: text.trim() });
   };
   const addRelation = (from: string, to: string, type: ArgdownRelationType, line: number): void => {
     if (!from || !to || from === to) return;
@@ -177,6 +183,7 @@ export function parseArgdown(text: string): ParsedArgdown {
           const kind: ArgdownItemKind = refM[2] !== undefined ? 'statement' : 'argument';
           const title = (refM[2] ?? refM[3])!;
           const childId = ensure(kind, title, line);
+          if (refM[4] !== undefined) define(childId, line, refM[4].replace(/^:\s*/, ''));
           const [from, to] = found.dir === 'in' ? [parent.id, childId] : [childId, parent.id];
           addRelation(from, to, found.type, line);
           stack.push({ id: childId, indent });
@@ -203,7 +210,9 @@ export function parseArgdown(text: string): ParsedArgdown {
     if (defM) {
       const kind: ArgdownItemKind = defM[2] !== undefined ? 'statement' : 'argument';
       const title = (defM[2] ?? defM[3])!;
-      pushScope(ensure(kind, title, line), indent);
+      const id = ensure(kind, title, line);
+      define(id, line, defM[4] ?? '');
+      pushScope(id, indent);
       continue;
     }
     const refM = TITLE_REF.exec(content);
