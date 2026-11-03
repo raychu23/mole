@@ -93,6 +93,27 @@ describe('mole priorities (T60)', () => {
     expect(() => evaluatePhase(root, { phase: 'launch' })).toThrow(/tenet-nope.*x\.argdown:1/);
   });
 
+  // review 1 (deleg_8866ecef) HIGH: the loader's node line is the FIRST mention; a bare `-> <use-kafka>` before its
+  // tagged definition dropped the tag silently
+  it('reads the tag from the definition line even when the argument is referenced earlier', () => {
+    const root = repo(PHASES);
+    write(root, '.mole/arguments/queue.argdown', [
+      '<ship-fast>: A hand-rolled queue ships this week. #tenet-speed', '  -> <use-kafka>', '',
+      '<use-kafka>: A managed queue is cheaper per message at scale. #tenet-cost', '  -> <ship-fast>', '',
+    ].join('\n'));
+    expect(evaluatePhase(root, { phase: 'launch' }).labels).toEqual({ 'ship-fast': 'in', 'use-kafka': 'out' });
+  });
+
+  it('refuses one argument defined twice with different tags, naming both lines', () => {
+    const root = repo(PHASES);
+    write(root, '.mole/arguments/x.argdown', ['<ship-fast>: Again. #tenet-cost', ''].join('\n'));
+    expect(() => evaluatePhase(root, { phase: 'launch' })).toThrow(/ship-fast.*queue\.argdown:1.*x\.argdown:1/);
+  });
+
+  it('refuses an impossible calendar date (review 1 LOW)', () => {
+    expect(() => readPriorities(repo(PHASES.replace('from 2026-09-01', 'from 2026-02-30')))).toThrow(/2026-02-30/);
+  });
+
   it('an unknown phase name is refused', () => {
     expect(() => evaluatePhase(repo(PHASES), { phase: 'growth' })).toThrow(/growth/);
   });

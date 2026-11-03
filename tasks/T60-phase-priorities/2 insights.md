@@ -22,3 +22,14 @@ replay          4 log/replay.txt · /Users/a1/.hermes/cache/scratch/t60-replay/r
 limits          INFERENCE: one value per argument (last tag wins) · strict order only (ties refused) · unranked tenet
                 or untagged argument = attack unfiltered (engine rule)
 ```
+
+## 11-02 19:50 review 1 (deleg_8866ecef) FAIL → fixed tests-first (3 red → green) + same-class siblings
+- HIGH the loader keeps an argument's FIRST mention as node.line; a bare `-> <use-kafka>` before its tagged definition
+  made valuesOf read the reference line and drop the tag silently (reviewer: 16/200 random frameworks mismatched)
+  → new argdown/definitions.ts: every `<id>: text` definition (also inline after an arrow `-> <b>: text`) across all
+  argument files the loader reads; tags from there; two definitions with different tenet tags refused, both lines named
+- same class fixed: T58 revive.ts argumentText and T56 proposals.ts statementText read node.line too → use the helper
+- LOW Date.parse rolled 2026-02-30 into March → round-trip check
+- reviewer's probes re-run: repro gives launch {ship-fast in, use-kafka out}; 200-trial property vs engine 0 failures
+- not ours (pre-existing T48 loader): self-attack edges dropped silently, no problem reported → backlog
+- decisions + proposals 362 tests

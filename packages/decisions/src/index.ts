@@ -31,3 +31,5 @@ export { acceptIncident, dismissIncident, IncidentError, incidentArgumentId, sug
 export type { IncidentWrite, RevivalCandidate, RevivalEvidence } from './incidents/revive.js';
 export { comparePhases, evaluatePhase, phaseAt, PrioritiesError, readPriorities } from './priorities.js';
 export type { FlippedAttack, Phase, PhaseComparison, PhaseEvaluation } from './priorities.js';
+export { argumentDefinitions } from './argdown/definitions.js';
+export type { ArgumentDefinition } from './argdown/definitions.js';

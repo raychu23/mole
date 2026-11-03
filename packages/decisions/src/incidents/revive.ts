@@ -15,6 +15,7 @@
 import { readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { evaluate, type Label } from '@mole/reasoning';
+import { argumentDefinitions, type ArgumentDefinition } from '../argdown/definitions.js';
 import { argumentFramework } from '../argdown/framework.js';
 import { frontMatter, loadGraph } from '../graph.js';
 import type { DecisionGraph, GraphNode } from '../types.js';
@@ -84,14 +85,9 @@ function readIncident(root: string, graph: DecisionGraph, id: string): IncidentR
 }
 
 /** '<id>: text' on the argument's own definition line (the parser keys items by title only). */
-function argumentText(root: string, n: GraphNode, cache: Map<string, string[]> = new Map()): string {
-  try {
-    if (!cache.has(n.file)) cache.set(n.file, readFileSync(join(root, n.file), 'utf8').split(/\r?\n/));
-    const l = cache.get(n.file)![n.line - 1] ?? '';
-    return /[>\]]\s*:\s*(.*)$/.exec(l)?.[1]?.trim() ?? '';
-  } catch {
-    return '';
-  }
+function argumentText(defs: Map<string, ArgumentDefinition[]>, n: GraphNode): string {
+  // the definition line, not node.line (first mention may be a bare `-> <id>` reference: T60 review 1, same class)
+  return defs.get(n.id)?.[0]?.text ?? '';
 }
 
 function trigrams(s: string): Set<string> {
@@ -155,7 +151,7 @@ function candidates(root: string, ev: Evaluated, inc: IncidentRecord): RevivalCa
   const incText = trigrams(inc.text);
   const nodes = new Map(ev.graph.nodes.map((n) => [n.id, n] as const));
   const byArg = new Map<string, RevivalCandidate>();
-  const files = new Map<string, string[]>();
+  const defs = argumentDefinitions(ev.graph);
   const attackersOf = new Map<string, string[]>();
   for (const [a, b] of ev.attacks) (attackersOf.get(b) ?? attackersOf.set(b, []).get(b)!).push(a);
   const hitByIncident = new Set(ev.attacks.filter(([a]) => a.startsWith('incident-')).map(([, b]) => b));
@@ -171,7 +167,7 @@ function candidates(root: string, ev: Evaluated, inc: IncidentRecord): RevivalCa
     for (const arg of [...neighbourhood(ev, d.id)].sort()) {
       if (ev.labels[arg] !== 'out' || decided.has(arg) || byArg.has(arg) || own.has(arg) || hitByIncident.has(arg)) continue;
       const n = nodes.get(arg)!;
-      const text = argumentText(root, n, files);
+      const text = argumentText(defs, n);
       const score = Math.round(jaccard(incText, trigrams(text)) * 1000) / 1000;
       const attackers = [...new Set((attackersOf.get(arg) ?? []).filter((a) => ev.labels[a] === 'in'))].sort();
       const alsoReinstates: string[] = []; // filled by withKnockOn for the candidates actually shown/accepted

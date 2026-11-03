@@ -10,6 +10,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { evaluate, type Label } from '@mole/reasoning';
+import { argumentDefinitions } from './argdown/definitions.js';
 import { argumentFramework } from './argdown/framework.js';
 import { loadGraph } from './graph.js';
 import type { DecisionGraph } from './types.js';
@@ -29,7 +30,6 @@ const FILE = '.mole/priorities.md';
 const HEADING = /^##\s+([A-Za-z0-9][\w.-]*)\s*(?:[·:\-–—]\s*)?from\s+(\S+)\s*$/i;
 const ITEM = /^\s*(?:\d+[.)]|[-*])\s+(\S+)\s*$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
-const TAG = /#(tenet-[\w.-]+)/g;
 
 function tenetIds(graph: DecisionGraph): Set<string> {
   return new Set(graph.nodes.filter((n) => n.kind === 'tenet').map((n) => n.id));
@@ -48,7 +48,8 @@ export function readPriorities(root: string, graph: DecisionGraph = loadGraph(ro
     if (/^##\s/.test(l)) {
       if (!h) throw new PrioritiesError(`phase heading must be '## <name> · from YYYY-MM-DD' (${at})`);
       const [, name, from] = h as unknown as [string, string, string];
-      if (!DATE.test(from) || Number.isNaN(Date.parse(`${from}T00:00:00Z`))) throw new PrioritiesError(`phase ${name}: '${from}' is not a YYYY-MM-DD date (${at})`);
+      // review 1 LOW: Date.parse rolls 2026-02-30 over to March; round-trip the date to catch impossible days
+      if (!DATE.test(from) || new Date(`${from}T00:00:00Z`).toISOString().slice(0, 10) !== from) throw new PrioritiesError(`phase ${name}: '${from}' is not a YYYY-MM-DD date (${at})`);
       const prev = phases[phases.length - 1];
       if (prev && from <= prev.from) throw new PrioritiesError(`phase ${name} must start after ${prev.name} (${prev.from}) (${at})`);
       if (phases.some((p) => p.name === name)) throw new PrioritiesError(`phase ${name} is defined twice (${at})`);
@@ -74,20 +75,19 @@ export function phaseAt(phases: Phase[], date: string): Phase {
   return p;
 }
 
-/** argument id -> the tenet its definition line tags (#tenet-x); an unknown tenet is refused with file:line */
+/** argument id -> the tenet its DEFINITION line tags (#tenet-x; review 1: not node.line, which may be an earlier bare
+ *  reference). Unknown tenet, or two definitions with different tenet tags, refused with file:line. */
 function valuesOf(graph: DecisionGraph): Map<string, string> {
   const tenets = tenetIds(graph);
   const out = new Map<string, string>();
-  const cache = new Map<string, string[]>();
-  for (const n of graph.nodes.filter((x) => x.kind === 'argument')) {
-    if (!cache.has(n.file)) {
-      try { cache.set(n.file, readFileSync(join(graph.root, n.file), 'utf8').split(/\r?\n/)); } catch { cache.set(n.file, []); }
-    }
-    const tags = [...(cache.get(n.file)![n.line - 1] ?? '').matchAll(TAG)].map((m) => m[1]!);
-    if (tags.length === 0) continue;
-    const t = tags[tags.length - 1]!;
-    if (!tenets.has(t)) throw new PrioritiesError(`argument ${n.id} is tagged #${t}, which is not a tenet (${n.file}:${n.line})`);
-    out.set(n.id, t);
+  for (const [id, defs] of argumentDefinitions(graph)) {
+    const tagged = defs.map((d) => ({ d, t: d.tags.filter((x) => x.startsWith('tenet-')).pop() })).filter((x) => x.t);
+    if (tagged.length === 0) continue;
+    const distinct = [...new Set(tagged.map((x) => x.t))];
+    if (distinct.length > 1) throw new PrioritiesError(`argument ${id} is tagged with different tenets: ${tagged.map((x) => `#${x.t} (${x.d.file}:${x.d.line})`).join(', ')}`);
+    const { d, t } = tagged[0]!;
+    if (!tenets.has(t!)) throw new PrioritiesError(`argument ${id} is tagged #${t}, which is not a tenet (${d.file}:${d.line})`);
+    out.set(id, t!);
   }
   return out;
 }

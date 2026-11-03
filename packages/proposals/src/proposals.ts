@@ -10,7 +10,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path';
-import { argumentFramework, loadGraph, type DecisionGraph, type GraphNode } from '@mole/decisions';
+import { argumentDefinitions, argumentFramework, loadGraph, type DecisionGraph, type GraphNode } from '@mole/decisions';
 import { evaluate, type Label } from '@mole/reasoning';
 
 export class ProposalError extends Error {}
@@ -177,13 +177,9 @@ function evaluateRecords(root: string): Evaluated {
 }
 
 /** '<id>: text' / '[id]: text' on the record's own line -> 'text' (the Argdown parser keys items by title only). */
-function statementText(root: string, file: string, line: number): string {
-  try {
-    const l = readFileSync(join(root, file), 'utf8').split(/\r?\n/)[line - 1] ?? '';
-    return /[>\]]\s*:\s*(.*)$/.exec(l)?.[1]?.trim() ?? '';
-  } catch {
-    return '';
-  }
+/** the argument's own definition text (not node.line, which may be an earlier bare reference: T60 review 1) */
+function statementText(graph: DecisionGraph, id: string): string {
+  return argumentDefinitions(graph).get(id)?.[0]?.text ?? '';
 }
 
 function decisionState(cited: string[], labels: Record<string, Label>): DecisionState {
@@ -228,7 +224,7 @@ export function evaluateProposal(path: string): ProposalReport {
       if (a === b) continue;
       const inAfter = aNodes.has(id);
       const n = (inAfter ? aNodes.get(id) : bNodes.get(id))!;
-      const text = statementText(inAfter ? worktree : baseDir, n.file, n.line);
+      const text = statementText(inAfter ? after.graph : before.graph, id);
       argumentsChanged.push({ id, text, before: b, after: a, source: { file: n.file, line: n.line } });
     }
     const changedArgs = new Set(argumentsChanged.map((c) => c.id));

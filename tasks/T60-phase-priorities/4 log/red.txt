@@ -1,2 +1,7 @@
 ⎯⎯⎯⎯⎯⎯ Failed Tests 11 ⎯⎯⎯⎯⎯⎯⎯
  FAIL  packages/decisions/test/priorities.test.ts > mole priorities (T60) > done-when 2: no priorities file -> labels identical to the plain engine
+   × mole priorities (T60) > reads the tag from the definition line even when the argument is referenced earlier 9ms
+   × mole priorities (T60) > refuses one argument defined twice with different tags, naming both lines 4ms
+   × mole priorities (T60) > refuses an impossible calendar date (review 1 LOW) 3ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  3 failed | 13 passed (16)
