@@ -1,22 +1,22 @@
 ---
-state: verified
+state: integrated
 owner: hermes-build
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t60-phase-priorities
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T60-phase-priorities
 base: 9a569de
 reviewer: hermes-subagents deleg_8866ecef, deleg_d06cf655 (FAIL, fixed) + deleg_c1d6eac9 PASS (fresh, claude-sonnet-5)
-updated: 2026-11-02 19:56
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+updated: 2026-11-02 19:57
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-11-02 19:26
 ---
 ```notes
 T60-phase-priorities      ledger task (rules.md §3 code features)      project tasks
     goal                    Tenets reranked as priorities shift from launch to scale (backlog value-order; human graph 11-01 'phase' + Le-Brun tenets in descending priority; Bench-Capon value-based AF already in packages/reasoning engine.ts:31-51): .mole/priorities.md lists phases (name + from date) each with an ordered tenet list; an argument declares the tenet it serves with a #tenet-N tag on its definition line; mole priorities [--at DATE | --phase P] evaluates the decision graph under that phase's order (audience) and mole priorities --compare A B lists decisions/arguments whose state differs, each with the attack that succeeds in one phase and fails in the other and the two tenets compared.
     done-when               1 tests first (red) · 2 no priorities file / no tags = labels identical to today (Dung, no audience) · 3 --compare explains every changed label with the flipped attack + both tenets + both phases' ranks · 4 --at picks the phase whose from date is the latest <= DATE; unknown phase/tenet, duplicate rank, a date before every phase refused with file:line · 5 replay on a real ADR as records (two tenets, launch vs scale) shows one decision flip, explained · 6 npm run check
-    status                  2026-11-02 verified      reviewer hermes-subagents deleg_8866ecef, deleg_d06cf655 (FAIL, fixed) + deleg_c1d6eac9 PASS (fresh, claude-sonnet-5) ·
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-11-02 integrated      merge 7607f0f (main check 1007 pass, /Users/a1/.hermes/cache/scratch/mole-build/main-check-t60.txt) · combined checks ex
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    one worker
     boundary                packages/decisions/src/priorities.ts (new), argdown/framework.ts (optional value from #tenet tag), decisions cli.ts + index.ts, one line in packages/daemon/src/cli.ts, tests
