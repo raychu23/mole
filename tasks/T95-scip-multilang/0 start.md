@@ -1,5 +1,5 @@
 ---
-state: proposed
+state: ready
 owner: hermes-build
 repo:
 branch:
@@ -7,15 +7,15 @@ worktree:
 base:
 reviewer:
 updated: 2026-11-04 16:47
-status: ledger proposed
-next: fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+status: ledger ready
+next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
 ---
 ```notes
 T95-scip-multilang      ledger task (rules.md §3 code features)      project tasks
     goal                    D71 rank 1: read SCIP indexes (sourcegraph/scip) so Mole's map, rules and checks work beyond TypeScript (start with Python via scip-python and Go via scip-go), reusing the official SCIP protobuf schema and bindings
     done-when               prior-art (SCIP spec + bindings, who consumes SCIP) · tests first on small fixture repos indexed by the real indexers (or checked-in .scip fixtures if indexers can't install) · mole rules forbid:import works on a Python fixture · README Limits updated honestly
-    status                  2026-11-04 proposed
-    next                    fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+    status                  2026-11-04 ready      owner hermes-build
+    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
     pinned
     mode                    one worker
     boundary                packages/indexer (or a new packages/scip), packages/decisions rules adapter, docs
