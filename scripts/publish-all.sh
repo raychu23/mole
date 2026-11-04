@@ -2,8 +2,16 @@
 # scripts/publish-all.sh -- builds mole-code + the VS Code extension, then publishes to npm, the
 # VS Code Marketplace, Open VSX and the MCP registry. Every publish step is independently skippable;
 # already-published versions are detected and skipped automatically. Tokens are only ever read from
-# a hidden `read -s` prompt into a temp npmrc / env var inside a temp dir deleted on exit -- never
-# echoed, never written to a permanent file, never passed on the command line.
+# a hidden `read -s` prompt, held in a shell variable just long enough to use, then unset; the npm
+# token touches disk only as a mode-600 file inside one private (mode 700, umask 077) temp dir
+# created once at the top of the script and removed by a trap on EXIT/INT/TERM/HUP no matter how
+# the script ends (success, publish failure, or Ctrl-C mid-run) -- never echoed, never written to a
+# permanent file, never passed on the command line (vsce/ovsx get their tokens via the VSCE_PAT /
+# OVSX_PAT env vars they document, scoped to a single command, not `-p`, which is visible to any
+# other local user via `ps`).
+#
+# The MCP registry publish step (step 6) must be run logged in to GitHub as the raychu23 account --
+# see the note printed just before `mcp-publisher login github`, and apps/vscode/PUBLISH.md.
 #
 #   scripts/publish-all.sh [--dry-run] [--skip-check] [--skip-npm] [--skip-vsce] [--skip-ovsx] [--skip-mcp]
 #
@@ -58,21 +66,35 @@ if [ "$SKIP_CHECK" = "1" ] && [ "$DRY_RUN" != "1" ]; then
   exit 2
 fi
 
-# ---- temp files, cleaned up no matter how the script exits -----------------------------------
-TMP_DIRS=()
-cleanup() {
-  for d in "${TMP_DIRS[@]:-}"; do
-    [ -n "$d" ] && rm -rf "$d"
-  done
-}
+# ---- one private temp dir for the whole run, removed no matter how the script exits -----------
+# A single mktemp -d in THIS (parent) shell, not inside a helper called via $(...) -- a command
+# substitution runs in a subshell, so anything a helper appended to an array there would vanish
+# the moment the subshell exited, leaving the real (parent-shell) array empty and the EXIT trap
+# with nothing to delete. umask 077 first so the dir (and every file written under it, e.g. the
+# npmrc holding the real npm token) is created private (dir 700, plain files 600) from birth,
+# with no window where it's briefly world/group readable.
+umask 077
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/mole-publish-all.XXXXXX")"
+cleanup() { rm -rf "$WORK"; }
 trap cleanup EXIT
-
-new_tmp_dir() {
-  local d
-  d="$(mktemp -d "${TMPDIR:-/tmp}/mole-publish-all.XXXXXX")"
-  TMP_DIRS+=("$d")
-  printf '%s' "$d"
+# A plain `trap cleanup INT TERM HUP` without an explicit exit would run cleanup and then bash
+# would carry on executing the *next* step (vsce/ovsx/MCP publish) instead of stopping -- Ctrl-C
+# on the npm step must abort the whole run, not skip ahead. Disable the traps first so cleanup
+# doesn't double-fire via the EXIT trap below, then exit with the conventional 128+signal code.
+on_signal() {
+  local sig="$1"
+  trap - EXIT INT TERM HUP
+  cleanup
+  case "$sig" in
+    INT) exit 130 ;;
+    TERM) exit 143 ;;
+    HUP) exit 129 ;;
+    *) exit 1 ;;
+  esac
 }
+trap 'on_signal INT' INT
+trap 'on_signal TERM' TERM
+trap 'on_signal HUP' HUP
 
 hidden_prompt() {
   # usage: hidden_prompt "prompt text" VARNAME
@@ -117,22 +139,25 @@ else
   elif [ "$DRY_RUN" = "1" ]; then
     (cd release/mole-code && npm publish --dry-run)
   else
-    NPM_TMP="$(new_tmp_dir)"
     NPM_TOKEN=""
     hidden_prompt "npm token (hidden, Enter to skip npm publish): " NPM_TOKEN
     if [ -z "$NPM_TOKEN" ]; then
       echo "no token entered -- skipping npm publish"
     else
-      NPMRC="$NPM_TMP/.npmrc"
+      NPMRC="$WORK/.npmrc"
       printf '//registry.npmjs.org/:_authToken=%s\n' "$NPM_TOKEN" > "$NPMRC"
+      chmod 600 "$NPMRC"
       unset NPM_TOKEN
-      PROVENANCE_ARGS=()
+      # No array of optional flags here: an empty array expanded as "${arr[@]}" under `set -u`
+      # throws "unbound variable" on the plain bash 3.2 that ships as /bin/bash on macOS (the
+      # /usr/bin/env bash this script's shebang resolves to, if /bin comes first on PATH) even
+      # though the array was assigned empty, not unset. Two plain branches sidestep that instead.
       if [ -n "${GITHUB_ACTIONS:-}" ] && [ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
-        PROVENANCE_ARGS=(--provenance)
+        (cd release/mole-code && npm publish --userconfig "$NPMRC" --provenance)
       else
         echo "note: npm provenance needs a GitHub Actions/GitLab CI OIDC token (docs.npmjs.com/trusted-publishers, fetched 2026-11-03) -- not available on this machine, publishing without --provenance"
+        (cd release/mole-code && npm publish --userconfig "$NPMRC")
       fi
-      (cd release/mole-code && npm publish --userconfig "$NPMRC" "${PROVENANCE_ARGS[@]}")
       rm -f "$NPMRC"
     fi
   fi
@@ -154,7 +179,9 @@ else
     if [ -z "$VSCE_PAT" ]; then
       echo "no token entered -- skipping vsce publish"
     else
-      npx --yes @vscode/vsce publish --packagePath "$VSIX" -p "$VSCE_PAT"
+      # Env var scoped to this one command, not -p "$VSCE_PAT" on argv (visible to any other
+      # local user via `ps`); @vscode/vsce documents VSCE_PAT as its token env var.
+      VSCE_PAT="$VSCE_PAT" npx --yes @vscode/vsce publish --packagePath "$VSIX"
       unset VSCE_PAT
     fi
   fi
@@ -176,8 +203,10 @@ else
     if [ -z "$OVSX_PAT" ]; then
       echo "no token entered -- skipping ovsx publish"
     else
-      npx --yes ovsx create-namespace raychu23 -p "$OVSX_PAT" || echo "(namespace probably exists already)"
-      npx --yes ovsx publish "$VSIX" -p "$OVSX_PAT"
+      # Env var scoped to each command, not -p "$OVSX_PAT" on argv (visible to any other local
+      # user via `ps`); ovsx documents OVSX_PAT as its token env var.
+      OVSX_PAT="$OVSX_PAT" npx --yes ovsx create-namespace raychu23 || echo "(namespace probably exists already)"
+      OVSX_PAT="$OVSX_PAT" npx --yes ovsx publish "$VSIX"
       unset OVSX_PAT
     fi
   fi
@@ -194,18 +223,21 @@ else
   if [ -n "$REGISTRY_VERSION" ] && [ "$REGISTRY_VERSION" = "$SERVER_VERSION" ]; then
     echo "$SERVER_NAME@$SERVER_VERSION is already in the MCP registry -- skipping"
   elif [ "$DRY_RUN" = "1" ]; then
-    SCHEMA_DIR="$(new_tmp_dir)"
+    SCHEMA_DIR="$WORK/schema"
+    mkdir -p "$SCHEMA_DIR"
     SCHEMA="$SCHEMA_DIR/server.schema.json"
     curl -fsSL "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json" -o "$SCHEMA"
     node "$REPO_ROOT/scripts/ci/validate-server-json.mjs" "$SCHEMA" "$REPO_ROOT/server.json"
   else
-    MCP_DIR="$(new_tmp_dir)"
+    MCP_DIR="$WORK/mcp"
+    mkdir -p "$MCP_DIR"
     OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
     ARCH="$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
     echo "downloading mcp-publisher (${OS}_${ARCH}) into $MCP_DIR (never installed globally)"
     curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_${OS}_${ARCH}.tar.gz" | tar xz -C "$MCP_DIR" mcp-publisher
     "$MCP_DIR/mcp-publisher" validate "$REPO_ROOT/server.json"
     echo "logging in to the MCP registry with GitHub (documented device-code flow -- opens a browser, no token typed here)"
+    echo "note: the GitHub login must be the raychu23 account -- the registry name io.github.raychu23/mole-code requires owning that account; logging in as any other account will fail the publish below"
     "$MCP_DIR/mcp-publisher" login github
     "$MCP_DIR/mcp-publisher" publish "$REPO_ROOT/server.json"
   fi

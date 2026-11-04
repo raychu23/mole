@@ -1,0 +1,26 @@
+ok   - npm-fail: script exits non-zero on publish failure
+FAIL - npm-fail: temp dir NOT cleaned: mole-publish-all.AeUdqI 
+FAIL - npm-fail: fake npm token found on disk under TMPDIR
+ok   - npm-fail: fake npm token absent from logged argv
+FAIL - npm-fail: npmrc was NOT mode 600 ()
+ok   - sigint: script exits non-zero after SIGINT
+FAIL - sigint: temp dir NOT cleaned: mole-publish-all.wpoPXE 
+FAIL - sigint: fake npm token found on disk under TMPDIR
+ok   - sigint: fake npm token absent from logged argv
+FAIL - success: script exited 1
+FAIL - success: temp dir NOT cleaned: mole-publish-all.zwae4W 
+FAIL - success: fake npm token found on disk under TMPDIR
+ok   - success: fake npm token absent from logged argv
+FAIL - skip: script exited 1
+ok   - skip: printed the already-published skip message
+ok   - skip: temp dir cleaned (nothing left under TMPDIR)
+ok   - skip: no fake npm token left on disk under TMPDIR
+ok   - skip: fake npm token absent from logged argv
+FAIL - vsce-ovsx-env: script exited 1
+FAIL - vsce-ovsx-env: fake vsce token leaked into logged argv (-p on argv)
+FAIL - vsce-ovsx-env: fake ovsx token leaked into logged argv (-p on argv)
+FAIL - vsce-ovsx-env: VSCE_PAT env var not observed by npx
+FAIL - vsce-ovsx-env: OVSX_PAT env var not observed by npx
+ok   - vsce-ovsx-env: no fake token left on disk under TMPDIR
+
+10 passed, 14 failed
