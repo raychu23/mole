@@ -1,21 +1,22 @@
 ---
-state: ready
+state: running
 owner: hermes-build
-repo:
-branch:
-worktree:
+repo: /Users/a1/Desktop/CS Code/Project/Mole
+branch: ledger/t93-public-eval-kit
+worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T93-public-eval-kit
 base:
 reviewer:
 updated: 2026-11-04 16:47
-status: ledger ready
-next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+status: ledger running
+next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+claimed: 2026-11-04 16:47
 ---
 ```notes
 T93-public-eval-kit      ledger task (rules.md §3 code features)      project tasks
     goal                    Make the Inspect AI A/B kit (evals/inspect/dcbench_eval, task mole_ab) usable by Mole's public users: an agent option that runs Claude Code or Codex via inspect-swe (users don't have hermes), no private references in the Python, shipped by export-public with docs/experiments.md
     done-when               inspect-swe claude_code/codex agent wired as an arm-independent agent option, tested with mockllm or 1 real call · private-string scan clean with evals shipped · docs/experiments.md commands verified verbatim in a fresh clone of the export · pytest green
-    status                  2026-11-04 ready      owner hermes-build
-    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+    status                  2026-11-04 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T93-public-eval-kit · branch ledger/t93-public-eval-kit · base
+    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
     pinned
     mode                    one worker
     boundary                evals/inspect, docs/experiments.md, scripts/export-public.mjs
