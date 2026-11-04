@@ -45,9 +45,9 @@ afterAll(() => {
 });
 
 describe('Review 1 HIGH 1: PreToolUse matcher is exactly "Edit|Write" again', () => {
-  it('hooks/hooks.json PreToolUse matcher is "Edit|Write", not "*"', () => {
+  it('hooks/hooks.json PreToolUse matcher is "Edit|Write|MultiEdit", not "*"', () => {
     const hooks = JSON.parse(readFileSync(join(plugin, 'hooks', 'hooks.json'), 'utf8'));
-    expect(hooks.hooks.PreToolUse[0].matcher).toBe('Edit|Write');
+    expect(hooks.hooks.PreToolUse[0].matcher).toBe('Edit|Write|MultiEdit'); // T92/D102: widened to add the crisp-rule deny check for MultiEdit too
   });
   it("this file's decisions additionalContext for a governed Edit is byte-identical to the pre-T74 base commit", () => {
     // base commit = the ledger-move commit right before T74's own commit (git log --oneline shows 8e4352b is the

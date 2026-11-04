@@ -13,12 +13,25 @@ developer already works).
   (`approver:`), plus your existing notes on those files and any parallel-run collisions. Falls back to
   `(weak spots from T35: not available yet)` until T35 (agent coverage) lands; shows weak spots inline
   once it does.
-- **PreToolUse** (`Edit`/`Write`) — when the file you are about to edit is governed by a decision, adds
-  that decision's rule once per session (never twice, never a block: it only ever adds context next to
-  the tool result, same as every other Mole hook).
+- **PreToolUse** (`Edit`/`Write`/`MultiEdit`) — when the file you are about to edit is governed by a
+  decision, adds that decision's rule once per session (never twice: it only ever adds context next to
+  the tool result). T92/D102: if the NEW content you are about to write would itself add a crisp
+  (zero-model, deterministic — `mole rules`, T27 import/call rules written in a decision record) rule
+  violation, the tool call is **denied** (`permissionDecision: "deny"`, with the decision id, the rule and
+  a fix hint in the reason) instead of applied. A pre-existing violation elsewhere in the file, or any
+  by-meaning/judged match, never denies — only a violation THIS edit adds does.
 - **Stop** — the decisions your session's diff touched (with their new flag), any decision-rule
   violations the diff introduced (T27 `mole rules`, citing the decision id), then the existing past
-  fixes, questions, claims and parallel-run collisions.
+  fixes, questions, claims and parallel-run collisions. T92/D102: a crisp rule violation in the diff
+  **blocks Claude from stopping by default** (`decision: "block"`, reason names the decision id, the
+  rule and a fix hint) — the exact contract Anthropic's own hooks docs ship for Stop. By-meaning/judged
+  matches (the separate cascade verifier, `MOLE_STOP_VERIFY`) stay advisory text only, never a block.
+  Honors `stop_hook_active` (never blocks twice in the same continuation) plus its own small per-session
+  cap (`MOLE_STOP_BLOCK_CAP`, default 3) on top of Claude Code's own built-in 8-consecutive-continuation
+  cap (`CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`) — so a condition that never resolves can't loop forever.
+  **Opt out:** `MOLE_STOP_BLOCK=0` turns the Stop block off and keeps the old inform-only behavior (the
+  violation still shows as text); `PreToolUse`'s deny has no separate opt-out today — fix the code, or
+  change the decision's `rules:`.
 
 Same content is available from the MCP server (`mole_check` / `mole_decisions`, both with a `files`
 argument) so Codex, Cursor and any other MCP-capable harness gets the same decisions-first context, not

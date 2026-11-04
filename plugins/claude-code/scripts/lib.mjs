@@ -564,31 +564,74 @@ export function weakSpotsLine(mole, root, files) {
   return `weak spots (T35, no guarding test / no recent human read / governed by a red-yellow decision):\n${reasons.slice(0, 5).map((l) => `- ${l}`).join('\n')}`;
 }
 
-/** T27 rule violations (`mole rules --json`) whose file is among `files`, each citing its decision id. '' when none,
- * silent on a clean diff (M31b) and on a repo with no rules (checkRules returns 0 rules, 0 violations). `mole rules`
+/** T27/T92: raw `mole rules --json` result; undefined on any failure or when no CLI is found. `mole rules`
  * intentionally exits 1 when it finds a violation (packages/decisions/src/rules/cli.ts), so this calls the CLI
  * directly and reads stdout on BOTH exit 0 and exit 1 -- moleJson() in this file treats any non-zero exit as a
  * failure and would silently drop every real violation otherwise. */
-export function ruleViolationsText(mole, root, files) {
-  if (!mole || !existsSync(join(root, '.mole', 'decisions'))) return ''; // no decisions dir: nothing could have a rules: list
+export function rulesJson(mole, root) {
+  if (!mole) return undefined;
   let out;
   try {
     out = execFileSync(mole[0], [...mole[1], 'rules', '--json', '--root', root], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 20_000, maxBuffer: 64 * 1024 * 1024 });
   } catch (e) {
     out = typeof e.stdout === 'string' ? e.stdout : undefined; // exit 1 (violations found) still has valid JSON on stdout
   }
-  let r;
   try {
-    r = out ? JSON.parse(out) : undefined;
+    return out ? JSON.parse(out) : undefined;
   } catch {
-    return '';
+    return undefined;
   }
-  if (!r || !Array.isArray(r.violations) || !r.violations.length) return '';
+}
+
+/** T92: crisp (zero-model, deterministic: TS AST + dependency-cruiser, packages/decisions/src/rules) rule
+ * violations among `files`, raw -- each citing its decision id/title/why and the rule's kind/target/file/line.
+ * Shared by the Stop hook (block on the session's diff) and PreToolUse (deny a prospective edit): both need the
+ * SAME crisp signal, never the by-meaning/judged ones (those stay advisory, see verify.mjs). [] on a repo with no
+ * decisions dir, no CLI, or no violations in `files` -- never throws. */
+export function crispViolations(mole, root, files) {
+  if (!mole || !existsSync(join(root, '.mole', 'decisions'))) return [];
+  const r = rulesJson(mole, root);
+  if (!r || !Array.isArray(r.violations) || !r.violations.length) return [];
   const set = new Set(files);
-  const hits = r.violations.filter((v) => set.has(v.file));
+  return r.violations.filter((v) => set.has(v.file));
+}
+
+/** T92: a one-line, actionable fix for a crisp violation -- the decision's own authored `why` (the team's own
+ * words on why the rule exists) when the record has one, else a generic action naming the exact import/call to
+ * remove, grounded in the violation's own fields (never invented). */
+export function ruleFixHint(v) {
+  if (v.decision?.why) return v.decision.why;
+  return v.kind === 'import' ? `remove the import of ${v.target}` : `remove the call to ${v.target}`;
+}
+
+/** T27 rule violations (`mole rules --json`) whose file is among `files`, each citing its decision id. '' when none,
+ * silent on a clean diff (M31b) and on a repo with no rules (checkRules returns 0 rules, 0 violations). */
+export function ruleViolationsText(mole, root, files) {
+  const hits = crispViolations(mole, root, files);
   if (!hits.length) return '';
   const lines = hits.map((v) => `- ${v.file}:${v.line} ${v.kind} ${v.target} breaks ${v.decision.id} "${v.decision.title}"${v.decision.flag ? ` (${v.decision.flag})` : ''}${v.decision.why ? ` \u2014 ${v.decision.why}` : ''}`);
   return `mole: decision-rule violations in this session's diff (${hits.length}, T27 \`mole rules\`):\n${lines.join('\n')}`;
+}
+
+/** T92: does this repo have at least one `rules:` block anywhere in .mole/decisions? A cheap text scan (no YAML
+ * parse, no subprocess) so PreToolUse's crisp-deny check can skip the `mole rules` subprocess entirely on the
+ * (common) repo with no rules at all -- the fast path M31a's p95 budget needs. */
+export function hasAnyRules(root) {
+  const dir = join(root, '.mole', 'decisions');
+  let names;
+  try {
+    names = readdirSync(dir).filter((f) => f.endsWith('.md'));
+  } catch {
+    return false;
+  }
+  for (const name of names) {
+    try {
+      if (/^rules\s*:/m.test(readFileSync(join(dir, name), 'utf8'))) return true;
+    } catch {
+      // unreadable record: not a rules source, keep scanning the rest
+    }
+  }
+  return false;
 }
 
 /** PreToolUse: decisions already added as context this session, so each is added at most once (never a second time, never a block). */
