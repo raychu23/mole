@@ -44,4 +44,6 @@ ledger (newest last, nothing deleted)
     2026-11-04 16:44      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T90-ab-experiment-system → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
     2026-11-04 16:49      submitted → verified      reviewer hermes-subagent deleg_72653e2b FAIL, deleg_50e433f0 FAIL, orchestrator verify (fresh, claude-sonnet-5) · findings: R1 HIGH Inspect named not used -> real Task mole_ab 1ff998f, R2 worktree leak on solver error ->
     2026-11-04 16:49      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T90-ab-experiment-system → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
+    2026-11-04 16:53      verified → integrated      merge 2255366 (main check: 1396 passed, main-check-waveE.txt) · combined checks exit 0
+    2026-11-04 16:53      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 ((Use `node --trace-warnings ...` to show where the warning was created))
 ```
