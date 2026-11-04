@@ -6,9 +6,9 @@ branch: ledger/t89-mj-arm
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T89-mj-arm
 base:
 reviewer:
-updated: 2026-11-04 15:12
-status: ledger running
-next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+updated: 2026-11-04 15:35
+status: ledger running (24 scored runs launched, in flight)
+next: poll /Users/a1/.hermes/cache/scratch/dcbench/scored-mj.log + raw/runs-mj.jsonl until 24/24, write results-mj.md, then ledger move <task> submitted --report … (ledger runs the checks row)
 claimed: 2026-11-04 15:12
 ---
 ```notes
