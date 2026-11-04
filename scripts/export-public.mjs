@@ -9,7 +9,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = resolve(process.argv[2] ?? '');
 if (!process.argv[2]) throw new Error('usage: node scripts/export-public.mjs <output dir>');
 
-const include = ['apps', 'packages', 'plugins', 'release/mole-code', 'docs', 'site', '.claude-plugin', 'LICENSE', 'package.json', 'package-lock.json', 'tsconfig.base.json', 'tsconfig.json', 'vitest.config.ts', 'scripts/bundle-daemon.mjs', 'scripts/mcp-entry.ts'];
+const include = ['apps', 'packages', 'plugins', 'release/mole-code', 'docs', 'site', '.claude-plugin', 'LICENSE', 'package.json', 'package-lock.json', 'tsconfig.base.json', 'tsconfig.json', 'vitest.config.ts', 'scripts/bundle-daemon.mjs', 'scripts/mcp-entry.ts', 'deploy', 'server.json', 'RELEASE-NOTES-0.5.0.md'];
 // private tooling that references the author's machine, chats or unpublished studies
 const exclude = [/(^|\/)node_modules(\/|$)/, /(^|\/)dist(\/|$)/, /(^|\/)dist-tsc(\/|$)/, /(^|\/)\.stage(\/|$)/, /\.vsix$/, /\.tgz$/, /\.tsbuildinfo$/, /^\.DS_Store$/, /\.DS_Store$/,
   // T87: every package's bench/ (dev-only perf/accuracy harnesses, fixture keys that embed real paths and
@@ -82,6 +82,8 @@ function walk(rel) {
 for (const p of include) if (existsSync(join(root, p))) walk(p);
 cpSync(join(root, 'scripts/public-README.md'), join(out, 'README.md'));
 cpSync(join(root, 'scripts/public-gitignore'), join(out, '.gitignore'));
+// public CI + Pages + container workflows (the private repo's own workflows read private benches; never exported)
+cpSync(join(root, 'scripts/public-github'), join(out, '.github'), { recursive: true });
 copied.push('README.md', '.gitignore');
 
 // T87 review 2 (HIGH): the product source (packages/mcp, packages/steer, packages/daemon) imports
