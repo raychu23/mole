@@ -1,0 +1,21 @@
+# T87 prior art (fetched 2026-11-03)
+
+Comparison-table sources, fetched live for this task (dated so the README's comparison table can cite them):
+
+- CodeRabbit — coderabbit.ai, coderabbit.ai/pricing (fetched 2026-11-03): PR-time AI review, codegraph + "adaptive systems" (team history/docs context), pre-merge checks, learnings from past PRs, slop detection. Cloud/SaaS, per-review pricing.
+- Greptile — greptile.com, greptile.com/content-library/best-ai-code-review-tools (fetched 2026-11-03): PR-time AI review with cross-file dependency understanding, Claude Code plugin + MCP + `/greploop` to auto-resolve comments in an agent loop, learns from manual feedback over time. Cloud/SaaS.
+- Cursor rules — cursor.com/docs/rules, prod.cursor.com/help/customization/rules (fetched 2026-11-03): `.cursor/rules/*.mdc` + AGENTS.md/CLAUDE.md, always-on or glob/description-triggered static prompt context; explicitly "LLMs don't retain memory between completions" — rules are prompt-level only, not a checked/enforced record, and Cursor's own docs say they don't apply to Tab or Bugbot review.
+- Claude Code memory — docs.claude.com/en/docs/claude-code/memory (fetched 2026-11-03): CLAUDE.md (human-written, every session) + auto memory (Claude-written notes, MEMORY.md index, 200-line/25KB load cap per session, machine-local, no code-change re-verification — "Claude treats them as context, not enforced configuration").
+- Graphiti / Zep — help.getzep.com/v3/graphiti/getting-started/overview, help.getzep.com/graphiti/getting-started/welcome (fetched 2026-11-03): temporal knowledge graph of entities/facts/relationships ("Kendra loves Adidas shoes"), bi-temporal model + fact invalidation, hybrid retrieval; general-purpose agent/enterprise memory, not code-anchored — facts are invalidated by newer facts, not by the code changing.
+- claude-mem — github.com/thedotmack/claude-mem README (fetched 2026-11-03): 5 lifecycle hooks (SessionStart/UserPromptSubmit/PostToolUse/Stop/SessionEnd), SQLite + Chroma vector DB, 3-layer MCP search (search/timeline/get_observations) over session transcripts/observations. Captures what happened in sessions, not team decisions re-checked against the code.
+- Swimm — swimm.io, swimm.io/context-layer, github.com/marketplace/swimm-io (fetched 2026-11-03): `/ask` Q&A over docs + codebase analysis, "patented algorithm" auto-syncs docs on PRs, MCP access to a "grounding layer." Enterprise service (consultants build the grounding layer), not a free/local open package.
+- ADR tooling — npryce/adr-tools and its MADR-era fork adr/adr-tools (superseded by log4brains per that repo's own README), fetched 2026-11-03: plain-markdown ADR files + CLI to create/supersede them. No enforcement: nothing checks an ADR's claim against the code it governs.
+
+## In-repo prior art consulted (read-only, main repo)
+
+- `context/product-plan/systems/decisions.jsonl` D87 (USP=ease), D90 (centre=human graph), D97 (mole-code single package), D99 (public face = mole-code-map, keep code map as a feature)
+- `context/product-plan/systems/metrics-proof/resume verification 11-02.md` — B2/B3 verified numbers and caveats (used verbatim in README, with the "no significant accuracy advantage" and "not universal 10k performance" caveats kept)
+- `context/product-plan/systems/metrics-proof/productivity/results-24.md` — T63 honesty constraint: Mole's hooks scored 19.5% vs 41.5% (no context) / 31.7% (CLAUDE.md rules) on the first 24 dcbench runs; never claim a productivity gain
+- `tasks/T79-h2-test-selection-number/4 log/ledger.md` + `tasks/T41-head-to-head-benchmarks/4 log/scoreboard.md` — verified: Mole catches 10/10 regressions running 1.2% of the suite (163/14,065 tests)
+- `packages/decisions/src/rules/*`, `packages/decisions/test/rules-check.test.ts` — the real mechanism behind `mole demo`/`mole rules`: decision records carry `rules: forbid: import|call`, checked via dependency-cruiser + the TypeScript compiler API, cited by plugins/claude-code's Stop hook (`ruleViolationsText`, `plugins/claude-code/scripts/stop.mjs`)
+- `scripts/bundle-daemon.mjs`, `release/mole-code/tools/build.mjs` — how `mole-code` bundles/vendors dependency-cruiser, typescript and better-sqlite3; used to confirm `mole demo` works standalone from the packed tarball

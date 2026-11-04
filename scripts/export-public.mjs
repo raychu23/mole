@@ -9,17 +9,43 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = resolve(process.argv[2] ?? '');
 if (!process.argv[2]) throw new Error('usage: node scripts/export-public.mjs <output dir>');
 
-const include = ['apps', 'packages', 'plugins', '.claude-plugin', 'LICENSE', 'package.json', 'package-lock.json', 'tsconfig.base.json', 'tsconfig.json', 'vitest.config.ts'];
+const include = ['apps', 'packages', 'plugins', 'release/mole-code', 'docs', 'site', '.claude-plugin', 'LICENSE', 'package.json', 'package-lock.json', 'tsconfig.base.json', 'tsconfig.json', 'vitest.config.ts', 'scripts/bundle-daemon.mjs', 'scripts/mcp-entry.ts'];
 // private tooling that references the author's machine, chats or unpublished studies
-const exclude = [/(^|\/)node_modules(\/|$)/, /(^|\/)dist(\/|$)/, /(^|\/)\.stage(\/|$)/, /\.vsix$/, /\.tsbuildinfo$/, /^packages\/daemon\/bench\/m15(\/|$)/, /^packages\/daemon\/test\/study-score\.test\.ts$/, /^packages\/indexer\/bench(\/|$)/, /^packages\/indexer\/test\/fixture-repo\.test\.ts$/,  /^\.DS_Store$/, /\.DS_Store$/,
+const exclude = [/(^|\/)node_modules(\/|$)/, /(^|\/)dist(\/|$)/, /(^|\/)dist-tsc(\/|$)/, /(^|\/)\.stage(\/|$)/, /\.vsix$/, /\.tsbuildinfo$/, /^\.DS_Store$/, /\.DS_Store$/,
+  // T87: every package's bench/ (dev-only perf/accuracy harnesses, fixture keys that embed real paths and
+  // private ledger task slugs) and test/ (fixtures with the same shape -- e.g. `raymond`, `/Users/<name>`,
+  // ledger task directory names like "T74-steering-dials") are internal evaluation artifacts, not runtime
+  // files the published mole-code package or this repo's README/docs need -- same reasoning the plugin's own
+  // bench/test exclusion below already used (T86). Neither is in release/mole-code's own `files` allowlist.
+  /(^|\/)bench(\/|$)/, /(^|\/)test(\/|$)/,
+  // T87: these two packages are built around the author's own private build process, not an end-user-facing
+  // Mole feature -- agentstate reads the author's own ~/.hermes/state.db, ~/.claude and ~/.codex session
+  // directories to attribute the author's own agent runs; coverage's commit attribution depends on the
+  // literal commit-message shape the private ledger tool writes ("ledger move: ..."). Neither is documented
+  // as a public feature (see the public README); packages/daemon's CLI still imports @mole/agentstate for a
+  // few internal subcommands at runtime, resolved from the published npm package's bundled dist, not this
+  // source mirror -- the public git repo is a source browse of the product, not a buildable monorepo clone.
+  /^packages\/agentstate(\/|$)/, /^packages\/coverage(\/|$)/,
+  // dev-only scripts/fixtures with a hardcoded machine path or scratch-dir example, not needed to use Mole
+  /^packages\/reasoning\/scripts\/oracle-check\.mjs$/, /^packages\/decisions\/fixtures\/argdown\/how-generated\.md$/,
+  // release/mole-code/.gitignore: these are build outputs of its own `npm run build` (bundle.mjs copies them
+  // from plugins/claude-code + the repo root) -- already published via the `plugins` and `LICENSE` entries
+  // above; excluding them here keeps this export correct whether or not that local build has been run.
+  /^release\/mole-code\/(dist|\.claude-plugin|hooks|scripts)(\/|$)/, /^release\/mole-code\/\.mcp\.json$/, /^release\/mole-code\/LICENSE$/,
   // T86: the plugin's own benchmark key material and its test fixtures embed internal ledger task-directory names
   // (e.g. "T74-steering-dials") as literal strings, the same private-history shape the forbidden scan below is
   // meant to catch -- ship the plugin's runtime files (plugin.json, .mcp.json, hooks/, scripts/, README.md) only.
   /^plugins\/claude-code\/bench(\/|$)/, /^plugins\/claude-code\/test(\/|$)/];
-const forbidden = [/\/Users\/[a-z0-9_-]+/i, /\.hermes/i, /raymond/i, /CS Code/, /docs-over-chat/i, /ledger/i, /\bT\d{1,2}-[a-z0-9-]+/, /AGENTS\.md/, /BEGIN [A-Z ]*PRIVATE KEY/, /(ghp|gho|ghs|pat|sk)[-_][A-Za-z0-9]{20,}/];
+const forbidden = [/\/Users\/[a-z0-9_-]+/i, /\.hermes/i, /raymond/i, /CS Code/, /docs-over-chat/i, /ledger/i, /\bT\d{1,2}-[a-z0-9-]+/, /AGENTS\.md/, /BEGIN [A-Z ]*PRIVATE KEY/, /(ghp|gho|ghs|pat|sk)[-_][A-Za-z0-9]{20,}/, /\btasks\//, /(^|[^a-zA-Z])context\//, /chat log/i, /chat transcript/i];
 // exceptions that are intended: the copyright holder's name in LICENSE, the source link in package manifests, and
 // the plugin/marketplace author field (the point of a public plugin listing is crediting a real person, same as LICENSE)
-const allowed = { 'LICENSE': [/raymond/i], 'plugins/claude-code/.claude-plugin/plugin.json': [/raymond/i], '.claude-plugin/marketplace.json': [/raymond/i] };
+const allowed = {
+  'LICENSE': [/raymond/i],
+  'release/mole-code/LICENSE': [/raymond/i],
+  'plugins/claude-code/.claude-plugin/plugin.json': [/raymond/i],
+  'release/mole-code/.claude-plugin/plugin.json': [/raymond/i],
+  '.claude-plugin/marketplace.json': [/raymond/i],
+};
 
 rmSync(out, { recursive: true, force: true });
 const copied = [];
@@ -31,7 +57,25 @@ function walk(rel) {
   mkdirSync(dirname(join(out, rel)), { recursive: true });
   if (/\.(?:ts|mjs|cjs|json|md)$/.test(rel) && !/package(-lock)?\.json$/.test(rel)) {
     // provenance comments that point into the private task ledger: `// [source: tasks/Tn-...; added: ...]`
-    writeFileSync(join(out, rel), readFileSync(src, 'utf8').replace(/[ \t]*\/\/ \[source: [^\]]*\]/g, ''));
+    // T87: a bare ledger task-slug citation in a doc comment (e.g. "prior art: tasks/T59-lesson-revises-tenet/4
+    // log/prior-art.md", "(T47-tenant-scoped via RLS FORCE)") -- never code logic, always prose provenance --
+    // is redacted the same way; this is a comment-only transform, never touches a string literal a test or
+    // runtime value depends on (those live under bench/ or test/, already excluded above). Likewise a bare
+    // "AGENTS.md" or "ledger" mention in a doc comment (both appear in otherwise-public packages' rationale
+    // comments, e.g. decisions/hotspots citing "one source of truth, AGENTS.md" or "same rule as the ledger")
+    // is redacted to neutral prose -- Mole's own "outcome ledger" feature name is affected the same way
+    // (becomes "outcome tracking log" below), which is an acceptable wording cost for a scan with zero misses.
+    let text = readFileSync(src, 'utf8')
+      .replace(/[ \t]*\/\/ \[source: [^\]]*\]/g, '')
+      .replace(/\btasks\/T\d{1,2}-[A-Za-z0-9-]+(?:\/[^\s)"'`]*)?/g, '(internal reference removed)')
+      .replace(/\bT\d{1,2}-[A-Za-z0-9][A-Za-z0-9-]*\b/g, '(internal task reference removed)')
+      .replace(/(^|[^a-zA-Z])context\/[^\s)"'`]*/g, '$1(internal reference removed)')
+      .replace(/\btasks\/[^\s)"'`]*/g, '(internal reference removed)')
+      .replace(/\bAGENTS\.md\b/g, "the project's shared instructions file")
+      .replace(/\bledger\b/gi, 'tracking log')
+      .replace(/\.hermes/g, '.agent-cache');
+    if (!(allowed[rel] ?? []).some((a) => a.source === /raymond/i.source)) text = text.replace(/\bRaymond(?:'s)?\b/g, 'the team');
+    writeFileSync(join(out, rel), text);
   } else cpSync(src, join(out, rel));
   copied.push(rel);
 }
