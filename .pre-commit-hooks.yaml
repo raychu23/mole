@@ -1,0 +1,26 @@
+# .pre-commit-hooks.yaml: makes this repo usable as a pre-commit hook SOURCE, per pre-commit.com's own
+# spec (fetched 2026-11-04) -- there is no central submission/registry; any repo with this file at its
+# root can be referenced directly by another repo's own .pre-commit-config.yaml, e.g.:
+#
+#   repos:
+#     - repo: https://github.com/raychu23/mole-code-map
+#       rev: v0.5.0
+#       hooks:
+#         - id: mole-check
+#
+# `language: node` tells pre-commit to install this repo as an npm package in an isolated venv-equivalent
+# and resolve `entry` against its installed bin -- works once `mole-code` is published (its package.json
+# already declares a `mole` bin, see release/mole-code/package.json). `mole check --worktree` reads the
+# repo's current staged/working changes directly (confirmed locally: `node packages/daemon/dist/cli.js check
+# --help` -> `usage: mole check <sha | --diff FILE [--base SHA] | --worktree> ...` -- it does NOT take bare
+# filenames, so `pass_filenames: false` here is required, not optional; a naive `pass_filenames: true` would
+# pass staged filenames as positional args `mole check` doesn't accept). No daemon needed for this path (see
+# docs/mcp.md's "What it reads/writes").
+- id: mole-check
+  name: Mole decision check
+  description: Flags edits to lines governed by a .mole/decisions/*.md rule, with the decision's rationale.
+  entry: mole check --worktree
+  language: node
+  pass_filenames: false
+  always_run: true
+

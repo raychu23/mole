@@ -1,0 +1,43 @@
+# T91: proves the root action.yml (the Marketplace-published form, raychu23/mole-code-map@v0) actually runs,
+# the same way .github/workflows/mole-pr-check.yml already proves .github/actions/mole-check does. Uses a
+# local path ref (`uses: ./`) because `raychu23/mole-code-map@v0` only resolves once a real tag exists on the
+# public repo (NOT RUN here: no GitHub Actions runner in this environment -- this workflow is new coverage
+# for CI the next time this branch's checks actually run in GitHub Actions, not something a local terminal
+# can execute).
+name: mole action self-test
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths: ['action.yml', '.github/workflows/action-self-test.yml']
+
+permissions:
+  contents: read
+  checks: write
+
+concurrency:
+  group: mole-action-self-test-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  self-test:
+    name: mole-action-self-test (runner)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: checkout (full history for the merge base, CODEOWNERS at the base, past fixes)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: run the root action (the exact form raychu23/mole-code-map@v0 would be)
+        uses: ./
+        with:
+          token: ${{ github.token }}
