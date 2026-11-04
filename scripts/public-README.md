@@ -83,7 +83,7 @@ repo; defaults to cwd):
 ```toml
 [mcp_servers.mole]
 command = "npx"
-args = ["-y", "mole-mcp"]
+args = ["-y", "-p", "mole-code", "mole-mcp"]
 ```
 (or, if installed globally: `command = "mole-mcp"`, `args = []`)
 </details>
@@ -93,7 +93,7 @@ args = ["-y", "mole-mcp"]
 ```json
 {
   "mcpServers": {
-    "mole": { "command": "npx", "args": ["-y", "mole-mcp"] }
+    "mole": { "command": "npx", "args": ["-y", "-p", "mole-code", "mole-mcp"] }
   }
 }
 ```
@@ -104,7 +104,7 @@ args = ["-y", "mole-mcp"]
 ```json
 {
   "mcpServers": {
-    "mole": { "command": "npx", "args": ["-y", "mole-mcp"] }
+    "mole": { "command": "npx", "args": ["-y", "-p", "mole-code", "mole-mcp"] }
   }
 }
 ```
@@ -115,7 +115,7 @@ args = ["-y", "mole-mcp"]
 ```json
 {
   "mcpServers": {
-    "mole": { "command": "npx", "args": ["-y", "mole-mcp"] }
+    "mole": { "command": "npx", "args": ["-y", "-p", "mole-code", "mole-mcp"] }
   }
 }
 ```
@@ -190,6 +190,14 @@ that doesn't need enforcement, just a reminder.
 - No productivity claim yet (see "What we will not claim" above) — a larger pre-registered agent-task run is
   in progress.
 - Local only: no network calls, no telemetry, no AI model calls in the core checks described here.
+
+### Source build vs. packaged builds
+
+The npm package (`mole-code`), the VS Code extension and the Claude Code plugin contain everything below. A build from
+this repository's source does not include two internal packages: agent-session state and coverage tracking. So in a
+source build `mole runs`, `mole agents`, `mole claims`, `mole steer query` and the MCP tools `mole_coverage`,
+`mole_claims`, `mole_tried`, `mole_collisions` and `mole_agent_intent` stop with
+"not part of the open-source Mole build". Use the packaged builds for those.
 
 ## Repository layout
 
