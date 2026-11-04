@@ -10,7 +10,8 @@
 // resolvable from the installed dist/, which an uninstalled dev checkout always has via the monorepo's own
 // hoisted node_modules; see release/mole-code/tools/build.mjs's header and
 // tasks/T86-claude-code-plugin-dist/2 insights.md).
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFile, execFileSync, spawnSync } from 'node:child_process';
+import { promisify } from 'node:util';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -38,16 +39,20 @@ function runHook(script: string, input: Record<string, unknown>): { code: number
   return { code: r.status ?? -1, stdout, stderr: r.stderr ?? '', json: stdout.trim() ? JSON.parse(stdout) : undefined };
 }
 
-beforeAll(() => {
+// async, not execFileSync: build + pack + install can take >60 s under load, and a synchronous child blocks the
+// vitest worker's event loop that long, so its RPC to the main process times out ("Timeout calling onTaskUpdate",
+// 2 unhandled errors that fail `npm run check` with every test green; reproduced 11-04 in the T91 worktree).
+const run = promisify(execFile);
+beforeAll(async () => {
   // 1. build + npm pack mole-code (release/mole-code/tools/build.mjs, then `npm pack`)
-  execFileSync(process.execPath, [join(pkgDir, 'tools/build.mjs')], { encoding: 'utf8', timeout: 180_000 });
-  const packOut = execFileSync('npm', ['pack', '--silent'], { cwd: pkgDir, encoding: 'utf8' }).trim();
+  await run(process.execPath, [join(pkgDir, 'tools/build.mjs')], { encoding: 'utf8', timeout: 180_000, maxBuffer: 64 * 1024 * 1024 });
+  const packOut = (await run('npm', ['pack', '--silent'], { cwd: pkgDir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })).stdout.trim();
   tarball = resolve(pkgDir, packOut.split('\n').pop()!);
 
   // 2. install the tarball into a FRESH npm project with no access to this repo's node_modules
   isolated = mkdtempSync(join(tmpdir(), 'mole-code-pack-'));
   writeFileSync(join(isolated, 'package.json'), JSON.stringify({ name: 'mole-code-pack-smoke', private: true, version: '0.0.0' }, null, 2));
-  execFileSync('npm', ['install', '--no-audit', '--no-fund', '--no-workspaces', tarball], { cwd: isolated, encoding: 'utf8', env: { ...process.env, npm_config_workspaces: 'false' } });
+  await run('npm', ['install', '--no-audit', '--no-fund', '--no-workspaces', tarball], { cwd: isolated, encoding: 'utf8', env: { ...process.env, npm_config_workspaces: 'false' }, maxBuffer: 64 * 1024 * 1024 });
   pluginDir = join(isolated, 'node_modules/mole-code');
   binMole = join(isolated, 'node_modules/.bin/mole');
 
@@ -65,7 +70,7 @@ beforeAll(() => {
   );
   g('add', '.');
   g('commit', '-q', '-m', 'init with decision D1 + planted violation');
-}, 180_000); // build + npm pack + npm install (fresh network-free tarball install) comfortably exceeds the 30s default
+}, 400_000); // build + npm pack + npm install (fresh network-free tarball install) comfortably exceeds the 30s default
 
 afterAll(() => {
   for (const d of [isolated, fixtureRepo, pluginData]) if (d) rmSync(d, { recursive: true, force: true });
@@ -73,14 +78,14 @@ afterAll(() => {
 });
 
 describe('T86/D97: mole-code installed from a real npm tarball, used as the Claude Code plugin root', () => {
-  it('npm pack --dry-run lists LICENSE (D97: copied into the package at build time)', () => {
-    const out = execFileSync('npm', ['pack', '--dry-run', '--json'], { cwd: pkgDir, encoding: 'utf8' });
+  it('npm pack --dry-run lists LICENSE (D97: copied into the package at build time)', async () => {
+    const out = (await run('npm', ['pack', '--dry-run', '--json'], { cwd: pkgDir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })).stdout;
     const [entry] = JSON.parse(out);
     expect(entry.files.map((f: { path: string }) => f.path)).toContain('LICENSE');
   }, 120_000); // npm pack --dry-run takes ~4 s idle but >20 s at load 40+ (ledger close flaked twice 11-04)
 
-  it('every vendored dependency keeps its license file (MIT/Apache notices must ship with the code)', () => {
-    const out = execFileSync('npm', ['pack', '--dry-run', '--json'], { cwd: pkgDir, encoding: 'utf8' });
+  it('every vendored dependency keeps its license file (MIT/Apache notices must ship with the code)', async () => {
+    const out = (await run('npm', ['pack', '--dry-run', '--json'], { cwd: pkgDir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })).stdout;
     const [entry] = JSON.parse(out);
     const paths: string[] = entry.files.map((f: { path: string }) => f.path);
     // each top-level vendored package dir (dist/node_modules/<name> or dist/node_modules/@scope/<name>, nested too)
