@@ -34,6 +34,7 @@ EVAL_DIR = Path(__file__).resolve().parents[1]
 if str(EVAL_DIR) not in sys.path:
     sys.path.insert(0, str(EVAL_DIR))
 
+from dcbench_eval.external_agent import SUPPORTED_AGENTS, external_agent_worktree  # noqa: E402
 from dcbench_eval.scorers import dcbench_scorer, mole_check_scorer  # noqa: E402
 from dcbench_eval.worktree_agent import (  # noqa: E402
     DEFAULT_MODEL,
@@ -75,7 +76,16 @@ def mole_ab(
     commit: str = "HEAD",
     dcbench_repo: str | None = None,
     mole_bin: str | None = None,
+    agent: str = "hermes",
+    agent_model_config: str | None = None,
 ) -> Task:
+    """agent: "hermes" (default here -- runs `hermes -z` through the user's own hermes subscription, no
+    sandbox needed) | "claude_code" | "codex" (run the real Claude Code / Codex CLI via inspect-swe's
+    maintained external-agent wrappers, in a "local" Inspect sandbox -- i.e. directly on the host against
+    whatever `claude`/`codex` binary is already on PATH, no Docker, no hermes subscription; see
+    external_agent.py's docstring for exactly how and why). PUBLIC USERS WITHOUT A HERMES SUBSCRIPTION
+    SHOULD PASS `agent=claude_code` OR `agent=codex`; "hermes" stays the default here only so existing
+    internal callers of this function are unaffected -- public docs lead with `-T agent=claude_code`."""
     rows = load_dataset(dataset)
     arm_list = arms if isinstance(arms, list) else [a.strip() for a in arms.split(",")]
     arm_specs = [a.strip() for a in arm_list if a.strip()]
@@ -97,10 +107,19 @@ def mole_ab(
         chosen_scorer = dcbench_scorer(dcbench_repo=dcbench_repo)
     else:
         raise ValueError(f"unknown scorer {scorer!r}; known: mole_check, dcbench")
+    if agent == "hermes":
+        chosen_solver = hermes_worktree_agent(repo=repo, model=model, provider=provider)
+        chosen_sandbox = None
+    elif agent in SUPPORTED_AGENTS:
+        chosen_solver = external_agent_worktree(repo=repo, agent=agent, model_config=agent_model_config)
+        chosen_sandbox = "local"  # exec directly on the host (no Docker) against the user's own claude/codex binary
+    else:
+        raise ValueError(f"unknown agent {agent!r}; known: hermes, {', '.join(sorted(SUPPORTED_AGENTS))}")
     return Task(
         dataset=MemoryDataset(samples),
-        solver=hermes_worktree_agent(repo=repo, model=model, provider=provider),
+        solver=chosen_solver,
         scorer=chosen_scorer,
         cleanup=cleanup_sample,
+        sandbox=chosen_sandbox,
         time_limit=TIME_LIMIT_S,
     )

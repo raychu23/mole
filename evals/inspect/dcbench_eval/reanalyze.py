@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -19,14 +20,17 @@ from typing import Any
 EVAL_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(EVAL_DIR))
 
-from dcbench_eval.stats import bootstrap_ci, clustered_se, holm_correction, paired_permutation_test  # noqa: E402
-from mole_eval.scoring import newcombe_diff  # noqa: E402
+from dcbench_eval.stats import bootstrap_ci, clustered_se, holm_correction, newcombe_diff, paired_permutation_test  # noqa: E402
 
-# T63's own raw data lives in the MAIN repo working tree (context/ is gitignored, so it is not checked out in
-# this worktree; see tasks/T90-ab-experiment-system/4 log/prior-art.md). Read-only: this module never writes here.
-DEFAULT_RUNS_PATH = Path(
-    "/Users/a1/Desktop/CS Code/Project/Mole/context/product-plan/systems/metrics-proof/productivity/raw/runs.jsonl"
-)
+# No machine-specific path baked in here (this module ships publicly): the historical T63 raw data lives
+# in a private task-history location outside this worktree and is read ONLY if MOLE_AB_RUNS_PATH points at
+# it, or the relative default below happens to exist under the current working directory (the convention
+# every doc here assumes: run reanalyze.py from the repo root). Read-only either way: this module never
+# writes to --runs.
+DEFAULT_RUNS_PATH = Path(os.environ.get(
+    "MOLE_AB_RUNS_PATH",
+    "context/product-plan/systems/metrics-proof/productivity/raw/runs.jsonl",
+))
 TASKS = ["TASK-001", "TASK-003", "TASK-004", "TASK-006", "TASK-008", "TASK-009", "TASK-012", "TASK-013"]
 ARMS = ["A", "R", "M"]
 PAIRS = [("R", "M"), ("A", "M"), ("A", "R")]

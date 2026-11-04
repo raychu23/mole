@@ -1,0 +1,84 @@
+"""Red-first (T93): a public user with Claude Code or Codex installed (no hermes, no subscription) must be
+able to run mole_ab via inspect-swe's maintained external-agent wrappers (inspect_swe.claude_code /
+codex_cli) -- the same pattern worktree_agent.py already documents as borrowed from inspect-swe, just
+routed through Inspect's own sandbox_agent_bridge/model loop instead of a raw subprocess. No real
+claude/codex process is launched here (as_solver(agent) is monkeypatched); a real local-sandbox run
+against an actually-installed `claude`/`codex` CLI is exercised outside pytest (see docs/experiments.md).
+"""
+from __future__ import annotations
+
+import subprocess
+
+import pytest
+
+from dcbench_eval.external_agent import SUPPORTED_AGENTS, build_external_agent, external_agent_worktree
+
+
+@pytest.fixture
+def tiny_repo(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "t@example.com"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "t"], cwd=repo, check=True)
+    (repo / "a.txt").write_text("hello\n")
+    subprocess.run(["git", "add", "a.txt"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "init"], cwd=repo, check=True)
+    return repo
+
+
+def test_supported_agents_are_claude_code_and_codex():
+    assert SUPPORTED_AGENTS == {"claude_code", "codex"}
+
+
+def test_build_external_agent_rejects_unknown_name():
+    with pytest.raises(ValueError, match="unknown agent"):
+        build_external_agent("bogus", cwd="/tmp/x")
+
+
+def test_build_external_agent_claude_code_sets_cwd_and_skips_permission_prompts(tmp_path):
+    agent = build_external_agent("claude_code", cwd=str(tmp_path))
+    # inspect_swe's @agent decorator wraps execute() in an AgentPlan; the agent object itself doesn't
+    # expose cwd back out, so this just proves construction succeeds with no exception (an invalid
+    # kwarg combination, e.g. a cwd that conflicts with version, raises at construction time in
+    # inspect_swe, so a silent misconfiguration would fail here, not at run_hermes-equivalent launch).
+    assert agent is not None
+
+
+def test_build_external_agent_codex_constructs(tmp_path):
+    agent = build_external_agent("codex", cwd=str(tmp_path))
+    assert agent is not None
+
+
+@pytest.mark.anyio
+async def test_external_agent_worktree_records_diff_and_cleans_up_via_task_cleanup(tiny_repo, monkeypatch):
+    """Mirrors test_worktree_agent.py/test_worktree_cleanup.py's contract for hermes_worktree_agent:
+    state.metadata gets worktree/repo/diff, and the worktree itself is left for the Task-level cleanup=
+    callback to remove (same cleanup_sample used by the hermes path -- no agent-specific cleanup needed)."""
+    from inspect_ai.solver import TaskState
+
+    async def fake_as_solver_call(state, generate):
+        # stand-in for Claude Code/Codex actually editing files in the worktree
+        wt = state.metadata["worktree"]
+        (__import__("pathlib").Path(wt) / "brand_new.txt").write_text("decision-compliant content\n")
+        return state
+
+    class FakeRunner:
+        def __call__(self, agent):
+            return fake_as_solver_call
+
+    monkeypatch.setattr("dcbench_eval.external_agent.as_solver", FakeRunner())
+
+    state = TaskState(model="mockllm/model", sample_id="s", epoch=0, input="do it",
+                       messages=[], metadata={"arm": "none", "commit": "HEAD"})
+    solve = external_agent_worktree(repo=str(tiny_repo), agent="claude_code")
+    out = await solve(state, None)
+
+    assert out.metadata["repo"] == str(tiny_repo)
+    wt = out.metadata["worktree"]
+    assert "brand_new.txt" in out.metadata["diff"]
+    assert "decision-compliant content" in out.metadata["diff"]
+
+    # cleanup is the Task's job (cleanup_sample), not this solver's -- worktree still exists here
+    from dcbench_eval.worktree_agent import remove_worktree
+    remove_worktree(tiny_repo, __import__("pathlib").Path(wt))

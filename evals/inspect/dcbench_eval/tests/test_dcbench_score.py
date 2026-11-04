@@ -1,8 +1,8 @@
 """Red-first (T90 follow-up, NEW EVIDENCE from the orchestrator 2026-11-04): dcbench_score.mjs must see
 new (untracked) file content, not just modified-tracked-file content (error-analysis-72.md: 60/111, 54%,
 of T63's failed gotchas were plain `git diff`'s blindness to untracked files). This test builds a tiny
-FAKE dcbench-shaped repo (never the real, live dcbench benchmark at /Users/a1/.hermes/cache/scratch/dcbench,
-which this task must only ever read) so it can run dcbench_score.mjs end to end without touching it.
+FAKE dcbench-shaped repo (never a real, live dcbench benchmark checkout, which this task must only ever
+read) so it can run dcbench_score.mjs end to end without touching it.
 """
 from __future__ import annotations
 

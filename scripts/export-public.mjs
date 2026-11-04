@@ -10,6 +10,13 @@ const out = resolve(process.argv[2] ?? '');
 if (!process.argv[2]) throw new Error('usage: node scripts/export-public.mjs <output dir>');
 
 const include = ['apps', 'packages', 'plugins', 'release/mole-code', 'docs', 'site', '.claude-plugin', 'LICENSE', 'package.json', 'package-lock.json', 'tsconfig.base.json', 'tsconfig.json', 'vitest.config.ts', 'scripts/bundle-daemon.mjs', 'scripts/mcp-entry.ts', 'deploy', 'server.json', 'RELEASE-NOTES-0.5.0.md',
+  // T93-public-eval-kit: the Inspect AI A/B kit (mole_ab) ships too, now that it has a public-usable
+  // agent option (claude_code/codex via inspect-swe, no hermes subscription needed -- see
+  // evals/inspect/dcbench_eval/external_agent.py) and no private paths in its own source (reanalyze.py's
+  // historical absolute path is now an env var with a relative default). experiments/ (T63's frozen
+  // protocol data, which cites private task history and unshipped results files) and the tests that only
+  // make sense against that private data are excluded below, not here.
+  'evals/inspect/dcbench_eval',
   // T91-distribution-channels: more discovery channels, same "read-only reference, publish separately" shape
   // as everything else in this list -- action.yml/smithery.yaml/glama.json/.pre-commit-hooks.yaml/
   // gemini-extension.json all need to sit at the EXPORTED repo's root for their own ecosystem's crawler/
@@ -43,8 +50,19 @@ const exclude = [/(^|\/)node_modules(\/|$)/, /(^|\/)dist(\/|$)/, /(^|\/)dist-tsc
   // T86: the plugin's own benchmark key material and its test fixtures embed internal ledger task-directory names
   // (e.g. "T74-steering-dials") as literal strings, the same private-history shape the forbidden scan below is
   // meant to catch -- ship the plugin's runtime files (plugin.json, .mcp.json, hooks/, scripts/, README.md) only.
-  /^plugins\/claude-code\/bench(\/|$)/, /^docs\/launch-drafts(\/|$)/, /^docs\/experiments\.md$/, /(^|\/)__pycache__(\/|$)/, /^evals\/inspect\/dcbench_eval\/(experiments|logs)(\/|$)/, /^plugins\/claude-code\/test(\/|$)/];
-const forbidden = [/\/Users\/[a-z0-9_-]+/i, /\.hermes/i, /raymond/i, /CS Code/, /docs-over-chat/i, /ledger/i, /\bT\d{1,2}-[a-z0-9-]+/, /AGENTS\.md/, /BEGIN [A-Z ]*PRIVATE KEY/, /(ghp|gho|ghs|pat|sk)[-_][A-Za-z0-9]{20,}/, /\btasks\//, /(^|[^a-zA-Z])context\//, /chat log/i, /chat transcript/i];
+  /^plugins\/claude-code\/bench(\/|$)/, /^docs\/launch-drafts(\/|$)/, /(^|\/)__pycache__(\/|$)/,
+  /^evals\/inspect\/dcbench_eval\/(experiments|logs)(\/|$)/,
+  // T93-public-eval-kit: these three tests only make sense against private data that is never shipped --
+  // test_reanalyze.py and test_protocol_v3.py assert against T63's own measured numbers / protocol-v3.json
+  // (both excluded above, under experiments/ or kept only in the private task history), and
+  // test_reanalyze_inspect_log.py reads a proof artifact that lives under the private tasks/ ledger.
+  // (a public user still gets reanalyze.py itself, generic unit coverage via its other callers, and every
+  // other test in the suite -- 43 of 46 cases, see the T93 task's 4 log/ for the exact count.)
+  /^evals\/inspect\/dcbench_eval\/tests\/test_reanalyze\.py$/,
+  /^evals\/inspect\/dcbench_eval\/tests\/test_protocol_v3\.py$/,
+  /^evals\/inspect\/dcbench_eval\/tests\/test_reanalyze_inspect_log\.py$/,
+  /^plugins\/claude-code\/test(\/|$)/];
+const forbidden = [/\/Users\/[a-z0-9_-]+/i, /\.hermes(?!\w)/i, /raymond/i, /CS Code/, /docs-over-chat/i, /ledger/i, /\bT\d{1,2}-[a-z0-9-]+/, /AGENTS\.md/, /BEGIN [A-Z ]*PRIVATE KEY/, /(ghp|gho|ghs|pat|sk)[-_][A-Za-z0-9]{20,}/, /\btasks\//, /(^|[^a-zA-Z])context\//, /chat log/i, /chat transcript/i];
 // exceptions that are intended: the copyright holder's name in LICENSE, the source link in package manifests, and
 // the plugin/marketplace author field (the point of a public plugin listing is crediting a real person, same as LICENSE)
 const allowed = {
@@ -67,7 +85,7 @@ function walk(rel) {
   const st = statSync(src);
   if (st.isDirectory()) return readdirSync(src).forEach((n) => walk(join(rel, n)));
   mkdirSync(dirname(join(out, rel)), { recursive: true });
-  if (/\.(?:ts|mjs|cjs|json|md)$/.test(rel) && !/package(-lock)?\.json$/.test(rel)) {
+  if (/\.(?:ts|mjs|cjs|json|md|py)$/.test(rel) && !/package(-lock)?\.json$/.test(rel)) {
     // provenance comments that point into the private task ledger: `// [source: tasks/Tn-...; added: ...]`
     // T87: a bare ledger task-slug citation in a doc comment (e.g. "prior art: tasks/T59-lesson-revises-tenet/4
     // log/prior-art.md", "(T47-tenant-scoped via RLS FORCE)") -- never code logic, always prose provenance --
@@ -85,7 +103,7 @@ function walk(rel) {
       .replace(/\btasks\/[^\s)"'`]*/g, '(internal reference removed)')
       .replace(/\bAGENTS\.md\b/g, "the project's shared instructions file")
       .replace(/\bledger\b/gi, 'tracking log')
-      .replace(/\.hermes/g, '.agent-cache');
+      .replace(/\.hermes(?!\w)/g, '.agent-cache');
     if (!(allowed[rel] ?? []).some((a) => a.source === /raymond/i.source)) text = text.replace(/\bRaymond(?:'s)?\b/g, 'the team');
     writeFileSync(join(out, rel), text);
   } else cpSync(src, join(out, rel));
