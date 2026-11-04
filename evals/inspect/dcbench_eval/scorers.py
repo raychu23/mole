@@ -9,6 +9,14 @@
                         contract as context/product-plan/systems/metrics-proof/productivity/scripts/
                         run_dcbench.py's score()) so dcbench can be plugged into mole_ab as one dataset
                         among others, not a special case.
+
+Worktree cleanup ownership (T90 round-2 review FAIL fix): neither scorer removes the worktree anymore.
+A scorer only runs when the solver actually reached scoring, so a `finally: remove_worktree(...)` here
+never fired on a solver exception (bad arm, timeout) or a cancelled/limit-exceeded sample -- exactly the
+leak the review found. Removal is now a Task-level `cleanup=` callback (`worktree_agent.cleanup_sample`,
+wired in `task.py`'s `mole_ab()`), which Inspect itself guarantees runs after scoring in every case,
+success or not. These scorers still read `state.metadata["diff"]` while the worktree is on disk, same as
+before -- only the deletion moved.
 """
 from __future__ import annotations
 
@@ -18,8 +26,6 @@ from pathlib import Path
 
 from inspect_ai.scorer import Score, Target, mean, scorer, stderr
 from inspect_ai.solver import TaskState
-
-from .worktree_agent import remove_worktree
 
 
 def _mole_bin(explicit: str | None) -> list[str]:
@@ -37,28 +43,21 @@ def mole_check_scorer(mole_bin: str | None = None, root: str | None = None):
         if not wt:
             return Score(value=-1, answer="error", explanation="no worktree in sample metadata; solver did not run")
         wt_path = Path(wt)
+        cmd = [*_mole_bin(mole_bin), "check", "--worktree", "--json", "--root", str(root or wt_path)]
+        r = subprocess.run(cmd, cwd=wt_path, capture_output=True, text=True, timeout=120)
+        if r.returncode not in (0, 1):  # mole check exits 1 on nothing-to-check, still valid JSON
+            return Score(value=-1, answer="error", explanation=f"mole check exit {r.returncode}: {r.stderr[-1000:]}")
         try:
-            cmd = [*_mole_bin(mole_bin), "check", "--worktree", "--json", "--root", str(root or wt_path)]
-            r = subprocess.run(cmd, cwd=wt_path, capture_output=True, text=True, timeout=120)
-            if r.returncode not in (0, 1):  # mole check exits 1 on nothing-to-check, still valid JSON
-                return Score(value=-1, answer="error", explanation=f"mole check exit {r.returncode}: {r.stderr[-1000:]}")
-            try:
-                report = json.loads(r.stdout)
-            except Exception as e:  # noqa: BLE001
-                return Score(value=-1, answer="error", explanation=f"mole check did not print JSON: {e}; stdout: {r.stdout[-500:]}")
-            questions = report.get("questions", [])
-            return Score(
-                value=float(len(questions)),
-                answer=f"{len(questions)} question(s)",
-                explanation=json.dumps({"questions": questions[:5], "hunks": len(report.get("hunks", []))})[:2000],
-                metadata={"diff_chars": len(state.metadata.get("diff", "")), "agent_rc": state.metadata.get("agent_rc")},
-            )
-        finally:
-            # the worktree's diff is already in state.metadata["diff"] (Inspect persists it in the .eval
-            # log), so it's safe to remove the throwaway checkout now that scoring is done
-            repo_root = state.metadata.get("repo")
-            if repo_root:
-                remove_worktree(Path(repo_root), wt_path)
+            report = json.loads(r.stdout)
+        except Exception as e:  # noqa: BLE001
+            return Score(value=-1, answer="error", explanation=f"mole check did not print JSON: {e}; stdout: {r.stdout[-500:]}")
+        questions = report.get("questions", [])
+        return Score(
+            value=float(len(questions)),
+            answer=f"{len(questions)} question(s)",
+            explanation=json.dumps({"questions": questions[:5], "hunks": len(report.get("hunks", []))})[:2000],
+            metadata={"diff_chars": len(state.metadata.get("diff", "")), "agent_rc": state.metadata.get("agent_rc")},
+        )
 
     return score
 
@@ -74,23 +73,18 @@ def dcbench_scorer(dcbench_repo: str, task_key: str = "task_id"):
         task_id = state.metadata.get(task_key)
         if not wt or not task_id:
             return Score(value=-1, answer="error", explanation="missing worktree or task id in sample metadata")
-        try:
-            r = subprocess.run(
-                ["node", "--experimental-strip-types", "--no-warnings", str(score_mjs), dcbench_repo, wt, task_id],
-                capture_output=True, text=True, timeout=120,
-            )
-            if r.returncode != 0:
-                return Score(value=-1, answer="error", explanation=f"score.mjs exit {r.returncode}: {r.stderr[-1000:]}")
-            report = json.loads(r.stdout)
-            return Score(
-                value=float(report.get("percentage", 0.0)),
-                answer="merge-ready" if report.get("mergeReady") else "not merge-ready",
-                explanation=json.dumps({k: report[k] for k in ("earned", "max", "mergeReady", "blockingViolations") if k in report}),
-                metadata=report,
-            )
-        finally:
-            repo_root = state.metadata.get("repo")
-            if repo_root:
-                remove_worktree(Path(repo_root), Path(wt))
+        r = subprocess.run(
+            ["node", "--experimental-strip-types", "--no-warnings", str(score_mjs), dcbench_repo, wt, task_id],
+            capture_output=True, text=True, timeout=120,
+        )
+        if r.returncode != 0:
+            return Score(value=-1, answer="error", explanation=f"score.mjs exit {r.returncode}: {r.stderr[-1000:]}")
+        report = json.loads(r.stdout)
+        return Score(
+            value=float(report.get("percentage", 0.0)),
+            answer="merge-ready" if report.get("mergeReady") else "not merge-ready",
+            explanation=json.dumps({k: report[k] for k in ("earned", "max", "mergeReady", "blockingViolations") if k in report}),
+            metadata=report,
+        )
 
     return score

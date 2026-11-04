@@ -35,7 +35,13 @@ if str(EVAL_DIR) not in sys.path:
     sys.path.insert(0, str(EVAL_DIR))
 
 from dcbench_eval.scorers import dcbench_scorer, mole_check_scorer  # noqa: E402
-from dcbench_eval.worktree_agent import DEFAULT_MODEL, DEFAULT_PROVIDER, hermes_worktree_agent  # noqa: E402
+from dcbench_eval.worktree_agent import (  # noqa: E402
+    DEFAULT_MODEL,
+    DEFAULT_PROVIDER,
+    cleanup_sample,
+    hermes_worktree_agent,
+    prune_stale_worktrees,
+)
 
 TIME_LIMIT_S = 1800
 
@@ -74,6 +80,15 @@ def mole_ab(
     arm_list = arms if isinstance(arms, list) else [a.strip() for a in arms.split(",")]
     arm_specs = [a.strip() for a in arm_list if a.strip()]
     samples = build_samples(rows, arm_specs, commit=commit)
+    # T90 round-2 review fix: sweep stale `mole_ab-*` worktrees left behind by a previous run that crashed
+    # before any per-sample cleanup could run (see worktree_agent.py's module docstring). Once per Task
+    # build, before any sample starts; a worktree younger than this is presumably still a live sample of a
+    # concurrently-running eval against the same repo, so it is left alone (max_age_s=0 removes anything
+    # already orphaned -- registered but stale -- not something still in flight). A generous 1h floor:
+    # mole_ab samples are a single `hermes -z` run bounded by AGENT_TIMEOUT_S (20min) plus scoring, so
+    # anything still registered after an hour is from a run that is no longer making progress, not a
+    # concurrently-running eval against the same repo.
+    prune_stale_worktrees(Path(repo), max_age_s=3600)
     if scorer == "mole_check":
         chosen_scorer = mole_check_scorer(mole_bin=mole_bin, root=repo)
     elif scorer == "dcbench":
@@ -86,5 +101,6 @@ def mole_ab(
         dataset=MemoryDataset(samples),
         solver=hermes_worktree_agent(repo=repo, model=model, provider=provider),
         scorer=chosen_scorer,
+        cleanup=cleanup_sample,
         time_limit=TIME_LIMIT_S,
     )
