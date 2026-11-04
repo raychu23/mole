@@ -1,0 +1,41 @@
+# T86 red -> green
+
+## Red (before this task's fix)
+`.mcp.json` ran the MCP server via `${CLAUDE_PLUGIN_ROOT}/../../packages/mcp/dist/cli.js` and the hook scripts'
+`findMole()` only looked at `MOLE_BIN`, `PATH`, and repo-relative `packages/daemon/dist/cli.js` paths -- every
+one of those requires the Mole repo checked out next to the plugin. Copying only `plugins/claude-code/` to a
+directory outside the repo and running a hook script finds no CLI at all (silently degrades to "nothing to
+say", which is correct behaviour for a missing CLI but means the plugin's actual feature -- decisions at
+session start / edit time / stop -- never fires standalone). This is the task's core problem statement, not a
+single reproducible test failure; tasks/T86-claude-code-plugin-dist/0 start.md states it directly ("only works
+inside the repo checkout").
+
+## Red (build iteration log, in order, each fixed before the next ran)
+1. `node plugins/claude-code/scripts/build.mjs` (first draft) --
+   `Could not resolve "@mole/core"` etc. (17 errors): esbuild resolves @mole/* via their package.json's `main`
+   (`dist/index.js`), which did not exist yet. Fix: `npx tsc -b` must run before the plugin build (same
+   precondition as apps/vscode/esbuild.mjs); documented in build.mjs and the standalone test's beforeAll.
+2. Bundling `packages/mcp/src/cli.ts` as CJS --
+   `Top-level await is currently not supported with the "cjs" output format` (3 errors, cli.ts's
+   `await server.connect(...)`). Tried format: 'esm' instead:
+   `Dynamic require of "fs" is not supported` (from node_modules/typescript inside the bundle), then after
+   marking `typescript` external, `Dynamic require of "process" is not supported` (from node_modules/yaml).
+   Fix: scripts/mcp-entry.ts (new file, not packages/mcp/src -- out of boundary) wraps the awaits in an async
+   function so the whole MCP bundle can stay CommonJS, same as the other two bundles; no further dynamic-require
+   errors on any dependency.
+3. `node plugins/claude-code/dist/cli.js rules --root .` (first bundle) --
+   `ReferenceError: require is not defined in ES module scope` (dist/cli.js is CJS content but the nearest
+   ancestor package.json, this repo's own root package.json, is `"type": "module"`). Fix: build.mjs writes
+   `dist/package.json` with `{"type":"commonjs"}` so dist/ is self-contained regardless of where it's copied.
+4. First pass of `plugins/claude-code/test/dist-standalone.test.ts` (5 tests) --
+   4 hook tests green immediately (findMole's new bundled-dist-first lookup worked as designed); the MCP
+   handshake test red with `expected undefined to be 'mole'` (same dynamic-require crash as #2, just now caught
+   inside the test instead of a manual run). Fixed by #2's wrapper; rerun below is fully green.
+
+## Green (after the fixes above)
+- `npx vitest run plugins/claude-code/test/dist-standalone.test.ts` -- 5/5 passed (SessionStart, PreToolUse,
+  UserPromptSubmit, Stop against sample stdin per the official docs; MCP initialize + tools/list handshake).
+- `npx vitest run plugins/claude-code/test/` (the whole existing suite, run-only not npm run check) -- 13 files,
+  55/55 passed: no regression from findMole()'s new bundled-path-first lookup or the lib.mjs comment edits.
+- `node packages/daemon/dist/cli.js rules --root .` (after `npx tsc -b`) -- "3 rules (2 import, 1 call) from 3
+  decisions: 0 violations" (repo-wide rules check, per this project's own build gate).

@@ -3,7 +3,7 @@
     "mole": {
       "command": "node",
       "args": [
-        "${CLAUDE_PLUGIN_ROOT}/../../packages/mcp/dist/cli.js"
+        "${CLAUDE_PLUGIN_ROOT}/dist/mcp.cjs"
       ]
     }
   }

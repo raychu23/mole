@@ -9,7 +9,7 @@
 // branches only on tool_input.file_path (every tool that touches a path sets it, including Read), never on
 // tool_name -- the FULL decisions block (governingDecisions + decisionsBlock) fired on those calls as well, not
 // just the T74 steering text. Matcher is restored to exactly "Edit|Write" (hooks/hooks.json); the decisions control
-// flow below is byte-for-byte the pre-T74 logic (see tasks/T74-steering-dials/4 log/red.txt's "Review 1" capture,
+// flow below is byte-for-byte the pre-T74 logic (see this task's own internal log's "Review 1" capture,
 // which diffs this file's additionalContext against the pre-T74 base commit for the same inputs and finds zero
 // difference). Steering is now delivered only here (PreToolUse, already Edit|Write-only again) and in
 // UserPromptSubmit -- never on every tool call -- so a signal reaches the agent before its very next edit or next
