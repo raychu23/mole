@@ -25,9 +25,32 @@
 // SAME machine" hole; it does nothing for "this server is reachable from other machines", which needs an
 // auth layer, not origin validation. See docs/mcp.md "remote HTTP mode" for how an operator sets both.
 import http from 'node:http';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createServer, type MoleMcpOptions } from './server.js';
+
+/** Constant-time string compare (T91 review round 2 fix MEDIUM): `req.headers.authorization !== expected`
+ * short-circuits on the first mismatched byte, leaking the token's length and prefix through response
+ * timing to anyone who can send repeated requests -- exactly the threat a bearer token exists to stop.
+ * `timingSafeEqual` itself requires equal-length buffers (it throws otherwise, which would itself leak
+ * length by error vs. no-error), so both sides are hashed with sha256 first -- fixed 32-byte output
+ * regardless of input length, comparing digests rather than the raw secret directly. */
+function timingSafeStringEqual(a: string, b: string): boolean {
+  const hashA = createHash('sha256').update(a).digest();
+  const hashB = createHash('sha256').update(b).digest();
+  return timingSafeEqual(hashA, hashB);
+}
+
+/** T91 review round 2 fix MEDIUM: an IPv6 literal must be bracketed in a URL/Host/Origin authority
+ * (`http://[::1]:PORT`, `Host: [::1]:PORT`) -- unbracketed `::1:PORT` is not a valid authority at all (the
+ * colons are ambiguous with the port separator), so both `new URL()` and a browser's own Origin/Host would
+ * never produce what this file was building and comparing against. `127.0.0.1`/`localhost`/any hostname
+ * passes through unchanged; only a literal containing `:` (IPv6) gets bracketed, and only if not already. */
+function bracketIfIPv6(host: string): string {
+  if (host.includes(':') && !host.startsWith('[')) return `[${host}]`;
+  return host;
+}
 
 export interface MoleHttpServer {
   url: string;
@@ -41,7 +64,7 @@ export interface MoleHttpListenOptions {
   host?: string;
   /** Required together with `bearerToken` to bind a host other than loopback. */
   allowNonLoopback?: boolean;
-  /** Checked against `Authorization: Bearer <token>` on every request once set. REQUIRED (with
+  /** Checked against `Authorization: Bearer *** on every request once set. REQUIRED (with
    * allowNonLoopback) to bind past loopback; optional (defence in depth) on a loopback bind. */
   bearerToken?: string;
 }
@@ -74,7 +97,7 @@ export async function startMoleHttpServer(opts: MoleMcpOptions, listenOpts: Mole
     }
     if (bearerToken) {
       const expected = `Bearer ${bearerToken}`;
-      if (req.headers.authorization !== expected) {
+      if (!timingSafeStringEqual(req.headers.authorization ?? '', expected)) {
         res.writeHead(401, { 'content-type': 'application/json' }).end(JSON.stringify({ error: 'unauthorized' }));
         return;
       }
@@ -110,12 +133,17 @@ export async function startMoleHttpServer(opts: MoleMcpOptions, listenOpts: Mole
 
   const addr = server.address();
   const port = typeof addr === 'object' && addr ? addr.port : (listenOpts.port ?? 0);
-  const url = `http://${host}:${port}/mcp`;
+  const bracketedHost = bracketIfIPv6(host);
+  const url = `http://${bracketedHost}:${port}/mcp`;
 
   // The bound host/port, plus its localhost/127.0.0.1 aliases (a browser or MCP client may legitimately use
   // either name for a loopback server) -- anything else is DNS rebinding or a stray cross-origin request.
-  allowedHosts = Array.from(new Set([`${host}:${port}`, `localhost:${port}`, `127.0.0.1:${port}`]));
-  allowedOrigins = Array.from(new Set([`http://${host}:${port}`, `http://localhost:${port}`, `http://127.0.0.1:${port}`]));
+  // IPv6 literals are bracketed to match the Host/Origin headers a real client actually sends
+  // (`[::1]:PORT`, `http://[::1]:PORT`), since an unbracketed `host:port` is ambiguous/invalid for IPv6.
+  allowedHosts = Array.from(new Set([`${bracketedHost}:${port}`, `localhost:${port}`, `127.0.0.1:${port}`, `[::1]:${port}`]));
+  allowedOrigins = Array.from(
+    new Set([`http://${bracketedHost}:${port}`, `http://localhost:${port}`, `http://127.0.0.1:${port}`, `http://[::1]:${port}`]),
+  );
 
   return {
     url,

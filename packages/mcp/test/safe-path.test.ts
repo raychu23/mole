@@ -65,3 +65,19 @@ it('end-to-end: mole_check root="/" is rejected by the tool, never passed to fs'
   expect(result.isError).toBe(true);
   expect(result.content[0]?.text).toMatch(/outside the server root|absolute path/);
 });
+
+// T91 review round 2 fix MEDIUM: mole_coverage's `file` arg is path-shaped exactly like `root`/`diff`/etc.
+// but wasn't confined -- `file: '/etc/passwd'` or `file: '../../etc/passwd'` reached @mole/coverage directly.
+it('end-to-end: mole_coverage file="/etc/passwd" is rejected by the tool, never passed to @mole/coverage', async () => {
+  const root = freshRoot();
+  const server = createServer({ root, noStart: true });
+  const handler = (server as unknown as { _registeredTools: Record<string, { handler: (args: unknown, extra: unknown) => Promise<{ isError?: boolean; content: Array<{ text: string }> }> }> })
+    ._registeredTools['mole_coverage']!.handler;
+  const abs = await handler({ file: '/etc/passwd' }, { requestId: 'r1' });
+  expect(abs.isError).toBe(true);
+  expect(abs.content[0]?.text).toMatch(/outside the server root|absolute path/);
+
+  const traversal = await handler({ file: '../../etc/passwd' }, { requestId: 'r2' });
+  expect(traversal.isError).toBe(true);
+  expect(traversal.content[0]?.text).toMatch(/outside the server root/);
+});

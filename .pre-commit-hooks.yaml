@@ -35,14 +35,21 @@
 #
 # Proof this shape actually works end-to-end (not just parses): scripts/test/pre-commit-local.sh runs
 # `pre-commit try-repo` against a scratch copy of this exact file with `additional_dependencies` pointed at
-# the local release tgz instead of the npm registry (no network/publish needed). Before npm publish, swapping
-# back to `mole-code@0.5.0` below is NOT RUN here (needs the real registry); after publish it is the same
-# code path `additional_dependencies` always uses, so the proof transfers.
+# the local release tgz instead of the npm registry (no network/publish needed). The version below is NOT
+# RUN against the real npm registry here (nothing is published yet -- T85/T86 wait on the maintainer's token); once
+# `mole-code` is published this pin resolves for real for the first time, same code path
+# `additional_dependencies` always uses otherwise, so the proof transfers.
+#
+# T91 review round 2 fix HIGH: this pin MUST equal release/mole-code/package.json's "version" (the real
+# package shape and content scripts/publish-all.sh publishes, and server.json's version alongside it) --
+# packages/mcp/test/pre-commit-hooks-pin.test.ts asserts this on every test run so a future version bump in
+# one place can't silently drift from the other and ship a pin pointing at a version that was never
+# published (round 1's bug: this file said 0.5.0 while the package was, and still is, 0.1.0).
 - id: mole-check
   name: Mole decision check
   description: Flags edits to lines governed by a .mole/decisions/*.md rule, with the decision's rationale.
   entry: mole check --worktree
   language: node
-  additional_dependencies: ["mole-code@0.5.0"]
+  additional_dependencies: ["mole-code@0.1.0"]
   pass_filenames: false
   always_run: true

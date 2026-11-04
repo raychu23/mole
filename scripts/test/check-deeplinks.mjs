@@ -3,7 +3,7 @@
 // must decode to valid, correctly-shaped JSON, not a placeholder -- this is what caught the truncated
 // Cursor `config=eyJjb2...iXX0=` placeholder in the first place. Run directly: `node
 // scripts/test/check-deeplinks.mjs` (also called from the vitest suite, see test/check-deeplinks.test.ts).
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const DOC = fileURLToPath(new URL('../../docs/install-mcp-clients.md', import.meta.url));
@@ -46,7 +46,15 @@ export function checkDeeplinks(markdown) {
   return found;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// T91 review round 2 fix LOW: `file://${process.argv[1]}` breaks on any path containing a space (or other
+// character requiring percent-encoding) because `import.meta.url` IS percent-encoded (`%20`) while a raw
+// string-concatenated `argv[1]` is not -- the two never compare equal, so this script silently did nothing
+// when run directly from a path like this repo's own `Desktop/CS Code/Project/...` (a real path on this
+// machine). Comparing realpath'd filesystem paths instead of raw URLs sidesteps BOTH that encoding mismatch
+// AND a second, unrelated mismatch on macOS where `/tmp` is itself a symlink to `/private/tmp` -- `argv[1]`
+// keeps whichever form the shell invoked it with, `import.meta.url` always resolves through the symlink, so
+// even a correctly-encoded string compare would still fail for a script run from under `/tmp`.
+if (realpathSync(fileURLToPath(import.meta.url)) === realpathSync(process.argv[1])) {
   const markdown = readFileSync(DOC, 'utf8');
   const found = checkDeeplinks(markdown);
   if (found.length === 0) throw new Error(`no deeplinks found in ${DOC} -- did the doc lose its install links?`);

@@ -60,9 +60,12 @@ it('an unknown path returns 404, never a crash (the endpoint is /mcp only)', asy
 // are actually wired in (not just declared), against the real HTTP server, not a unit mock.
 function rawPost(url: string, headers: Record<string, string>): Promise<{ status: number; body: string }> {
   const u = new URL(url);
+  // Node's http.request() wants a bare address for `hostname` (no brackets) -- `new URL(...).hostname` keeps
+  // the brackets for an IPv6 literal (`[::1]`), which getaddrinfo then fails to resolve as a literal string.
+  const hostname = u.hostname.replace(/^\[|\]$/g, '');
   return new Promise((resolvePromise, reject) => {
     const req = httpRequest(
-      { hostname: u.hostname, port: u.port, path: u.pathname, method: 'POST', headers: { 'content-type': 'application/json', ...headers } },
+      { hostname, port: u.port, path: u.pathname, method: 'POST', headers: { 'content-type': 'application/json', ...headers } },
       (res) => {
         const chunks: Buffer[] = [];
         res.on('data', (c: Buffer) => chunks.push(c));
@@ -108,4 +111,36 @@ it('binding past loopback without allowNonLoopback + bearerToken is refused befo
   const root = mkdtempSync(join(tmpdir(), 'mole-mcp-http-nonloopback-'));
   cleanups.push(() => rmSync(root, { recursive: true, force: true }));
   await expect(startMoleHttpServer({ root, stateDir: join(root, '.state') }, { host: '0.0.0.0' })).rejects.toThrow(/allowNonLoopback|bearerToken/);
+});
+
+// T91 review round 2 fix MEDIUM: an IPv6 bind must produce a bracketed authority (`[::1]:PORT`) in both
+// the returned `url` and the allowedHosts/allowedOrigins the SDK checks Host/Origin against -- an
+// unbracketed `::1:PORT` is not a valid authority (ambiguous with the port separator) and would never
+// match a real client's own bracketed Host/Origin header, silently breaking every IPv6 loopback request.
+it('binding [::1] (IPv6 loopback): url is bracketed and a bracketed Host/Origin round-trips to 200', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'mole-mcp-http-ipv6-'));
+  cleanups.push(() => rmSync(root, { recursive: true, force: true }));
+  const server = await startMoleHttpServer({ root, stateDir: join(root, '.state') }, { host: '::1' });
+  cleanups.push(() => server.close());
+
+  expect(server.url).toMatch(/^http:\/\/\[::1\]:\d+\/mcp$/);
+  const port = new URL(server.url).port;
+
+  const withHeaders = await rawPost(server.url, {
+    host: `[::1]:${port}`,
+    origin: `http://[::1]:${port}`,
+    accept: 'application/json, text/event-stream',
+  });
+  expect(withHeaders.status).toBe(200);
+});
+
+it('binding [::1] (IPv6 loopback): a request with no Origin header still gets 200 (non-browser clients)', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'mole-mcp-http-ipv6-noorigin-'));
+  cleanups.push(() => rmSync(root, { recursive: true, force: true }));
+  const server = await startMoleHttpServer({ root, stateDir: join(root, '.state') }, { host: '::1' });
+  cleanups.push(() => server.close());
+  const port = new URL(server.url).port;
+
+  const res = await rawPost(server.url, { host: `[::1]:${port}`, accept: 'application/json, text/event-stream' });
+  expect(res.status).toBe(200);
 });

@@ -333,7 +333,10 @@ export function createServer(opts: MoleMcpOptions): McpServer {
         const root = confineToRoot(opts.root, args.root, 'root');
         const { coverage, scanCoverage } = await import('@mole/coverage');
         if (args.file) {
-          const r = await coverage(root, args.file);
+          // T91 review fix MEDIUM: `file` is a path-shaped arg like any other -- confine it the same way
+          // `root` already is, so it can't point outside the server root (absolute escape or `..` traversal).
+          const file = confineToRoot(root, args.file, 'file');
+          const r = await coverage(root, file);
           return { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }], structuredContent: sc(r) };
         }
         const scan = scanCoverage(root);

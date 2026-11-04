@@ -4,7 +4,7 @@
 # end-to-end via `pre-commit try-repo`, without needing a real npm publish or network access.
 #
 # Why this can't just run `pre-commit try-repo` against the repo unmodified: the real shipped
-# .pre-commit-hooks.yaml pins `additional_dependencies: ["mole-code@0.5.0"]`, which needs the real npm
+# .pre-commit-hooks.yaml pins `additional_dependencies: ["mole-code@0.1.0"]`, which needs the real npm
 # registry (not published yet -- T85/T86 wait on Raymond's token). This script copies the repo's hook spec
 # into a scratch dir and swaps ONLY that one version string for the LOCAL release tgz path -- same
 # `additional_dependencies` mechanism `npm install` always supports (a tarball path is as valid an argument
@@ -40,7 +40,7 @@ trap 'rm -rf "$WORK"' EXIT
 # AND prefix.exists('package.json') -- matching the real repo's layout exactly, not a simplified one).
 HOOK_REPO="$WORK/hook-repo"
 mkdir -p "$HOOK_REPO"
-sed "s#mole-code@0.5.0#$TGZ#" "$REPO_ROOT/.pre-commit-hooks.yaml" > "$HOOK_REPO/.pre-commit-hooks.yaml"
+sed "s#mole-code@0.1.0#$TGZ#" "$REPO_ROOT/.pre-commit-hooks.yaml" > "$HOOK_REPO/.pre-commit-hooks.yaml"
 cp "$REPO_ROOT/package.json" "$HOOK_REPO/package.json"
 git -C "$HOOK_REPO" init -q -b main
 git -C "$HOOK_REPO" -c user.name=T -c user.email=t@example.com add -A
