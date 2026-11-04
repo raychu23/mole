@@ -14,6 +14,7 @@
     "@mole/questions": "*",
     "@mole/reasoning": "*",
     "@mole/reviews": "*",
+    "@mole/scip": "*",
     "dependency-cruiser": "^18.7.0",
     "proper-lockfile": "^4.1.2",
     "typescript": "^5.9.3",

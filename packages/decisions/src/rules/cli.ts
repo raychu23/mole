@@ -1,6 +1,7 @@
-// `mole rules [--json] [--emit] [--ts-config FILE] [--root DIR]`: run the rules written in decision records.
-// Exit 0 clean, 1 violations, 2 rule syntax errors (printed with file:line). --emit writes the generated
-// dependency-cruiser config (import rules) and the call rules next to the repo's own config, never over it.
+// `mole rules [--json] [--emit] [--ts-config FILE] [--scip FILE] [--root DIR]`: run the rules written in
+// decision records. Exit 0 clean, 1 violations, 2 rule syntax errors (printed with file:line). --emit writes
+// the generated dependency-cruiser config (import rules) and the call rules next to the repo's own config,
+// never over it. --scip (T95) names a SCIP index explicitly; without it, root/index.scip is used if present.
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { checkRules } from './check.js';
@@ -76,7 +77,8 @@ export async function rulesCli(_pos: string[], flags: Record<string, string | tr
     return 0;
   }
   const tsConfig = typeof flags['ts-config'] === 'string' ? flags['ts-config'] : undefined;
-  const r = await checkRules(root, { tsConfig });
+  const scip = typeof flags.scip === 'string' ? flags.scip : undefined;
+  const r = await checkRules(root, { tsConfig, scip });
   console.log(flags.json ? JSON.stringify(r, null, 2) : formatRules(r));
   return r.errors.length ? 2 : r.violations.length ? 1 : 0;
 }

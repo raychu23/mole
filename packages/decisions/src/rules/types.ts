@@ -64,6 +64,8 @@ export interface RulesResult extends RulesLoad {
 export interface RulesOptions {
   /** tsconfig passed to dependency-cruiser (paths/baseUrl); repo-relative or absolute */
   tsConfig?: string;
+  /** SCIP index path (repo-relative or absolute); selects the SCIP path (T95) instead of auto-detecting root/index.scip. */
+  scip?: string;
 }
 
 export const DEPCRUISE_FILE = '.dependency-cruiser.mole.cjs';

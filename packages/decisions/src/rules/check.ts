@@ -9,6 +9,7 @@ import { loadGraph } from '../graph.js';
 import type { Flag } from '../types.js';
 import { cruiseOptions, depcruiseRuleSet, entryPrefixes, EXCLUDE } from './compile.js';
 import { anyOf, isModuleName, loadRules, pathRegex } from './parse.js';
+import { checkRulesScip, findScipIndex } from './scip.js';
 import type { RuleSpec, RulesOptions, RulesResult, Violation } from './types.js';
 
 type TSMod = typeof TS;
@@ -115,6 +116,12 @@ export async function checkRules(root: string, opts: RulesOptions = {}): Promise
   const violations: Violation[] = [];
   const result = (): RulesResult => ({ root, ...load, violations: sortV(violations), ms: Date.now() - t0 });
   if (load.rules.length === 0) return result();
+
+  // T95: a SCIP index (any language a SCIP indexer covers -- scip-python, scip-go, ...) at root/index.scip,
+  // or named by --scip, takes over entirely; the TypeScript path below (dependency-cruiser + Mole's own TS
+  // AST scan) is unchanged for repos with neither.
+  const scipPath = findScipIndex(root, opts);
+  if (scipPath) return checkRulesScip(root, scipPath, load);
 
   // a from: or path to: that matches no source file narrows the rule to nothing and reads as green (review 1 P2-2)
   const filesUnder = new Map<string, Set<string>>();

@@ -1,0 +1,17 @@
+packages/scip/test/reader.test.ts, first run (before the `__init__` descriptor fix in reader.ts):
+
+RUN  v3.2.7
+ ❯ packages/scip/test/reader.test.ts (5 tests | 1 failed)
+   ✓ lists every indexed document
+   ✓ finds the import of src.db.query from src/ui/view.py, at the import line
+   × finds the external stdlib import (urllib.request) by module name, not path
+     → expected undefined to match object { line: 1, isPath: false }
+   ✓ finds the cross-file call q() in src/ui/view.py, with its dotted callee name
+   ✓ never reports the `from src.db.query import q` binding itself as a call to q
+
+Cause: descriptorNames() included scip-python's synthetic trailing `__init__` meta descriptor
+(every module -- not just packages -- gets one, scip-python's symbols.ts `makeModuleInit`), so the
+external module name came out as 'urllib.request.__init__' instead of 'urllib.request' and matched
+nothing. Fixed by dropping a trailing '__init__' descriptor name before joining.
+
+Fixed: all 5 pass (see 4 log/green.txt).

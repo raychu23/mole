@@ -24,5 +24,6 @@ to a model.
 
 - No authentication layer: anything that can start the `mole-mcp` process can query your repo's decisions
   and map — treat it like any other local dev tool, not a networked service (it only ever listens on stdio).
-- Same per-feature limits as the CLI commands it mirrors (TypeScript-only indexing, rule-graph-only
-  enforcement, etc.) — see the other docs pages.
+- Same per-feature limits as the CLI commands it mirrors (TypeScript-only `map`/`impact` indexing;
+  `rules` enforcement also reads a pre-built SCIP index for other languages, see
+  `docs/decisions-and-rules.md`) — see the other docs pages.
