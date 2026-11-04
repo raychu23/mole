@@ -253,12 +253,13 @@ that doesn't need enforcement, just a reminder.
 
 ## AGENTS.md / CLAUDE.md precedence
 
-Put Mole's decisions above a stale instruction file's own wording, in the one place that already has the
-highest authority Claude Code (and any AGENTS.md-reading agent — Codex, Cursor, Gemini CLI) gives any
-context: the project's own `AGENTS.md`/`CLAUDE.md`, loaded as a user message right after the system
-prompt. Add this one sentence (Raymond-approved wording, item #3 of `ux-research 11-04`, grounded in
-arXiv 2610.30571 "Stale Instruction Files Override the Code" — a single added sentence like this moved a
-controlled 320-run study's compliance from 4.2% to 91.4%):
+Put Mole's decisions above a stale instruction file's own wording, in the place agents already treat as
+instructions: the project's own `AGENTS.md`/`CLAUDE.md` (read by Claude Code, Codex, Cursor, Gemini CLI). Add
+this one sentence. Why one sentence can matter: in a 320-run study of Claude Code and Codex CLI, a single
+precedence sentence in the user's instruction file raised the share of choices that followed the existing
+code over a stale file from 4.2% to 91.4% ([arXiv 2610.30571](https://arxiv.org/abs/2610.30571), 2026-10).
+That study gave the *code* precedence; giving Mole's decisions precedence is the same mechanism but has not
+been measured yet.
 
 ```markdown
 When a `.mole/decisions/*.md` rule and this file's guidance disagree, the Mole decision wins; treat a

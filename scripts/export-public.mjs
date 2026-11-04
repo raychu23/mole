@@ -43,7 +43,7 @@ const exclude = [/(^|\/)node_modules(\/|$)/, /(^|\/)dist(\/|$)/, /(^|\/)dist-tsc
   // T86: the plugin's own benchmark key material and its test fixtures embed internal ledger task-directory names
   // (e.g. "T74-steering-dials") as literal strings, the same private-history shape the forbidden scan below is
   // meant to catch -- ship the plugin's runtime files (plugin.json, .mcp.json, hooks/, scripts/, README.md) only.
-  /^plugins\/claude-code\/bench(\/|$)/, /^plugins\/claude-code\/test(\/|$)/];
+  /^plugins\/claude-code\/bench(\/|$)/, /^docs\/launch-drafts(\/|$)/, /^docs\/experiments\.md$/, /(^|\/)__pycache__(\/|$)/, /^evals\/inspect\/dcbench_eval\/(experiments|logs)(\/|$)/, /^plugins\/claude-code\/test(\/|$)/];
 const forbidden = [/\/Users\/[a-z0-9_-]+/i, /\.hermes/i, /raymond/i, /CS Code/, /docs-over-chat/i, /ledger/i, /\bT\d{1,2}-[a-z0-9-]+/, /AGENTS\.md/, /BEGIN [A-Z ]*PRIVATE KEY/, /(ghp|gho|ghs|pat|sk)[-_][A-Za-z0-9]{20,}/, /\btasks\//, /(^|[^a-zA-Z])context\//, /chat log/i, /chat transcript/i];
 // exceptions that are intended: the copyright holder's name in LICENSE, the source link in package manifests, and
 // the plugin/marketplace author field (the point of a public plugin listing is crediting a real person, same as LICENSE)
@@ -55,6 +55,8 @@ const allowed = {
   '.claude-plugin/marketplace.json': [/raymond/i],
   // T91-distribution-channels: the Marketplace action's `author:` field, same crediting rationale as above.
   'action.yml': [/raymond/i],
+  // the README tells USERS to edit their own AGENTS.md (a public, cross-agent convention), not ours
+  'README.md': [/AGENTS\.md/],
 };
 
 rmSync(out, { recursive: true, force: true });
