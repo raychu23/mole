@@ -54,7 +54,22 @@ function main() {
   const input = readInput();
   const root = repoRoot(input.cwd || process.cwd());
   if (!root) return;
-  saveSession(input.session_id, { root, head: git(root, ['rev-parse', '--verify', '-q', 'HEAD'])?.trim() ?? '', started: new Date().toISOString(), source: input.source ?? '' });
+  // T92 review-1 fix (HIGH 2): snapshot every file already dirty at session start as a git blob
+  // (`git hash-object -w`, writes to .git/objects only -- never the working tree or the index), so Stop can
+  // later tell a violation that predates this session apart from one the session itself introduced, without
+  // ever checking anything out (lib.mjs's sessionBaselineContent / crispViolationsForOverlay).
+  const baselineBlobs = {};
+  for (const line of (git(root, ['status', '--porcelain', '--untracked-files=all']) ?? '').split('\n')) {
+    if (line.length < 4) continue;
+    const status = line.slice(0, 2);
+    if (status.includes('D')) continue; // deleted: no content to snapshot; Stop's HEAD fallback covers this file
+    for (const part of line.slice(3).split(' -> ')) {
+      const p = part.replace(/^"|"$/g, '');
+      const sha = git(root, ['hash-object', '-w', '--', p])?.trim();
+      if (sha) baselineBlobs[p] = sha;
+    }
+  }
+  saveSession(input.session_id, { root, head: git(root, ['rev-parse', '--verify', '-q', 'HEAD'])?.trim() ?? '', started: new Date().toISOString(), source: input.source ?? '', baselineBlobs });
   const mole = findMole(root);
   if (!mole) return;
   // T21: other parallel runs whose work meets this session's (a resumed or compacted session has steps already)

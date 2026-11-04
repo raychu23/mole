@@ -1,0 +1,110 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T92-agent-compliance-hooks
+
+ ❯ plugins/claude-code/test/pretooluse-no-write.test.ts (10 tests | 3 failed) 6207ms
+   ✓ T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > SIGKILL 0ms after spawn: the real file never diverges from its original bytes 156ms
+   ✓ T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > SIGKILL 2ms after spawn: the real file never diverges from its original bytes 166ms
+   ✓ T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > SIGKILL 5ms after spawn: the real file never diverges from its original bytes 127ms
+   ✓ T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > SIGKILL 15ms after spawn: the real file never diverges from its original bytes 151ms
+   ✓ T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > SIGKILL 40ms after spawn: the real file never diverges from its original bytes 158ms
+   ✓ T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > SIGKILL 200ms after spawn: the real file never diverges from its original bytes  334ms
+   ✓ T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > SIGKILL 500ms after spawn: the real file never diverges from its original bytes  660ms
+   × T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > SIGKILL 900ms after spawn: the real file never diverges from its original bytes 1016ms
+     → expected true to be false // Object.is equality
+   × T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > SIGKILL 1300ms after spawn: the real file never diverges from its original bytes 1416ms
+     → expected true to be false // Object.is equality
+   × T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > concurrent PreToolUse invocations on the same file never corrupt it and each gets a correct answer 2022ms
+     → expected undefined to be 'deny' // Object.is equality
+ ❯ plugins/claude-code/test/stop-baseline.test.ts (4 tests | 2 failed) 14707ms
+   × T92 review-1 fix (HIGH 2): Stop blocks only on violations THIS session introduced > a violation already COMMITTED to HEAD before the session, touched only by an unrelated edit -> no block 2415ms
+     → expected 'block' to be undefined
+   × T92 review-1 fix (HIGH 2): Stop blocks only on violations THIS session introduced > a violation already DIRTY in the working tree at session start, touched only by an unrelated edit -> no block 2202ms
+     → expected 'block' to be undefined
+   ✓ T92 review-1 fix (HIGH 2): Stop blocks only on violations THIS session introduced > a violation the SESSION introduces (clean at SessionStart) -> block, reason names the decision  2972ms
+   ✓ T92 review-1 fix (HIGH 2): Stop blocks only on violations THIS session introduced > stop_hook_active true still never blocks, and the per-session cap is still respected, with a real SessionStart baseline  7116ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  plugins/claude-code/test/pretooluse-no-write.test.ts > T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > SIGKILL 900ms after spawn: the real file never diverges from its original bytes
+ FAIL  plugins/claude-code/test/pretooluse-no-write.test.ts > T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > SIGKILL 1300ms after spawn: the real file never diverges from its original bytes
+AssertionError: expected true to be false // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ plugins/claude-code/test/pretooluse-no-write.test.ts:84:27
+     82|     await new Promise((r) => setTimeout(r, 50));
+     83|     clearInterval(poll);
+     84|     expect(sawDivergence).toBe(false);
+       |                           ^
+     85|     expect(readFileSync(join(root, 'src/a.ts'), 'utf8')).toBe(original…
+     86|   }, 20_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  plugins/claude-code/test/pretooluse-no-write.test.ts > T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > concurrent PreToolUse invocations on the same file never corrupt it and each gets a correct answer
+AssertionError: expected undefined to be 'deny' // Object.is equality
+
+[32m- Expected:[39m 
+"deny"
+
+[31m+ Received:[39m 
+undefined
+
+ ❯ plugins/claude-code/test/pretooluse-no-write.test.ts:111:136
+    109|     // and every single one still correctly denies the edit (the viola…
+    110|     for (const r of results) {
+    111|       expect((r.json as { hookSpecificOutput?: { permissionDecision?: …
+       |                                                                                                                                        ^
+    112|     }
+    113|   }, 30_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  plugins/claude-code/test/stop-baseline.test.ts > T92 review-1 fix (HIGH 2): Stop blocks only on violations THIS session introduced > a violation already COMMITTED to HEAD before the session, touched only by an unrelated edit -> no block
+AssertionError: expected 'block' to be undefined
+
+[32m- Expected:[39m 
+undefined
+
+[31m+ Received:[39m 
+"block"
+
+ ❯ plugins/claude-code/test/stop-baseline.test.ts:68:30
+     66|     write(root, 'src/a.ts', "import { b } from './b';\nexport function…
+     67|     const result = run('stop.mjs', root, sessionId, data, { hook_event…
+     68|     expect(result?.decision).toBeUndefined();
+       |                              ^
+     69|   });
+     70| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  plugins/claude-code/test/stop-baseline.test.ts > T92 review-1 fix (HIGH 2): Stop blocks only on violations THIS session introduced > a violation already DIRTY in the working tree at session start, touched only by an unrelated edit -> no block
+AssertionError: expected 'block' to be undefined
+
+[32m- Expected:[39m 
+undefined
+
+[31m+ Received:[39m 
+"block"
+
+ ❯ plugins/claude-code/test/stop-baseline.test.ts:82:30
+     80|     write(root, 'src/a.ts', "import { b } from './b';\nexport function…
+     81|     const result = run('stop.mjs', root, sessionId, data, { hook_event…
+     82|     expect(result?.decision).toBeUndefined();
+       |                              ^
+     83|   });
+     84| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  5 failed | 9 passed (14)
+   Start at  16:11:40
+   Duration  15.03s (transform 87ms, setup 0ms, collect 129ms, tests 20.91s, environment 0ms, prepare 124ms)
+

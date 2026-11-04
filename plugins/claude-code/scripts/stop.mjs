@@ -10,14 +10,28 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { clip, collisionsStopText, crispViolations, decisionsDiffText, emit, findMole, git, loadSession, moleJson, readInput, repoRoot, ruleFixHint, ruleViolationsText, saveSession, sessionCollisions } from './lib.mjs';
+import { clip, collisionsStopText, crispViolations, crispViolationsForOverlay, decisionsDiffText, emit, findMole, git, loadSession, moleJson, readInput, repoRoot, ruleFixHint, ruleViolationsText, saveSession, sessionBaselineContent, sessionCollisions, violationKey } from './lib.mjs';
 import { runVerifier, verifierParts } from './verify.mjs';
 
 // T92/D102: crisp (zero-model, deterministic) decision-rule violations block Claude from stopping by default --
 // the exact contract Anthropic's own hooks docs ship for Stop (decision: "block" + reason; fetched 2026-11-04,
 // code.claude.com/docs/en/hooks#stop-decision-control; see this task's 4 log/prior-art.md). By-meaning/judged
 // matches (verify.mjs's verifierParts) stay advisory text only -- never this block path; only a rule a decision
-// record itself wrote (packages/decisions/src/rules, T27) counts. Loop safety, belt and suspenders:
+// record itself wrote (packages/decisions/src/rules, T27) counts.
+// T92 review-1 fix (HIGH 2): this used to block on ANY crisp violation among `files` (what the session's diff
+// touched), including one that pre-dates the session entirely (already committed to HEAD, or already dirty in
+// the working tree before SessionStart ever ran) -- a false-positive block on pre-existing state, not on
+// anything this session did. Fixed: only the files that have a violation RIGHT NOW are checked against their
+// SESSION-START baseline (lib.mjs's sessionBaselineContent: the file's content at SessionStart, via a recorded
+// git blob for an already-dirty file or the session's head commit otherwise -- never a checkout), evaluated on
+// a throwaway overlay (crispViolationsForOverlay), and only a violation key (decision id + rule + file +
+// target, lib.mjs's violationKey) present now but absent from that baseline blocks. Semantics vs PreToolUse:
+// PreToolUse denies per-EDIT (before = this file's content right before the edit, after = right after it, so
+// it catches a new violation at the instant it would be introduced); Stop blocks per-SESSION (before = this
+// file's content at SessionStart, now = its content at Stop time, so it catches anything still unresolved when
+// the agent tries to finish, no matter which edit introduced it or whether PreToolUse saw that edit at all --
+// e.g. a violation from a shell command, a merge, or a file PreToolUse's Edit|Write|MultiEdit matcher never saw).
+// Loop safety, belt and suspenders:
 //   1. stop_hook_active (the docs' own field): true means Claude is already continuing from an earlier block this
 //      turn -- never block again, so a condition that never resolves can't spin forever.
 //   2. a small per-session counter (MOLE_STOP_BLOCK_CAP, default 3) on top of Claude Code's own built-in
@@ -30,12 +44,21 @@ const STOP_BLOCK_CAP = Number(process.env.MOLE_STOP_BLOCK_CAP) > 0 ? Number(proc
 function stopBlockDecision(mole, root, files, input) {
   if (process.env.MOLE_STOP_BLOCK === '0') return undefined;
   if (input.stop_hook_active === true) return undefined; // already continuing from a block: never re-block
-  const hits = crispViolations(mole, root, files);
-  if (!hits.length) return undefined;
-  const sess = loadSession(input.session_id) ?? {};
-  const blocks = sess.stopBlocks ?? 0;
+  const now = crispViolations(mole, root, files);
+  if (!now.length) return undefined;
+  // only the files with a violation right now need a baseline check -- a file with no violation now can't
+  // contribute a "new" one, whatever its baseline looked like.
+  const sess = loadSession(input.session_id);
+  const nowFiles = [...new Set(now.map((v) => v.file))];
+  const overrides = new Map(nowFiles.map((f) => [f, sessionBaselineContent(root, sess, f)]));
+  const baseline = crispViolationsForOverlay(mole, root, overrides);
+  const baseKeys = new Set(baseline.map(violationKey));
+  const hits = now.filter((v) => !baseKeys.has(violationKey(v)));
+  if (!hits.length) return undefined; // every violation present now already existed at session start
+  const sessState = sess ?? {};
+  const blocks = sessState.stopBlocks ?? 0;
   if (blocks >= STOP_BLOCK_CAP) return undefined; // our own cap reached: let Claude stop rather than loop forever
-  saveSession(input.session_id, { ...sess, stopBlocks: blocks + 1 });
+  saveSession(input.session_id, { ...sessState, stopBlocks: blocks + 1 });
   const lines = hits.map((v) => `- ${v.file}:${v.line} ${v.kind} ${v.target} breaks ${v.decision.id} "${v.decision.title}" \u2014 fix: ${ruleFixHint(v)} (rule ${v.rule} at ${v.decision.file}:${v.decision.line})`);
   return {
     decision: 'block',

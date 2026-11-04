@@ -14,9 +14,9 @@
 // difference). Steering is now delivered only here (PreToolUse, already Edit|Write-only again) and in
 // UserPromptSubmit -- never on every tool call -- so a signal reaches the agent before its very next edit or next
 // prompt, exactly the contract's wording, without re-introducing the Read-time decisions regression.
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, relative, resolve } from 'node:path';
-import { clip, crispViolations, decisionsBlock, emit, findMole, governingDecisions, hasAnyRules, loadAddedDecisions, readInput, repoRoot, ruleFixHint, sameFormRoot, saveAddedDecisions, steerDeliverText } from './lib.mjs';
+import { readFileSync } from 'node:fs';
+import { relative, resolve } from 'node:path';
+import { clip, crispViolationsForContent, decisionsBlock, emit, findMole, governingDecisions, hasAnyRules, loadAddedDecisions, readInput, repoRoot, ruleFixHint, sameFormRoot, saveAddedDecisions, steerDeliverText, violationKey } from './lib.mjs';
 
 // T92/D102: deny an Edit/Write/MultiEdit whose NEW content adds a crisp (zero-model, deterministic) decision-rule
 // violation -- Anthropic's own worked PreToolUse example is exactly this shape (hookSpecificOutput.permissionDecision
@@ -50,40 +50,25 @@ function prospectiveContent(toolName, toolInput, current) {
   return undefined;
 }
 
-/** Deny reason text, or undefined (allow silently). Writes the prospective content to the REAL path (the only way
- * to run the exact same deterministic engine `mole rules` is -- dependency-cruiser's own TS-AST resolution), then
- * restores the original bytes (or removes a file that did not exist before) in a `finally` that never throws --
- * the edit has not actually been applied yet, so the working tree must come back exactly as it was either way. */
+/** Deny reason text, or undefined (allow silently). T92 review-1 fix (HIGH 1): this NEVER writes to the real
+ * path `abs` -- the real file is only ever read. Both the "before" (current content) and "after" (prospective
+ * content) crisp-rule checks run on a throwaway overlay (lib.mjs's crispViolationsForContent / buildOverlay),
+ * so a crash, SIGKILL or timeout mid-check can never leave the user's file holding a prospective, never-applied
+ * edit (see lib.mjs's "T92 review-1 fix: never write the real file" section for the full prior-art citation). */
 function crispDenyReason(root, mole, abs, rel, toolName, toolInput) {
   if (!hasAnyRules(root) || !SOURCE.test(rel)) return undefined;
   let original;
-  let existed = false;
   try {
     original = readFileSync(abs, 'utf8');
-    existed = true;
   } catch {
     original = undefined;
   }
   const prospective = prospectiveContent(toolName, toolInput, original);
   if (prospective === undefined || prospective === original) return undefined; // can't simulate, or a no-op
-  const before = crispViolations(mole, root, [rel]);
-  let after = [];
-  try {
-    mkdirSync(dirname(abs), { recursive: true });
-    writeFileSync(abs, prospective);
-    after = crispViolations(mole, root, [rel]);
-  } catch {
-    after = [];
-  } finally {
-    try {
-      if (existed) writeFileSync(abs, original);
-      else rmSync(abs, { force: true });
-    } catch {
-      // best effort restore: never let a restore failure throw out of a hook (never fail the session)
-    }
-  }
-  const beforeKeys = new Set(before.map((v) => `${v.line}:${v.rule}:${v.target}`));
-  const added = after.filter((v) => !beforeKeys.has(`${v.line}:${v.rule}:${v.target}`));
+  const before = crispViolationsForContent(mole, root, rel, original);
+  const after = crispViolationsForContent(mole, root, rel, prospective);
+  const beforeKeys = new Set(before.map(violationKey));
+  const added = after.filter((v) => !beforeKeys.has(violationKey(v)));
   if (!added.length) return undefined;
   const lines = added.map((v) => `- ${rel}:${v.line} ${v.kind} ${v.target} breaks ${v.decision.id} "${v.decision.title}" \u2014 fix: ${ruleFixHint(v)} (rule ${v.rule} at ${v.decision.file}:${v.decision.line})`);
   return `Mole: this edit adds ${added.length} accepted-decision rule violation${added.length === 1 ? '' : 's'} (mole rules, zero-model, deterministic -- not a guess):\n${lines.join('\n')}\n\nFix the code instead, or get the decision changed.`;
