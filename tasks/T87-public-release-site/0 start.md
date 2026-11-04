@@ -1,21 +1,22 @@
 ---
-state: ready
+state: running
 owner: hermes-build
-repo:
-branch:
-worktree:
+repo: /Users/a1/Desktop/CS Code/Project/Mole
+branch: ledger/t87-public-release-site
+worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T87-public-release-site
 base:
 reviewer:
 updated: 2026-11-03 22:26
-status: ledger ready
-next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+status: ledger running
+next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+claimed: 2026-11-03 22:26
 ---
 ```notes
 T87-public-release-site      ledger task (rules.md §3 code features)      project tasks
     goal                    Public face in raychu23/mole-code-map (D99): regenerate the public copy from today's main with scripts/export-public.mjs (allowlist + private-string scan), keeping the existing code map as a feature/folder inside (not removed); a landing README that sells Mole's USPs honestly; an easy demo (`npx mole-code demo` or equivalent creating a sample repo with team decisions and showing Mole catch a change that breaks one, in the terminal and in Claude Code); a 60-second quickstart for Claude Code plugin, VS Code, npm CLI, MCP clients (Codex, Cursor, Gemini CLI); a GitHub Pages landing page; docs for each feature. Not pushed by the builder.
     done-when               1 product-claims table (closest existing tools, our difference, verdict) with dated sources · 2 every number on the page traced to a verified result file · 3 demo runs from a clean temp dir via the packed mole-code tarball · 4 export-public output scanned (no /Users/a1, no private notes) · 5 page renders (screenshot)
-    status                  2026-11-03 ready      owner hermes-build
-    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+    status                  2026-11-03 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T87-public-release-site · branch ledger/t87-public-release-sit
+    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
     pinned
     mode                    one worker
     boundary                scripts/export-public.mjs, scripts/public-README.md, docs/ (public), release/mole-code (demo command), site/ (Pages)
