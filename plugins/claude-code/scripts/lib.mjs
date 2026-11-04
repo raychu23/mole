@@ -53,7 +53,10 @@ export function findMole(root) {
   const asCmd = (p) => (/\.[cm]?js$/.test(p) ? [process.execPath, ['--no-warnings', p]] : [p, []]);
   if (process.env.MOLE_BIN !== undefined && process.env.MOLE_BIN !== '') return isFile(process.env.MOLE_BIN) ? asCmd(resolve(process.env.MOLE_BIN)) : undefined;
   for (const dir of (process.env.PATH ?? '').split(delimiter)) if (dir && isFile(join(dir, 'mole'))) return [join(dir, 'mole'), []];
-  for (const p of [root && join(root, 'packages/daemon/dist/cli.js'), resolve(here, '../../../packages/daemon/dist/cli.js')]) if (p && isFile(p)) return asCmd(p);
+  // T86: the plugin's own bundled CLI (plugins/claude-code/dist/cli.js, built by scripts/build.mjs) is checked
+  // FIRST -- it is what makes the plugin work with no repo checkout at all. The repo-relative paths below are the
+  // fallback for working on Mole itself from an unbuilt plugin dir (no `node plugins/claude-code/scripts/build.mjs` run yet).
+  for (const p of [resolve(here, '../dist/cli.js'), root && join(root, 'packages/daemon/dist/cli.js'), resolve(here, '../../../packages/daemon/dist/cli.js')]) if (p && isFile(p)) return asCmd(p);
   return undefined;
 }
 
@@ -181,7 +184,7 @@ export function collisionsStopText(r, sessionId) {
 
 // ---------------------------------------------------------------- T37: the decisions behind the code, for the agent plugin
 // Mole's plugin carries the PEOPLE's decisions (.mole/decisions/*.md, .mole/tenets.md) to the agent, and reports the
-// agent's effect on them back to the person (Raymond 10-29 15:30). Parsed here with a plain regex, not @mole/decisions:
+// agent's effect on them back to the person. Parsed here with a plain regex, not @mole/decisions:
 // the plugin scripts stay dependency-free (see the file header), and this only needs id/title/status/approver/scope,
 // never the full citator graph. Flags (red/yellow/green/grey) still come from the real engine via `mole decisions --json`.
 const SCOPE_BUDGET = 1500; // M31a: the governing-decisions block's id/title/status/owner lines fit in 1,500 characters
@@ -629,8 +632,8 @@ function steerInboxFile(root, sessionId) {
  * the cheap in-process check the CLI itself would otherwise have done: no inbox file at all (existsSync, no
  * subprocess) or an inbox with nothing undelivered (one readFileSync + JSON.parse, still no subprocess) both
  * short-circuit to '' without ever touching execFileSync. Only an inbox with real pending signals/updates pays for
- * the CLI call (which also performs the atomic claim -- see packages/agentstate/src/steer/store.ts). Timed proof:
- * tasks/T74-steering-dials/4 log/red.txt ("Review 1: HIGH 2 latency").
+ * the CLI call (which also performs the atomic claim -- see packages/agentstate/src/steer/store.ts). Timed proof
+ * kept in this task's own internal log ("Review 1: HIGH 2 latency").
  */
 function hasPendingSteer(root, sessionId) {
   const f = steerInboxFile(root, sessionId);
