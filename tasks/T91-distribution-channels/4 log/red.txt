@@ -1,0 +1,134 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T91-distribution-channels
+
+(node:37116) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:37115) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ packages/mcp/test/safe-path.test.ts (6 tests | 3 failed) 18ms
+   × undefined input resolves to the root itself 5ms
+     → expected '/private/var/folders/55/nkhj4v2x2fg1p…' to be '/var/folders/55/nkhj4v2x2fg1pd_l8gdrl…' // Object.is equality
+   ✓ an absolute path argument is rejected outright, even "/" 1ms
+   × a relative path that stays inside the root resolves fine 1ms
+     → expected '/private/var/folders/55/nkhj4v2x2fg1p…' to be '/var/folders/55/nkhj4v2x2fg1pd_l8gdrl…' // Object.is equality
+   ✓ a `..` traversal that escapes the root is rejected 1ms
+   ✓ a symlink inside the root that points outside it is rejected (realpath check) 1ms
+   × end-to-end: mole_check root="/" is rejected by the tool, never passed to fs 8ms
+     → server._registeredTools.mole_check.callback is not a function
+ ❯ packages/mcp/test/http.test.ts (6 tests | 3 failed) 1460ms
+   ✓ mole_map over streamable HTTP returns the same neighbourhood text as the stdio server  1430ms
+   ✓ an unknown path returns 404, never a crash (the endpoint is /mcp only) 4ms
+   × a cross-origin POST (Origin: https://evil.example) is rejected with 403 11ms
+     → expected 200 to be 403 // Object.is equality
+   × a mismatched Host header is rejected with 403 7ms
+     → expected [ 403, 421 ] to include 200
+   ✓ an allowed local Origin on the bound host/port still gets 200 5ms
+   × binding past loopback without allowNonLoopback + bearerToken is refused before listening 3ms
+     → promise resolved "{ …(2) }" instead of rejecting
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/mcp/test/http.test.ts > a cross-origin POST (Origin: https://evil.example) is rejected with 403
+AssertionError: expected 200 to be 403 // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 403[39m
+[31m+ 200[39m
+
+ ❯ packages/mcp/test/http.test.ts:84:22
+     82| 
+     83|   const res = await rawPost(server.url, { origin: 'https://evil.exampl…
+     84|   expect(res.status).toBe(403);
+       |                      ^
+     85| });
+     86| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  packages/mcp/test/http.test.ts > a mismatched Host header is rejected with 403
+AssertionError: expected [ 403, 421 ] to include 200
+ ❯ packages/mcp/test/http.test.ts:94:22
+     92| 
+     93|   const res = await rawPost(server.url, { host: 'evil.example', accept…
+     94|   expect([403, 421]).toContain(res.status);
+       |                      ^
+     95| });
+     96| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  packages/mcp/test/http.test.ts > binding past loopback without allowNonLoopback + bearerToken is refused before listening
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- Error {[39m
+[32m-   "message": "rejected promise",[39m
+[31m+ {[39m
+[31m+   "close": [Function close],[39m
+[31m+   "url": "http://0.0.0.0:62635/mcp",[39m
+[2m  }[22m
+
+ ❯ packages/mcp/test/http.test.ts:110:98
+    108|   const root = mkdtempSync(join(tmpdir(), 'mole-mcp-http-nonloopback-'…
+    109|   cleanups.push(() => rmSync(root, { recursive: true, force: true }));
+    110|   await expect(startMoleHttpServer({ root, stateDir: join(root, '.stat…
+       |                                                                                                  ^
+    111| });
+    112| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  packages/mcp/test/safe-path.test.ts > undefined input resolves to the root itself
+AssertionError: expected '/private/var/folders/55/nkhj4v2x2fg1p…' to be '/var/folders/55/nkhj4v2x2fg1pd_l8gdrl…' // Object.is equality
+
+Expected: [32m"/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-mcp-safe-path-FdNb6x"[39m
+Received: [31m"[7m/private[27m/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-mcp-safe-path-FdNb6x"[39m
+
+ ❯ packages/mcp/test/safe-path.test.ts:26:50
+     24| it('undefined input resolves to the root itself', () => {
+     25|   const root = freshRoot();
+     26|   expect(confineToRoot(root, undefined, 'root')).toBe(root);
+       |                                                  ^
+     27| });
+     28| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  packages/mcp/test/safe-path.test.ts > a relative path that stays inside the root resolves fine
+AssertionError: expected '/private/var/folders/55/nkhj4v2x2fg1p…' to be '/var/folders/55/nkhj4v2x2fg1pd_l8gdrl…' // Object.is equality
+
+Expected: [32m"/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-mcp-safe-path-cGkb4u/sub"[39m
+Received: [31m"[7m/private[27m/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-mcp-safe-path-cGkb4u/sub"[39m
+
+ ❯ packages/mcp/test/safe-path.test.ts:38:51
+     36|   const root = freshRoot();
+     37|   mkdirSync(join(root, 'sub'));
+     38|   expect(confineToRoot(root, 'sub', 'notesRoot')).toBe(join(root, 'sub…
+       |                                                   ^
+     39|   expect(confineToRoot(root, '.', 'root')).toBe(root);
+     40| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  packages/mcp/test/safe-path.test.ts > end-to-end: mole_check root="/" is rejected by the tool, never passed to fs
+TypeError: server._registeredTools.mole_check.callback is not a function
+ ❯ packages/mcp/test/safe-path.test.ts:62:38
+     60|   // reach into the registered handler the same way the SDK would for …
+     61|   const result = await (server as unknown as { _registeredTools: Recor…
+     62|     ._registeredTools['mole_check']!.callback({ root: '/', worktree: t…
+       |                                      ^
+     63|   expect(result.isError).toBe(true);
+     64|   expect(result.content[0]?.text).toMatch(/outside the server root|abs…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  6 failed | 6 passed (12)
+   Start at  15:55:21
+   Duration  4.04s (transform 775ms, setup 0ms, collect 4.49s, tests 1.48s, environment 0ms, prepare 168ms)
+

@@ -6,14 +6,24 @@
 // `mole` repo-scoped server has no per-session state worth keeping across requests anyway (unlike the team
 // server, which is per-org-token-scoped).
 //
-// Deliberately NOT auth'd and NOT DB-backed: this is the single-user/local-repo `mole-mcp` (packages/mcp),
-// the same trust model docs/mcp.md already documents for the stdio form ("treat it like any other local dev
-// tool, not a networked service") -- exposing it over HTTP just adds a second way a LOCAL client (e.g. a
-// Dockerized MCP client, a Smithery URL-publish target, VS Code/Cursor's "http" server type) can reach it
-// without spawning a child process. Bind to 127.0.0.1 by default for exactly that reason: this is a
-// loopback convenience, not a hardened remote service (an operator who wants to expose it past loopback is
-// responsible for putting auth in front of it themselves -- out of scope here, same non-goal as the stdio
-// form's "no authentication layer" limit).
+// SECURITY (T91 review fix HIGH 1): the MCP spec (2025-03-26 through 2026-07-28, all checked) says servers
+// MUST validate the Origin header on every incoming connection to prevent DNS rebinding -- independent of
+// bind address; a public attacker page can point DNS at 127.0.0.1 and have a victim's own browser fetch()
+// this endpoint. The @modelcontextprotocol/sdk (^1.32.1) ships exactly this as
+// StreamableHTTPServerTransportOptions.enableDnsRebindingProtection + allowedHosts/allowedOrigins (the SDK
+// marks these two fields `@deprecated` in favour of "external middleware", but there is no external
+// middleware here -- this file IS the middleware layer, so using the SDK's own enforcement is the correct,
+// not-reinvented fix). Requests with a Host/Origin header that isn't one of the bound host/port's own
+// values get the SDK's 403 JSON-RPC error response; a request with NO Origin header at all (most non-browser
+// MCP clients, including this file's own tests and the official SDK client) is left unvalidated by the SDK,
+// matching the spec's actual target (a browser-driven DNS-rebinding attack always carries an Origin).
+//
+// Bind policy: 127.0.0.1 by default (a loopback convenience, not a hardened remote service, same trust
+// model docs/mcp.md documents for the stdio form). Binding PAST loopback is refused unless the caller
+// explicitly opts in with BOTH `allowNonLoopback: true` AND a `bearerToken` (checked via `Authorization:
+// Bearer <token>`) -- the DNS-rebinding fix above only closes the "another origin asks this server from the
+// SAME machine" hole; it does nothing for "this server is reachable from other machines", which needs an
+// auth layer, not origin validation. See docs/mcp.md "remote HTTP mode" for how an operator sets both.
 import http from 'node:http';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
@@ -24,18 +34,50 @@ export interface MoleHttpServer {
   close(): Promise<void>;
 }
 
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1', '[::1]']);
+
+export interface MoleHttpListenOptions {
+  port?: number;
+  host?: string;
+  /** Required together with `bearerToken` to bind a host other than loopback. */
+  allowNonLoopback?: boolean;
+  /** Checked against `Authorization: Bearer <token>` on every request once set. REQUIRED (with
+   * allowNonLoopback) to bind past loopback; optional (defence in depth) on a loopback bind. */
+  bearerToken?: string;
+}
+
 /** Starts a stateless streamable-HTTP MCP endpoint at POST/GET/DELETE `/mcp`, serving the exact same tools
  * as the stdio server (same `createServer(opts)`). One fresh McpServer + transport per request. */
-export async function startMoleHttpServer(
-  opts: MoleMcpOptions,
-  listenOpts: { port?: number; host?: string } = {}
-): Promise<MoleHttpServer> {
+export async function startMoleHttpServer(opts: MoleMcpOptions, listenOpts: MoleHttpListenOptions = {}): Promise<MoleHttpServer> {
   const host = listenOpts.host ?? '127.0.0.1';
+  const isLoopback = LOOPBACK_HOSTS.has(host);
+
+  if (!isLoopback && !(listenOpts.allowNonLoopback && listenOpts.bearerToken)) {
+    throw new Error(
+      `mole-mcp http: refusing to bind non-loopback host '${host}' without BOTH allowNonLoopback: true and a ` +
+        'bearerToken set (this endpoint has no other auth layer by default -- see docs/mcp.md "remote HTTP ' +
+        'mode"; MOLE_HTTP_ALLOW_NON_LOOPBACK=1 + MOLE_HTTP_BEARER_TOKEN in http-cli.ts)',
+    );
+  }
+
+  const bearerToken = listenOpts.bearerToken;
+  // Filled in once the real port is known (right after listen() resolves, below). Reassigning the binding
+  // (not just mutating in place) is enough for the request handler closure to see the final values, since
+  // no request can arrive before the `await new Promise(listen)` below settles.
+  let allowedHosts: string[] = [];
+  let allowedOrigins: string[] = [];
 
   const server = http.createServer((req, res) => {
     if (req.url !== '/mcp') {
       res.writeHead(404, { 'content-type': 'application/json' }).end(JSON.stringify({ error: 'not found' }));
       return;
+    }
+    if (bearerToken) {
+      const expected = `Bearer ${bearerToken}`;
+      if (req.headers.authorization !== expected) {
+        res.writeHead(401, { 'content-type': 'application/json' }).end(JSON.stringify({ error: 'unauthorized' }));
+        return;
+      }
     }
     void (async () => {
       // A fresh McpServer per request (stateless mode): an McpServer can only be bound to one transport at
@@ -43,7 +85,12 @@ export async function startMoleHttpServer(
       // it only registers tool handlers, it does not itself open the daemon connection (that happens lazily
       // per-tool-call via `ensureDaemon`/`MoleClient`, same as the stdio path).
       const mcp = createServer(opts);
-      const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+      const transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: undefined,
+        enableDnsRebindingProtection: true,
+        allowedHosts,
+        allowedOrigins,
+      });
       res.on('close', () => {
         void transport.close();
         void mcp.close();
@@ -62,8 +109,13 @@ export async function startMoleHttpServer(
   });
 
   const addr = server.address();
-  const port = typeof addr === 'object' && addr ? addr.port : listenOpts.port ?? 0;
+  const port = typeof addr === 'object' && addr ? addr.port : (listenOpts.port ?? 0);
   const url = `http://${host}:${port}/mcp`;
+
+  // The bound host/port, plus its localhost/127.0.0.1 aliases (a browser or MCP client may legitimately use
+  // either name for a loopback server) -- anything else is DNS rebinding or a stray cross-origin request.
+  allowedHosts = Array.from(new Set([`${host}:${port}`, `localhost:${port}`, `127.0.0.1:${port}`]));
+  allowedOrigins = Array.from(new Set([`http://${host}:${port}`, `http://localhost:${port}`, `http://127.0.0.1:${port}`]));
 
   return {
     url,

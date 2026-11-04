@@ -1,6 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { request as httpRequest } from 'node:http';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { afterEach, expect, it } from 'vitest';
@@ -51,4 +52,60 @@ it('an unknown path returns 404, never a crash (the endpoint is /mcp only)', asy
 
   const res = await fetch(server.url.replace('/mcp', '/not-mcp'));
   expect(res.status).toBe(404);
+});
+
+// T91-distribution-channels review fix HIGH 1: the MCP spec (2025-03-26 through 2026-07-28) says servers
+// MUST validate the Origin header on every incoming connection to prevent DNS rebinding, independent of
+// bind address. These three prove the SDK's own enableDnsRebindingProtection + allowedHosts/allowedOrigins
+// are actually wired in (not just declared), against the real HTTP server, not a unit mock.
+function rawPost(url: string, headers: Record<string, string>): Promise<{ status: number; body: string }> {
+  const u = new URL(url);
+  return new Promise((resolvePromise, reject) => {
+    const req = httpRequest(
+      { hostname: u.hostname, port: u.port, path: u.pathname, method: 'POST', headers: { 'content-type': 'application/json', ...headers } },
+      (res) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (c: Buffer) => chunks.push(c));
+        res.on('end', () => resolvePromise({ status: res.statusCode ?? 0, body: Buffer.concat(chunks).toString('utf8') }));
+      },
+    );
+    req.on('error', reject);
+    req.end(JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '0' } } }));
+  });
+}
+
+it('a cross-origin POST (Origin: https://evil.example) is rejected with 403', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'mole-mcp-http-origin-'));
+  cleanups.push(() => rmSync(root, { recursive: true, force: true }));
+  const server = await startMoleHttpServer({ root, stateDir: join(root, '.state') });
+  cleanups.push(() => server.close());
+
+  const res = await rawPost(server.url, { origin: 'https://evil.example', accept: 'application/json, text/event-stream' });
+  expect(res.status).toBe(403);
+});
+
+it('a mismatched Host header is rejected with 403', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'mole-mcp-http-host-'));
+  cleanups.push(() => rmSync(root, { recursive: true, force: true }));
+  const server = await startMoleHttpServer({ root, stateDir: join(root, '.state') });
+  cleanups.push(() => server.close());
+
+  const res = await rawPost(server.url, { host: 'evil.example', accept: 'application/json, text/event-stream' });
+  expect([403, 421]).toContain(res.status);
+});
+
+it('an allowed local Origin on the bound host/port still gets 200', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'mole-mcp-http-allowed-origin-'));
+  cleanups.push(() => rmSync(root, { recursive: true, force: true }));
+  const server = await startMoleHttpServer({ root, stateDir: join(root, '.state') });
+  cleanups.push(() => server.close());
+
+  const res = await rawPost(server.url, { origin: new URL(server.url).origin, accept: 'application/json, text/event-stream' });
+  expect(res.status).toBe(200);
+});
+
+it('binding past loopback without allowNonLoopback + bearerToken is refused before listening', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'mole-mcp-http-nonloopback-'));
+  cleanups.push(() => rmSync(root, { recursive: true, force: true }));
+  await expect(startMoleHttpServer({ root, stateDir: join(root, '.state') }, { host: '0.0.0.0' })).rejects.toThrow(/allowNonLoopback|bearerToken/);
 });

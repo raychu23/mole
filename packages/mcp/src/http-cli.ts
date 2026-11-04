@@ -7,6 +7,10 @@ import { startMoleHttpServer } from './http.js';
 
 const port = process.env.MOLE_HTTP_PORT ? Number(process.env.MOLE_HTTP_PORT) : 3917;
 const host = process.env.MOLE_HTTP_HOST ?? '127.0.0.1';
+// T91 review fix HIGH 1: binding past loopback needs BOTH of these set (see http.ts's file header) -- an
+// operator who wants a reachable-from-other-machines endpoint has to opt in explicitly and set a token.
+const allowNonLoopback = process.env.MOLE_HTTP_ALLOW_NON_LOOPBACK === '1';
+const bearerToken = process.env.MOLE_HTTP_BEARER_TOKEN;
 
 const server = await startMoleHttpServer(
   {
@@ -15,7 +19,7 @@ const server = await startMoleHttpServer(
     tsconfig: process.env.MOLE_TSCONFIG,
     srcDir: process.env.MOLE_SRC_DIR,
   },
-  { port, host }
+  { port, host, allowNonLoopback, bearerToken }
 );
 
 // eslint-disable-next-line no-console -- this is the one line an operator watches to confirm it's up

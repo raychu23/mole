@@ -1,4 +1,4 @@
 {
-  "name": "mole-code",
+  "$schema": "https://glama.ai/mcp/schemas/server.json",
   "maintainers": ["raychu23"]
 }

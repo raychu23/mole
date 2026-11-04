@@ -8,19 +8,41 @@
 #       hooks:
 #         - id: mole-check
 #
-# `language: node` tells pre-commit to install this repo as an npm package in an isolated venv-equivalent
-# and resolve `entry` against its installed bin -- works once `mole-code` is published (its package.json
-# already declares a `mole` bin, see release/mole-code/package.json). `mole check --worktree` reads the
-# repo's current staged/working changes directly (confirmed locally: `node packages/daemon/dist/cli.js check
-# --help` -> `usage: mole check <sha | --diff FILE [--base SHA] | --worktree> ...` -- it does NOT take bare
-# filenames, so `pass_filenames: false` here is required, not optional; a naive `pass_filenames: true` would
-# pass staged filenames as positional args `mole check` doesn't accept). No daemon needed for this path (see
-# docs/mcp.md's "What it reads/writes").
+# Why `language: node` alone wasn't enough: it ALWAYS additionally npm-installs this cloned repo itself
+# (`git+file://<checkout>`, see pre-commit's own languages/node.py install_environment -- it does this
+# whenever a package.json exists at the hook repo's root, which ours does: the monorepo workspaces
+# manifest, intentionally `private: true` with no `bin`). That install succeeds but links nothing, so
+# `entry: mole ...` alone had nothing to resolve against ("Executable mole not found").
+#
+# The fix two real node-based pre-commit hook repos already use for exactly this (a hook repo that is NOT
+# itself the npm package providing the binary), both fetched 2026-11-04:
+#   - github.com/pre-commit/mirrors-eslint/.pre-commit-hooks.yaml: `entry: eslint`, `language: node`,
+#     `additional_dependencies: ["eslint@10.2.0"]` -- the mirror repo ships no eslint code of its own; the
+#     REAL published npm package is pulled in via `additional_dependencies` and provides the executable
+#     `entry` resolves against.
+#   - github.com/pre-commit/mirrors-prettier (referenced the same way in real .pre-commit-config.yaml files,
+#     e.g. a `.pre-commit-hooks.yaml`-shaped config quoted at gatlenculp.medium.com's 2025 pre-commit guide):
+#     `id: prettier`, `additional_dependencies: ["prettier@3.4.2"]` -- identical shape, different package.
+# This file follows the identical pattern: `mole-code` (release/mole-code/package.json, bin: mole, mole-mcp)
+# is pulled in as `additional_dependencies`, never relied on from this repo's own (bin-less) root
+# package.json. Pin the version to each tagged release the same way the mirrors above pin theirs.
+#
+# `mole check --worktree` reads the repo's current staged/working changes directly (confirmed locally:
+# `node packages/daemon/dist/cli.js check --help` -> `usage: mole check <sha | --diff FILE [--base SHA] |
+# --worktree> ...` -- it does NOT take bare filenames, so `pass_filenames: false` here is required, not
+# optional; a naive `pass_filenames: true` would pass staged filenames as positional args `mole check`
+# doesn't accept). No daemon needed for this path (see docs/mcp.md's "What it reads/writes").
+#
+# Proof this shape actually works end-to-end (not just parses): scripts/test/pre-commit-local.sh runs
+# `pre-commit try-repo` against a scratch copy of this exact file with `additional_dependencies` pointed at
+# the local release tgz instead of the npm registry (no network/publish needed). Before npm publish, swapping
+# back to `mole-code@0.5.0` below is NOT RUN here (needs the real registry); after publish it is the same
+# code path `additional_dependencies` always uses, so the proof transfers.
 - id: mole-check
   name: Mole decision check
   description: Flags edits to lines governed by a .mole/decisions/*.md rule, with the decision's rationale.
   entry: mole check --worktree
   language: node
+  additional_dependencies: ["mole-code@0.5.0"]
   pass_filenames: false
   always_run: true
-
