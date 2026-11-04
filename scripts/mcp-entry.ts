@@ -1,6 +1,9 @@
-// T86: esbuild entry point for the bundled MCP server, replacing packages/mcp/src/cli.ts as the thing we bundle
-// (never modifying packages/mcp/src -- outside this task's boundary). Same logic as that file, with ONE change:
-// everything after createServer() is wrapped in an async main() instead of living at module top level.
+#!/usr/bin/env node
+// T86/D97: esbuild entry point for the bundled MCP server, replacing packages/mcp/src/cli.ts as the thing we
+// bundle (never modifying packages/mcp/src -- outside this task's boundary). Same logic as that file, with ONE
+// change: everything after createServer() is wrapped in an async main() instead of living at module top level.
+// Shared by release/mole-code/tools/build.mjs and plugins/claude-code/scripts/build.mjs via scripts/bundle-daemon.mjs
+// (one MCP bundle format for both -- see tasks/T86-claude-code-plugin-dist/2 insights.md).
 //
 // Why: packages/mcp/src/cli.ts has top-level `await server.connect(...)`. esbuild's CJS output format rejects
 // top-level await outright ("Top-level await is currently not supported with the cjs output format"), and its ESM
@@ -11,7 +14,7 @@
 // wrapper moves the awaits into a function and the whole file bundles as CJS like dist/cli.js and dist/worker.cjs.
 import { resolve } from 'node:path';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { createServer } from '../../../packages/mcp/src/server.js';
+import { createServer } from '../packages/mcp/src/server.js';
 
 async function main() {
   const server = createServer({

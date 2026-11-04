@@ -1,4 +1,4 @@
-## Summary
+## Summary (superseded by T86/D97 -- see "D97 update" below for what is now true)
 - One public npm package, `mole-code` (npm 404-checked free; `mole-cli` is taken), bundles the `mole` CLI
   and `mole-mcp` MCP stdio server from TypeScript source with esbuild, reusing the vsix esbuild approach.
 - No real native dependency exists in this codebase (`node:sqlite`, not `better-sqlite3`, for the graph
@@ -18,6 +18,39 @@
   JSON-RPC exchange with `mole-mcp` over stdio. All 6 steps pass (exit 0).
 - Did not publish anything. `npx tsc -b` + `node packages/daemon/dist/cli.js rules --root .` report 0
   violations; `npx vitest run packages/decisions packages/daemon packages/mcp` = 575/575 passed.
+
+## D97 update (T86 merge, same review pass): what is now true
+- **The dependency-cruiser "silently misses the violation" claim above did NOT reproduce.** Checked 3
+  independent ways in review: (1) built this task's own `mole-code` tarball, installed it into two isolated
+  temp dirs, forced one to `dependency-cruiser@18.7.2` (the exact version a bare `^18.7.0` resolves to
+  today) and the other to the repo's pinned `18.7.0`, ran the identical fixture through both -- both report
+  the violation identically (exit 1, same `breaks 0001` line); (2) diffed the two versions' installed files
+  (`diff -rq`) -- real code changes exist between patches, but none behaviorally relevant here;
+  (3) confirmed the caret-resolves-to-18.7.2 premise is still true today (`npm install 'dependency-cruiser@^18.7.0'`
+  with no lockfile → 18.7.2), then re-ran the fixture against that exact install and it still found the
+  violation. The exact pin is **kept anyway** -- not because the claimed bug is real, but for
+  determinism/reproducibility (matches the rest of the repo's lockfile) and because D97 moots the question
+  entirely: `dependency-cruiser` is now **vendored** into `dist/node_modules/` at build time (copied, full
+  dependency closure, from this repo's own already-resolved install) rather than left as an installable
+  `dependency` of the shipped package, so no consumer-side `npm install` ever re-resolves its version at all.
+- **A real, reproducible bug was found in its place** (by T86's review, while building the clean-dir /
+  marketplace test this merge adds): `mole rules` against the SAME fixture, with dependency-cruiser
+  correctly vendored, still silently reported 0 violations instead of 1 -- but only when the CLI's bundled
+  `dist/` was NOT nested inside this monorepo (a plain `cp -R dist` to anywhere else, or a real npm install,
+  reproduced it every time; the original build location inside the monorepo never did). Root cause:
+  dependency-cruiser's own TypeScript-AST pass (`tsPreCompilationDeps`, required for `mole rules` to parse a
+  `.ts` import at all) does `await tryImport('typescript')` and treats every import as rule-compliant
+  the moment that import fails -- which it always does once `dist/` has no ancestor `node_modules/typescript`
+  to find, which the repo's own hoisted install always supplies when testing from inside the tree. Fixed by
+  also vendoring `typescript` into `dist/node_modules/` (see `release/mole-code/tools/build.mjs` and
+  `tasks/T86-claude-code-plugin-dist/2 insights.md`).
+- `packages/cli-dist` moved to `release/mole-code/` (outside the `packages/*` workspace glob -- the
+  bin-collision risk this file's Notes section flagged as a TODO is now actually fixed, verified by a
+  root `npm install` in the T86 worktree with `node_modules/.bin/mole` still pointing at `packages/daemon`).
+- `mole-mcp` no longer ships as separate ESM (`dist/mole-mcp.mjs`); it now shares T86's CJS `mcp-entry.ts`
+  wrapper (`dist/mcp.cjs`), one MCP bundling strategy for both the CLI package and the plugin instead of two.
+- The package now ALSO carries the Claude Code plugin files (D97: one npm package for all three); see T86's
+  insights for that half.
 
 ## Notes
 - Tarball: 4,920,876 bytes (~4.8 MB, gzip). Unpacked bundles: `dist/mole.cjs` 13.3 MB, `dist/worker.cjs`

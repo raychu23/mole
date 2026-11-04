@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const pkgDir = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const pkgDir = resolve(dirname(fileURLToPath(import.meta.url)), '..'); // release/mole-code
 const report = { steps: {} };
 const fail = [];
 
@@ -25,7 +25,7 @@ async function step(name, fn) {
 
 // 1. build
 await step('build', () => {
-  execFileSync('node', [join(pkgDir, 'scripts/build.mjs')], { cwd: pkgDir, encoding: 'utf8' });
+  execFileSync('node', [join(pkgDir, 'tools/build.mjs')], { cwd: pkgDir, encoding: 'utf8' });
   return {};
 });
 
@@ -38,10 +38,19 @@ await step('pack', () => {
   return { tarball, bytes: size, kb: Math.round(size / 1024) };
 });
 
+// 2b. npm pack --dry-run must list LICENSE (D97 requirement: LICENSE copied into the package at build time)
+await step('pack-dry-run lists LICENSE', () => {
+  const out = execFileSync('npm', ['pack', '--dry-run', '--json'], { cwd: pkgDir, encoding: 'utf8' });
+  const [entry] = JSON.parse(out);
+  const files = entry.files.map((f) => f.path);
+  if (!files.includes('LICENSE')) throw new Error(`LICENSE missing from npm pack --dry-run files: ${files.join(', ')}`);
+  return { files };
+});
+
 // 3. install the tarball into an isolated temp dir with NO access to this repo's node_modules
-const isolated = mkdtempSync(join(tmpdir(), 'mole-cli-dist-install-'));
+const isolated = mkdtempSync(join(tmpdir(), 'mole-code-install-'));
 await step('install-isolated', () => {
-  writeFileSync(join(isolated, 'package.json'), JSON.stringify({ name: 'mole-cli-dist-smoke', private: true, version: '0.0.0' }, null, 2));
+  writeFileSync(join(isolated, 'package.json'), JSON.stringify({ name: 'mole-code-smoke', private: true, version: '0.0.0' }, null, 2));
   // --prefix + no workspaces discovery: npm must resolve everything from the registry / the tarball, not ../../node_modules
   const out = execFileSync('npm', ['install', '--no-audit', '--no-fund', '--no-workspaces', tarball], { cwd: isolated, encoding: 'utf8', env: { ...process.env, npm_config_workspaces: 'false' } });
   const binMole = join(isolated, 'node_modules/.bin/mole');
@@ -51,6 +60,16 @@ await step('install-isolated', () => {
 });
 const binMole = join(isolated, 'node_modules/.bin/mole');
 const binMcp = join(isolated, 'node_modules/.bin/mole-mcp');
+
+// 3b. the installed package directory is also a valid Claude Code plugin root (D97: this package carries
+// the plugin files too, resolved via what would be ${CLAUDE_PLUGIN_ROOT})
+await step('installed package is a plugin root', () => {
+  const pluginDir = join(isolated, 'node_modules/mole-code');
+  for (const rel of ['.claude-plugin/plugin.json', 'hooks/hooks.json', '.mcp.json', 'scripts/lib.mjs', 'scripts/session-start.mjs']) {
+    if (!existsSync(join(pluginDir, rel))) throw new Error(`missing plugin file in installed package: ${rel}`);
+  }
+  return { pluginDir };
+});
 
 // 4. mole help (bare --help flag maps to cmd '--help', not 'help', which this CLI exits 2 for by design;
 // no-arg / `mole help` is the exit-0 path; the usage line goes to stderr, so shell-redirect it into stdout),
@@ -62,7 +81,7 @@ await step('mole help', () => {
 });
 
 // 5. tiny scratch git repo with one .mole decision rule, outside the repo and outside `isolated`
-const fixture = mkdtempSync(join(tmpdir(), 'mole-cli-dist-fixture-'));
+const fixture = mkdtempSync(join(tmpdir(), 'mole-code-fixture-'));
 await step('fixture', () => {
   mkdirSync(join(fixture, 'src'), { recursive: true });
   mkdirSync(join(fixture, '.mole/decisions'), { recursive: true });
@@ -79,7 +98,7 @@ await step('fixture', () => {
       '  - forbid: import',
       '    from: src/a.ts',
       '    to: src/b.ts',
-      '    why: T85 install-check fixture rule',
+      '    why: T85/T86 install-check fixture rule',
       '---',
       '# a.ts must not import b.ts',
       '',
@@ -93,7 +112,9 @@ await step('fixture', () => {
   return { fixture };
 });
 
-// 6. mole rules: expects exit 1 (one violation found)
+// 6. mole rules: expects exit 1 (one violation found) -- also the test for the vendored dependency-cruiser:
+// no npm dependency on it is declared (package.json's dependencies is {}), so this only passes if the
+// tarball itself ships a working dependency-cruiser under dist/node_modules/.
 await step('mole rules', () => {
   let out, code;
   try {
@@ -123,7 +144,7 @@ await step('mole-mcp initialize + tools/list', async () => {
   p.stdout.on('data', (d) => (buf += d.toString()));
   p.stderr.on('data', (d) => (errBuf += d.toString()));
   const send = (msg) => p.stdin.write(`${JSON.stringify(msg)}\n`);
-  send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 't85-install-check', version: '0.0.1' } } });
+  send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'mole-code-install-check', version: '0.0.1' } } });
   await new Promise((r) => setTimeout(r, 1200));
   send({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
   await new Promise((r) => setTimeout(r, 1200));

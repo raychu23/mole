@@ -55,8 +55,10 @@ pick up its own native binary.
 
 ### dependency-cruiser (`mole rules`)
 
-Not bundled (it is pure ESM with a top-level `await`, which cannot go into this plugin's CommonJS bundles —
-same constraint apps/vscode/esbuild.mjs documents for the VS Code extension's daemon bundle). `mole rules`,
-and the decision-rule-violation lines in the Stop hook's output, need a real `npm install` of
-`dependency-cruiser` next to the bundled CLI to work; every other feature is unaffected, and this one
-degrades the same silent way as the native-module case above.
+Vendored into `dist/node_modules/dependency-cruiser/` from this repo's own install at build time (T86/D97;
+earlier builds left it external and required a real `npm install` next to the bundled CLI — see
+`tasks/T86-claude-code-plugin-dist/2 insights.md` for why vendoring replaced that). It is pure ESM with a
+top-level `await`, which still cannot go into this plugin's CommonJS bundles (same constraint
+`apps/vscode/esbuild.mjs` documents for the VS Code extension's daemon bundle), so it is copied as files
+rather than bundled — `mole rules` and the decision-rule-violation lines in the Stop hook's output work with
+no extra install step.
