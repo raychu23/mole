@@ -1,10 +1,10 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "project": "mole",
   "updated": "2026-11-03",
   "issues": [
     {
-      "id": "I1",
+      "id": "3",
       "name": "Define and sharpen Mole's problems and users",
       "status": "proposed",
       "direction": "find the real problems and real users Mole should serve, and keep sharpening them as new evidence (interviews, PR-review data, his own notes) comes in",
@@ -45,32 +45,36 @@
           "text": "once D75 is answered, run D15 (interviews) next — the only way new user evidence enters"
         }
       ],
-      "needs_you": [
-        {
-          "id": "D75",
-          "text": "sharpen who the Mole user is (one developer on a team shipping through agents, vouching without the senior's memory), then say whether to run D15 interviews next",
-          "ref": "context/streams/S1-problems/0 start.md"
-        }
-      ],
-      "ideas": [
-        {
-          "id": "P2",
-          "kind": "amend",
-          "text": "Fold the 7 untagged 10-27..10-30 messages and the 10-31/11-01 messages into the problem/idea tracking before more of his words age out",
-          "why": "S1-problems' own gap line: '7 of your messages (10-27 to 10-30) are still untagged in the my-words table, and your 10-31 / 11-01 messages are not yet folded into 0 Your ideas'",
-          "status": "proposed"
-        }
-      ],
       "tasks": [],
       "docs": [
         "context/streams/S1-problems/0 start.md",
         "context/product-plan/0 Your ideas.txt",
         "context/product-plan/11 Who Mole is for.md"
       ],
-      "purpose": "agent"
+      "purpose": "agent",
+      "legacy_id": "I1",
+      "decisions": [
+        {
+          "id": "D1",
+          "text": "sharpen who the Mole user is (one developer on a team shipping through agents, vouching without the senior's memory), then say whether to run D15 interviews next",
+          "ref": "context/streams/S1-problems/0 start.md",
+          "status": "open",
+          "legacy_id": "D75"
+        }
+      ],
+      "proposals": [
+        {
+          "id": "P1",
+          "kind": "amend",
+          "text": "Fold the 7 untagged 10-27..10-30 messages and the 10-31/11-01 messages into the problem/idea tracking before more of his words age out",
+          "why": "S1-problems' own gap line: '7 of your messages (10-27 to 10-30) are still untagged in the my-words table, and your 10-31 / 11-01 messages are not yet folded into 0 Your ideas'",
+          "status": "proposed",
+          "legacy_id": "P2"
+        }
+      ]
     },
     {
-      "id": "I2",
+      "id": "4",
       "name": "Prove Mole actually beats alternatives",
       "status": "proposed",
       "direction": "test every feature and claim against real data and real baselines, and keep re-testing as claims and competitors change",
@@ -112,34 +116,41 @@
           "text": "if D81 OK: add type-checker signals, rerun test 1 on 4+ repos (>=50 held-out positives), then log n + a 95% interval"
         }
       ],
-      "needs_you": [
-        {
-          "id": "D81",
-          "text": "what to fix first: precision (type-checker signals + rerun on 4+ repos) vs the other proposed fixes",
-          "ref": "context/streams/S2-verification/0 start.md"
-        },
-        {
-          "id": "D78",
-          "text": "reword the staleness headline since its answer key is circular with what Mole flags",
-          "ref": "context/streams/S2-verification/0 start.md"
-        },
-        {
-          "id": "D61",
-          "text": "run T17: paid A/B of agents with vs without Mole on real tasks",
-          "ref": "context/streams/S2-verification/0 start.md"
-        }
-      ],
-      "ideas": [],
       "tasks": [],
       "docs": [
         "context/streams/S2-verification/0 start.md",
         "context/product-plan/systems/metrics-proof/metrics + proof.md",
         "context/product-plan/8 Prove it.html"
       ],
-      "purpose": "agent"
+      "purpose": "agent",
+      "legacy_id": "I2",
+      "decisions": [
+        {
+          "id": "D1",
+          "text": "what to fix first: precision (type-checker signals + rerun on 4+ repos) vs the other proposed fixes",
+          "ref": "context/streams/S2-verification/0 start.md",
+          "status": "open",
+          "legacy_id": "D81"
+        },
+        {
+          "id": "D2",
+          "text": "reword the staleness headline since its answer key is circular with what Mole flags",
+          "ref": "context/streams/S2-verification/0 start.md",
+          "status": "open",
+          "legacy_id": "D78"
+        },
+        {
+          "id": "D3",
+          "text": "run T17: paid A/B of agents with vs without Mole on real tasks",
+          "ref": "context/streams/S2-verification/0 start.md",
+          "status": "open",
+          "legacy_id": "D61"
+        }
+      ],
+      "proposals": []
     },
     {
-      "id": "I3",
+      "id": "5",
       "name": "Find and defend Mole's unique selling point",
       "status": "proposed",
       "direction": "keep the USP real and distinct as the field (claude-mem, ai-memory, Windsurf Codemaps, etc) keeps shipping",
@@ -170,23 +181,26 @@
           "text": "after S2's reports: restate the USP in one line with the number that backs it, and list which competitors could ship it next"
         }
       ],
-      "needs_you": [
-        {
-          "id": "D74",
-          "text": "position Mole as the code-truth / memory-validity layer, never as agent memory, and whether to open the repo + a benchmark",
-          "ref": "context/streams/S3-usp/0 start.md"
-        }
-      ],
-      "ideas": [],
       "tasks": [],
       "docs": [
         "context/streams/S3-usp/0 start.md",
         "context/product-plan/10 Where Mole fits.md"
       ],
-      "purpose": "agent"
+      "purpose": "agent",
+      "legacy_id": "I3",
+      "decisions": [
+        {
+          "id": "D1",
+          "text": "position Mole as the code-truth / memory-validity layer, never as agent memory, and whether to open the repo + a benchmark",
+          "ref": "context/streams/S3-usp/0 start.md",
+          "status": "open",
+          "legacy_id": "D74"
+        }
+      ],
+      "proposals": []
     },
     {
-      "id": "I4",
+      "id": "6",
       "name": "Borrow and test ideas from other fields",
       "status": "proposed",
       "direction": "scan other fields (Amazon doors, truth maintenance, HAZOP, outcome ledgers, etc) for ideas, and only keep the ones that serve a named core job",
@@ -205,18 +219,19 @@
           "text": "after D80 (S5) is decided: re-sort the 10 borrowed ideas against the core edges; keep at most 3 with a measurable test each, park the rest with a reason"
         }
       ],
-      "needs_you": [],
-      "ideas": [],
       "tasks": [],
       "docs": [
         "context/streams/S4-ideas/0 start.md",
         "context/product-plan/systems/decision-graph/ask 2026-10-29.txt",
         "context/product-plan/9 The bet graph.html"
       ],
-      "purpose": "agent"
+      "purpose": "agent",
+      "legacy_id": "I4",
+      "decisions": [],
+      "proposals": []
     },
     {
-      "id": "I5",
+      "id": "7",
       "name": "Keep the core product plan true and current",
       "status": "proposed",
       "direction": "keep the plan's center, scope and schedule honest as decisions are made and the build moves",
@@ -253,49 +268,58 @@
           "text": "use the build-backlog doc; resolve the T54 review/known parsing defect, then propose a bounded D67 feature-branch contract"
         }
       ],
-      "needs_you": [
-        {
-          "id": "D80",
-          "text": "confirm D90's center (the team's why, compounding, kept true by code) replaces D77's one-dev centre",
-          "ref": "context/streams/S5-core-plan/0 start.md"
-        },
-        {
-          "id": "D77",
-          "text": "approve cutting Mole to 4 jobs plus the team PR check (not yet silently approved)",
-          "ref": "context/streams/S5-core-plan/0 start.md"
-        },
-        {
-          "id": "D49",
-          "text": "push main (734 commits) to private github raychu23/mole?",
-          "ref": "context/streams/S5-core-plan/0 start.md"
-        }
-      ],
-      "ideas": [
-        {
-          "id": "P1",
-          "kind": "new-issue",
-          "text": "Add an 8th direction: ship & publish Mole (VS Code Marketplace, Open VSX, Claude plugin, GitHub release) — no current stream owns it",
-          "why": "Raymond asked in S5's inbox 2026-11-03: 'how about our deployment to vscode extensions and claude code plugins and other distributions, and more'; T9/T10 publish steps (publisher, tokens, logins) are still open per context/0 start.md build history",
-          "status": "proposed"
-        },
-        {
-          "id": "P3",
-          "kind": "add-agent",
-          "text": "Attach an agent to each of the 7 streams now that they are tracked as issues",
-          "why": "context/streams/0 start.md status line: 'no agent is attached to any stream yet (spawn waits for his go)'",
-          "status": "proposed"
-        }
-      ],
       "tasks": [],
       "docs": [
         "context/streams/S5-core-plan/0 start.md",
         "context/product-plan/2 Decision graph.md",
         "context/product-plan/systems/cut/ask 2026-10-30.txt"
       ],
-      "purpose": "agent"
+      "purpose": "agent",
+      "legacy_id": "I5",
+      "decisions": [
+        {
+          "id": "D1",
+          "text": "confirm D90's center (the team's why, compounding, kept true by code) replaces D77's one-dev centre",
+          "ref": "context/streams/S5-core-plan/0 start.md",
+          "status": "open",
+          "legacy_id": "D80"
+        },
+        {
+          "id": "D2",
+          "text": "approve cutting Mole to 4 jobs plus the team PR check (not yet silently approved)",
+          "ref": "context/streams/S5-core-plan/0 start.md",
+          "status": "open",
+          "legacy_id": "D77"
+        },
+        {
+          "id": "D3",
+          "text": "push main (734 commits) to private github raychu23/mole?",
+          "ref": "context/streams/S5-core-plan/0 start.md",
+          "status": "open",
+          "legacy_id": "D49"
+        }
+      ],
+      "proposals": [
+        {
+          "id": "P1",
+          "kind": "new-issue",
+          "text": "Add an 8th direction: ship & publish Mole (VS Code Marketplace, Open VSX, Claude plugin, GitHub release) — no current stream owns it",
+          "why": "Raymond asked in S5's inbox 2026-11-03: 'how about our deployment to vscode extensions and claude code plugins and other distributions, and more'; T9/T10 publish steps (publisher, tokens, logins) are still open per context/0 start.md build history",
+          "status": "proposed",
+          "legacy_id": "P1"
+        },
+        {
+          "id": "P2",
+          "kind": "add-agent",
+          "text": "Attach an agent to each of the 7 streams now that they are tracked as issues",
+          "why": "context/streams/0 start.md status line: 'no agent is attached to any stream yet (spawn waits for his go)'",
+          "status": "proposed",
+          "legacy_id": "P3"
+        }
+      ]
     },
     {
-      "id": "I6",
+      "id": "8",
       "name": "Keep the resume entry true to what's built and measured",
       "status": "proposed",
       "direction": "keep the resume's claims matched to what's actually built and measured as proof changes",
@@ -336,18 +360,19 @@
           "text": "boot doc.html + the exact final resume.tex; no unsolicited rewrite — new measured changes go into the evidence scope, not silently into accepted wording"
         }
       ],
-      "needs_you": [],
-      "ideas": [],
       "tasks": [],
       "docs": [
         "context/streams/S6-resume/0 start.md",
         "context/streams/S6-resume/final resume.tex",
         "context/product-plan/systems/decisions.jsonl"
       ],
-      "purpose": "agent"
+      "purpose": "agent",
+      "legacy_id": "I6",
+      "decisions": [],
+      "proposals": []
     },
     {
-      "id": "I7",
+      "id": "9",
       "name": "Design Mole itself to hold up at scale",
       "status": "proposed",
       "direction": "keep checking Mole's own system design against real scale targets as the codebase and team size it must handle grows",
@@ -388,26 +413,31 @@
           "text": "if D81 step 3 is OK: add tsconfig project references + a per-commit incremental re-check command, rerun test 2 on full src/"
         }
       ],
-      "needs_you": [
-        {
-          "id": "D50",
-          "text": "approve one decision store (team server writes through @mole/temporal)",
-          "ref": "context/streams/S7-system-design/0 start.md"
-        },
-        {
-          "id": "D76",
-          "text": "approve a live run view in the panel (brief = dials, path of checks + commits)",
-          "ref": "context/streams/S7-system-design/0 start.md"
-        }
-      ],
-      "ideas": [],
       "tasks": [],
       "docs": [
         "context/streams/S7-system-design/0 start.md",
         "context/product-plan/6 Mole system design.md",
         "context/product-plan/systems/core-design/ask 2026-11-01.txt"
       ],
-      "purpose": "agent"
+      "purpose": "agent",
+      "legacy_id": "I7",
+      "decisions": [
+        {
+          "id": "D1",
+          "text": "approve one decision store (team server writes through @mole/temporal)",
+          "ref": "context/streams/S7-system-design/0 start.md",
+          "status": "open",
+          "legacy_id": "D50"
+        },
+        {
+          "id": "D2",
+          "text": "approve a live run view in the panel (brief = dials, path of checks + commits)",
+          "ref": "context/streams/S7-system-design/0 start.md",
+          "status": "open",
+          "legacy_id": "D76"
+        }
+      ],
+      "proposals": []
     }
   ],
   "agents": [
@@ -418,11 +448,19 @@
       "chat": "session local-dac884a85eda7fa63e51f1702e2e487da6cd686c0a774d30334b1d1426b8de01 (+2 more archived sessions in 4 log/chats/)",
       "model": "unknown",
       "issues": [
-        "I6"
+        "8"
       ],
       "from": "2026-11-02",
       "to": "",
       "status": "unknown"
     }
-  ]
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "text": "Confirm, rename or drop the 7 proposed issues of this project (they were drafted by an agent from the project's own files; status is 'proposed' until you say so)",
+      "status": "open"
+    }
+  ],
+  "proposals": []
 }
