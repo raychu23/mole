@@ -1,0 +1,31 @@
+{
+  "experiments": [
+    {
+      "id": "T63-productivity-v1",
+      "idea": "Does Mole's context (decisions + hooks) raise dcbench decision compliance vs no-context vs a CLAUDE.md rules file?",
+      "status": "analyzed",
+      "protocol": "context/product-plan/systems/metrics-proof/productivity/protocol.md",
+      "frozen": "context/product-plan/systems/metrics-proof/productivity/FROZEN.sha256",
+      "raw_data": "context/product-plan/systems/metrics-proof/productivity/raw/runs.jsonl",
+      "results": "context/product-plan/systems/metrics-proof/productivity/results-72.md",
+      "reanalysis": "evals/inspect/dcbench_eval/reanalyze.py (reproduces results-72.md exactly + adds bootstrap/clustered-SE/Holm intervals it did not have)",
+      "finding": "not significant (R-M p=1.0, A-M p=0.375, A-R p=0.5); no productivity claim"
+    },
+    {
+      "id": "T63-productivity-v2",
+      "idea": "Same as v1, with a check that forces a fix on a blocking violation (v1's never fired, 0/17)",
+      "status": "pre-registered",
+      "spec": "evals/inspect/dcbench_eval/experiments/protocol-v2.json",
+      "frozen": "evals/inspect/dcbench_eval/experiments/FROZEN-v2.sha256",
+      "run": "SUPERSEDED by v3: v2's sample size (3 runs/arm/task) was never computed from measured variance and is ~7x underpowered for its own stated MDE; v2 is kept frozen as a historical record, not run"
+    },
+    {
+      "id": "T63-productivity-v3",
+      "idea": "Same hypothesis as v2 (R vs M vs A on dcbench decision compliance), with TWO fixes found by review/orchestrator evidence on 2026-11-04: (1) sample size COMPUTED from T63's measured per-task paired-diff SDs via dcbench_eval.stats.sample_size_for_mde (v2's n=3/arm/task was ~7x underpowered for mde=15 on the primary R-M pair, which needs n=21); (2) the dcbench scorer adapter now stages new files with `git add --intent-to-add` before diffing, fixing new-file blindness that caused 60/111 (54%) of v1's failed gotchas (error-analysis-72.md)",
+      "status": "pre-registered",
+      "spec": "evals/inspect/dcbench_eval/experiments/protocol-v3.json",
+      "frozen": "evals/inspect/dcbench_eval/experiments/FROZEN-v3.sha256",
+      "run": "NOT RUN: pre-registered only, per T90 contract; a real run at n=21/arm/task (504 scored runs) needs Raymond's go given the cost increase over v2's 72"
+    }
+  ]
+}

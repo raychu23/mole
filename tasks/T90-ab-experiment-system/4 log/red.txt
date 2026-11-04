@@ -1,0 +1,39 @@
+
+==================================== ERRORS ====================================
+_____________________ ERROR collecting tests/test_arms.py ______________________
+ImportError while importing test module '/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T90-ab-experiment-system/evals/inspect/dcbench_eval/tests/test_arms.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_arms.py:6: in <module>
+    from dcbench_eval.arms import ArmConfig, apply_arm, parse_arm, parse_arms
+E   ModuleNotFoundError: No module named 'dcbench_eval.arms'
+________________ ERROR collecting tests/test_hermes_provider.py ________________
+ImportError while importing test module '/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T90-ab-experiment-system/evals/inspect/dcbench_eval/tests/test_hermes_provider.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_hermes_provider.py:14: in <module>
+    import dcbench_eval.hermes_provider as hermes_provider  # noqa: E402,F401 (registers "hermes" on import)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   ModuleNotFoundError: No module named 'dcbench_eval.hermes_provider'
+________________ ERROR collecting tests/test_worktree_agent.py _________________
+ImportError while importing test module '/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T90-ab-experiment-system/evals/inspect/dcbench_eval/tests/test_worktree_agent.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_worktree_agent.py:10: in <module>
+    from dcbench_eval.worktree_agent import make_worktree, remove_worktree, run_hermes, worktree_diff
+E   ModuleNotFoundError: No module named 'dcbench_eval.worktree_agent'
+=========================== short test summary info ============================
+ERROR tests/test_arms.py
+ERROR tests/test_hermes_provider.py
+ERROR tests/test_worktree_agent.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!!
+3 errors in 4.08s

@@ -38,3 +38,24 @@ evals/inspect/.venv/bin/python evals/inspect/run.py --model anthropic/<model> --
 
 Tests: `python3 -m pytest evals/inspect/tests -q` (pure-Python scorer logic; the Inspect task test skips without
 inspect_ai) and `evals/inspect/.venv/bin/python -m pytest evals/inspect/tests -q` (all).
+
+## dcbench_eval (T90): the pre-registered A/B experiment system
+
+`dcbench_eval/` is a REAL, generic Inspect AI integration (fixed 2026-11-04 after a review FAIL found
+nothing in the package imported `inspect_ai`): a generic Task `mole_ab` (any repo, any JSONL dataset, named
+context arms), a solver that runs the real `hermes -z` agent in a per-sample git worktree (pattern borrowed
+from inspect-swe's external-agent wrapper, used here already by `mole_eval/task.py`'s `claude_code()`), two
+scorers (`mole_check_scorer` for any repo, `dcbench_scorer` wrapping dcbench's own `scorer.ts`), plus
+pre-registration (spec+freeze, OSF/AsPredicted practice) and stats (scipy/statsmodels) on top. Proved end
+to end against a tiny synthetic repo in `tasks/T90-ab-experiment-system/4 log/mole_ab-e2e-proof.eval`. See
+`../../docs/experiments.md` for the full command reference, the dcbench scorer's new-file-blindness fix,
+and the v3 sample-size arithmetic.
+
+```sh
+VENV=/Users/a1/.hermes/cache/scratch/mole-ab-venv    # has inspect-ai, inspect-swe, scipy, statsmodels, pytest
+$VENV/bin/python -m pytest evals/inspect/dcbench_eval/tests -q
+$VENV/bin/inspect eval evals/inspect/dcbench_eval/task.py@mole_ab -T repo=. -T dataset=<tasks.jsonl> \
+  -T arms=none,decisions:.mole/decisions -T scorer=mole_check --model mockllm/model
+$VENV/bin/python evals/inspect/dcbench_eval/reanalyze.py                 # re-analyses T63's frozen raw/runs.jsonl, read-only
+$VENV/bin/python evals/inspect/dcbench_eval/reanalyze.py --inspect-log <run>.eval   # or any mole_ab .eval log
+```

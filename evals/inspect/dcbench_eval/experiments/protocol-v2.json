@@ -1,0 +1,42 @@
+{
+  "id": "T63-productivity-v2",
+  "hypothesis": "Giving Claude Code (hermes -z) the team's 15 decisions via Mole's hooks, WITH a check that forces a fix on a blocking violation (a resume that actually happens, unlike v1 where it fired 0/17 times), raises weighted decision-compliance points on dcbench versus the same decisions pasted into CLAUDE.md (R) and versus no context (A).",
+  "arms": [
+    {
+      "id": "A",
+      "description": "dcbench Config A as shipped: no CLAUDE.md, no Mole. Baseline, rerun from a pinned copy (v1's deviation, see FROZEN.sha256, is not repeated).",
+      "env": {},
+      "context_files": [],
+      "pinned_commit": "PINNED_AT_FREEZE_V2"
+    },
+    {
+      "id": "R",
+      "description": "CLAUDE.md = the 15 decision texts from benchmark/seed-data.ts, verbatim (same text as M, v1's fairness rule unchanged).",
+      "env": {},
+      "context_files": ["scratch/dcbench/arms/R/CLAUDE.md"],
+      "pinned_commit": "PINNED_AT_FREEZE_V2"
+    },
+    {
+      "id": "M",
+      "description": "The same 15 as .mole/decisions records + Mole's hooks, PLUS the v2 fix: a model-judge (haiku router) after the edit forces one resume on any blocking violation, instead of v1's model-free Stop check that never fired (0/17). Code is run from a pinned copy per arm, never the live working tree (v1's deviation fix).",
+      "env": {"MOLE_STOP_JUDGE": "1"},
+      "context_files": ["scratch/dcbench/arms/M/.mole/decisions"],
+      "pinned_commit": "PINNED_AT_FREEZE_V2"
+    }
+  ],
+  "tasks": ["TASK-001", "TASK-003", "TASK-004", "TASK-006", "TASK-008", "TASK-009", "TASK-012", "TASK-013"],
+  "primary_metric": "weighted decision-compliance percentage (dcbench scorer.ts, unchanged), intention-to-treat",
+  "analysis_plan": "paired permutation test (scipy.stats.permutation_test, permutation_type=samples, exact 2^8 sign flips) on the 8 per-task mean percentages, for each of R-M, A-M, A-R; Holm correction across the 3 p-values (statsmodels multipletests); bootstrap 95% CI (scipy.stats.bootstrap, percentile) on each arm's mean task percentage; clustered SE by task (Anthropic arXiv 2411.00640 Eq. 4); Newcombe 95% CI on the merge-ready rate difference per pair; report R vs M first, losses first, as v1 did. Significance bar: p < 0.05 on the primary paired permutation test (v1 found R-M p=1.0, A-M p=0.375, A-R p=0.5 -- all not significant).",
+  "sample_size": {
+    "runs_per_arm_per_task": 3,
+    "power": 0.8,
+    "alpha": 0.05,
+    "mde": 15.0
+  },
+  "stop_rules": [
+    "any edit to scorer.ts, tasks.ts, the R CLAUDE.md or the M records after run 1: a NEW spec version (v3), all arms rerun",
+    "mixing models mid-experiment",
+    "quoting dcbench's own published Config B numbers beside this experiment's A/R/M as if they were one experiment (different harness: their runner spawns `claude`, this one spawns `hermes -z`)",
+    "a merge to plugins/claude-code/scripts/* or packages/daemon mid-run without re-pinning the per-arm code copy (v1's deviation, logged in FROZEN.sha256, must not recur: v2 runs arms from a pinned copy, never the live tree)"
+  ]
+}
