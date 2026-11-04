@@ -250,6 +250,58 @@ exist — judge the whole assembly. The nearest real competitive pressure is Cla
 CodeRabbit/Greptile's "learnings" features: both are reachable, free, zero-install alternatives for a team
 that doesn't need enforcement, just a reminder.
 
+## AGENTS.md / CLAUDE.md precedence
+
+Put Mole's decisions above a stale instruction file's own wording, in the one place that already has the
+highest authority Claude Code (and any AGENTS.md-reading agent — Codex, Cursor, Gemini CLI) gives any
+context: the project's own `AGENTS.md`/`CLAUDE.md`, loaded as a user message right after the system
+prompt. Add this one sentence (Raymond-approved wording, item #3 of `ux-research 11-04`, grounded in
+arXiv 2610.30571 "Stale Instruction Files Override the Code" — a single added sentence like this moved a
+controlled 320-run study's compliance from 4.2% to 91.4%):
+
+```markdown
+When a `.mole/decisions/*.md` rule and this file's guidance disagree, the Mole decision wins; treat a
+Mole Stop-hook violation (`decision: "block"`) the same as a failing test — fix the code before finishing.
+```
+
+## CI: block a PR on a decision-rule violation
+
+Mole's own repository runs a required GitHub Actions check this way (`.github/workflows/mole-pr-check.yml`
++ `.github/actions/mole-check`) — not a new, invented Action, the same one dogfooded here. For a repo built
+from this monorepo's own checkout, copy both files as-is. For a repo that only has the published
+`mole-code` npm package (no Mole source checkout), swap the "build mole" step for installing the package:
+
+```yaml
+name: mole pr-check
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: read
+  checks: write
+jobs:
+  mole:
+    name: mole-pr-check (runner)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0, persist-credentials: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: install mole-code
+        run: npm install --no-save mole-code
+      - name: mole pr-check
+        run: npx mole-code pr-check --event "$GITHUB_EVENT_PATH" --root . --out "$RUNNER_TEMP/mole-check-run.json"
+      - name: post the check run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method POST "repos/$GITHUB_REPOSITORY/check-runs" --input "$RUNNER_TEMP/mole-check-run.json" --jq '.html_url'
+```
+
+Make "mole" a required status check under branch protection and a PR can't merge while it fails. Forked
+PRs get a read-only token from GitHub, so the POST step is skipped there by GitHub's own rule, not Mole's.
+
 ## Limits
 
 - TypeScript/TSX only (indexer, rules, code map).

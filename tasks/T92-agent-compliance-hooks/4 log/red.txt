@@ -1,0 +1,143 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T92-agent-compliance-hooks
+
+stdout | plugins/claude-code/test/pretooluse-deny.test.ts > T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > p95 latency on a fixture repo (never the pinned dcbench copy) stays well under the 15s PreToolUse timeout
+T92 pre-tool-use.mjs crisp-deny check: n=15 p50=66ms p95=89ms max=167ms
+
+ ❯ plugins/claude-code/test/pretooluse-deny.test.ts (6 tests | 3 failed) 2050ms
+   × T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > Write that adds the import -> permissionDecision deny, names the decision/rule/fix hint; file left untouched 213ms
+     → expected undefined to be 'deny' // Object.is equality
+   × T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > Edit that adds the import -> deny 167ms
+     → expected false to be true // Object.is equality
+   ✓ T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > a clean Edit (no new violation) is allowed silently: no permissionDecision field 151ms
+   ✓ T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > a file an existing violation already touches, edited elsewhere, is NOT re-denied (only a NEW violation denies) 191ms
+   × T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > MultiEdit that adds the import -> deny 134ms
+     → expected undefined to be 'deny' // Object.is equality
+   ✓ T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > p95 latency on a fixture repo (never the pinned dcbench copy) stays well under the 15s PreToolUse timeout  1192ms
+ ❯ plugins/claude-code/test/stop-block.test.ts (5 tests | 3 failed) 8171ms
+   × T92/D102 stop.mjs: crisp-rule violation blocks by default > a seeded violation -> decision: "block", reason names the decision id, the rule, and a fix hint 1990ms
+     → expected undefined to be 'block' // Object.is equality
+   ✓ T92/D102 stop.mjs: crisp-rule violation blocks by default > a clean diff never blocks  883ms
+   × T92/D102 stop.mjs: crisp-rule violation blocks by default > stop_hook_active: true -- already continuing from a block this turn -- never blocks again 1706ms
+     → expected undefined to be 'block' // Object.is equality
+   × T92/D102 stop.mjs: crisp-rule violation blocks by default > a retry cap (MOLE_STOP_BLOCK_CAP) stops forcing a block after N blocks in one session, even with stop_hook_active false 1888ms
+     → expected undefined to be 'block' // Object.is equality
+   ✓ T92/D102 stop.mjs: crisp-rule violation blocks by default > MOLE_STOP_BLOCK=0 opts out: the violation still shows as text, but never blocks  1702ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  plugins/claude-code/test/pretooluse-deny.test.ts > T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > Write that adds the import -> permissionDecision deny, names the decision/rule/fix hint; file left untouched
+AssertionError: expected undefined to be 'deny' // Object.is equality
+
+[32m- Expected:[39m 
+"deny"
+
+[31m+ Received:[39m 
+undefined
+
+ ❯ plugins/claude-code/test/pretooluse-deny.test.ts:60:58
+     58|     const before = readFileSync(join(root, 'src/a.ts'), 'utf8');
+     59|     const { json } = preToolUse(root, 'Write', { file_path: join(root,…
+     60|     expect(json?.hookSpecificOutput?.permissionDecision).toBe('deny');
+       |                                                          ^
+     61|     expect(json?.hookSpecificOutput?.permissionDecisionReason).toConta…
+     62|     expect(json?.hookSpecificOutput?.permissionDecisionReason).toMatch…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  plugins/claude-code/test/pretooluse-deny.test.ts > T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > Edit that adds the import -> deny
+AssertionError: expected false to be true // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+ ❯ plugins/claude-code/test/pretooluse-deny.test.ts:71:111
+     69|     const { json } = preToolUse(root, 'Edit', { file_path: join(root, …
+     70|     // require('./b') is a call-form import Mole's rule engine also se…
+     71|     expect(json?.hookSpecificOutput?.permissionDecision === 'deny' || …
+       |                                                                                                               ^
+     72|   });
+     73| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  plugins/claude-code/test/pretooluse-deny.test.ts > T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > MultiEdit that adds the import -> deny
+AssertionError: expected undefined to be 'deny' // Object.is equality
+
+[32m- Expected:[39m 
+"deny"
+
+[31m+ Received:[39m 
+undefined
+
+ ❯ plugins/claude-code/test/pretooluse-deny.test.ts:92:58
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  plugins/claude-code/test/stop-block.test.ts > T92/D102 stop.mjs: crisp-rule violation blocks by default > a seeded violation -> decision: "block", reason names the decision id, the rule, and a fix hint
+AssertionError: expected undefined to be 'block' // Object.is equality
+
+[32m- Expected:[39m 
+"block"
+
+[31m+ Received:[39m 
+undefined
+
+ ❯ plugins/claude-code/test/stop-block.test.ts:59:28
+     57|     write(root, 'src/a.ts', "import { b } from './b';\nexport function…
+     58|     const { json } = stop(root, 's1');
+     59|     expect(json?.decision).toBe('block');
+       |                            ^
+     60|     expect(json?.reason).toContain('D1');
+     61|     expect(json?.reason).toMatch(/import .*\.\/b/);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  plugins/claude-code/test/stop-block.test.ts > T92/D102 stop.mjs: crisp-rule violation blocks by default > stop_hook_active: true -- already continuing from a block this turn -- never blocks again
+AssertionError: expected undefined to be 'block' // Object.is equality
+
+[32m- Expected:[39m 
+"block"
+
+[31m+ Received:[39m 
+undefined
+
+ ❯ plugins/claude-code/test/stop-block.test.ts:86:34
+     84|         }).trim() || '{}',
+     85|       );
+     86|     expect(call(false).decision).toBe('block');
+       |                                  ^
+     87|     expect(call(true).decision).toBeUndefined();
+     88|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  plugins/claude-code/test/stop-block.test.ts > T92/D102 stop.mjs: crisp-rule violation blocks by default > a retry cap (MOLE_STOP_BLOCK_CAP) stops forcing a block after N blocks in one session, even with stop_hook_active false
+AssertionError: expected undefined to be 'block' // Object.is equality
+
+[32m- Expected:[39m 
+"block"
+
+[31m+ Received:[39m 
+undefined
+
+ ❯ plugins/claude-code/test/stop-block.test.ts:104:29
+    102|         }).trim() || '{}',
+    103|       );
+    104|     expect(call().decision).toBe('block'); // 1
+       |                             ^
+    105|     expect(call().decision).toBe('block'); // 2 (cap)
+    106|     expect(call().decision).toBeUndefined(); // 3: cap reached, never …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  6 failed | 5 passed (11)
+   Start at  15:51:37
+   Duration  8.54s (transform 92ms, setup 0ms, collect 117ms, tests 10.22s, environment 0ms, prepare 172ms)
+
