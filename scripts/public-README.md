@@ -115,9 +115,7 @@ mole demo -- a 30-second walkthrough, no network, no model calls, nothing leaves
    block the agent, it puts the decision and the reason back in front of a person before merge.
 ```
 
-Static frame of the same transcript (a real terminal-recording tool — asciinema/vhs — could not be installed
-without `sudo` on the machine that built this page; see `scripts/render-demo-svg.mjs` for the no-sudo
-constraint and how this SVG is generated straight from the transcript above, so it cannot drift from it):
+Static frame of the same transcript, generated from it so the two cannot drift apart:
 
 ![mole demo terminal output](site/demo-terminal.svg)
 

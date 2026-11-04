@@ -215,9 +215,10 @@ flowchart LR
   </footer>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js" integrity="sha384-EOXBFmc3gx5mb+vn0vPvvGqACToJD24hhacX5Yx+8NUUQrHIle/Qi5Bg9o3zKwW2" crossorigin="anonymous"></script>
 <script>
-mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+// pinned + SRI; if the CDN is unreachable the diagram stays as readable mermaid source, no error
+if (window.mermaid) { mermaid.initialize({ startOnLoad: true, theme: 'dark' }); }
 </script>
 <script>
 // Real, unedited transcript from `npx -y mole-code demo` run through a packed mole-code tarball in a
