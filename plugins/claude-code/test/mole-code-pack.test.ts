@@ -79,6 +79,16 @@ describe('T86/D97: mole-code installed from a real npm tarball, used as the Clau
     expect(entry.files.map((f: { path: string }) => f.path)).toContain('LICENSE');
   }, 20_000);
 
+  it('every vendored dependency keeps its license file (MIT/Apache notices must ship with the code)', () => {
+    const out = execFileSync('npm', ['pack', '--dry-run', '--json'], { cwd: pkgDir, encoding: 'utf8' });
+    const [entry] = JSON.parse(out);
+    const paths: string[] = entry.files.map((f: { path: string }) => f.path);
+    // each top-level vendored package dir (dist/node_modules/<name> or dist/node_modules/@scope/<name>, nested too)
+    const pkgRoots = new Set(paths.filter((p) => /(^|\/)node_modules\/(@[^/]+\/)?[^/@]+\/package\.json$/.test(p)).map((p) => p.slice(0, -'/package.json'.length)));
+    const missing = [...pkgRoots].filter((root) => !paths.some((p) => p.startsWith(root + '/') && /^(licen[cs]e|copying)([-.]|$)/i.test(p.slice(root.length + 1))));
+    expect(missing).toEqual([]);
+  }, 20_000);
+
   it('the installed package directory is a valid Claude Code plugin root', () => {
     for (const rel of ['.claude-plugin/plugin.json', 'hooks/hooks.json', '.mcp.json', 'scripts/lib.mjs', 'scripts/session-start.mjs', 'dist/cli.js']) {
       expect(existsSync(join(pluginDir, rel)), `missing ${rel}`).toBe(true);

@@ -89,6 +89,8 @@ console.log(`vendored dependency-cruiser + typescript + ${vendored.size - 2} fur
     copyFileSync(nodeBinary, join(dest, 'build', 'Release', 'better_sqlite3.node'));
     cpSync(join(src, 'lib'), join(dest, 'lib'), { recursive: true });
     copyFileSync(join(src, 'package.json'), join(dest, 'package.json'));
+    // its MIT notice must ship with the code we redistribute (T86 review 2 MEDIUM)
+    for (const f of ['LICENSE', 'LICENSE.md', 'LICENSE.txt']) if (existsSync(join(src, f))) copyFileSync(join(src, f), join(dest, f));
     console.log(`vendored better-sqlite3's native binary for ${process.platform}-${process.arch}`);
   } else {
     console.log(`better-sqlite3 has no prebuilt binary at ${nodeBinary}: shipping without it (degrades, see README.md)`);

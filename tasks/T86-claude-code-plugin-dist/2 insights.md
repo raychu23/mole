@@ -103,3 +103,13 @@ MCP `initialize`/`tools/list` handshake -- all green, alongside the full pre-exi
   `tasks/T74-steering-dials/4 log/red.txt` path cited in two comments (replaced with "this task's own
   internal log"), and a `(Raymond 10-29 15:30)` aside in a comment — both inside files this task's build now
   ships, so they'd otherwise leak into the exported plugin.
+
+```notes
+review 2 (deleg_46820aba)   PASS: npm-source install simulated per docs (scripts off, no deps step) → 4 hooks + MCP (20 tools) exit 0;
+                            vendored better-sqlite3 is darwin-arm64 only BUT only langgraph's SqliteSaver loads it, which no hook or
+                            MCP tool reaches (deleted binary → all still exit 0); vscode worker.cjs byte-identical; fresh-clone root
+                            npm install leaves the lockfile unchanged; no /Users/a1 in the tarball; 13.4 MB packed / 71.9 MB unpacked
+    MEDIUM                  better-sqlite3's MIT LICENSE dropped by its special-case vendoring → copied now; new test asserts every
+                            vendored package dir ships a license file (LICENSE / LICENSE-MIT / COPYING); red caught it, 68/68 green
+    platforms               declared: none (no os/cpu); tested: macOS arm64, Node 22 only · Linux/Windows NOT RUN
+```
