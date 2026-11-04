@@ -1,5 +1,5 @@
 ---
-state: proposed
+state: ready
 owner: hermes-build
 repo:
 branch:
@@ -7,15 +7,15 @@ worktree:
 base:
 reviewer:
 updated: 2026-11-03 19:00
-status: ledger proposed
-next: fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+status: ledger ready
+next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
 ---
 ```notes
 T85-mole-cli-bundle      ledger task (rules.md §3 code features)      project tasks
     goal                    One installable `mole` CLI + MCP server for people outside this repo: a single public npm package bundled with esbuild (same approach as apps/vscode/esbuild.mjs, which already bundles the daemon), exposing `mole` (daemon CLI) and `mole-mcp` (MCP stdio server) bins; native deps (better-sqlite3) handled the way the vsix does or made optional with a clear message; name chosen after checking npm availability, reversible. Not published: npm pack + install the tarball into a clean temp dir + run the bins and an MCP initialize handshake from there.
     done-when               1 prior-art note (how comparable CLIs ship a bundled TS monorepo) · 2 test first: pack, install into a clean dir, run bins · 3 tarball size + node engines stated · 4 README install section · 5 npm run check passes
-    status                  2026-11-03 proposed
-    next                    fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+    status                  2026-11-03 ready      owner hermes-build
+    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
     pinned
     mode                    one worker
     boundary                packages/cli-dist (new) or scripts/dist, root package.json scripts, README, tests
