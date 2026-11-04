@@ -1,0 +1,18 @@
+== step 1: build mole (action.yml 'build mole') ==
+tsc -b: ok
+== step 2: mole pr-check (action.yml 'mole pr-check') ==
+(node:85444) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+mole pr-check fd6d60d..73c0d38: 1 files · mole: 1 decision govern these lines
+### Decisions that govern these lines (1)
+- **0001** (green) Foo returns one · .mole/decisions/0001.md:1 · src/a.ts:2
+### Owners
+@team/core
+(1 annotations, 857 ms)
+pr-check: wrote /var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/tmp.I88N6i8KNI/mole-check-run.json
+payload check: ok (name=mole, annotates decision 0001)
+== step 3: post the check run (action.yml 'post the check run') ==
+DRY RUN (no live GITHUB_TOKEN/GITHUB_REPOSITORY here): would run
+  gh api --method POST repos/$GITHUB_REPOSITORY/check-runs --input /var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/tmp.I88N6i8KNI/mole-check-run.json --jq '.html_url'
+payload is valid JSON for that call (checked above); the gh api call itself is NOT RUN -- it needs a real Actions run's token+repo, exactly what .github/workflows/action-self-test.yml exercises once this branch's checks run in GitHub Actions.
+== action-local.sh: all local steps passed ==

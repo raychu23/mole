@@ -9,7 +9,15 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = resolve(process.argv[2] ?? '');
 if (!process.argv[2]) throw new Error('usage: node scripts/export-public.mjs <output dir>');
 
-const include = ['apps', 'packages', 'plugins', 'release/mole-code', 'docs', 'site', '.claude-plugin', 'LICENSE', 'package.json', 'package-lock.json', 'tsconfig.base.json', 'tsconfig.json', 'vitest.config.ts', 'scripts/bundle-daemon.mjs', 'scripts/mcp-entry.ts', 'deploy', 'server.json', 'RELEASE-NOTES-0.5.0.md'];
+const include = ['apps', 'packages', 'plugins', 'release/mole-code', 'docs', 'site', '.claude-plugin', 'LICENSE', 'package.json', 'package-lock.json', 'tsconfig.base.json', 'tsconfig.json', 'vitest.config.ts', 'scripts/bundle-daemon.mjs', 'scripts/mcp-entry.ts', 'deploy', 'server.json', 'RELEASE-NOTES-0.5.0.md',
+  // T91-distribution-channels: more discovery channels, same "read-only reference, publish separately" shape
+  // as everything else in this list -- action.yml/smithery.yaml/glama.json/.pre-commit-hooks.yaml/
+  // gemini-extension.json all need to sit at the EXPORTED repo's root for their own ecosystem's crawler/
+  // publish flow to find them (GitHub Marketplace, Gemini CLI's gallery, Smithery, pre-commit.com's own
+  // convention -- see tasks/T91-distribution-channels/4 log/prior-art.md for each, dated). `distribution/`
+  // holds drafts (Docker MCP catalog entry, Homebrew tap formula) that still need a real release artifact
+  // before they're submittable -- see tasks/T91-distribution-channels/channels.md's needs-Raymond checklist.
+  'action.yml', 'smithery.yaml', 'glama.json', '.pre-commit-hooks.yaml', 'gemini-extension.json', 'distribution'];
 // private tooling that references the author's machine, chats or unpublished studies
 const exclude = [/(^|\/)node_modules(\/|$)/, /(^|\/)dist(\/|$)/, /(^|\/)dist-tsc(\/|$)/, /(^|\/)\.stage(\/|$)/, /\.vsix$/, /\.tgz$/, /\.tsbuildinfo$/, /^\.DS_Store$/, /\.DS_Store$/,
   // T87: every package's bench/ (dev-only perf/accuracy harnesses, fixture keys that embed real paths and
@@ -45,6 +53,8 @@ const allowed = {
   'plugins/claude-code/.claude-plugin/plugin.json': [/raymond/i],
   'release/mole-code/.claude-plugin/plugin.json': [/raymond/i],
   '.claude-plugin/marketplace.json': [/raymond/i],
+  // T91-distribution-channels: the Marketplace action's `author:` field, same crediting rationale as above.
+  'action.yml': [/raymond/i],
 };
 
 rmSync(out, { recursive: true, force: true });
