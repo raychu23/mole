@@ -1,0 +1,356 @@
+{
+  "schema_version": 1,
+  "project": "mole",
+  "updated": "2026-11-03",
+  "issues": [
+    {
+      "id": "I1",
+      "name": "Define and sharpen Mole's problems and users",
+      "status": "proposed",
+      "direction": "find the real problems and real users Mole should serve, and keep sharpening them as new evidence (interviews, PR-review data, his own notes) comes in",
+      "parts": [
+        {
+          "name": "Problem/solution ideas inventory",
+          "state": "done",
+          "detail": "7 problem-to-solution lines from his own notes (3C1 - mole.txt 633-649), organized across product docs",
+          "ref": "context/product-plan/0 Your ideas.txt"
+        },
+        {
+          "name": "Who the user is (D75)",
+          "state": "blocked",
+          "detail": "D75 sharpens D11: user = one developer on a team shipping through agents who must vouch for the result without the senior's memory; still OPEN, 2 of 11 decisions settled for this stream",
+          "ref": "context/streams/S1-problems/0 start.md"
+        },
+        {
+          "name": "Problem evidence (people-tests)",
+          "state": "todo",
+          "detail": "the three people-tests are OPEN: D15 (5 junior + 5 senior interviews), D7 (pilot), D18 (learning trial) — no new user evidence has entered yet",
+          "ref": "context/streams/S1-problems/0 start.md"
+        }
+      ],
+      "done": [
+        {
+          "date": "2026-11-01",
+          "text": "Test 3: of 81 real 'why is it like this?' answers from PR-review threads, only 14 (17%) had the answer in earlier history",
+          "ref": "context/streams/S1-problems/0 start.md"
+        }
+      ],
+      "next": [
+        { "who": "agent", "text": "tag the 7 untagged 10-27..10-30 messages in 2 insights.md; fold the 10-31/11-01 messages into 0 Your ideas.txt" },
+        { "who": "agent", "text": "once D75 is answered, run D15 (interviews) next — the only way new user evidence enters" }
+      ],
+      "needs_you": [
+        {
+          "id": "D75",
+          "text": "sharpen who the Mole user is (one developer on a team shipping through agents, vouching without the senior's memory), then say whether to run D15 interviews next",
+          "ref": "context/streams/S1-problems/0 start.md"
+        }
+      ],
+      "ideas": [
+        {
+          "id": "P2",
+          "kind": "amend",
+          "text": "Fold the 7 untagged 10-27..10-30 messages and the 10-31/11-01 messages into the problem/idea tracking before more of his words age out",
+          "why": "S1-problems' own gap line: '7 of your messages (10-27 to 10-30) are still untagged in the my-words table, and your 10-31 / 11-01 messages are not yet folded into 0 Your ideas'",
+          "status": "proposed"
+        }
+      ],
+      "tasks": [],
+      "docs": [
+        "context/streams/S1-problems/0 start.md",
+        "context/product-plan/0 Your ideas.txt",
+        "context/product-plan/11 Who Mole is for.md"
+      ]
+    },
+    {
+      "id": "I2",
+      "name": "Prove Mole actually beats alternatives",
+      "status": "proposed",
+      "direction": "test every feature and claim against real data and real baselines, and keep re-testing as claims and competitors change",
+      "parts": [
+        {
+          "name": "Staleness-detection headline",
+          "state": "blocked",
+          "detail": "the '136/136 stale notes caught, 0 false flags in 1,151' headline is close to circular (the answer key marks exactly what Mole flags); D78 (reword it) is OPEN",
+          "ref": "context/streams/S2-verification/0 start.md"
+        },
+        {
+          "name": "Real-data test vs field baseline",
+          "state": "done",
+          "detail": "Test 1 on xstate (367 documented-function changes): flag-every-change (Mole today) scores P 7.1% R 100% F1 13.2 — about 93% of flags are noise; best published field F1 is 93.4",
+          "ref": "context/streams/S2-verification/0 start.md"
+        },
+        {
+          "name": "dcbench head-to-head",
+          "state": "done",
+          "detail": "T63: 24 runs, Mole 19.5% vs no-context 41.5% vs rules 31.7% (merge-ready 1/2/2 of 8) — a loss on this bench; verifier never fired (D96); expanding to 72 runs",
+          "ref": "context/streams/S2-verification/0 start.md"
+        }
+      ],
+      "done": [
+        {
+          "date": "2026-11-01",
+          "text": "Test 1 confirmed D78: the '0 false flags' claim does not survive real data (xstate, 18 held-out positives)",
+          "ref": "context/streams/S2-verification/0 start.md"
+        },
+        {
+          "date": "2026-11-03",
+          "text": "T63 dcbench ran: Mole lost to no-context on this bench (19.5% vs 41.5%)",
+          "ref": "context/streams/S2-verification/0 start.md"
+        }
+      ],
+      "next": [
+        { "who": "agent", "text": "if D81 OK: add type-checker signals, rerun test 1 on 4+ repos (>=50 held-out positives), then log n + a 95% interval" }
+      ],
+      "needs_you": [
+        { "id": "D81", "text": "what to fix first: precision (type-checker signals + rerun on 4+ repos) vs the other proposed fixes", "ref": "context/streams/S2-verification/0 start.md" },
+        { "id": "D78", "text": "reword the staleness headline since its answer key is circular with what Mole flags", "ref": "context/streams/S2-verification/0 start.md" },
+        { "id": "D61", "text": "run T17: paid A/B of agents with vs without Mole on real tasks", "ref": "context/streams/S2-verification/0 start.md" }
+      ],
+      "ideas": [],
+      "tasks": [],
+      "docs": [
+        "context/streams/S2-verification/0 start.md",
+        "context/product-plan/systems/metrics-proof/metrics + proof.md",
+        "context/product-plan/8 Prove it.html"
+      ]
+    },
+    {
+      "id": "I3",
+      "name": "Find and defend Mole's unique selling point",
+      "status": "proposed",
+      "direction": "keep the USP real and distinct as the field (claude-mem, ai-memory, Windsurf Codemaps, etc) keeps shipping",
+      "parts": [
+        {
+          "name": "Positioning (D74)",
+          "state": "blocked",
+          "detail": "D74 is OPEN: position Mole as the code-truth / memory-validity layer, never as agent memory",
+          "ref": "context/streams/S3-usp/0 start.md"
+        },
+        {
+          "name": "4-edge proof",
+          "state": "todo",
+          "detail": "none of the 4 claimed edges (eval set, compounding, undo, placement) is measured yet",
+          "ref": "context/streams/S3-usp/0 start.md"
+        }
+      ],
+      "done": [
+        {
+          "date": "2026-10-31",
+          "text": "'vs just asking the agent' analysis: Mole should not compete on 'how does this code work', only on why-it-was-decided / is-it-still-true / is-the-agent's-done-true",
+          "ref": "context/streams/S3-usp/0 start.md"
+        }
+      ],
+      "next": [
+        { "who": "agent", "text": "after S2's reports: restate the USP in one line with the number that backs it, and list which competitors could ship it next" }
+      ],
+      "needs_you": [
+        { "id": "D74", "text": "position Mole as the code-truth / memory-validity layer, never as agent memory, and whether to open the repo + a benchmark", "ref": "context/streams/S3-usp/0 start.md" }
+      ],
+      "ideas": [],
+      "tasks": [],
+      "docs": [
+        "context/streams/S3-usp/0 start.md",
+        "context/product-plan/10 Where Mole fits.md"
+      ]
+    },
+    {
+      "id": "I4",
+      "name": "Borrow and test ideas from other fields",
+      "status": "proposed",
+      "direction": "scan other fields (Amazon doors, truth maintenance, HAZOP, outcome ledgers, etc) for ideas, and only keep the ones that serve a named core job",
+      "parts": [
+        {
+          "name": "Borrowed-idea backlog",
+          "state": "todo",
+          "detail": "10 borrowed ideas listed (D56, D57, D62, D63, D65, D66, D67, D68, D69, D73), all still proposals; no ledger task exists for any of them (tasks/ stops at T41)",
+          "ref": "context/streams/S4-ideas/0 start.md"
+        }
+      ],
+      "done": [],
+      "next": [
+        { "who": "agent", "text": "after D80 (S5) is decided: re-sort the 10 borrowed ideas against the core edges; keep at most 3 with a measurable test each, park the rest with a reason" }
+      ],
+      "needs_you": [],
+      "ideas": [],
+      "tasks": [],
+      "docs": [
+        "context/streams/S4-ideas/0 start.md",
+        "context/product-plan/systems/decision-graph/ask 2026-10-29.txt",
+        "context/product-plan/9 The bet graph.html"
+      ]
+    },
+    {
+      "id": "I5",
+      "name": "Keep the core product plan true and current",
+      "status": "proposed",
+      "direction": "keep the plan's center, scope and schedule honest as decisions are made and the build moves",
+      "parts": [
+        {
+          "name": "Core centering (D90)",
+          "state": "done",
+          "detail": "D90 accepted 2026-11-01: human reasoning beside design docs is the center; supersedes the earlier one-dev hand-back centre (D77)",
+          "ref": "context/streams/S5-core-plan/0 start.md"
+        },
+        {
+          "name": "Scope cuts / push decision",
+          "state": "blocked",
+          "detail": "D77 (cut Mole to 4 jobs) and D49 (push main, 734 commits, to private GitHub) are proposed, not approved",
+          "ref": "context/streams/S5-core-plan/0 start.md"
+        },
+        {
+          "name": "Build backlog",
+          "state": "unknown",
+          "detail": "20 known open/partial items plus 9 integrated T42-T54 tasks are listed; no fresh full-suite run is claimed",
+          "ref": "context/streams/S5-core-plan/0 start.md"
+        }
+      ],
+      "done": [
+        {
+          "date": "2026-11-03",
+          "text": "Unified build inventory produced: 80 rows — 43 built, 11 partial, 15 missing, 11 rejected",
+          "ref": "context/streams/S5-core-plan/0 start.md"
+        }
+      ],
+      "next": [
+        { "who": "agent", "text": "use the build-backlog doc; resolve the T54 review/known parsing defect, then propose a bounded D67 feature-branch contract" }
+      ],
+      "needs_you": [
+        { "id": "D80", "text": "confirm D90's center (the team's why, compounding, kept true by code) replaces D77's one-dev centre", "ref": "context/streams/S5-core-plan/0 start.md" },
+        { "id": "D77", "text": "approve cutting Mole to 4 jobs plus the team PR check (not yet silently approved)", "ref": "context/streams/S5-core-plan/0 start.md" },
+        { "id": "D49", "text": "push main (734 commits) to private github raychu23/mole?", "ref": "context/streams/S5-core-plan/0 start.md" }
+      ],
+      "ideas": [
+        {
+          "id": "P1",
+          "kind": "new-issue",
+          "text": "Add an 8th direction: ship & publish Mole (VS Code Marketplace, Open VSX, Claude plugin, GitHub release) — no current stream owns it",
+          "why": "Raymond asked in S5's inbox 2026-11-03: 'how about our deployment to vscode extensions and claude code plugins and other distributions, and more'; T9/T10 publish steps (publisher, tokens, logins) are still open per context/0 start.md build history",
+          "status": "proposed"
+        },
+        {
+          "id": "P3",
+          "kind": "add-agent",
+          "text": "Attach an agent to each of the 7 streams now that they are tracked as issues",
+          "why": "context/streams/0 start.md status line: 'no agent is attached to any stream yet (spawn waits for his go)'",
+          "status": "proposed"
+        }
+      ],
+      "tasks": [],
+      "docs": [
+        "context/streams/S5-core-plan/0 start.md",
+        "context/product-plan/2 Decision graph.md",
+        "context/product-plan/systems/cut/ask 2026-10-30.txt"
+      ]
+    },
+    {
+      "id": "I6",
+      "name": "Keep the resume entry true to what's built and measured",
+      "status": "proposed",
+      "direction": "keep the resume's claims matched to what's actually built and measured as proof changes",
+      "parts": [
+        {
+          "name": "Accepted resume entry",
+          "state": "done",
+          "detail": "complete entry accepted 2026-11-02: nuanced ADR graph; verifier 97% / five repos / about half false alarms / 13x cost; deployed surfaces + a 10k-argument engine at 7.2ms vs 2.08s Carneades",
+          "ref": "context/streams/S6-resume/0 start.md"
+        },
+        {
+          "name": "Feature-A/B wording",
+          "state": "todo",
+          "detail": "feature-A/B wording is plan scope, not yet a measured complete workflow",
+          "ref": "context/streams/S6-resume/0 start.md"
+        }
+      ],
+      "done": [
+        {
+          "date": "2026-10-29",
+          "text": "D28 (USER): the resume entry is the plan, written ambitious — 3 bullets (problem+solution+offering, technical design, connection to tools/verification), every phrase built-and-checked or a ledger task with a metric",
+          "ref": "context/product-plan/systems/decisions.jsonl"
+        },
+        {
+          "date": "2026-11-02",
+          "text": "Raymond accepted the complete resume entry; final resume.tex + doc.html archived with 3 selected chats",
+          "ref": "context/streams/S6-resume/0 start.md"
+        },
+        {
+          "date": "2026-11-02",
+          "text": "B1 built, not just designed: tenets reranked launch to scale, an incident-revived dissent, a double-loop lesson-to-tenet, human-gated illustrative replays",
+          "ref": "context/streams/S6-resume/0 start.md"
+        }
+      ],
+      "next": [
+        { "who": "agent", "text": "boot doc.html + the exact final resume.tex; no unsolicited rewrite — new measured changes go into the evidence scope, not silently into accepted wording" }
+      ],
+      "needs_you": [],
+      "ideas": [],
+      "tasks": [],
+      "docs": [
+        "context/streams/S6-resume/0 start.md",
+        "context/streams/S6-resume/final resume.tex",
+        "context/product-plan/systems/decisions.jsonl"
+      ]
+    },
+    {
+      "id": "I7",
+      "name": "Design Mole itself to hold up at scale",
+      "status": "proposed",
+      "direction": "keep checking Mole's own system design against real scale targets as the codebase and team size it must handle grows",
+      "parts": [
+        {
+          "name": "Page 6 system design (Hello-Interview style)",
+          "state": "done",
+          "detail": "re-centred on D90 in Hello-Interview order with 4 new human-graph diagrams; source audit + a challenger found missing temporal tenant isolation and knownAt correction semantics",
+          "ref": "context/streams/S7-system-design/0 start.md"
+        },
+        {
+          "name": "Scale test (Test 2)",
+          "state": "done",
+          "detail": "microsoft/TypeScript v5.6.3 src/compiler (76 of 691 files): cold index 9.95s, 477 MiB peak, 33,316 edges; re-check p50 484ms, p95 3.6s — misses the <0.5s target when a 52.7k-line file changes; tsconfig project references unsupported",
+          "ref": "context/streams/S7-system-design/0 start.md"
+        },
+        {
+          "name": "One decision store / live run view",
+          "state": "blocked",
+          "detail": "D50 (one decision store) and D76 (a live run view in the panel) are both OPEN",
+          "ref": "context/streams/S7-system-design/0 start.md"
+        }
+      ],
+      "done": [
+        {
+          "date": "2026-11-01",
+          "text": "Test 2 run: TypeScript compiler scale test, p95 recheck 3.6s, missed the <0.5s target on a 52.7k-line file",
+          "ref": "context/streams/S7-system-design/0 start.md"
+        }
+      ],
+      "next": [
+        { "who": "agent", "text": "freeze the D90 pilot contract and semantic translation; repair the temporal-tenant / two-clock gaps before any multi-org rollout" },
+        { "who": "agent", "text": "if D81 step 3 is OK: add tsconfig project references + a per-commit incremental re-check command, rerun test 2 on full src/" }
+      ],
+      "needs_you": [
+        { "id": "D50", "text": "approve one decision store (team server writes through @mole/temporal)", "ref": "context/streams/S7-system-design/0 start.md" },
+        { "id": "D76", "text": "approve a live run view in the panel (brief = dials, path of checks + commits)", "ref": "context/streams/S7-system-design/0 start.md" }
+      ],
+      "ideas": [],
+      "tasks": [],
+      "docs": [
+        "context/streams/S7-system-design/0 start.md",
+        "context/product-plan/6 Mole system design.md",
+        "context/product-plan/systems/core-design/ask 2026-11-01.txt"
+      ]
+    }
+  ],
+  "agents": [
+    {
+      "id": "resume-chats",
+      "kind": "chat",
+      "role": "resume wording rounds and resume-claim verification, archived under S6-resume",
+      "chat": "session local-dac884a85eda7fa63e51f1702e2e487da6cd686c0a774d30334b1d1426b8de01 (+2 more archived sessions in 4 log/chats/)",
+      "model": "unknown",
+      "issues": ["I6"],
+      "from": "2026-11-02",
+      "to": "",
+      "status": "unknown"
+    }
+  ]
+}
