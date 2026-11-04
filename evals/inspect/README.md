@@ -38,3 +38,16 @@ evals/inspect/.venv/bin/python evals/inspect/run.py --model anthropic/<model> --
 
 Tests: `python3 -m pytest evals/inspect/tests -q` (pure-Python scorer logic; the Inspect task test skips without
 inspect_ai) and `evals/inspect/.venv/bin/python -m pytest evals/inspect/tests -q` (all).
+
+## dcbench_eval (T90): the pre-registered A/B experiment system
+
+`dcbench_eval/` generalises this pattern beyond one planted regression: a spec+freeze step (OSF/AsPredicted
+pre-registration), published stats (scipy/statsmodels, reusing `mole_eval/scoring.py`'s intervals), and a
+registry of experiments. The worked example is T63's dcbench productivity test (72 runs, 3 arms). See
+`../../docs/experiments.md` for the two commands (freeze, reanalyse) and
+`../../tasks/T90-ab-experiment-system/4 log/prior-art.md` for what was reused from where.
+
+```sh
+/Users/a1/.hermes/cache/scratch/mole-ab-venv/bin/python -m pytest evals/inspect/dcbench_eval/tests -q
+evals/inspect/dcbench_eval/reanalyze.py                 # re-analyses T63's frozen raw/runs.jsonl, read-only
+```

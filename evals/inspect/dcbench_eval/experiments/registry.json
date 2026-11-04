@@ -1,0 +1,23 @@
+{
+  "experiments": [
+    {
+      "id": "T63-productivity-v1",
+      "idea": "Does Mole's context (decisions + hooks) raise dcbench decision compliance vs no-context vs a CLAUDE.md rules file?",
+      "status": "analyzed",
+      "protocol": "context/product-plan/systems/metrics-proof/productivity/protocol.md",
+      "frozen": "context/product-plan/systems/metrics-proof/productivity/FROZEN.sha256",
+      "raw_data": "context/product-plan/systems/metrics-proof/productivity/raw/runs.jsonl",
+      "results": "context/product-plan/systems/metrics-proof/productivity/results-72.md",
+      "reanalysis": "evals/inspect/dcbench_eval/reanalyze.py (reproduces results-72.md exactly + adds bootstrap/clustered-SE/Holm intervals it did not have)",
+      "finding": "not significant (R-M p=1.0, A-M p=0.375, A-R p=0.5); no productivity claim"
+    },
+    {
+      "id": "T63-productivity-v2",
+      "idea": "Same as v1, with a check that forces a fix on a blocking violation (v1's never fired, 0/17)",
+      "status": "pre-registered",
+      "spec": "evals/inspect/dcbench_eval/experiments/protocol-v2.json",
+      "frozen": "evals/inspect/dcbench_eval/experiments/FROZEN-v2.sha256",
+      "run": "NOT RUN: pre-registered only, per T90 contract"
+    }
+  ]
+}
