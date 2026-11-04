@@ -36,8 +36,14 @@
         }
       ],
       "next": [
-        { "who": "agent", "text": "tag the 7 untagged 10-27..10-30 messages in 2 insights.md; fold the 10-31/11-01 messages into 0 Your ideas.txt" },
-        { "who": "agent", "text": "once D75 is answered, run D15 (interviews) next — the only way new user evidence enters" }
+        {
+          "who": "agent",
+          "text": "tag the 7 untagged 10-27..10-30 messages in 2 insights.md; fold the 10-31/11-01 messages into 0 Your ideas.txt"
+        },
+        {
+          "who": "agent",
+          "text": "once D75 is answered, run D15 (interviews) next — the only way new user evidence enters"
+        }
       ],
       "needs_you": [
         {
@@ -60,7 +66,8 @@
         "context/streams/S1-problems/0 start.md",
         "context/product-plan/0 Your ideas.txt",
         "context/product-plan/11 Who Mole is for.md"
-      ]
+      ],
+      "purpose": "agent"
     },
     {
       "id": "I2",
@@ -100,12 +107,27 @@
         }
       ],
       "next": [
-        { "who": "agent", "text": "if D81 OK: add type-checker signals, rerun test 1 on 4+ repos (>=50 held-out positives), then log n + a 95% interval" }
+        {
+          "who": "agent",
+          "text": "if D81 OK: add type-checker signals, rerun test 1 on 4+ repos (>=50 held-out positives), then log n + a 95% interval"
+        }
       ],
       "needs_you": [
-        { "id": "D81", "text": "what to fix first: precision (type-checker signals + rerun on 4+ repos) vs the other proposed fixes", "ref": "context/streams/S2-verification/0 start.md" },
-        { "id": "D78", "text": "reword the staleness headline since its answer key is circular with what Mole flags", "ref": "context/streams/S2-verification/0 start.md" },
-        { "id": "D61", "text": "run T17: paid A/B of agents with vs without Mole on real tasks", "ref": "context/streams/S2-verification/0 start.md" }
+        {
+          "id": "D81",
+          "text": "what to fix first: precision (type-checker signals + rerun on 4+ repos) vs the other proposed fixes",
+          "ref": "context/streams/S2-verification/0 start.md"
+        },
+        {
+          "id": "D78",
+          "text": "reword the staleness headline since its answer key is circular with what Mole flags",
+          "ref": "context/streams/S2-verification/0 start.md"
+        },
+        {
+          "id": "D61",
+          "text": "run T17: paid A/B of agents with vs without Mole on real tasks",
+          "ref": "context/streams/S2-verification/0 start.md"
+        }
       ],
       "ideas": [],
       "tasks": [],
@@ -113,7 +135,8 @@
         "context/streams/S2-verification/0 start.md",
         "context/product-plan/systems/metrics-proof/metrics + proof.md",
         "context/product-plan/8 Prove it.html"
-      ]
+      ],
+      "purpose": "agent"
     },
     {
       "id": "I3",
@@ -142,17 +165,25 @@
         }
       ],
       "next": [
-        { "who": "agent", "text": "after S2's reports: restate the USP in one line with the number that backs it, and list which competitors could ship it next" }
+        {
+          "who": "agent",
+          "text": "after S2's reports: restate the USP in one line with the number that backs it, and list which competitors could ship it next"
+        }
       ],
       "needs_you": [
-        { "id": "D74", "text": "position Mole as the code-truth / memory-validity layer, never as agent memory, and whether to open the repo + a benchmark", "ref": "context/streams/S3-usp/0 start.md" }
+        {
+          "id": "D74",
+          "text": "position Mole as the code-truth / memory-validity layer, never as agent memory, and whether to open the repo + a benchmark",
+          "ref": "context/streams/S3-usp/0 start.md"
+        }
       ],
       "ideas": [],
       "tasks": [],
       "docs": [
         "context/streams/S3-usp/0 start.md",
         "context/product-plan/10 Where Mole fits.md"
-      ]
+      ],
+      "purpose": "agent"
     },
     {
       "id": "I4",
@@ -169,7 +200,10 @@
       ],
       "done": [],
       "next": [
-        { "who": "agent", "text": "after D80 (S5) is decided: re-sort the 10 borrowed ideas against the core edges; keep at most 3 with a measurable test each, park the rest with a reason" }
+        {
+          "who": "agent",
+          "text": "after D80 (S5) is decided: re-sort the 10 borrowed ideas against the core edges; keep at most 3 with a measurable test each, park the rest with a reason"
+        }
       ],
       "needs_you": [],
       "ideas": [],
@@ -178,7 +212,8 @@
         "context/streams/S4-ideas/0 start.md",
         "context/product-plan/systems/decision-graph/ask 2026-10-29.txt",
         "context/product-plan/9 The bet graph.html"
-      ]
+      ],
+      "purpose": "agent"
     },
     {
       "id": "I5",
@@ -213,12 +248,27 @@
         }
       ],
       "next": [
-        { "who": "agent", "text": "use the build-backlog doc; resolve the T54 review/known parsing defect, then propose a bounded D67 feature-branch contract" }
+        {
+          "who": "agent",
+          "text": "use the build-backlog doc; resolve the T54 review/known parsing defect, then propose a bounded D67 feature-branch contract"
+        }
       ],
       "needs_you": [
-        { "id": "D80", "text": "confirm D90's center (the team's why, compounding, kept true by code) replaces D77's one-dev centre", "ref": "context/streams/S5-core-plan/0 start.md" },
-        { "id": "D77", "text": "approve cutting Mole to 4 jobs plus the team PR check (not yet silently approved)", "ref": "context/streams/S5-core-plan/0 start.md" },
-        { "id": "D49", "text": "push main (734 commits) to private github raychu23/mole?", "ref": "context/streams/S5-core-plan/0 start.md" }
+        {
+          "id": "D80",
+          "text": "confirm D90's center (the team's why, compounding, kept true by code) replaces D77's one-dev centre",
+          "ref": "context/streams/S5-core-plan/0 start.md"
+        },
+        {
+          "id": "D77",
+          "text": "approve cutting Mole to 4 jobs plus the team PR check (not yet silently approved)",
+          "ref": "context/streams/S5-core-plan/0 start.md"
+        },
+        {
+          "id": "D49",
+          "text": "push main (734 commits) to private github raychu23/mole?",
+          "ref": "context/streams/S5-core-plan/0 start.md"
+        }
       ],
       "ideas": [
         {
@@ -241,7 +291,8 @@
         "context/streams/S5-core-plan/0 start.md",
         "context/product-plan/2 Decision graph.md",
         "context/product-plan/systems/cut/ask 2026-10-30.txt"
-      ]
+      ],
+      "purpose": "agent"
     },
     {
       "id": "I6",
@@ -280,7 +331,10 @@
         }
       ],
       "next": [
-        { "who": "agent", "text": "boot doc.html + the exact final resume.tex; no unsolicited rewrite — new measured changes go into the evidence scope, not silently into accepted wording" }
+        {
+          "who": "agent",
+          "text": "boot doc.html + the exact final resume.tex; no unsolicited rewrite — new measured changes go into the evidence scope, not silently into accepted wording"
+        }
       ],
       "needs_you": [],
       "ideas": [],
@@ -289,7 +343,8 @@
         "context/streams/S6-resume/0 start.md",
         "context/streams/S6-resume/final resume.tex",
         "context/product-plan/systems/decisions.jsonl"
-      ]
+      ],
+      "purpose": "agent"
     },
     {
       "id": "I7",
@@ -324,12 +379,26 @@
         }
       ],
       "next": [
-        { "who": "agent", "text": "freeze the D90 pilot contract and semantic translation; repair the temporal-tenant / two-clock gaps before any multi-org rollout" },
-        { "who": "agent", "text": "if D81 step 3 is OK: add tsconfig project references + a per-commit incremental re-check command, rerun test 2 on full src/" }
+        {
+          "who": "agent",
+          "text": "freeze the D90 pilot contract and semantic translation; repair the temporal-tenant / two-clock gaps before any multi-org rollout"
+        },
+        {
+          "who": "agent",
+          "text": "if D81 step 3 is OK: add tsconfig project references + a per-commit incremental re-check command, rerun test 2 on full src/"
+        }
       ],
       "needs_you": [
-        { "id": "D50", "text": "approve one decision store (team server writes through @mole/temporal)", "ref": "context/streams/S7-system-design/0 start.md" },
-        { "id": "D76", "text": "approve a live run view in the panel (brief = dials, path of checks + commits)", "ref": "context/streams/S7-system-design/0 start.md" }
+        {
+          "id": "D50",
+          "text": "approve one decision store (team server writes through @mole/temporal)",
+          "ref": "context/streams/S7-system-design/0 start.md"
+        },
+        {
+          "id": "D76",
+          "text": "approve a live run view in the panel (brief = dials, path of checks + commits)",
+          "ref": "context/streams/S7-system-design/0 start.md"
+        }
       ],
       "ideas": [],
       "tasks": [],
@@ -337,7 +406,8 @@
         "context/streams/S7-system-design/0 start.md",
         "context/product-plan/6 Mole system design.md",
         "context/product-plan/systems/core-design/ask 2026-11-01.txt"
-      ]
+      ],
+      "purpose": "agent"
     }
   ],
   "agents": [
@@ -347,7 +417,9 @@
       "role": "resume wording rounds and resume-claim verification, archived under S6-resume",
       "chat": "session local-dac884a85eda7fa63e51f1702e2e487da6cd686c0a774d30334b1d1426b8de01 (+2 more archived sessions in 4 log/chats/)",
       "model": "unknown",
-      "issues": ["I6"],
+      "issues": [
+        "I6"
+      ],
       "from": "2026-11-02",
       "to": "",
       "status": "unknown"
