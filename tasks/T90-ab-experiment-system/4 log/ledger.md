@@ -42,4 +42,6 @@ ledger (newest last, nothing deleted)
                            with the new modules removed, collection failure, genuine red).
     2026-11-04 16:44      running → submitted      report: tasks/T90-ab-experiment-system/4 log/prior-art.md, proof 4 log/mole_ab-e2e-proof.eval + .txt, red.txt, evals/inspect pytest 55 · checks exit 0
     2026-11-04 16:44      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T90-ab-experiment-system → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
+    2026-11-04 16:49      submitted → verified      reviewer hermes-subagent deleg_72653e2b FAIL, deleg_50e433f0 FAIL, orchestrator verify (fresh, claude-sonnet-5) · findings: R1 HIGH Inspect named not used -> real Task mole_ab 1ff998f, R2 worktree leak on solver error ->
+    2026-11-04 16:49      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T90-ab-experiment-system → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
 ```
