@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-11-04 01:39      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T87-public-release-site → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
     2026-11-04 01:48      submitted → verified      reviewer hermes-subagent deleg_74258246 FAIL, deleg_0ecbf02b FAIL, deleg_28da1140 FAIL (fresh, claude-sonnet-5) + agent fixes · findings: export didn't build -> 6425bc5, esbuild dropped agentstate -> 2224814, npx bin + d
     2026-11-04 01:48      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T87-public-release-site → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
+    2026-11-04 01:51      verified → integrated      merge f5e244c · combined checks exit 0
+    2026-11-04 01:51      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
 ```
