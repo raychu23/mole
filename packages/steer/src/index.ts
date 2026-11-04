@@ -16,8 +16,28 @@ import { validateUpdate } from './validate.js';
 export * from './types.js';
 export { validateUpdate, KNOWN_UPDATE_KINDS, decisionExists, decisionsDirExists } from './validate.js';
 export { inboxFile, readInbox } from './store.js';
-export { queryAgentState, type AgentStateSnapshot } from '@mole/agentstate';
-import type { SteerDelivery, SteerSignal, SteerUpdateRequest, SteerUpdateResult } from './types.js';
+export type { AgentStateSnapshot } from './types.js';
+import type { AgentStateSnapshot, SteerDelivery, SteerSignal, SteerUpdateRequest, SteerUpdateResult } from './types.js';
+
+// T87 review fix (HIGH): @mole/agentstate is excluded from the public release export (author-machine workflow,
+// see scripts/export-public.mjs); loaded here through a non-literal specifier so `npx tsc -b` on the export
+// never tries (and fails) to resolve it -- a literal `import('@mole/agentstate')` is statically resolved by
+// tsc even inside a dynamic import and would fail TS2307 once the package and tsconfig reference are gone,
+// a variable one is typed `any` and is never resolved. Behaves as a plain import in the private repo and the
+// published npm package (which bundles agentstate's dist regardless of this source mirror).
+const AGENTSTATE_SPECIFIER = '@mole/agentstate';
+
+/** `mole steer query --session S`: read-only snapshot from @mole/agentstate (T18), never queues. Throws a clear
+ * "not available in this build" error if @mole/agentstate is absent (the public release export). */
+export async function queryAgentState(root: string, session: string): Promise<AgentStateSnapshot> {
+  let mod: { queryAgentState: (root: string, session: string) => Promise<AgentStateSnapshot> };
+  try {
+    mod = (await import(/* not a literal on purpose, see above */ AGENTSTATE_SPECIFIER)) as unknown as typeof mod;
+  } catch (e) {
+    throw new Error(`mole steer query: @mole/agentstate is not available in this build: ${(e as Error).message}`);
+  }
+  return mod.queryAgentState(root, session);
+}
 
 /** `mole steer signal --session S "text"`: queued for the agent's next tool call or prompt, seen at most once.
  * Review 1 (HIGH 3): append happens inside `withInboxClaim` (atomic claim/release, store.ts), not a bare

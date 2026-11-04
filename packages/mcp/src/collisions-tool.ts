@@ -2,7 +2,7 @@
 // Kept in its own file so server.ts only gains one registration line (T15 edits server.ts too).
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { collisions, defaultSources } from '@mole/agentstate';
+import { loadAgentstate } from './optional-agentstate.js'; // T87: @mole/agentstate is an optional/lazy dep, see that file
 import { READ_ONLY_ANNOTATIONS, sc } from './annotations.js'; // T50: shared read-only annotations + structuredContent cast
 
 export function registerCollisionsTool(server: McpServer, opts: { root: string }): void {
@@ -24,8 +24,13 @@ export function registerCollisionsTool(server: McpServer, opts: { root: string }
       outputSchema: z.object({ windowMinutes: z.number(), hops: z.number(), runs: z.array(z.unknown()), pairs: z.array(z.unknown()), notes: z.array(z.unknown()), skipped: z.array(z.unknown()) }).passthrough(),
     },
     async ({ run, since_hours }) => {
-      const r = collisions({ ...defaultSources(), root: opts.root, run, since: since_hours !== undefined ? Date.now() - since_hours * 3600_000 : undefined });
-      return { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }], structuredContent: sc(r) };
+      try {
+        const { collisions, defaultSources } = await loadAgentstate();
+        const r = collisions({ ...defaultSources(), root: opts.root, run, since: since_hours !== undefined ? Date.now() - since_hours * 3600_000 : undefined });
+        return { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }], structuredContent: sc(r) };
+      } catch (e) {
+        return { content: [{ type: 'text' as const, text: `mole_collisions: ${(e as Error).message}` }], isError: true };
+      }
     },
   );
 }

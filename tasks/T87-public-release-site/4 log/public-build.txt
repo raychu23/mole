@@ -1,0 +1,111 @@
+T87 review fix verification: clean export build + privacy re-scan
+===================================================================
+
+Command sequence run (fresh export, from the Mole-worktrees/T87-public-release-site worktree):
+
+  $ node scripts/export-public.mjs /Users/a1/.hermes/cache/scratch/t87-export2
+  copied 297 files to /Users/a1/.hermes/cache/scratch/t87-export2
+  private-string scan: clean
+
+  $ cd /Users/a1/.hermes/cache/scratch/t87-export2
+  $ node --version
+  v22.21.0
+
+  $ npm install
+  npm warn deprecated cron-parser@4.9.0: v4 is no longer maintained, upgrade to v5
+
+  added 455 packages, and audited 482 packages in 4s
+
+  111 packages are looking for funding
+    run `npm fund` for details
+
+  14 vulnerabilities (4 moderate, 8 high, 2 critical)
+
+  To address issues that do not require attention, run:
+    npm audit fix
+
+  To address all issues (including breaking changes), run:
+    npm audit fix --force
+
+  Run `npm audit` for details.
+
+  $ npm run check               # README's documented command: npm install && npm run check
+
+  > mole@0.0.0 check
+  > npm run build && npm test
+
+
+  > mole@0.0.0 build
+  > tsc -b
+
+
+  > mole@0.0.0 test
+  > vitest run
+
+
+   RUN  v3.2.7 /Users/a1/.hermes/cache/scratch/t87-export2
+
+  No test files found, exiting with code 0
+
+  include: **/*.{test,spec}.?(c|m)[jt]s?(x)
+  exclude:  **/node_modules/**, **/dist/**, **/bench/corpora/**, **/bench/**/corpora/**, evals/inspect/**, .mole/local/**, (internal reference removed), (internal reference removed)
+
+  (process exit code: 0)
+
+Separately, as an equivalent check (the acceptance text's alternate form):
+
+  $ npx tsc -b
+  (exit 0, no diagnostics)
+
+  $ npm test
+  > vitest run
+  No test files found, exiting with code 0
+  (exit 0)
+
+Note: the exported repo legitimately ships zero test files (every package's test/ dir is excluded by
+export-public.mjs, dev-only fixtures). vitest.config.ts now sets `passWithNoTests: true` (T87 review fix) so
+this is a real pass, not a false positive -- the private repo always has ~1,350 real tests and runs them
+exactly as before (verified separately: `npm run check` in the private repo, 1347 passed | 19 skipped).
+
+Root cause of the original failure (HIGH): root tsconfig.json and packages/daemon, packages/steer,
+packages/mcp's tsconfig.json referenced packages/agentstate and packages/coverage, which export-public.mjs
+excludes (author-machine workflow, not an end-user Mole feature -- see that file's own comment). Fix:
+daemon/steer/mcp's compile-time dependency on those two packages' functions is now a lazy, non-literal dynamic
+import (packages/mcp/src/optional-agentstate.ts, packages/mcp/src/optional-coverage.ts,
+packages/steer/src/index.ts, packages/daemon/src/cli.ts) instead of a static import -- tsc only statically
+resolves a dynamic import() whose argument is a string literal (verified empirically against tsc 5.9.3), so a
+variable specifier never needs the package to be present to type-check; export-public.mjs now also rewrites
+the dangling tsconfig project references and package.json dependency entries. A second, same-shape bug was
+also found and fixed along the way: root tsconfig.json also referenced packages/bench (a private, dev-only
+benchmark harness also excluded by export-public.mjs), causing the same TS5083.
+
+
+Privacy re-scan (reviewer's grep list), run against the exported + npm-installed tree
+---------------------------------------------------------------------------------------
+(excluding node_modules/ and dist/, which are install/build output, not source this repo ships)
+
+  /Users/                -> no matches
+  a1 (as a path segment)  -> no matches (one binary PNG false-positive on the literal substring "a1" in
+                             apps/vscode/media/panel.png, not a path; package-lock.json/tsbuildinfo
+                             substring hits are inside sha512 hashes and benchmark name strings, e.g.
+                             "admbuster_10000" and "cjK9fuEa1...", not the username)
+  raymond                 -> only LICENSE:3 ("Copyright (c) 2026 Raymond Chu"),
+                             plugins/claude-code/.claude-plugin/plugin.json ("author": "Raymond Chu"),
+                             .claude-plugin/marketplace.json ("owner": "Raymond Chu") -- all allowed
+                             (LICENSE + author/owner fields, same as export-public.mjs's own `allowed` list)
+  .hermes                 -> no matches
+  CS Code                 -> no matches
+  ledger                  -> no matches
+  tasks/T                 -> no literal match; one case-insensitive substring false-positive in a vendored
+                             @modelcontextprotocol/sdk .d.ts path baked into packages/mcp/tsconfig.tsbuildinfo
+                             ("experimental/tasks/types.d.ts"), not the private ledger task-slug pattern
+  context/                -> no literal (lowercase, trailing-slash) match; substring false-positives are
+                             "Context/Rationale" / "Context and Problem Statement" (MADR/Nygard decision
+                             section names, capital C, part of the public decisions feature), not the
+                             excluded context/ directory
+  deleg_                  -> no matches
+  RooGen                  -> no matches
+  STA230                  -> no matches
+
+Conclusion: 0 real hits. export-public.mjs's own built-in scan (copied-files only) also reports "private-string
+scan: clean" on the same export.

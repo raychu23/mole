@@ -84,6 +84,40 @@ cpSync(join(root, 'scripts/public-README.md'), join(out, 'README.md'));
 cpSync(join(root, 'scripts/public-gitignore'), join(out, '.gitignore'));
 copied.push('README.md', '.gitignore');
 
+// T87 review fix (HIGH): packages/agentstate and packages/coverage are excluded above (author-machine
+// workflow -- see that comment), but daemon/steer/mcp's tsconfig.json + package.json still referenced them
+// (TS project references + npm workspace deps) for the private repo's build. Their consumers now load those
+// two packages lazily through a non-literal dynamic import (packages/mcp/src/optional-agentstate.ts,
+// packages/steer/src/index.ts, packages/daemon/src/cli.ts) instead of a compile-time dependency, so this
+// rewrites the now-dangling references/deps -- without it `npx tsc -b` on the export fails with
+// TS5083/TS6053 (root tsconfig.json's references point at a project.json that is not here) even though no
+// source file imports the excluded packages statically anymore.
+function dropTsconfigRefs(tsconfigRel, dropPaths) {
+  const p = join(out, tsconfigRel);
+  if (!existsSync(p)) return;
+  const j = JSON.parse(readFileSync(p, 'utf8'));
+  if (Array.isArray(j.references)) j.references = j.references.filter((r) => !dropPaths.includes(r.path));
+  writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
+}
+function dropPackageDeps(pkgRel, names) {
+  const p = join(out, pkgRel);
+  if (!existsSync(p)) return;
+  const j = JSON.parse(readFileSync(p, 'utf8'));
+  if (j.dependencies) for (const n of names) delete j.dependencies[n];
+  writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
+}
+// packages/bench is a private: true, dev-only test-selection benchmark harness (packages/bench/package.json),
+// not a runtime dependency of anything else (no other package imports @mole/bench) -- same bench/test-dir
+// exclusion reasoning as the top of this file, just at the whole-package level since this package's name IS
+// "bench"; its root tsconfig reference is excluded here for the same TS5083 reason as agentstate/coverage.
+dropTsconfigRefs('tsconfig.json', ['packages/agentstate', 'packages/coverage', 'packages/bench']);
+dropTsconfigRefs('packages/daemon/tsconfig.json', ['../agentstate', '../coverage']);
+dropTsconfigRefs('packages/mcp/tsconfig.json', ['../agentstate', '../coverage']);
+dropTsconfigRefs('packages/steer/tsconfig.json', ['../agentstate']);
+dropPackageDeps('packages/daemon/package.json', ['@mole/agentstate', '@mole/coverage']);
+dropPackageDeps('packages/steer/package.json', ['@mole/agentstate']);
+dropPackageDeps('packages/mcp/package.json', ['@mole/agentstate', '@mole/coverage']);
+
 const hits = [];
 for (const rel of copied) {
   if (/\.(png|ico|jpg|vsix)$/i.test(rel)) continue;

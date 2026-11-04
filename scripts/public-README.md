@@ -38,7 +38,7 @@ mole demo -- a 30-second walkthrough, no network, no model calls, nothing leaves
    D003  No dynamic eval anywhere in src/
 
 2. Checking the repo as it stands (`mole rules`):
-   3 rules (2 import, 1 call) from 3 decisions: 0 violations (899 ms)
+   3 rules (2 import, 1 call) from 3 decisions: 0 violations (726 ms)
    Clean: nothing in the sample code breaks a decision yet.
 
 3. Now simulate an agent (or a teammate) making a change that breaks D001:
@@ -48,7 +48,7 @@ mole demo -- a 30-second walkthrough, no network, no model calls, nothing leaves
    src/payments/checkout.ts:2  import ../legacy-billing/client.js  breaks D001 "Payments never imports
    the legacy billing client directly" (green accepted)
        why: legacy-billing has no refund path; payments must go through src/billing/
-   3 rules (2 import, 1 call) from 3 decisions: 1 violation (43 ms)
+   3 rules (2 import, 1 call) from 3 decisions: 1 violation (70 ms)
 
    Caught: src/payments/checkout.ts:2 breaks D001.
    In Claude Code, this text is what the agent sees before it reports the task done -- it does not
