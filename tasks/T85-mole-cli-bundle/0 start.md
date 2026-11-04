@@ -1,22 +1,22 @@
 ---
-state: submitted
+state: verified
 owner: hermes-build
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t85-mole-cli-bundle
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T85-mole-cli-bundle
 base:
-reviewer:
-updated: 2026-11-04 01:24
-status: ledger submitted
-next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
+reviewer: hermes-subagent fresh reviews (claude-sonnet-5), FAIL x2 -> PASS
+updated: 2026-11-04 01:27
+status: ledger verified
+next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
 claimed: 2026-11-03 19:00
 ---
 ```notes
 T85-mole-cli-bundle      ledger task (rules.md §3 code features)      project tasks
     goal                    One installable `mole` CLI + MCP server for people outside this repo: a single public npm package bundled with esbuild (same approach as apps/vscode/esbuild.mjs, which already bundles the daemon), exposing `mole` (daemon CLI) and `mole-mcp` (MCP stdio server) bins; native deps (better-sqlite3) handled the way the vsix does or made optional with a clear message; name chosen after checking npm availability, reversible. Not published: npm pack + install the tarball into a clean temp dir + run the bins and an MCP initialize handshake from there.
     done-when               1 prior-art note (how comparable CLIs ship a bundled TS monorepo) · 2 test first: pack, install into a clean dir, run bins · 3 tarball size + node engines stated · 4 README install section · 5 npm run check passes
-    status                  2026-11-04 submitted      report: tasks/T85-mole-cli-bundle/4 log/ledger.md, proof 4 log/red.txt + release/mole-code/tools/test-install.mjs · chec
-    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
+    status                  2026-11-04 verified      reviewer hermes-subagent fresh reviews (claude-sonnet-5), FAIL x2 -> PASS · findings: pack+install test green, later T87
+    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
     pinned
     mode                    one worker
     boundary                packages/cli-dist (new) or scripts/dist, root package.json scripts, README, tests
