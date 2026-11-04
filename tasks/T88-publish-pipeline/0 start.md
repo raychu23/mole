@@ -1,22 +1,22 @@
 ---
-state: running
+state: submitted
 owner: hermes-build
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t88-publish-pipeline
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T88-publish-pipeline
 base:
 reviewer:
-updated: 2026-11-03 22:26
-status: ledger running
-next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+updated: 2026-11-04 01:53
+status: ledger submitted
+next: fresh reviewer → ledger move <task> verified --reviewer … --findings …
 claimed: 2026-11-03 22:26
 ---
 ```notes
 T88-publish-pipeline      ledger task (rules.md §3 code features)      project tasks
     goal                    Everything publishing needs except Raymond's tokens (D100): VS Code extension 0.5.0 with T64-T85 features (rebuild, install-check, CHANGELOG), one `scripts/publish-all.sh` that builds then publishes mole-code to npm, the vsix to the VS Code Marketplace and Open VSX, and the MCP registry entry, each token read from a hidden prompt (never echoed, never stored), with a --dry-run that does every step except the final publish calls; MCP registry server.json (official schema, npm package mole-code, mole-mcp); a GitHub Actions workflow building the team-server container to GHCR on tag; release notes. Nothing published by the builder.
     done-when               1 prior-art: official docs for vsce, ovsx, npm publish (provenance), MCP registry server.json + mcp-publisher, GHCR (fetched, dated) · 2 publish-all.sh --dry-run passes end to end on this machine (npm publish --dry-run, vsce package, ovsx verify where possible, server.json schema-validated) · 3 vsix 0.5.0 install-check passes · 4 workflow lint (actionlint if available, else yaml parse) · 5 npm run check passes
-    status                  2026-11-03 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T88-publish-pipeline · branch ledger/t88-publish-pipeline · ba
-    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+    status                  2026-11-04 submitted      report: tasks/T88-publish-pipeline/2 insights.md, proof 4 log/red.txt (10/24), green.txt (24/24), publish-all-dry-run.tx
+    next                    fresh reviewer → ledger move <task> verified --reviewer … --findings …
     pinned
     mode                    one worker
     boundary                apps/vscode (version, CHANGELOG), scripts/publish-all.sh, server.json, .github/workflows/release-container.yml, release notes
