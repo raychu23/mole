@@ -1,21 +1,21 @@
 ---
-state: proposed
+state: ready
 owner: hermes-build
 repo:
 branch:
 worktree:
 base:
 reviewer:
-updated: 2026-11-04 15:12
-status: ledger proposed
-next: fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+updated: 2026-11-04 15:13
+status: ledger ready
+next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
 ---
 ```notes
 T90-ab-experiment-system      ledger task (rules.md §3 code features)      project tasks
     goal                    A reusable pre-registered A/B experiment system for testing Mole ideas with coding agents (arms, tasks, freeze, runner adapters, scoring, paired stats with intervals, results page), generalising the T63 scripts; its first experiment is protocol v2
     done-when               prior-art note (>=5 fetched, dated: Inspect AI, promptfoo, Braintrust/LangSmith experiments, GrowthBook/Statsig stats, SWE-bench harness) · reuse before build · tests first · T63 72-run data re-analysed by the system reproduces results-72.md numbers exactly · protocol v2 written as its first pre-registered experiment (not run)
-    status                  2026-11-04 proposed
-    next                    fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+    status                  2026-11-04 ready      owner hermes-build
+    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
     pinned
     mode                    one worker
     boundary                new package or bench dir in the Mole repo + docs; T63 raw data read-only
