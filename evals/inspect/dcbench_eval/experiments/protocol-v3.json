@@ -1,0 +1,45 @@
+{
+  "id": "T63-productivity-v3",
+  "hypothesis": "Giving Claude Code (hermes -z) the team's 15 decisions via Mole's hooks, WITH a check that forces a fix on a blocking violation (a resume that actually happens, unlike v1 where it fired 0/17 times), raises weighted decision-compliance points on dcbench versus the same decisions pasted into CLAUDE.md (R) and versus no context (A).",
+  "arms": [
+    {
+      "id": "A",
+      "description": "dcbench Config A as shipped: no CLAUDE.md, no Mole. Baseline, rerun from a pinned copy (v1's deviation, see FROZEN.sha256, is not repeated).",
+      "env": {},
+      "context_files": [],
+      "pinned_commit": "PINNED_AT_FREEZE_V3"
+    },
+    {
+      "id": "R",
+      "description": "CLAUDE.md = the 15 decision texts from benchmark/seed-data.ts, verbatim (same text as M, v1's fairness rule unchanged).",
+      "env": {},
+      "context_files": ["scratch/dcbench/arms/R/CLAUDE.md"],
+      "pinned_commit": "PINNED_AT_FREEZE_V3"
+    },
+    {
+      "id": "M",
+      "description": "The same 15 as .mole/decisions records + Mole's hooks, PLUS the v2 fix: a model-judge (haiku router) after the edit forces one resume on any blocking violation, instead of v1's model-free Stop check that never fired (0/17). Code is run from a pinned copy per arm, never the live working tree (v1's deviation fix).",
+      "env": {"MOLE_STOP_JUDGE": "1"},
+      "context_files": ["scratch/dcbench/arms/M/.mole/decisions"],
+      "pinned_commit": "PINNED_AT_FREEZE_V3"
+    }
+  ],
+  "tasks": ["TASK-001", "TASK-003", "TASK-004", "TASK-006", "TASK-008", "TASK-009", "TASK-012", "TASK-013"],
+  "primary_metric": "weighted decision-compliance percentage (dcbench scorer.ts, UNCHANGED, scored through the v3 adapter evals/inspect/dcbench_eval/dcbench_score.mjs, which fixes the adapter's new-file blindness -- see 'v3 scorer fix' below -- intention-to-treat",
+  "analysis_plan": "paired permutation test (scipy.stats.permutation_test, permutation_type=samples) on the 8 per-task mean percentages, for each of R-M, A-M, A-R; Holm correction across the 3 p-values (statsmodels multipletests); bootstrap 95% CI (scipy.stats.bootstrap, percentile) on each arm's mean task percentage; clustered SE by task (Anthropic arXiv 2411.00640 Eq. 4); Newcombe 95% CI on the merge-ready rate difference per pair; report R vs M first, losses first, as v1/v2 did. Significance bar: p < 0.05 on the primary paired permutation test (primary comparison: R vs M, per the hypothesis). v1 found R-M p=1.0, A-M p=0.375, A-R p=0.5 (all not significant) but v1's own measured effect (R-M mean diff +2.4 points) is far smaller than the MDE below, so v1 was never powered to detect it either way -- v1's result is 'underpowered, not evidence of no effect,' not 'no effect'.",
+  "sample_size": {
+    "runs_per_arm_per_task": 21,
+    "power": 0.8,
+    "alpha": 0.05,
+    "mde": 15.0
+  },
+  "sample_size_arithmetic": "COMPUTED from T63's own 72 measured runs (read-only), not asserted. Method: dcbench_eval.stats.sample_size_for_mde(sd, mde, alpha=0.05, power=0.8) = statsmodels TTestPower().solve_power(effect_size=mde/sd, ...), a paired one-sample-difference power calc (same family T63's own protocol.md power note pointed at but never actually ran). sd = stdev of the 8 per-task paired percentage-point differences (R-M, A-M, A-R; T63's n=3 epochs/arm/task gives one mean-% per task per arm, 8 tasks -> 8 paired diffs per comparison). Measured, 2026-11-04: sd(R-M diff)=23.05, mean diff=+2.4; sd(A-M diff)=18.58, mean diff=+7.8; sd(A-R diff)=16.32, mean diff=+5.4 (same numbers reanalyze.py reproduces from results-72.md). At mde=15.0 (this spec's stated minimum detectable effect, unchanged from v2): sample_size_for_mde(23.05, 15) = 21 (R-M, the PRIMARY comparison per the hypothesis), sample_size_for_mde(18.58, 15) = 15 (A-M), sample_size_for_mde(16.32, 15) = 12 (A-R). v2's runs_per_arm_per_task=3 was NOT computed this way (it copied v1's n unchanged) and is underpowered by roughly 7x for the primary comparison at this MDE: n=3 can only reliably detect an R-M effect several times larger than 15 points, which T63's own measured 72-run effect (+2.4 points) is nowhere near. v3 therefore sets runs_per_arm_per_task to 21 (the primary pair's requirement; A-M and A-R are then over-powered at 21, which is the conservative, not understated, direction) rather than averaging or taking the weakest pair's smaller numbers. This is a real cost increase (21x3x8=504 scored runs vs v2's 72) that is NOT approved to actually run -- this spec is pre-registered, NOT RUN, per the T90 contract; a real run needs Raymond's go given the cost.",
+  "stop_rules": [
+    "any edit to scorer.ts, tasks.ts, the R CLAUDE.md or the M records after run 1: a NEW spec version (v4), all arms rerun",
+    "mixing models mid-experiment",
+    "quoting dcbench's own published Config B numbers beside this experiment's A/R/M as if they were one experiment (different harness: their runner spawns `claude`, this one spawns `hermes -z`)",
+    "a merge to plugins/claude-code/scripts/* or packages/daemon mid-run without re-pinning the per-arm code copy (v1's deviation, logged in FROZEN.sha256, must not recur: v3 runs arms from a pinned copy, never the live tree)",
+    "v3 SCORER FIX (orchestrator-verified new evidence, 2026-11-04, error-analysis-72.md): dcbench's scorer.ts grep_diff check reads plain `git diff`, which never shows content in files the agent newly created -- 60/111 (54%) of T63's 72 failed gotchas were this artefact alone, evenly split across arms, not a real compliance signal. v3's adapter (evals/inspect/dcbench_eval/dcbench_score.mjs) runs `git add --intent-to-add --all` before diffing so new-file content is scored (disclosed deviation from the v1/v2 harness; scorer.ts ITSELF is unmodified). v1's 72 runs are KEPT AS MEASURED (results-72.md is not retracted or rewritten) but CANNOT be rescored post-hoc: the v1/v2 harness saved only diffFiles/untracked name lists, never diff text, to raw/runs.jsonl (error-analysis-72.md, 'Data available' note) -- the bytes needed to rescore are gone. v3 fixes this too: every run's full diff (tracked + new files) is saved in the Inspect .eval log's sample metadata, so a v3 run CAN be rescored later from its log alone without re-running the agent.",
+    "any arm's observed per-task effect at analysis time should be compared against this spec's stated mde=15.0 before calling a null result 'no effect' -- an underpowered negative (as v1's R-M p=1.0 technically is, given n=3 against a required n=21) must be reported as 'not powered to detect', not 'no difference found'"
+  ]
+}

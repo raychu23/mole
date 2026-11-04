@@ -1,0 +1,71 @@
+## mole_ab end-to-end proof (T90 follow-up, 2026-11-04, after worktree-cleanup fix)
+
+Real run: 2 samples (dataset.jsonl's T1 x arms none / rules:<path>), repo = a tiny SYNTHETIC git repo
+(never dcbench, which stays read-only per the standing rule). model=mockllm/model is cosmetic (the
+solver never calls generate()); the AGENT is a REAL hermes -z call (see agent_rc/agent_seconds/diff).
+
+Command:
+  inspect eval evals/inspect/dcbench_eval/task.py@mole_ab \
+    -T repo=<tiny synthetic repo> -T dataset=<dataset.jsonl> \
+    -T arms="none,rules:<rules.md>" -T scorer=mole_check -T mole_bin=<packages/daemon/dist/cli.js> \
+    --model mockllm/model --log-dir <logs>
+
+Log file: /Users/a1/.hermes/cache/scratch/mole-ab-e2e/logs/2026-11-04T22-04-44-00-00_mole-ab_A5fb2GMM6FSW9hg25nAfZF.eval
+(copied beside this note as mole_ab-e2e-proof.eval; `inspect view` opens it like any Inspect log)
+git worktree list on the repo after the run shows ONLY the repo itself -- no leaked per-sample
+worktrees (scorers.py now removes them after scoring).
+
+--- inspect log dump (trimmed) ---
+status: success
+eval.task: mole_ab
+eval.task_args: {'repo': '/Users/a1/.hermes/cache/scratch/mole-ab-e2e/repo', 'dataset': '/Users/a1/.hermes/cache/scratch/mole-ab-e2e/dataset.jsonl', 'arms': ['none', 'rules:/Users/a1/.hermes/cache/scratch/mole-ab-e2e/rules.md'], 'scorer': 'mole_check', 'mole_bin': '/Users/a1/Desktop/CS Code/Project/Mole/packages/daemon/dist/cli.js'}
+
+sample T1-none
+ agent_rc 0 agent_seconds 19.88
+ diff:
+  diff --git a/hello.txt b/hello.txt
+  new file mode 100644
+  index 0000000..8c98c68
+  --- /dev/null
+  +++ b/hello.txt
+  @@ -0,0 +1 @@
+  +hello from mole_ab
+  \ No newline at end of file
+  
+ score: {
+ "mole_check_scorer": {
+  "value": 0.0,
+  "answer": "0 question(s)",
+  "explanation": "{\"questions\": [], \"hunks\": 0}",
+  "metadata": {
+   "diff_chars": 171,
+   "agent_rc": 0
+  },
+  "history": []
+ }
+}
+
+sample T1-rules:/Users/a1/.hermes/cache/scratch/mole-ab-e2e/rules.md
+ agent_rc 0 agent_seconds 23.41
+ diff:
+  diff --git a/hello.txt b/hello.txt
+  new file mode 100644
+  index 0000000..8c98c68
+  --- /dev/null
+  +++ b/hello.txt
+  @@ -0,0 +1 @@
+  +hello from mole_ab
+  \ No newline at end of file
+  
+ score: {
+ "mole_check_scorer": {
+  "value": 0.0,
+  "answer": "0 question(s)",
+  "explanation": "{\"questions\": [], \"hunks\": 0}",
+  "metadata": {
+   "diff_chars": 171,
+   "agent_rc": 0
+  },
+  "history": []
+ }
+}

@@ -38,6 +38,44 @@ def load_runs(path: Path | str) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
+def load_inspect_log(path: Path | str) -> list[dict[str, Any]]:
+    """T90 follow-up (e): read an Inspect `.eval` log (mole_ab or mole_regression) and normalise its
+    samples into the SAME record shape analyze() expects (task/arm/score.earned/score.max/score.mergeReady/
+    agent_seconds_1/tokens), so one `analyze()` works on T63's old runs.jsonl AND any mole_ab .eval log.
+    Uses inspect_ai.log.read_eval_log -- the one correct way to parse `.eval` (a zip, not JSON-on-disk).
+    """
+    from inspect_ai.log import read_eval_log  # local import: reanalyze.py must run even without inspect_ai
+
+    log = read_eval_log(str(path))
+    out: list[dict[str, Any]] = []
+    for s in log.samples or []:
+        meta = s.metadata or {}
+        scores = s.scores or {}
+        sc = next(iter(scores.values()), None)
+        score_meta = (sc.metadata or {}) if sc is not None else {}
+        usage = list((s.model_usage or {}).values())
+        input_tokens = sum(u.input_tokens for u in usage)
+        output_tokens = sum(u.output_tokens for u in usage)
+        # dcbench_scorer's Score.metadata IS the dcbench score.mjs report (earned/max/mergeReady);
+        # mole_check_scorer has no earned/max concept, so "score" falls back to the scorer's own value.
+        score: dict[str, Any] = {
+            "earned": score_meta.get("earned"),
+            "max": score_meta.get("max"),
+            "percentage": score_meta.get("percentage", float(sc.value) if sc is not None and isinstance(sc.value, (int, float)) else None),
+            "mergeReady": score_meta.get("mergeReady"),
+        }
+        out.append({
+            "run_id": s.id,
+            "task": meta.get("row_id") or meta.get("case") or str(s.id).rsplit("-", 1)[0],
+            "arm": meta.get("arm"),
+            "agent_seconds_1": meta.get("agent_seconds", 0.0),
+            "tokens": {"input_tokens": input_tokens, "output_tokens": output_tokens},
+            "score": score,
+            "status": "ok" if sc is not None and not s.error else "agent_error",
+        })
+    return out
+
+
 def _task_max(records: list[dict[str, Any]]) -> dict[str, int]:
     out: dict[str, int] = {}
     for r in records:
@@ -122,11 +160,93 @@ def analyze(records: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def analyze_generic(records: list[dict[str, Any]]) -> dict[str, Any]:
+    """T90 follow-up (e): the same stats as analyze(), but for an ARBITRARY arm/task set (any mole_ab
+    .eval log), not T63's hardcoded 3-arm/8-task shape. Skips merge-ready (dcbench-only) and permutation
+    tests when fewer than 2 arms or any arm/task cell is empty (an Inspect log of a quick 1-2 sample smoke
+    run, like the e2e proof in 4 log/, has no statistical power -- this still reports means/CIs honestly,
+    it just can't run a permutation test on n=1)."""
+    arms_present = sorted({r["arm"] for r in records if r.get("arm") is not None})
+    tasks_present = sorted({r["task"] for r in records})
+    task_pct: dict[str, dict[str, float]] = {t: {} for t in tasks_present}
+    arms: dict[str, Any] = {}
+    for arm in arms_present:
+        rs = [r for r in records if r["arm"] == arm]
+        n = len(rs)
+        pcts_by_task: dict[str, list[float]] = {}
+        for r in rs:
+            pct = (r.get("score") or {}).get("percentage")
+            if pct is not None:
+                pcts_by_task.setdefault(r["task"], []).append(pct)
+        per_task_means = []
+        for t in tasks_present:
+            vals = pcts_by_task.get(t, [])
+            mean_pct = sum(vals) / len(vals) if vals else None
+            if mean_pct is not None:
+                task_pct[t][arm] = mean_pct
+                per_task_means.append(mean_pct)
+        secs = [r.get("agent_seconds_1", 0.0) for r in rs]
+        tok = [r.get("tokens", {}) for r in rs]
+        entry: dict[str, Any] = {
+            "n": n,
+            "mean_agent_seconds": sum(secs) / len(secs) if secs else 0.0,
+            "total_tokens": sum((t.get("input_tokens") or 0) + (t.get("output_tokens") or 0) for t in tok),
+        }
+        if len(per_task_means) >= 2:
+            boot = bootstrap_ci(per_task_means)
+            entry["mean_task_pct"] = boot["mean"]
+            entry["bootstrap_ci95"] = [boot["lo"], boot["hi"]]
+        elif per_task_means:
+            entry["mean_task_pct"] = per_task_means[0]
+            entry["bootstrap_ci95"] = None  # not enough samples for a bootstrap CI; say so, don't fabricate one
+        arms[arm] = entry
+
+    pairwise_tests: dict[str, Any] = {}
+    common_tasks = [t for t in tasks_present if len(task_pct[t]) == len(arms_present)]
+    if len(arms_present) >= 2 and len(common_tasks) >= 2:
+        raw_p = {}
+        for i, x_arm in enumerate(arms_present):
+            for y_arm in arms_present[i + 1 :]:
+                xs = [task_pct[t][x_arm] for t in common_tasks]
+                ys = [task_pct[t][y_arm] for t in common_tasks]
+                res = paired_permutation_test(xs, ys)
+                key = f"{x_arm}-{y_arm}"
+                pairwise_tests[key] = res
+                raw_p[key] = res["p"]
+        if raw_p:
+            adj = holm_correction([raw_p[k] for k in pairwise_tests])
+            for key, p_adj in zip(pairwise_tests, adj):
+                pairwise_tests[key]["p_holm"] = p_adj
+    return {"arms": arms, "per_task_pct": task_pct, "pairwise_tests": pairwise_tests,
+            "note": None if len(common_tasks) >= 2 else "fewer than 2 tasks with every arm scored: no permutation test run (not enough data, not a null result)"}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--runs", default=str(DEFAULT_RUNS_PATH))
+    ap.add_argument("--inspect-log", default=None, help="an Inspect .eval log (mole_ab or mole_regression) instead of --runs; uses analyze_generic, not T63's hardcoded A/R/M shape")
     ap.add_argument("--json", action="store_true", help="print the full result as JSON (default: a short table)")
     a = ap.parse_args()
+    if a.inspect_log:
+        records = load_inspect_log(a.inspect_log)
+        result = analyze_generic(records)
+        if a.json:
+            print(json.dumps(result, indent=1))
+            return 0
+        print(f"{len(records)} samples read from Inspect log {a.inspect_log}\n")
+        print("arm                 n   mean agent s   tokens   mean task %   bootstrap 95% CI")
+        for arm, d in result["arms"].items():
+            ci = f"{d['bootstrap_ci95'][0]:.1f} to {d['bootstrap_ci95'][1]:.1f}" if d.get("bootstrap_ci95") else "n/a (n<2)"
+            pct = d.get("mean_task_pct")
+            pct_s = f"{pct:5.1f}" if pct is not None else "  n/a"
+            print(f"{arm:<20} {d['n']:<3} {d['mean_agent_seconds']:9.1f}      {d['total_tokens']:<8} {pct_s}         {ci}")
+        if result["pairwise_tests"]:
+            print("\npaired permutation + Holm correction:")
+            for key, t in result["pairwise_tests"].items():
+                print(f"  {key}  mean diff {t['mean_diff']:+.1f}  p={t['p']:.3f}  p(Holm)={t.get('p_holm', float('nan')):.3f}")
+        elif result.get("note"):
+            print(f"\n{result['note']}")
+        return 0
     records = load_runs(a.runs)
     result = analyze(records)
     if a.json:

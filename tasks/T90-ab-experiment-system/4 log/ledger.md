@@ -13,4 +13,31 @@ ledger (newest last, nothing deleted)
                            existing convention, see mole_eval/tests/test_task_inspect.py); reanalyze.py reproduces
                            results-72.md exactly (7/7 assertions) and adds bootstrap/clustered-SE/Holm intervals it lacked;
                            protocol-v2.json is pre-registered (hashed + frozen, FROZEN-v2.sha256) and NOT run
+    2026-11-04 (review)   FAIL (deleg_72653e2b/task-0.log)      nothing in dcbench_eval/ imported inspect_ai;
+                           __init__.py cited task.py/hermes_solver.py/scorer.py that did not exist; docs claimed
+                           "logs land in Inspect's own format" with no Inspect Task anywhere; freeze.py segfaults
+                           when exec'd directly without the venv python (system numpy is a broken arch on this
+                           machine); docs/experiments.md's commands not runnable verbatim (no chmod +x)
+    2026-11-04 (fix)       follow-up, FAIL -> fixed      added the REAL Inspect integration: hermes_provider.py
+                           (@modelapi "hermes", text-only), worktree_agent.py (the solver mole_ab runs: real
+                           `hermes -z` in a per-sample git worktree, pattern from inspect-swe's external-agent
+                           wrapper), arms.py (none|rules:PATH|decisions:PATH|plugin_pin:SHA:PATH), scorers.py
+                           (mole_check_scorer generic + dcbench_scorer), task.py (generic Task `mole_ab`).
+                           chmod +x freeze.py/reanalyze.py; docs now say "always use the venv python" (root cause
+                           of the segfault: a broken-arch system numpy, not a Mole bug). Proved end to end: 2 real
+                           hermes calls against a tiny synthetic repo, real `.eval` log, saved +
+                           `inspect log dump` excerpt in 4 log/mole_ab-e2e-proof.{eval,txt}.
+                           NEW EVIDENCE mid-task (orchestrator, error-analysis-72.md): dcbench's scorer.ts
+                           grep_diff can't see untracked new-file content (60/111, 54%, of T63's failed gotchas).
+                           Fixed in dcbench_score.mjs (git add --intent-to-add before diffing, disclosed
+                           deviation, scorer.ts unmodified) + worktree_agent.worktree_diff() (same fix, generic).
+                           v1 kept as measured (not retracted), cannot be rescored (no saved diff text in v1/v2);
+                           every mole_ab run now saves its full diff in the Inspect log so it CAN be rescored.
+                           Sample size for protocol-v3 COMPUTED (not copied from v1/v2's uncomputed n=3) via
+                           stats.sample_size_for_mde on T63's measured per-task paired-diff SDs: n=21/arm/task
+                           for the primary (R-M) pair at mde=15 (vs n=15 A-M, n=12 A-R) -- protocol-v3.json
+                           frozen at FROZEN-v3.sha256; v2 kept frozen as a superseded historical record.
+                           reanalyze.py now also reads Inspect .eval logs (--inspect-log, analyze_generic).
+                           31 passed (dcbench_eval/tests), red captured first at 4 log/red.txt (3 import errors
+                           with the new modules removed, collection failure, genuine red).
 ```
