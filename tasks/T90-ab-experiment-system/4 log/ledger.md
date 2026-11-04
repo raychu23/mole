@@ -40,4 +40,6 @@ ledger (newest last, nothing deleted)
                            reanalyze.py now also reads Inspect .eval logs (--inspect-log, analyze_generic).
                            31 passed (dcbench_eval/tests), red captured first at 4 log/red.txt (3 import errors
                            with the new modules removed, collection failure, genuine red).
+    2026-11-04 16:44      running → submitted      report: tasks/T90-ab-experiment-system/4 log/prior-art.md, proof 4 log/mole_ab-e2e-proof.eval + .txt, red.txt, evals/inspect pytest 55 · checks exit 0
+    2026-11-04 16:44      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T90-ab-experiment-system → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
 ```
