@@ -138,6 +138,7 @@ async function main(): Promise<number> {
   if (cmd === 'hotspots') return (await import('@mole/hotspots/dist/src/cli.js')).hotspotsCli(pos, flags, root); // T70/D68: churn x complexity x decision volatility x fix density, ranked
   if (cmd === 'coupling') return (await import('@mole/coupling/dist/src/cli.js')).couplingCli(pos, flags, root); // T77/D69: logical coupling (co-change) x CODEOWNERS teams, cross-team pairs first
   if (['interrogate', 'check-records'].includes(cmd)) return (await import('@mole/intake')).intakeCli(pos, flags, root); // T23: agents interrogate, people write
+  if (cmd === 'demo') return (await import('./demo.js')).demoCli(); // T87: 30-second sample-repo walkthrough, no daemon, no network, no model calls
   const stateDir = str(flags['state-dir']);
   const common = { root, stateDir, ...defaultSources(root, str(flags.tsconfig), str(flags['src-dir'])) };
 
@@ -245,7 +246,7 @@ async function main(): Promise<number> {
       return 1;
     }
   }
-  console.error('usage: mole <daemon|map|impact|check|status|reindex|stop|note add|memory|since|seen> [target] [--root DIR] [--state-dir DIR] [--tsconfig F] [--src-dir D] [--idle-minutes N] [--json]');
+  console.error('usage: mole <daemon|map|impact|check|status|reindex|stop|note add|memory|since|seen|demo> [target] [--root DIR] [--state-dir DIR] [--tsconfig F] [--src-dir D] [--idle-minutes N] [--json]');
   return cmd === 'help' ? 0 : 2;
 }
 

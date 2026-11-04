@@ -136,8 +136,35 @@ await step('mole check', () => {
   return { output: out.trim() };
 });
 
-// 8. mole-mcp: JSON-RPC initialize + tools/list over stdio
-await step('mole-mcp initialize + tools/list', async () => {
+// T87 review 2 (HIGH): @mole/agentstate and @mole/coverage are regular runtime dependencies of the daemon
+// CLI, @mole/steer and the MCP server (same as on main) -- only the PUBLIC SOURCE EXPORT (scripts/export-public.mjs)
+// is allowed to swap them for a stub; the installed npm tarball (built here the same way the real release is)
+// must bundle the real packages and answer real data or the same "no run"/"no agent run" message main gives,
+// never "not available in this build". 8-10 below are this check, on this tarball, in the isolated install dir.
+const NOT_AVAILABLE = /not available in this build/;
+
+// 8. mole runs / mole agents / mole steer query: real agentstate-backed subcommands, no daemon
+await step('mole runs', () => {
+  const out = execFileSync(binMole, ['runs', '--root', fixture], { cwd: isolated, encoding: 'utf8' });
+  if (NOT_AVAILABLE.test(out)) throw new Error(`mole runs answered "not available": ${out}`);
+  if (!/mole: no runs/.test(out)) throw new Error(`expected the no-runs message (same as main, empty fixture): ${out}`);
+  return { output: out.trim() };
+});
+await step('mole agents', () => {
+  const out = execFileSync(binMole, ['agents', 'src/a.ts', '--root', fixture], { cwd: isolated, encoding: 'utf8' });
+  if (NOT_AVAILABLE.test(out)) throw new Error(`mole agents answered "not available": ${out}`);
+  if (!/mole: no agent run edited/.test(out)) throw new Error(`expected the no-agent-edit message: ${out}`);
+  return { output: out.trim() };
+});
+await step('mole steer query', () => {
+  const out = execFileSync(binMole, ['steer', 'query', '--session', 'nope', '--root', fixture], { cwd: isolated, encoding: 'utf8' });
+  if (NOT_AVAILABLE.test(out)) throw new Error(`mole steer query answered "not available": ${out}`);
+  if (!/mole: no run nope/.test(out)) throw new Error(`expected the no-run message (@mole/agentstate's queryAgentState, same as main): ${out}`);
+  return { output: out.trim() };
+});
+
+// 9. mole-mcp: JSON-RPC initialize + tools/list over stdio, then tools/call for the 5 agentstate/coverage tools
+await step('mole-mcp initialize + tools/list + agentstate/coverage tools/call', async () => {
   const p = spawn(binMcp, [], { cwd: fixture, stdio: ['pipe', 'pipe', 'pipe'] });
   let buf = '';
   let errBuf = '';
@@ -148,14 +175,42 @@ await step('mole-mcp initialize + tools/list', async () => {
   await new Promise((r) => setTimeout(r, 1200));
   send({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
   await new Promise((r) => setTimeout(r, 1200));
+  const calls = [
+    { id: 10, name: 'mole_coverage', arguments: {} },
+    { id: 11, name: 'mole_claims', arguments: { run: 'nope' } },
+    { id: 12, name: 'mole_tried', arguments: { target: 'src/a.ts' } },
+    { id: 13, name: 'mole_collisions', arguments: {} },
+    { id: 14, name: 'mole_agent_intent', arguments: { target: 'src/a.ts' } },
+  ];
+  for (const c of calls) send({ jsonrpc: '2.0', id: c.id, method: 'tools/call', params: { name: c.name, arguments: c.arguments } });
+  // mole_coverage/mole_tried/mole_collisions/mole_agent_intent scan this machine's real ~/.claude, ~/.codex,
+  // ~/.hermes session logs (defaultSources()) -- on a machine with a lot of agent history that scan alone can
+  // take 20+ seconds, nothing to do with this fix; poll for all 5 responses up to 60s instead of a fixed sleep.
+  const expectedIds = new Set(calls.map((c) => c.id));
+  let msgs = [];
+  const deadline = Date.now() + 60_000;
+  while (Date.now() < deadline) {
+    const lines = buf.trim().split('\n').filter(Boolean);
+    msgs = lines.map((l) => JSON.parse(l));
+    const have = new Set(msgs.map((m) => m.id));
+    if ([...expectedIds].every((id) => have.has(id))) break;
+    await new Promise((r) => setTimeout(r, 500));
+  }
   p.kill();
-  const lines = buf.trim().split('\n').filter(Boolean);
-  const msgs = lines.map((l) => JSON.parse(l));
   const init = msgs.find((m) => m.id === 1);
   const list = msgs.find((m) => m.id === 2);
   if (!init?.result?.serverInfo) throw new Error(`no initialize result (stderr: ${errBuf.slice(0, 300)})`);
   if (!Array.isArray(list?.result?.tools) || list.result.tools.length === 0) throw new Error('no tools/list result');
-  return { serverInfo: init.result.serverInfo, toolCount: list.result.tools.length, toolNames: list.result.tools.map((t) => t.name) };
+  const callResults = {};
+  for (const c of calls) {
+    const m = msgs.find((x) => x.id === c.id);
+    if (!m) throw new Error(`no tools/call response for ${c.name} (stderr: ${errBuf.slice(0, 500)})`);
+    const text = (m.result?.content ?? []).map((x) => x.text).join('\n');
+    if (m.result?.isError && NOT_AVAILABLE.test(text)) throw new Error(`${c.name} answered "not available": ${text}`);
+    if (NOT_AVAILABLE.test(text)) throw new Error(`${c.name} answered "not available" in content: ${text}`);
+    callResults[c.name] = { isError: m.result?.isError ?? false, text: text.slice(0, 200) };
+  }
+  return { serverInfo: init.result.serverInfo, toolCount: list.result.tools.length, toolNames: list.result.tools.map((t) => t.name), callResults };
 });
 
 // cleanup

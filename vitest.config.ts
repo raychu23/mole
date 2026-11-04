@@ -12,6 +12,14 @@ import { defineConfig } from 'vitest/config';
 // touch any package's own `src`/`test` directories or skip any real test.
 export default defineConfig({
   test: {
+    // T87: the public release export (scripts/export-public.mjs) strips every package's test/ (and bench/)
+    // directory -- dev-only, not needed to use or build the published product -- so the exported repo
+    // legitimately has zero test files to run; vitest's own default is to exit 1 on that ("No test files
+    // found"), which would make the README's documented `npm run check`/`npm test` always fail on a clean
+    // export even though nothing is actually broken. This config ships to both repos unchanged, so it
+    // only ever matters when there truly are no test files (the export); the private repo always has
+    // hundreds and runs them exactly as before.
+    passWithNoTests: true,
     // Shared-machine load mitigation (Raymond 10-30 "fix the blocked"): several builder
     // tasks (T23/T36/T37) met their own metric gates but got blocked by `npm run check`
     // failing on UNRELATED tests ("Test timed out in 5000ms", vitest-worker onTaskUpdate

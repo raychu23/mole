@@ -11,6 +11,7 @@
   },
   "type": "commonjs",
   "bin": {
+    "mole-code": "dist/cli.js",
     "mole": "dist/cli.js",
     "mole-mcp": "dist/mcp.cjs"
   },
