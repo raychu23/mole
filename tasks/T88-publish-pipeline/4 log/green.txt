@@ -1,0 +1,26 @@
+ok   - npm-fail: script exits non-zero on publish failure
+ok   - npm-fail: temp dir cleaned (nothing left under TMPDIR)
+ok   - npm-fail: no fake npm token left on disk under TMPDIR
+ok   - npm-fail: fake npm token absent from logged argv
+ok   - npm-fail: npmrc was written mode 600
+ok   - sigint: script exits non-zero after SIGINT
+ok   - sigint: temp dir cleaned (nothing left under TMPDIR)
+ok   - sigint: no fake npm token left on disk under TMPDIR
+ok   - sigint: fake npm token absent from logged argv
+ok   - success: script exits 0 on successful publish
+ok   - success: temp dir cleaned (nothing left under TMPDIR)
+ok   - success: no fake npm token left on disk under TMPDIR
+ok   - success: fake npm token absent from logged argv
+ok   - skip: script exits 0 for an already-published version
+ok   - skip: printed the already-published skip message
+ok   - skip: temp dir cleaned (nothing left under TMPDIR)
+ok   - skip: no fake npm token left on disk under TMPDIR
+ok   - skip: fake npm token absent from logged argv
+ok   - vsce-ovsx-env: script exits 0
+ok   - vsce-ovsx-env: fake vsce token absent from logged argv
+ok   - vsce-ovsx-env: fake ovsx token absent from logged argv
+ok   - vsce-ovsx-env: vsce token delivered via VSCE_PAT env var
+ok   - vsce-ovsx-env: ovsx token delivered via OVSX_PAT env var
+ok   - vsce-ovsx-env: no fake token left on disk under TMPDIR
+
+24 passed, 0 failed
