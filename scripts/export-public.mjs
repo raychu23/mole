@@ -11,7 +11,7 @@ if (!process.argv[2]) throw new Error('usage: node scripts/export-public.mjs <ou
 
 const include = ['apps', 'packages', 'plugins', 'release/mole-code', 'docs', 'site', '.claude-plugin', 'LICENSE', 'package.json', 'package-lock.json', 'tsconfig.base.json', 'tsconfig.json', 'vitest.config.ts', 'scripts/bundle-daemon.mjs', 'scripts/mcp-entry.ts'];
 // private tooling that references the author's machine, chats or unpublished studies
-const exclude = [/(^|\/)node_modules(\/|$)/, /(^|\/)dist(\/|$)/, /(^|\/)dist-tsc(\/|$)/, /(^|\/)\.stage(\/|$)/, /\.vsix$/, /\.tsbuildinfo$/, /^\.DS_Store$/, /\.DS_Store$/,
+const exclude = [/(^|\/)node_modules(\/|$)/, /(^|\/)dist(\/|$)/, /(^|\/)dist-tsc(\/|$)/, /(^|\/)\.stage(\/|$)/, /\.vsix$/, /\.tgz$/, /\.tsbuildinfo$/, /^\.DS_Store$/, /\.DS_Store$/,
   // T87: every package's bench/ (dev-only perf/accuracy harnesses, fixture keys that embed real paths and
   // private ledger task slugs) and test/ (fixtures with the same shape -- e.g. `raymond`, `/Users/<name>`,
   // ledger task directory names like "T74-steering-dials") are internal evaluation artifacts, not runtime
@@ -84,14 +84,25 @@ cpSync(join(root, 'scripts/public-README.md'), join(out, 'README.md'));
 cpSync(join(root, 'scripts/public-gitignore'), join(out, '.gitignore'));
 copied.push('README.md', '.gitignore');
 
-// T87 review fix (HIGH): packages/agentstate and packages/coverage are excluded above (author-machine
-// workflow -- see that comment), but daemon/steer/mcp's tsconfig.json + package.json still referenced them
-// (TS project references + npm workspace deps) for the private repo's build. Their consumers now load those
-// two packages lazily through a non-literal dynamic import (packages/mcp/src/optional-agentstate.ts,
-// packages/steer/src/index.ts, packages/daemon/src/cli.ts) instead of a compile-time dependency, so this
-// rewrites the now-dangling references/deps -- without it `npx tsc -b` on the export fails with
-// TS5083/TS6053 (root tsconfig.json's references point at a project.json that is not here) even though no
-// source file imports the excluded packages statically anymore.
+// T87 review 2 (HIGH): the product source (packages/mcp, packages/steer, packages/daemon) imports
+// @mole/agentstate and @mole/coverage literally, exactly as on main -- review 1's non-literal/dynamic-import
+// trick in the SOURCE was rejected because it also defeats esbuild: a non-literal `import()` can't be
+// statically bundled either, so every bundle (the npm tarball's dist/cli.js + dist/mcp.cjs, the .vsix's
+// dist/daemon.cjs) silently lost `mole runs/agents/claims`, `mole steer query` and the 5 MCP tools built on
+// these two packages, in EVERY build, not just the public export. Fixed structurally: the product source
+// (packages/mcp/src/server.ts, collisions-tool.ts, packages/steer/src/index.ts, packages/daemon/src/cli.ts)
+// is back to plain literal imports; this export-time step is the ONLY place the swap happens, and only for
+// the four import sites that reach the two excluded packages, in the exported copy only.
+//
+// packages/agentstate and packages/coverage are excluded above (author-machine workflow -- see that
+// comment), but daemon/steer/mcp's tsconfig.json + package.json still reference them (TS project references +
+// npm workspace deps) for the private repo's build; dropTsconfigRefs/dropPackageDeps below still rewrite
+// those dangling references (same as review 1) -- without it `npx tsc -b` on the export fails with
+// TS5083/TS6053. On top of that, the four files above import the real packages by name; writeOssStub +
+// rewriteImportSite below generate a small local stub module (same shape as the real package's exports, each
+// function throwing "not part of the open-source Mole build") and repoint exactly those import specifiers at
+// it with a plain string replacement -- a literal import of a real (if stub) file, so tsc resolves it with no
+// special-casing, and esbuild bundles it in like any other local module (no "optional import" either).
 function dropTsconfigRefs(tsconfigRel, dropPaths) {
   const p = join(out, tsconfigRel);
   if (!existsSync(p)) return;
@@ -117,6 +128,139 @@ dropTsconfigRefs('packages/steer/tsconfig.json', ['../agentstate']);
 dropPackageDeps('packages/daemon/package.json', ['@mole/agentstate', '@mole/coverage']);
 dropPackageDeps('packages/steer/package.json', ['@mole/agentstate']);
 dropPackageDeps('packages/mcp/package.json', ['@mole/agentstate', '@mole/coverage']);
+
+/** Writes `<out>/<relPath>`: one throwing stub per entry in `fns` ({name, sig}: `sig` is the exact TS function
+ * type the real call sites need -- e.g. `scanCoverage`'s callers `.filter`/property-access its result, so its
+ * stub needs the real structural return type, not `any`, or tsc's noImplicitAny flags the callback params),
+ * plus one `export interface <name> { ... }` per entry in `types` (verbatim shape, for a `type`-only
+ * re-export or for a `sig` below to reference). */
+function writeOssStub(relPath, { pkg, fns, types = [] }) {
+  const p = join(out, relPath);
+  mkdirSync(dirname(p), { recursive: true });
+  const body = [
+    `// Generated by scripts/export-public.mjs at export time (not part of the private repo's own source --`,
+    `// see that script's "T87 review 2 (HIGH)" comment). ${pkg} is not included in this open-source export`,
+    `// (it is built around the author's own private machine/workflow state); every call below throws a clear`,
+    `// error instead of the real feature silently going missing or crashing with an unrelated message. Each`,
+    `// export keeps the real function's call shape (loose where callers never inspect the result, the real`,
+    `// structural shape where they do -- a plain \`any\` return made tsc's noImplicitAny flag every caller that`,
+    `// destructures/filters/maps the result) so this type-checks exactly like the real package would.`,
+    `function unavailable(name: string): (...args: any[]) => any {`,
+    `  return (..._args: any[]): any => {`,
+    `    throw new Error(\`${pkg} is not part of the open-source Mole build (called \${name})\`);`,
+    `  };`,
+    `}`,
+    ...types.map((t) => t.src),
+    ...fns.map(({ name, sig }) => `export const ${name}: ${sig} = unavailable(${JSON.stringify(name)}) as ${sig};`),
+    '',
+  ].join('\n');
+  writeFileSync(p, body);
+}
+/** Finds `exact` (a whole import/dynamic-import line, copied verbatim from the committed source) in
+ * `<out>/<relPath>` and replaces it with `replacement`. Throws loudly instead of silently no-op'ing if the
+ * source line it expects is gone (e.g. the real file was edited and this rewrite table fell out of sync). */
+function rewriteImportSite(relPath, exact, replacement) {
+  const p = join(out, relPath);
+  const text = readFileSync(p, 'utf8');
+  if (!text.includes(exact)) throw new Error(`export-public.mjs: expected import site not found in ${relPath}:\n  ${exact}`);
+  writeFileSync(p, text.replace(exact, replacement));
+}
+
+const AGENTSTATE_SNAPSHOT_TYPE = {
+  src: [
+    'export interface AgentStateSnapshot {',
+    '  session: string;',
+    '  found: boolean;',
+    '  harness?: string;',
+    '  cwd?: string | null;',
+    '  start?: string;',
+    '  end?: string | null;',
+    '  steps?: number;',
+    '  intent?: string | null;',
+    '  filesInPlay?: string[];',
+    '  decisionsInPlay?: Array<{ id: string; title: string }>;',
+    '  lastStep?: { time: string; operation: string; kind: string; tool: string | null; command: string | null } | null;',
+    '}',
+  ].join('\n'),
+};
+// Structural mirror of @mole/coverage's own CoverageScanResult/CoverageFileEntry (packages/coverage/src/index.ts):
+// mole_coverage's handler (packages/mcp/src/server.ts) filters/property-accesses scanCoverage()'s result
+// (scan.notice, scan.files, f.agents[].session, f.weak.is) and spreads it (`...scan`) -- a bare `any` return
+// made every one of those callback parameters an implicit-any tsc error, so this stub keeps the real shape.
+const COVERAGE_RESULT_TYPES = {
+  src: [
+    'export interface CoverageFileEntry {',
+    '  file: string;',
+    '  agents: Array<{ session: string }>;',
+    '  weak: { is: boolean };',
+    '  [k: string]: unknown;',
+    '}',
+    'export interface CoverageScanResult {',
+    '  notice?: string | null;',
+    '  files: CoverageFileEntry[];',
+    '  [k: string]: unknown;',
+    '}',
+  ].join('\n'),
+};
+
+writeOssStub('packages/mcp/src/_oss-agentstate-stub.ts', {
+  pkg: '@mole/agentstate',
+  fns: [
+    { name: 'agentIntentsFor', sig: '(root: string, target: string) => Record<string, unknown>' },
+    { name: 'claims', sig: '(run: string, opts: Record<string, unknown>) => Record<string, unknown>' },
+    { name: 'defaultSources', sig: '(env?: NodeJS.ProcessEnv) => Record<string, unknown>' },
+    { name: 'tried', sig: '(target: string, opts: Record<string, unknown>) => Record<string, unknown>' },
+    { name: 'collisions', sig: '(opts: Record<string, unknown>) => Record<string, unknown>' },
+  ],
+});
+writeOssStub('packages/mcp/src/_oss-coverage-stub.ts', {
+  pkg: '@mole/coverage',
+  types: [COVERAGE_RESULT_TYPES],
+  fns: [
+    { name: 'coverage', sig: '(root: string, file: string) => Promise<Record<string, unknown>>' },
+    { name: 'scanCoverage', sig: '(root: string) => CoverageScanResult' },
+  ],
+});
+writeOssStub('packages/daemon/src/_oss-agentstate-stub.ts', {
+  pkg: '@mole/agentstate',
+  fns: [
+    { name: 'agentCli', sig: "(cmd: string, pos: string[], flags: Record<string, string | true>, root: string) => Promise<number>" },
+    { name: 'claimsCli', sig: '(pos: string[], flags: Record<string, string | true>) => Promise<number>' },
+  ],
+});
+writeOssStub('packages/daemon/src/_oss-coverage-stub.ts', {
+  pkg: '@mole/coverage',
+  fns: [{ name: 'coverageCli', sig: '(pos: string[], flags: Record<string, string | true>, root: string) => Promise<number>' }],
+});
+writeOssStub('packages/steer/src/_oss-agentstate-stub.ts', {
+  pkg: '@mole/agentstate',
+  types: [AGENTSTATE_SNAPSHOT_TYPE],
+  fns: [{ name: 'queryAgentState', sig: '(root: string, session: string) => Promise<AgentStateSnapshot>' }],
+});
+
+rewriteImportSite('packages/mcp/src/server.ts', "import { agentIntentsFor, claims, defaultSources, tried } from '@mole/agentstate';", "import { agentIntentsFor, claims, defaultSources, tried } from './_oss-agentstate-stub.js';");
+rewriteImportSite('packages/mcp/src/server.ts', "const { coverage, scanCoverage } = await import('@mole/coverage');", "const { coverage, scanCoverage } = await import('./_oss-coverage-stub.js');");
+rewriteImportSite('packages/mcp/src/collisions-tool.ts', "import { collisions, defaultSources } from '@mole/agentstate';", "import { collisions, defaultSources } from './_oss-agentstate-stub.js';");
+rewriteImportSite(
+  'packages/daemon/src/cli.ts',
+  "if (cmd === 'claims') return (await import('@mole/agentstate/dist/src/claims/cli.js')).claimsCli(pos, flags); // claim check (T24): light entry, no daemon",
+  "if (cmd === 'claims') return (await import('./_oss-agentstate-stub.js')).claimsCli(pos, flags); // claim check (T24): light entry, no daemon",
+);
+rewriteImportSite(
+  'packages/daemon/src/cli.ts',
+  "if (['runs', 'run', 'tried', 'agents', 'agent-intent', 'collisions'].includes(cmd)) return (await import('@mole/agentstate')).agentCli(cmd, pos, flags, root); // agent states (T18) + collisions (T21) + external agent-session intent (T39), no daemon needed",
+  "if (['runs', 'run', 'tried', 'agents', 'agent-intent', 'collisions'].includes(cmd)) return (await import('./_oss-agentstate-stub.js')).agentCli(cmd, pos, flags, root); // agent states (T18) + collisions (T21) + external agent-session intent (T39), no daemon needed",
+);
+rewriteImportSite(
+  'packages/daemon/src/cli.ts',
+  "if (cmd === 'coverage') return (await import('@mole/coverage/dist/src/cli.js')).coverageCli(pos, flags, root); // which agents cover which files, weak spots (T35)",
+  "if (cmd === 'coverage') return (await import('./_oss-coverage-stub.js')).coverageCli(pos, flags, root); // which agents cover which files, weak spots (T35)",
+);
+rewriteImportSite(
+  'packages/steer/src/index.ts',
+  "export { queryAgentState, type AgentStateSnapshot } from '@mole/agentstate';",
+  "export { queryAgentState, type AgentStateSnapshot } from './_oss-agentstate-stub.js';",
+);
 
 const hits = [];
 for (const rel of copied) {

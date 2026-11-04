@@ -56,22 +56,3 @@ export interface SteerDelivery {
   signals: SteerSignal[];
   updates: SteerUpdateResult[]; // accepted only: a rejected update was never queued for delivery
 }
-
-/** T87 review fix (HIGH): structural mirror of @mole/agentstate's own AgentStateSnapshot
- * (packages/agentstate/src/steer/query.ts) kept here too, field-for-field, so this package's public type for
- * `queryAgentState` (index.ts) does not require @mole/agentstate's source to be present (that package is
- * excluded from the public release export -- author-machine workflow, see scripts/export-public.mjs). The two
- * must be kept in sync by hand; agentstate's own copy is the source of truth for the shape. */
-export interface AgentStateSnapshot {
-  session: string;
-  found: boolean;
-  harness?: string;
-  cwd?: string | null;
-  start?: string;
-  end?: string | null;
-  steps?: number;
-  intent?: string | null;
-  filesInPlay?: string[];
-  decisionsInPlay?: Array<{ id: string; title: string }>;
-  lastStep?: { time: string; operation: string; kind: string; tool: string | null; command: string | null } | null;
-}

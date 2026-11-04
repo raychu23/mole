@@ -41,3 +41,52 @@ timing numbers and `site/index.html`'s entire `LINES` animation array mechanical
 `4 log/demo-transcript.txt` (idempotent — a second run is a no-op). `scripts/demo-assets-sync.test.ts` asserts
 both files equal what the transcript derives (red when hand-edited off, verified by deliberately corrupting
 README's timing and watching the test fail before fixing it back).
+
+### Review fixes (round 3)
+
+**HIGH — round 2's non-literal/dynamic-import trick broke every build, not just the export.** Round 2's fix
+for the TS5083 export build failure (loading `@mole/agentstate`/`@mole/coverage` through a variable import
+specifier, `packages/mcp/src/optional-agentstate.ts`/`optional-coverage.ts`, `packages/steer/src/index.ts`,
+`packages/daemon/src/cli.ts:113-120`) solved tsc but broke esbuild the same way: esbuild can only bundle an
+`import()` whose argument is a string literal, so every bundle built from this source — the installed
+`mole-code` npm tarball's `dist/cli.js`/`dist/mcp.cjs` and the VS Code extension's `dist/daemon.cjs` — silently
+dropped both packages and answered "not available in this build" for `mole runs/agents/claims`, `mole steer
+query` and the `mole_coverage`/`mole_claims`/`mole_tried`/`mole_collisions`/`mole_agent_intent` MCP tools, in
+every build (private repo, public release, VS Code), not just the public source export the fix targeted.
+Confirmed red on 6425bc5 by extending `release/mole-code/tools/test-install.mjs` to build+pack+install the
+tarball into a clean dir and call those CLI/MCP surfaces on a tiny temp git repo (`tasks/.../4 log/red.txt`):
+all four new steps failed with "not available in this build".
+
+Fixed structurally, per the review: the product source (`packages/mcp/src/server.ts`, `collisions-tool.ts`,
+`packages/steer/src/index.ts` + `types.ts`, `packages/daemon/src/cli.ts`) is back to the exact plain literal
+imports `main` has (diffed byte-for-byte against `main` except the unrelated `mole demo` addition); deleted
+`optional-agentstate.ts`/`optional-coverage.ts`. The export-time swap now lives ONLY in
+`scripts/export-public.mjs`: `writeOssStub()` generates one small local stub module per package per consumer
+package (e.g. `packages/mcp/src/_oss-agentstate-stub.ts`), with the real function names and real call-site
+shapes (reusing the same structural interfaces round 2's deleted files had — `CoverageScanResult` etc — so
+`noImplicitAny` still passes on every `.filter`/`.map`/spread the real callers do), each one throwing "is not
+part of the open-source Mole build" when actually called; `rewriteImportSite()` then does a literal, asserted
+string replacement of the four real import specifiers (`@mole/agentstate` → `./_oss-agentstate-stub.js`, etc.)
+in the exported copy only — a normal literal import of a real (if stub) file, so both tsc and esbuild handle
+it like any other local module; no "optional"/non-literal anything anywhere. `dropTsconfigRefs`/
+`dropPackageDeps` are unchanged from round 2 (still needed since `packages/agentstate`/`coverage` stay
+excluded from the export).
+
+Verified: (a) `release/mole-code/tools/test-install.mjs`'s new steps are green on this fix (private repo build
+— tarball bundles the real packages): `mole runs`/`agents`/`steer query` give the real "no run(s)"/"no agent
+run" messages (same as `main`, never "not available"), and `tools/call` for all 5 MCP tools returns real
+data/real not-found errors, never "not available" (`4 log/green-test-a.txt`; note the agentstate scan of this
+machine's real `~/.claude`/`~/.codex`/`~/.hermes` session history can take 20–30s, so the test polls for
+responses instead of a fixed sleep). (b) `node apps/vscode/esbuild.mjs` then `dist/daemon.cjs` contains real
+agentstate symbols (`agentIntentsFor`/`scanAgents`/`queryAgentState`, 8 hits) and zero occurrences of "not
+available in this build" or the stub helpers. (c) `node scripts/export-public.mjs <dir>` → `npm install && npm
+run check` passes clean (`tsc -b` + `vitest run`, 0 errors) in a fresh export
+(`4 log/green-test-c-export-check.txt`); privacy scan (both the script's own and the reviewer's grep list)
+stays 0 real hits (`hermesLlmClient` is a pre-existing public API identifier, not a leak). Private repo
+`npm run check` still passes unchanged (1347/1347 tests, same as before this fix). `node
+packages/daemon/dist/cli.js rules --root .` stays 0 violations.
+
+**MEDIUM — `.tgz` not excluded from the export.** A stray `npm pack` output left in `release/mole-code/`
+during local dev would have been copied into the public export (it already has its own
+`release/mole-code/.gitignore` entry but `export-public.mjs`'s own exclude list didn't). Added `/\.tgz$/` next
+to the existing `/\.vsix$/` entry.

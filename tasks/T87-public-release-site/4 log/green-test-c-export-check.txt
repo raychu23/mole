@@ -1,0 +1,20 @@
+
+> mole@0.0.0 check
+> npm run build && npm test
+
+
+> mole@0.0.0 build
+> tsc -b
+
+
+> mole@0.0.0 test
+> vitest run
+
+
+ RUN  v3.2.7 /Users/a1/.hermes/cache/scratch/t87-export4
+
+No test files found, exiting with code 0
+
+include: **/*.{test,spec}.?(c|m)[jt]s?(x)
+exclude:  **/node_modules/**, **/dist/**, **/bench/corpora/**, **/bench/**/corpora/**, evals/inspect/**, .mole/local/**, (internal reference removed), (internal reference removed)
+

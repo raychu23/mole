@@ -2,8 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { formatNeighborhood, MAX_MAP_NODES } from '@mole/core';
 import { ensureDaemon, MoleClient, type EnsureOptions } from '@mole/daemon';
-import { loadAgentstate } from './optional-agentstate.js'; // T87: @mole/agentstate is an optional/lazy dep, see that file
-import { loadCoverage } from './optional-coverage.js'; // T87: @mole/coverage is an optional/lazy dep, see that file
+import { agentIntentsFor, claims, defaultSources, tried } from '@mole/agentstate';
 import { registerCollisionsTool } from './collisions-tool.js';
 import { registerCompileAndCascadeTools } from './compile-cascade-tool.js'; // T46: compile-at-capture approve/reject + cascade check
 import { registerOneOnOneTool } from './oneonone-tool.js'; // T31: 1:1 prep + read-back, grouped by folder, never by person
@@ -92,13 +91,8 @@ export function createServer(opts: MoleMcpOptions): McpServer {
       outputSchema: z.object({ target: z.string(), runs: z.array(z.string()), items: z.array(z.unknown()), skipped: z.array(z.unknown()) }).passthrough(),
     },
     async ({ target }) => {
-      try {
-        const { tried, defaultSources } = await loadAgentstate();
-        const r = tried(target, { ...defaultSources(), root: opts.root });
-        return { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }], structuredContent: sc(r) };
-      } catch (e) {
-        return { content: [{ type: 'text' as const, text: `mole_tried: ${(e as Error).message}` }], isError: true };
-      }
+      const r = tried(target, { ...defaultSources(), root: opts.root });
+      return { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }], structuredContent: sc(r) };
     },
   );
   // T24: what an agent says it did (its final answer) checked against what it did (its own tool calls + git)
@@ -124,7 +118,6 @@ export function createServer(opts: MoleMcpOptions): McpServer {
     },
     async ({ run, at }) => {
       try {
-        const { claims, defaultSources } = await loadAgentstate();
         const r = claims(run, { ...defaultSources(), at });
         return { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }], structuredContent: sc(r) };
       } catch (e) {
@@ -152,7 +145,6 @@ export function createServer(opts: MoleMcpOptions): McpServer {
     },
     async ({ target }) => {
       try {
-        const { agentIntentsFor } = await loadAgentstate();
         const r = agentIntentsFor(opts.root, target);
         return { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }], structuredContent: sc(r) };
       } catch (e) {
@@ -339,7 +331,7 @@ export function createServer(opts: MoleMcpOptions): McpServer {
     async (args) => {
       const root = resolve(opts.root, args.root ?? '.');
       try {
-        const { coverage, scanCoverage } = await loadCoverage();
+        const { coverage, scanCoverage } = await import('@mole/coverage');
         if (args.file) {
           const r = await coverage(root, args.file);
           return { content: [{ type: 'text' as const, text: JSON.stringify(r, null, 2) }], structuredContent: sc(r) };

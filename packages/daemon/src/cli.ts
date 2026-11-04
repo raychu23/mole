@@ -108,29 +108,9 @@ async function main(): Promise<number> {
     if (!flags.stdin || flags.verbose) console.log(`recorded ${ev.length} look${ev.length === 1 ? '' : 's'} in .mole/local/seen.jsonl${ev.length < inputs.length ? ` (${inputs.length - ev.length} unknown symbol${inputs.length - ev.length === 1 ? '' : 's'} skipped)` : ''}`);
     return ev.length === 0 && inputs.length > 0 && !flags.stdin ? 1 : 0;
   }
-  // T87 review fix (HIGH): @mole/agentstate and @mole/coverage are excluded from the public release export
-  // (author-machine workflow, see scripts/export-public.mjs); these specifiers are kept in a variable so tsc
-  // never tries to statically resolve them (a literal `import('@mole/agentstate')` would fail TS2307/TS5083
-  // once the package and its tsconfig reference are gone) -- a normal import in the private repo and the
-  // published npm package (bundles their dist regardless of this source mirror).
-  const optionalImport = async (spec: string, feature: string): Promise<any> => {
-    try {
-      return await import(/* not a literal on purpose, see above */ spec);
-    } catch (e) {
-      console.error(`mole ${feature}: not available in this build (${(e as Error).message})`);
-      process.exitCode = 2;
-      return undefined;
-    }
-  };
-  if (cmd === 'claims') {
-    const mod = await optionalImport('@mole/agentstate/dist/src/claims/cli.js', 'claims');
-    return mod ? mod.claimsCli(pos, flags) : 2; // claim check (T24): light entry, no daemon
-  }
+  if (cmd === 'claims') return (await import('@mole/agentstate/dist/src/claims/cli.js')).claimsCli(pos, flags); // claim check (T24): light entry, no daemon
   if (cmd === 'steer') return (await import('@mole/steer/dist/src/cli.js')).steerCli(pos, flags, root); // T74: signal/update/query/deliver, light entry, no daemon
-  if (['runs', 'run', 'tried', 'agents', 'agent-intent', 'collisions'].includes(cmd)) {
-    const mod = await optionalImport('@mole/agentstate', 'agent states'); // agent states (T18) + collisions (T21) + external agent-session intent (T39), no daemon needed
-    return mod ? mod.agentCli(cmd, pos, flags, root) : 2;
-  }
+  if (['runs', 'run', 'tried', 'agents', 'agent-intent', 'collisions'].includes(cmd)) return (await import('@mole/agentstate')).agentCli(cmd, pos, flags, root); // agent states (T18) + collisions (T21) + external agent-session intent (T39), no daemon needed
   if (cmd === 'decisions') return (await import('@mole/decisions')).decisionsCli(pos, flags, root); // decision graph + flags (T29), no daemon needed
   if (cmd === 'decision') return (await import('@mole/decisions')).decisionCli(pos, flags, root); // write records: new / supersede / link / suggest / recover (T51)
   if (cmd === 'incident') return (await import('@mole/decisions')).incidentCli(pos, flags, root); // incident revives dissent: suggest / accept / dismiss (T58)
@@ -154,10 +134,7 @@ async function main(): Promise<number> {
   if (cmd === 'compile') return (await import('@mole/decisions')).compileCli(pos, flags, root); // T46: compile-at-capture (draft/approve/reject/status)
   if (cmd === 'arguments') return (await import('@mole/decisions')).argumentsCli(pos, flags, root); // T80: captured-argument capture/approve/reject/list
   if (cmd === 'cascade-check') return (await import('@mole/decisions')).cascadeCheckCli(pos, flags, root); // T46: zero-LLM tier then one-call LLM escalation
-  if (cmd === 'coverage') {
-    const mod = await optionalImport('@mole/coverage/dist/src/cli.js', 'coverage');
-    return mod ? mod.coverageCli(pos, flags, root) : 2; // which agents cover which files, weak spots (T35)
-  }
+  if (cmd === 'coverage') return (await import('@mole/coverage/dist/src/cli.js')).coverageCli(pos, flags, root); // which agents cover which files, weak spots (T35)
   if (cmd === 'hotspots') return (await import('@mole/hotspots/dist/src/cli.js')).hotspotsCli(pos, flags, root); // T70/D68: churn x complexity x decision volatility x fix density, ranked
   if (cmd === 'coupling') return (await import('@mole/coupling/dist/src/cli.js')).couplingCli(pos, flags, root); // T77/D69: logical coupling (co-change) x CODEOWNERS teams, cross-team pairs first
   if (['interrogate', 'check-records'].includes(cmd)) return (await import('@mole/intake')).intakeCli(pos, flags, root); // T23: agents interrogate, people write
