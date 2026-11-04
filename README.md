@@ -44,6 +44,12 @@ Mole sits in both: as the visualizer inside agent tasks, and in the codebase its
 
 **Still open:** what "propagate" updates, first language and repository, storage, renderer, cost per file entry.
 
+## Installing the CLI + MCP server
+
+`packages/cli-dist` builds one public npm package (`mole-code`, not published yet — T85) bundling the
+`mole` CLI and the `mole-mcp` MCP stdio server so someone outside this repo can use them without a
+checkout: see `packages/cli-dist/README.md` for install, usage and the isolated-install test.
+
 ## Working in this repository
 
 New chat startup: open this repository folder, then follow `AGENTS.md` → `context/0 start.md` + `context/1 takeaways.md` → selected task. Detailed history is on demand. Tested: a writable chat updated both condensed files after a synthetic correction, and a separate fresh chat recovered the change and reason without the answer in its prompt. The latest reader skipped the full global preference inbox and long logs. This is agent-managed turn-end maintenance, not an independent background service or a cross-host guarantee. Evidence: `context/systems/decision-sync-test.json`; earlier checks: `context/systems/startup-test.json`.
