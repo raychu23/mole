@@ -1,21 +1,22 @@
 ---
-state: ready
+state: running
 owner: hermes-build
-repo:
-branch:
-worktree:
+repo: /Users/a1/Desktop/CS Code/Project/Mole
+branch: ledger/t86-claude-code-plugin-dist
+worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T86-claude-code-plugin-dist
 base:
 reviewer:
 updated: 2026-11-03 19:01
-status: ledger ready
-next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+status: ledger running
+next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+claimed: 2026-11-03 19:01
 ---
 ```notes
 T86-claude-code-plugin-dist      ledger task (rules.md §3 code features)      project tasks
     goal                    Make the Claude Code plugin installable outside this repo: plugins/claude-code/.mcp.json and the hook scripts reach ../../packages/... (repo checkout only). Use the official plugin + marketplace format (.claude-plugin/marketplace.json, ${CLAUDE_PLUGIN_ROOT}), make the plugin self-contained (bundled CLI/MCP inside the plugin dir built by a script), add marketplace.json, bump version, test from a clean temp dir: hook scripts with sample stdin + MCP initialize handshake.
     done-when               1 prior-art note from the official docs (fetched, dated) · 2 test first: clean-dir smoke script · 3 plugin.json/marketplace.json validate against the documented schema · 4 export-public allowlist includes what the marketplace needs · 5 npm run check passes
-    status                  2026-11-03 ready      owner hermes-build
-    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
+    status                  2026-11-03 running      worktree /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T86-claude-code-plugin-dist · branch ledger/t86-claude-code-pl
+    next                    worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
     pinned
     mode                    one worker
     boundary                plugins/claude-code/**, .claude-plugin/marketplace.json, scripts/export-public.mjs allowlist, tests
