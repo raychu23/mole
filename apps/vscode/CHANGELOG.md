@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.5.0
+
+- New "Reasoning" section in the sidebar (T62): the phase in force (`.mole/priorities.md`) with what flips if
+  the audience/value order changes, incident suggestions that could revive a past decision under that phase
+  (T58), and open proposal branches compared against the approved baseline (T56) — same JSON the MCP tools
+  return, so the IDE and an agent see the same reasoning.
+- Priorities what-if (T73): the reasoning section's "compare with order X" box runs `mole priorities whatif`
+  against an arbitrary audience/value order without writing `.mole/priorities.md` — a read-only comparison,
+  never a silent change to the order in force.
+- Distribution housekeeping only, nothing in the panel changed: the extension's daemon/worker bundling step
+  is now shared with the npm package and the Claude Code plugin (D97/T85/T86) — verified byte-identical output
+  before/after, no behavior change.
+
+Not in this release: steering (the agent signal/query/update loop, T74/T75) and the newer reasoning inputs
+(outcome ledger T81, assurance T78, coupling T77, hotspots T70, case recall T71, argument capture T80) are
+CLI/MCP-only so far — none of them have sidebar UI yet.
+
 ## 0.3.0
 
 - New sidebar view in the Activity Bar ("Mole: the code behind this"), always visible, follows the function
