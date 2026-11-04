@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-11-04 01:53      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T88-publish-pipeline → exit 0 (at new Promise (<anonymous>))
     2026-11-04 01:56      submitted → verified      reviewer hermes-subagent deleg_74258246 FAIL, deleg_0ecbf02b PASS (fresh, claude-sonnet-5) · findings: CRITICAL npm token left on disk + HIGH PATs in argv -> cb3ed9e, R2 independent stubs PASS on bash 3.2 + 5.2 · checks 
     2026-11-04 01:56      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T88-publish-pipeline → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
+    2026-11-04 01:58      verified → integrated      merge c821d43 · combined checks exit 0
+    2026-11-04 01:58      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
 ```
