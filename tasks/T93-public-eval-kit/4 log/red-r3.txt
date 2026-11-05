@@ -1,0 +1,8 @@
+E           ?? .mole_ab_worktrees/foo.txt
+
+dcbench_eval/tests/test_worktree_cleanup.py:228: AssertionError
+=========================== short test summary info ============================
+FAILED dcbench_eval/tests/test_arms.py::test_preflight_fails_loudly_when_installed_mole_predates_blocking_hooks
+FAILED dcbench_eval/tests/test_arms.py::test_default_package_is_the_latest_release_asset_not_a_pinned_old_version
+FAILED dcbench_eval/tests/test_worktree_cleanup.py::test_ensure_worktrees_excluded_uses_the_common_git_dir_for_a_linked_worktree
+3 failed, 42 passed in 9.29s

@@ -212,3 +212,17 @@ def test_make_worktree_registers_git_exclude_when_worktrees_root_is_inside_repo(
     assert "/.mole_ab_worktrees/" in exclude_text
 
     wa.remove_worktree(tiny_repo, wt)
+
+
+def test_ensure_worktrees_excluded_uses_the_common_git_dir_for_a_linked_worktree(tiny_repo, tmp_path):
+    """T93 round-3 review HIGH: for a repo that is itself a linked git worktree, `--git-dir` is the
+    per-worktree admin dir, whose info/exclude git never reads. The entry must land where git reads it."""
+    import subprocess
+    linked = tmp_path / "linked"
+    subprocess.run(["git", "-C", str(tiny_repo), "worktree", "add", "-q", str(linked)], check=True)
+    wa.ensure_worktrees_excluded(linked)
+    (linked / ".mole_ab_worktrees").mkdir()
+    (linked / ".mole_ab_worktrees" / "foo.txt").write_text("x")
+    st = subprocess.run(["git", "-C", str(linked), "status", "--porcelain", "--untracked-files=all"],
+                        capture_output=True, text=True, check=True).stdout
+    assert ".mole_ab_worktrees" not in st

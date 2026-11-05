@@ -307,6 +307,25 @@ def test_preflight_mole_resolves_passes_when_the_real_find_mole_resolves(tmp_pat
     preflight_mole_resolves(pkg, wt)  # must not raise
 
 
+def test_preflight_fails_loudly_when_installed_mole_predates_blocking_hooks(tmp_path):
+    """T93 round-3 review HIGH: the v0.5.0 release tarball resolves findMole() but its hooks never block
+    (pre-D102). The preflight must check the installed package's FEATURES, not just that a CLI resolves,
+    else a 'decisions' arm silently tests an older Mole than the repo."""
+    pkg = tmp_path / "old_pkg"
+    _write_fake_mole_package(pkg, working_find_mole=True)
+    lib = pkg / "scripts" / "lib.mjs"
+    lib.write_text(lib.read_text().replace("crispViolationsForOverlay", "oldNameWithoutBlocking"))
+    wt = tmp_path / "wt"
+    wt.mkdir()
+    with pytest.raises(RuntimeError, match="predates the blocking hooks"):
+        preflight_mole_resolves(pkg, wt)
+
+
+def test_default_package_is_the_latest_release_asset_not_a_pinned_old_version():
+    assert "/releases/latest/download/" in DEFAULT_MOLE_PACKAGE_URL
+    assert "v0.5.0" not in DEFAULT_MOLE_PACKAGE_URL
+
+
 def test_install_claude_code_plugin_hooks_reports_not_installed_when_npm_package_unavailable(tmp_path, monkeypatch):
     monkeypatch.setattr("dcbench_eval.arms.install_mole_npm_package", lambda worktree, mole_package=None: None)
     wt = tmp_path / "wt"

@@ -84,3 +84,10 @@ see below); verified via its own unit tests + the pre-existing Docker-sandboxed 
 - Nothing blocking. Optional: a real Linux or Docker-sandboxed run of `agent=claude_code`/`codex` to
   confirm the local-sandbox path end to end off this Mac, if/when he wants that extra confidence before
   recommending it to users.
+
+## Round 3 fix (hermes-main, 11-04 ~20:45, after review deleg_8888be34 FAIL)
+- HIGH 1 default package v0.5.0 predates D102 blocking hooks → default = releases/latest/download/mole-code.tgz; preflight now also requires the installed lib.mjs to export crispViolationsForOverlay, else fails "predates the blocking hooks" with the fix command.
+  real check: v0.5.0 release tarball → FAIL (predates); fresh build of this branch (node release/mole-code/tools/build.mjs + npm pack) → PASS.
+- HIGH 2 info/exclude for a linked worktree used --git-dir → `git rev-parse --git-path info/exclude` (common dir).
+- red: 4 log/red-r3.txt (3 failed) · green: pytest 76 passed / 8 skipped.
+- TODO at release: upload asset named mole-code.tgz to the newest GitHub release (else the default URL 404s → npm install fails → honest instruction-file fallback).

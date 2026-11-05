@@ -108,13 +108,15 @@ def ensure_worktrees_excluded(repo: Path, dirname: str = WORKTREES_DIRNAME) -> N
     `.mole_ab_worktrees` exclude is not already present (so re-running a sweep/task build repeatedly never
     grows the file). No-op (never raises) if `repo` is not a git repo at all or `.git` is missing/unwritable
     -- this is a convenience, not something that should ever fail a sample."""
-    git_dir_r = subprocess.run(["git", "-C", str(repo), "rev-parse", "--git-dir"], capture_output=True, text=True)
-    if git_dir_r.returncode != 0:
+    # `--git-path info/exclude` resolves to the file git actually reads, which for a linked worktree is in the
+    # COMMON dir, not the per-worktree `--git-dir` (T93 round-3 review HIGH; https://git-scm.com/docs/git-rev-parse).
+    path_r = subprocess.run(["git", "-C", str(repo), "rev-parse", "--git-path", "info/exclude"],
+                            capture_output=True, text=True)
+    if path_r.returncode != 0:
         return
-    git_dir = Path(git_dir_r.stdout.strip())
-    if not git_dir.is_absolute():
-        git_dir = repo / git_dir
-    exclude_path = git_dir / "info" / "exclude"
+    exclude_path = Path(path_r.stdout.strip())
+    if not exclude_path.is_absolute():
+        exclude_path = repo / exclude_path
     entry = f"/{dirname}/"
     try:
         existing = exclude_path.read_text() if exclude_path.exists() else ""

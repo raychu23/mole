@@ -25,7 +25,10 @@ from pathlib import Path
 # plugin in ONE npm package, dist/ built in) until `mole-code` is published to the npm registry -- see
 # release/mole-code/package.json and tools/build.mjs. A locally built tarball (`npm pack` inside
 # release/mole-code after `node tools/build.mjs`) can be passed instead via `-T mole_package=PATH`.
-DEFAULT_MOLE_PACKAGE_URL = "https://github.com/raychu23/mole-code-map/releases/download/v0.5.0/mole-code-0.1.0.tgz"
+# GitHub's documented stable link to the newest release's asset (releases/latest/download/<asset>), so the
+# default always tracks the latest Mole release; preflight_mole_resolves still refuses a package whose hooks
+# predate D102 blocking (T93 round-3 review HIGH: the pinned v0.5.0 asset never blocked).
+DEFAULT_MOLE_PACKAGE_URL = "https://github.com/raychu23/mole-code-map/releases/latest/download/mole-code.tgz"
 
 
 @dataclass(frozen=True)
@@ -193,14 +196,22 @@ def preflight_mole_resolves(plugin_dir: Path, worktree: Path) -> None:
     'none' arm's behavior while reporting success."""
     script = (
         f"import({json.dumps((plugin_dir / 'scripts' / 'lib.mjs').as_posix())})"
-        f".then(({{findMole}}) => {{ const r = findMole({json.dumps(str(worktree))}); "
+        f".then((m) => {{ const r = m.findMole({json.dumps(str(worktree))}); "
         "if (!r) { console.error('MOLE_UNRESOLVED'); process.exit(1); } "
+        "if (typeof m.crispViolationsForOverlay !== 'function') { console.error('MOLE_NO_BLOCKING'); process.exit(1); } "
         "console.log(JSON.stringify(r)); }).catch((e) => { console.error(String(e)); process.exit(1); });"
     )
     try:
         r = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=30)
     except (subprocess.TimeoutExpired, OSError) as e:
         raise RuntimeError(f"mole_ab preflight could not even run node to check findMole(): {e}") from e
+    if "MOLE_NO_BLOCKING" in (r.stderr or ""):
+        raise RuntimeError(
+            f"mole_ab preflight FAILED: the installed Mole plugin at {plugin_dir} predates the blocking hooks "
+            "(D102: Stop blocks / PreToolUse denies crisp rule violations), so a 'decisions' arm would test an "
+            "older Mole than this repo. Pass -T mole_package=<path or URL of a current mole-code tarball> "
+            "(build one with `node release/mole-code/tools/build.mjs && npm pack release/mole-code`)."
+        )
     if r.returncode != 0 or "MOLE_UNRESOLVED" in (r.stderr or ""):
         raise RuntimeError(
             "mole_ab preflight FAILED: the just-installed Mole plugin at "

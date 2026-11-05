@@ -106,7 +106,7 @@ def mole_ab(
     dist/ included) that gets installed INSIDE the sample's worktree before the agent runs, so the plugin's
     SessionStart/PreToolUse/Stop hooks actually resolve the Mole CLI (previously a bare source copy with no
     dist/ made every hook silently no-op while still reporting success). None defaults to the public GitHub
-    release tarball (arms.DEFAULT_MOLE_PACKAGE_URL) until `mole-code` is published to the npm registry.
+    latest-release tarball (arms.DEFAULT_MOLE_PACKAGE_URL; must include the D102 blocking hooks, checked by the preflight) until `mole-code` is published to the npm registry.
     """
     rows = load_dataset(dataset)
     arm_list = arms if isinstance(arms, list) else [a.strip() for a in arms.split(",")]

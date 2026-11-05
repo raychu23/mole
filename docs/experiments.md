@@ -101,8 +101,13 @@ arms.py               what context (if any) the agent sees before the same task 
                       | decisions:PATH | plugin_pin:SHA:PATH (see its own docstring for the full syntax).
                       For claude_code/codex specifically, install_arm_for_agent() places that context the
                       way THOSE agents actually read it (CLAUDE.md/AGENTS.md on disk, and -- for a
-                      'decisions' arm under claude_code, when this checkout's own plugin is found --
-                      Mole's real Claude Code plugin hooks installed project-locally).
+                      'decisions' arm under claude_code -- the real `mole-code` package installed into the
+                      worktree, its Claude Code hooks wired via .claude/settings.json). Package source:
+                      -T mole_package=PATH_OR_URL, default the latest GitHub release asset. A preflight
+                      fails the sample loudly if Mole doesn't resolve or the installed hooks predate
+                      blocking (D102), so a 'decisions' arm never silently tests nothing or an old Mole.
+                      The worktrees dir (.mole_ab_worktrees/) is added to git's info/exclude, never your
+                      .gitignore.
 scorers.py            mole_check_scorer (generic, any repo) + dcbench_scorer (wraps dcbench's OWN
                       benchmark/scorer.ts via dcbench_score.mjs, a node subprocess). dcbench_scorer needs a
                       local dcbench checkout (-T dcbench_repo=PATH); mole_check_scorer works on any repo
