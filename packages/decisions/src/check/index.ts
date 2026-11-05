@@ -11,6 +11,7 @@ export { codeownersAt, parseCodeowners } from './codeowners.js';
 export { parseGitDiff, type ChangedFile, type Hunk } from './diff.js';
 export { contentAnchorsOf, globToRegExp, hasNestedQuantifier, isVersionOnlyHunk, MAX_MATCH_LINE, type ContentAnchor } from './options.js';
 export { CHECK_NAME, formatPrCheck, MAX_ANNOTATIONS, prCheck } from './pr-check.js';
+export { prCheckAsync } from './pr-check-async.js';
 
 const str = (v: string | true | undefined): string | undefined => (typeof v === 'string' ? v : undefined);
 

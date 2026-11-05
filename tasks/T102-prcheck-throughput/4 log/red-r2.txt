@@ -1,0 +1,6 @@
+   ✓ T102 review fix: symlink tamper refusal > refuses a slot tampered into a symlink pointing at the main worktree  410ms
+   ✓ T102 review fix: lock stale window (finding 3) > a lock left by a killed process recovers within STALE_MS, not the old 120s  15358ms
+   × T102 review r2 fix: gc safety (CRITICAL: an unregistered slot HEAD is not a gc root) > git gc --prune=now in the user repo never deletes the commit a slot has checked out (unreferenced PR head) 387ms
+   × T102 review r2 fix: gc safety (CRITICAL: an unregistered slot HEAD is not a gc root) > clearWorktreeCache also removes the pin refs 232ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  2 failed | 6 passed (8)

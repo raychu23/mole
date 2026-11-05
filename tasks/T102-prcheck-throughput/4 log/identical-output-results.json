@@ -1,0 +1,292 @@
+{
+  "fixture": [
+    {
+      "label": "fixture:foo",
+      "opts": {
+        "root": "/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-t102-fixture-dpqMYG",
+        "base": "cc4053f0cc006793e9a1cab0b888f65247c8cc1c",
+        "head": "c0a64c3c4e0aa21d88a0fbdc409ea248f8a3effe",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "fixture:bar",
+      "opts": {
+        "root": "/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-t102-fixture-dpqMYG",
+        "base": "cc4053f0cc006793e9a1cab0b888f65247c8cc1c",
+        "head": "49c83189d2899da5f3ce722093676cd9e4cc3a74",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "fixture:docs",
+      "opts": {
+        "root": "/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-t102-fixture-dpqMYG",
+        "base": "cc4053f0cc006793e9a1cab0b888f65247c8cc1c",
+        "head": "f992b92de3e1769a21e1d29602092d354df130b8",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "fixture:rename",
+      "opts": {
+        "root": "/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-t102-fixture-dpqMYG",
+        "base": "cc4053f0cc006793e9a1cab0b888f65247c8cc1c",
+        "head": "d8eedb14c3390ced73a097c5a5a2515248ee8abd",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "fixture:pkg",
+      "opts": {
+        "root": "/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-t102-fixture-dpqMYG",
+        "base": "cc4053f0cc006793e9a1cab0b888f65247c8cc1c",
+        "head": "48926ad2bd15b32771bfb4ba84241e06a835fa26",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "fixture:dropFoo",
+      "opts": {
+        "root": "/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-t102-fixture-dpqMYG",
+        "base": "cc4053f0cc006793e9a1cab0b888f65247c8cc1c",
+        "head": "dd576af911f5285dd823ccda590c5daf28f53cc4",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    }
+  ],
+  "real": [
+    {
+      "label": "real:1565dee..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "1565deea77d7f8fb9d328200c40311417d50484f",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:fc87e1c..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "fc87e1cd8196e94e689ea0388979f2926a962816",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:62a740f..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "62a740f58f321d0192847d33d4584746028d6d7d",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:2df7a8f..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "2df7a8f13302f4e8cee46393d065ccda4b88658e",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:c1973fc..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "c1973fccc486c8340b04767f2c5b8b2da6c69c6c",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:9b838fa..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "9b838fa580883778e3d017e61ef2cda2f0759269",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:3f4535b..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "3f4535b3c6886b2613441ff207e7cdaa9370915b",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:13ec38f..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "13ec38f5307157bd357806be6dd1ad161ef5ccf2",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:38ccc76..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "38ccc7630014ab91b00d303a9b485ebea5bc5597",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:2e3208c..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "2e3208ca33065f0941e159860b38797128396c96",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:1ed8d05..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "1ed8d05b0dc9d7e6fd002a9dc7fb5743efb84057",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:4a736b4..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "4a736b4a9ab2a7144ab7ed4c1f9864c1d1de7520",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:31362f8..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "31362f8b5f07a086b5503e1345a1ea9a5b291777",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:f38f8df..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "f38f8dff6cee24a17c39868315ad64d0c01bf8ea",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:a1ee3c1..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "a1ee3c1c76b3e45c0121d955a91c926f5d3c2250",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:662e0b7..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "662e0b710d9a7fd860f75c0dbaee73437c649839",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:32fbf7c..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "32fbf7c5ab98130f126845b738a739dd0c51f98a",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:5a519c3..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "5a519c3a79884c01e5c65070c1c37af35417a1e2",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:d121584..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "d1215842e8d719f170de6467fa5dd61499450db0",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    },
+    {
+      "label": "real:2f22b75..8aba155",
+      "opts": {
+        "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "base": "2f22b75a96fa5b79adac873310144c43ab31b4be",
+        "head": "8aba1558d5f62e9cce1b9a0d05473a3db2eab0e1",
+        "history": true
+      },
+      "identical": true,
+      "error": null
+    }
+  ]
+}
