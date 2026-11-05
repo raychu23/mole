@@ -24,7 +24,7 @@ export * from './cascade/index.js';
 export * from './route/index.js';
 // T30: the annotated file tree (badges, colors, intent cards per folder)
 export * from './tree/index.js';
-export { CALL_RULES_FILE, checkRules, DEPCRUISE_FILE, depcruiseRuleSet, emitConfig, formatRules, loadRules, rulesCli } from './rules/index.js';
+export { CALL_RULES_FILE, checkRules, DEPCRUISE_FILE, depcruiseRuleSet, emitConfig, formatRules, loadRules, rulesCli, scipStaleness, StaleScipIndexError } from './rules/index.js';
 export type { RuleDecision, RuleKind, RuleSpec, RulesLoad, RulesOptions, RulesResult, SkippedRules, Violation } from './rules/index.js';
 // T48: Argdown-sourced argument relations (supports/attacks/undercuts) + the packages/reasoning adapter
 export { argumentFramework } from './argdown/framework.js';

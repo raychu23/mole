@@ -14,6 +14,9 @@
       "path": "packages/indexer"
     },
     {
+      "path": "packages/scip"
+    },
+    {
       "path": "packages/flows"
     },
     {

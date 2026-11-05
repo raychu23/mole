@@ -52,6 +52,9 @@
     },
     {
       "path": "../coupling"
+    },
+    {
+      "path": "../scip"
     }
   ]
 }

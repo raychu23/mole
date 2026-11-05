@@ -324,7 +324,11 @@ PRs get a read-only token from GitHub, so posting the check run fails there (403
 
 ## Limits
 
-- TypeScript/TSX only (indexer, rules, code map).
+- TypeScript/TSX indexer and code map; rule enforcement (`rules:`) additionally reads a pre-built SCIP
+  index (`index.scip` at the repo root, or `--scip FILE`) for other languages — verified on Python via
+  `scip-python` (`forbid: import`/`forbid: call`, line-cited); Go's indexer (`scip-go`) installs and runs
+  but the version tested does not emit usable line ranges yet, so it is not wired. See
+  `docs/decisions-and-rules.md` Limits.
 - Rule enforcement (`rules:`) checks import/call graphs; it does not understand runtime behavior.
 - Tested on macOS (arm64) so far; other platforms degrade gracefully (native dependency falls back, logged).
 - No productivity claim yet (see "What we will not claim" above) — a larger pre-registered agent-task run is

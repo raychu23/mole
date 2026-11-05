@@ -26,6 +26,7 @@
     "@mole/intake": "*",
     "@mole/proposals": "*",
     "@mole/hotspots": "*",
-    "@mole/coupling": "*"
+    "@mole/coupling": "*",
+    "@mole/scip": "*"
   }
 }

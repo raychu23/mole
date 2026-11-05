@@ -1,0 +1,28 @@
+{
+  "indexSha256": "4c571ce7fc6f393889bed801dd6de46a9fb61eb8505b238e7a30b4618f23aa48",
+  "tool": "scip-python 0.6.8",
+  "files": {
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/case_alias.py": "b2d5980b1ad9cd998a79490a844ee55765fba8070a64219c7a734a6236007e41",
+    "src/case_dup_import.py": "1bb11501d19899f1c7f0f81c7e5eb9a473db1b7df2dd318d47f9a2dbd999a672",
+    "src/case_method.py": "344e811c889dfd9c56981bf43aaf8286b4f2ca307a82d39d29cec492820db4c7",
+    "src/case_noimport.py": "b0fce71035255a15a954006c03e6ed44192f3daec24274a0d4718275daa54258",
+    "src/case_plain.py": "07c6f7de18166474c31bf7a3bc22c4b3d1bd8c38205d406bce5f224078278c6e",
+    "src/case_reexport_use.py": "a234bf78a733f1468abd471d1285d86a568229dc246dc3e58e78dacd09dfce11",
+    "src/case_type_checking.py": "2d992d52375ac47dfadbace03a4d91ce90afd53fbcd4013192e1615995dd020b",
+    "src/case_type_checking_only.py": "c0e124e8225b47c62d28da7523f391e78d43d70223c47bccee7782973510f4db",
+    "src/pkg/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/pkg/case_backslash_continuation.py": "8e0ecb39e6c8fabe9e23e41c74c4f9bb41d165f43f459522d7ba071cd08bb823",
+    "src/pkg/case_multiline_parens.py": "aae3cad2423aa458a28d42075b893c608bc0add6abf6098b9bdadc351ea17bfe",
+    "src/pkg/case_relative_name.py": "b387113a5a860d5f646ee307be81268a5b3ebaf5db35bb00cacd46f97a6e8af1",
+    "src/pkg/case_relative_whole.py": "30fafc2d0f42edacacda49203e9486fb413bca188ff5ccfd5b32853a121f08b8",
+    "src/pkg/leaf.py": "f9229309c25ba3f46a1fc1e60db72861751cdef6ddaf39562df78b10a3c31539",
+    "src/pkg/other.py": "ca3616760fa614feb793d259068f2715908ff76d626c334b787a7020e88d775e",
+    "src/pkg/sub/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/pkg/sub/case_comment_paren.py": "fca71f7c0db661f4e9a19740848555e1a5431989c0183c360c8b3e372ade1919",
+    "src/pkg/sub/case_multiline_dotdot.py": "7483711defb12c89dd400327d3043f8ad156282dba70742aeadcc4ed8c4de61a",
+    "src/pkg/sub/decoy.py": "552d72cf85d499bbc5a216186b41839b6dfb3725152a0d0c115184594c811f31",
+    "src/pkg/sub/leaf.py": "caa4f07d3ceeb089310ebe05b2d0b9958f7904080e9f3bab5e4e316bd2046b71",
+    "src/pkg2/__init__.py": "a128e022ecc95e343bddbc03253ce3158b04f076854f9de3d9326661bb4193d8"
+  }
+}
