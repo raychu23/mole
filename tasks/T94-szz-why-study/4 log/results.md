@@ -72,7 +72,7 @@ underlying n (23 events) is far too small to treat as evidence of anything.
 ### Model (pre-registered, run once)
 `bug_inducing ~ has_why + log1p(churn) + log1p(files_changed) + log1p(author_prior_commits)`, logistic,
 cluster-robust SE by repo (n_clusters=3, pre-flagged in protocol.md as too few for the asymptotics to be
-trustworthy — reported anyway per the frozen plan, read as indicative only):
+trustworthy — Cameron & Miller 2015, "A Practitioner's Guide to Cluster-Robust Inference", J. Human Resources 50(2), advise far more clusters (few-cluster corrections below ~20-50) — reported anyway per the frozen plan, read as indicative only; the paired bootstrap CI is the better guide):
 
 - **Odds ratio for has_why: 0.906** (i.e. 9% lower odds of being SZZ-flagged as bug-inducing, controlling
   for size/churn/experience) — **95% CI (cluster-robust by repo): [0.324, 2.533]**
@@ -128,3 +128,10 @@ commits to detect.
   checkpoints live in scratch (`/Users/a1/.hermes/cache/scratch/szz/`, not committed — scratch rule) and
   will be deleted per the disk-tight rule; `analysis_output.json` (the full numeric output) is committed
   alongside the scripts for reproducibility of this exact run.
+
+
+## Review (11-04, fresh reviewer deleg_8e2da650 task 1): PASS
+    reproduced     OR 0.9060, cluster CI [0.3242, 2.5325], repo-FE 1.4819 exactly; bootstrap consistent
+    integrity      FROZEN hash matches; protocol mtime 16:57 before first mining script 17:02; 50→10 ADR relaxation inside the frozen text
+    spot checks    20/20 has-why/no-why commits correct; 5/5 SZZ attributions temporally valid
+    minor          cluster-count citation added (Cameron & Miller 2015) · FIX_RE caps 80 chars between keyword and #n (protocol: unbounded) — undocumented narrowing, not material
