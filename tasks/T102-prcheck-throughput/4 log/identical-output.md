@@ -44,6 +44,51 @@ PASS: old and new prCheck produce IDENTICAL results on every comparison.
 
 Full per-comparison data (including the stripped JSON on any mismatch, none occurred): `identical-output-results.json`.
 
+**Re-run after the review fix (11-05, FAIL deleg_4f165c05)**: the cache redesign (`.git/mole/prcheck-cache` +
+an unregistered worktree admin dir, `docs/pr-check.md`) re-ran clean the first time only after a real bug was
+caught BY this exact proof: the first fix attempt (a private `GIT_INDEX_FILE`-based checkout with no `.git` in
+the cached tree) silently broke `anchors.ts`'s `Git` class and `computeFlags`'s "has the anchored code changed
+since confirmation" check -- both run their own `git -C <recordsRoot> log/diff/show`, which fail (`Git.ok ===
+false`) against a plain directory with no `.git`, so every "code changed since confirmed" / history-based flag
+silently went missing (19/26 comparisons DIFFed, e.g. `0007`'s flag `yellow` (partly-superseded, scope_changed)
+in the old module vs `green` in the broken new one). The second fix (an unregistered-but-real worktree
+attachment, so `git` plumbing works exactly as before) re-ran 26/26 identical:
+
+```
+=== T102 identical-output check: 26 comparisons (fixture 6, real 20) ===
+  OK   fixture:foo
+  OK   fixture:bar
+  OK   fixture:docs
+  OK   fixture:rename
+  OK   fixture:pkg
+  OK   fixture:dropFoo
+  OK   real:476a905..ee13154
+  OK   real:980e6a6..ee13154
+  OK   real:aa1db61..ee13154
+  OK   real:0624e94..ee13154
+  OK   real:e1d2a51..ee13154
+  OK   real:3478adc..ee13154
+  OK   real:83ec74f..ee13154
+  OK   real:3f19606..ee13154
+  OK   real:0585454..ee13154
+  OK   real:6a375ef..ee13154
+  OK   real:c12580f..ee13154
+  OK   real:fa0de38..ee13154
+  OK   real:52c2819..ee13154
+  OK   real:b870876..ee13154
+  OK   real:50012c7..ee13154
+  OK   real:662e57e..ee13154
+  OK   real:dc60f00..ee13154
+  OK   real:eddeb26..ee13154
+  OK   real:aa90129..ee13154
+  OK   real:9994247..ee13154
+
+mismatches: 0 / 26
+PASS: old and new prCheck produce IDENTICAL results on every comparison.
+```
+
+(`identical-output-results.json` is overwritten by the re-run above.)
+
 `pr-check-async.test.ts` extends this same proof to `prCheckAsync` (the worker-thread variant): it must return
 byte-identical results to the sync `prCheck` on the same inputs, and stays correct when run concurrently against
 the same repo at different revisions (the cached-worktree's lock serializes the checkout, never the result).

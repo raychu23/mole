@@ -14,7 +14,24 @@ new (T102, cached reused worktree):                     median 1911.5 ms
 speedup: 1.57x
 ```
 
-Full raw data: `latency-results.json`.
+**Re-run after the review fix (11-05, FAIL deleg_4f165c05 -> cache redesign: `.git/mole/prcheck-cache`
++ an unregistered worktree admin dir instead of a real `git worktree` under `os.tmpdir()`; see
+`docs/pr-check.md`)** -- same machine, `980e6a6..ee13154`, same method:
+
+```
+=== prCheck latency, median of 10, 980e6a6..ee13154 ===
+old (main, unconditional worktree add/remove per call): median 3169.2 ms
+  [3325.1, 3044.6, 3271.5, 2975.1, 2937, 2972.8, 3066.8, 4436.2, 3598, 3498.6]
+new (T102, cached reused worktree):                     median 1340 ms
+  [1954.4, 1419.2, 1379.1, 1343.8, 1299.8, 1364.8, 1336.3, 1270.4, 1264.5, 1255.6]
+speedup: 2.37x
+```
+
+The gain is at least as good as before the fix (2.37x vs 1.57x on a different commit range; both measure the
+same mechanism) -- the redesign changed WHERE the cache lives and how it is attached to git, not the
+checkout-reuse savings itself.
+
+Full raw data: `latency-results.json` (overwritten by the re-run above).
 
 **Why 1.57x end-to-end, not the 4.5-10x this task's git-call reduction alone would suggest** (see
 `profile-after.md`): this repo's own `prCheck` call spends roughly 1.4-1.7s of its ~2-3s wall time on work this
