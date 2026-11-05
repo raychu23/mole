@@ -53,6 +53,60 @@ mole rules --emit     # also write .dependency-cruiser.mole.cjs + .mole-call-rul
 
 Try the whole loop without touching your own repo: `npx mole-code demo`.
 
+## MADR 4 and adrkit compatibility (D71)
+
+`.mole/decisions/*.md` is a real [MADR 4](https://github.com/adr/madr) file: Mole's loader
+(`packages/decisions/src/graph.ts`) reads and `mole init` writes MADR 4's optional metadata fields —
+`status`, `date` (`YYYY-MM-DD`), `decision-makers` (also accepts the legacy MADR ≤3 / log4brains `deciders:`
+key), `consulted`, `informed` — as a sequence (`[a, b]` / `- a\n  - b`) or a comma-separated scalar (MADR's
+own template wording, "list everyone..."). Adding any of these fields is optional and additive: a record
+written before this support, with none of them, still loads exactly as before.
+
+Mole also reads [adrkit](https://github.com/mbeacom/adrkit)'s `affects` field — a list of
+`{ type: path|package|api|resource|entity|data, pattern: <glob or id> }` entries naming what a decision
+governs. Every `affects` entry is folded into the same `scope` / `applies_to` graph edges a plain `scope:`
+entry produces (file:line-cited), so existing Mole consumers (the flag computation, `mole decisions`) see
+`affects` for free, and the raw `affects` list is also kept on the node for a faithful round trip.
+
+```yaml
+---
+id: D010-use-pg-boss
+title: Use pg-boss for the job queue
+status: accepted
+date: 2026-11-04
+decision-makers: [raymond]
+consulted: [platform-team]
+affects:
+  - type: path
+    pattern: packages/server/src/queue/**
+  - type: package
+    pattern: pg-boss
+rules:               # Mole's own extension -- not part of MADR or adrkit
+  - forbid: import
+    from: src/ui/
+    to: src/db/
+    why: ...
+---
+```
+
+**Interop, verified 2026-11-05** (`npx @adrkit/cli@0.20.0`, `tasks/T100-madr-adrkit-compat/4 log/`): a
+Mole-written MADR 4 + `affects` file run through adrkit's own `adr migrate --from madr` round-trips
+`title`/`status`/`date`/`affects` (type and pattern) correctly. Three things do **not** round-trip, and all
+three are adrkit's own format boundary, not something Mole's loader is missing:
+- adrkit's `madr` importer still reads the legacy `deciders:` key, not MADR 4's renamed `decision-makers:` —
+  a decision written with only `decision-makers:` imports into adrkit with an empty `deciders: []`.
+- `adr migrate` drops Mole's `rules:` block entirely (an unrecognized key); adrkit's own strict `adr lint`
+  rejects both `decision-makers` and `rules` as `strict-unknown-key` on an unmigrated file.
+- adrkit requires a 4+-digit numeric or ULID `id` (`adr lint`: `invalid-format`); Mole's own id scheme
+  (`D001-example-decision`) is not an adrkit-valid id until `adr migrate` rewrites it.
+
+Net: a Mole decisions directory round-trips through `adr migrate --from madr` without hand-editing, which is
+the compatibility D71 asked for ("any ADR tool reads them"); becoming a fully-validating adrkit corpus
+additionally needs `deciders:` (not just `decision-makers:`) and a numeric/ULID id, which `adr migrate`
+itself already handles. `mole decisions --export madr` was not needed: `.mole/decisions/*.md` already **is**
+MADR 4, so there is nothing to export — only `adr migrate` (adrkit's own importer) is needed to add adrkit's
+remaining required fields.
+
 ## What it reads / writes
 
 - **Reads:** every `.mole/decisions/*.md` file's YAML front matter and body; the repo's source tree (import

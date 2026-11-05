@@ -7,7 +7,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
-import { AGENTS_MARKER_START, EXAMPLE_DECISION_REL, PRECEDENCE_SENTENCE, planInit, runInit } from '../src/init.js';
+import { AGENTS_MARKER_START, EXAMPLE_DECISION_ID, EXAMPLE_DECISION_REL, PRECEDENCE_SENTENCE, planInit, runInit } from '../src/init.js';
+import { loadGraph } from '@mole/decisions';
 
 const pkg = join(dirname(fileURLToPath(import.meta.url)), '..');
 const cliDist = join(pkg, 'dist/cli.js');
@@ -36,6 +37,22 @@ describe('T96: mole init -- fresh repo', () => {
     expect(text).toContain('status: accepted');
     expect(text).toContain('rules:');
     expect(text).toContain('forbid: import');
+  });
+
+  it('T100 (D71): writes real MADR 4 fields (date, decision-makers) plus adrkit\'s affects, loadable by loadGraph', async () => {
+    const root = freshRepo();
+    await runInit(root, {});
+    const text = readFileSync(join(root, EXAMPLE_DECISION_REL), 'utf8');
+    expect(text).toMatch(/\ndate: \d{4}-\d{2}-\d{2}\n/);
+    expect(text).toContain('decision-makers:');
+    expect(text).toContain('affects:');
+    expect(text).toContain('type: path');
+    const g = loadGraph(root);
+    expect(g.problems).toEqual([]);
+    const d = g.nodes.find((n) => n.id === EXAMPLE_DECISION_ID);
+    expect(d?.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(d?.deciders).toEqual(['your-name']);
+    expect(d?.affects).toEqual([{ type: 'path', pattern: 'src/ui/**' }]);
   });
 
   it('with no --agents-snippet / --yes / TTY, never touches AGENTS.md or CLAUDE.md (non-interactive default: off)', async () => {

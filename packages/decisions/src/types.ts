@@ -67,6 +67,22 @@ export interface GraphNode extends Loc {
   confirmed?: string;
   source?: string;
   retired?: boolean;
+  // T100 (D71 MADR 4 + adrkit compat): MADR 4's `date` (YYYY-MM-DD last updated) and the three
+  // RACI-style audiences the template distinguishes -- `decision-makers` (accountable), `consulted`
+  // (two-way, subject-matter experts) and `informed` (one-way, kept up to date). All optional: an
+  // existing Mole record with none of them keeps loading exactly as before (back-compat).
+  // https://github.com/adr/madr/blob/4.0.0/template/adr-template.md (fetched 2026-11-05).
+  date?: string;
+  deciders?: string[]; // MADR 4 `decision-makers:` (also accepts legacy `deciders:`, MADR <=3 / log4brains)
+  consulted?: string[];
+  informed?: string[];
+  // adrkit (github.com/mbeacom/adrkit, Apache-2.0, fetched 2026-11-05, adrkit.dev/quickstart): a decision
+  // record is typed data with one field, `affects`, that names what the decision governs -- each entry is
+  // `{ type: path|package|api|resource|entity|data, pattern: <glob or id> }`. Mole keeps the raw list for a
+  // faithful MADR/adrkit round trip AND folds every entry into `scope`/`applies_to` edges below (Builder.node
+  // call site), so existing Mole consumers of scope (flag computation, `mole decisions --scope`) see adrkit's
+  // `affects` for free without a second code path.
+  affects?: Array<{ type: string; pattern: string }>;
   scope: Anchor[];
   evidence: EvidenceRef[];
   /** 1-based line of each front matter key (or Status section) in the record file */

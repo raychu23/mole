@@ -1,0 +1,113 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T100-madr-adrkit-compat/packages/decisions
+
+ ❯ test/madr4-adrkit.test.ts (6 tests | 4 failed) 401ms
+   × T100: MADR 4 fields (date, decision-makers, consulted, informed) > parses date/decision-makers/consulted/informed onto the node, file:line kept, rules: untouched 71ms
+     → expected undefined to be '2026-11-04' // Object.is equality
+   × T100: MADR 4 fields (date, decision-makers, consulted, informed) > legacy `deciders:` (MADR <=3 / log4brains) still populates the same node.deciders field 61ms
+     → expected undefined to deeply equal [ 'raymond' ]
+   × T100: MADR 4 fields (date, decision-makers, consulted, informed) > a comma-separated scalar deciders/consulted value (MADR template prose: "list everyone...") also parses 56ms
+     → expected undefined to deeply equal [ 'raymond', 'agent-b' ]
+   × T100: adrkit `affects` (github.com/mbeacom/adrkit) > each affects entry is kept raw on the node AND folds into scope + an applies_to edge, same as a plain scope: entry 67ms
+     → expected undefined to deeply equal [ { type: 'path', …(1) }, …(1) ]
+   ✓ T100: adrkit `affects` (github.com/mbeacom/adrkit) > a record with no affects: key has no extra scope/edges (back-compat: affects is purely additive) 79ms
+   ✓ T100: adrkit `affects` (github.com/mbeacom/adrkit) > Mole's own rules: block survives unchanged alongside the new MADR 4 / adrkit fields (D71: not losing rules:) 66ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/madr4-adrkit.test.ts > T100: MADR 4 fields (date, decision-makers, consulted, informed) > parses date/decision-makers/consulted/informed onto the node, file:line kept, rules: untouched
+AssertionError: expected undefined to be '2026-11-04' // Object.is equality
+
+[32m- Expected:[39m 
+"2026-11-04"
+
+[31m+ Received:[39m 
+undefined
+
+ ❯ test/madr4-adrkit.test.ts:64:21
+     62|     const d = g.nodes.find((n) => n.id === 'D010-use-pg-boss');
+     63|     expect(d).toBeDefined();
+     64|     expect(d?.date).toBe('2026-11-04');
+       |                     ^
+     65|     expect(d?.deciders).toEqual(['raymond', 'agent-b40d00a6']);
+     66|     expect(d?.consulted).toEqual(['platform-team']);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/madr4-adrkit.test.ts > T100: MADR 4 fields (date, decision-makers, consulted, informed) > legacy `deciders:` (MADR <=3 / log4brains) still populates the same node.deciders field
+AssertionError: expected undefined to deeply equal [ 'raymond' ]
+
+[32m- Expected:[39m 
+[
+  "raymond",
+]
+
+[31m+ Received:[39m 
+undefined
+
+ ❯ test/madr4-adrkit.test.ts:76:67
+     74|     });
+     75|     const g = loadGraph(root);
+     76|     expect(g.nodes.find((n) => n.id === 'D011-legacy')?.deciders).toEq…
+       |                                                                   ^
+     77|   });
+     78| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/madr4-adrkit.test.ts > T100: MADR 4 fields (date, decision-makers, consulted, informed) > a comma-separated scalar deciders/consulted value (MADR template prose: "list everyone...") also parses
+AssertionError: expected undefined to deeply equal [ 'raymond', 'agent-b' ]
+
+[32m- Expected:[39m 
+[
+  "raymond",
+  "agent-b",
+]
+
+[31m+ Received:[39m 
+undefined
+
+ ❯ test/madr4-adrkit.test.ts:85:25
+     83|     const g = loadGraph(root);
+     84|     const d = g.nodes.find((n) => n.id === 'D012-scalar');
+     85|     expect(d?.deciders).toEqual(['raymond', 'agent-b']);
+       |                         ^
+     86|     expect(d?.consulted).toEqual(['platform-team']);
+     87|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/madr4-adrkit.test.ts > T100: adrkit `affects` (github.com/mbeacom/adrkit) > each affects entry is kept raw on the node AND folds into scope + an applies_to edge, same as a plain scope: entry
+AssertionError: expected undefined to deeply equal [ { type: 'path', …(1) }, …(1) ]
+
+[32m- Expected:[39m 
+[
+  {
+    "pattern": "packages/server/src/queue/**",
+    "type": "path",
+  },
+  {
+    "pattern": "pg-boss",
+    "type": "package",
+  },
+]
+
+[31m+ Received:[39m 
+undefined
+
+ ❯ test/madr4-adrkit.test.ts:95:24
+     93|     const g = loadGraph(root);
+     94|     const d = g.nodes.find((n) => n.id === 'D010-use-pg-boss');
+     95|     expect(d?.affects).toEqual([
+       |                        ^
+     96|       { type: 'path', pattern: 'packages/server/src/queue/**' },
+     97|       { type: 'package', pattern: 'pg-boss' },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 2 passed (6)
+   Start at  22:40:58
+   Duration  1.42s (transform 306ms, setup 0ms, collect 794ms, tests 401ms, environment 0ms, prepare 40ms)
+

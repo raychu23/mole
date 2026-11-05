@@ -1,12 +1,13 @@
-// `mole init` (T96, ux-research #3 + #5): the first-run path a new user finds from `mole --help` / the README
-// quickstart. Scaffolds `.mole/decisions/` with MADR-style front matter that Mole's loader reads
-// (graph.ts frontMatter(): id/title/status + an optional `rules:` block) — not the full MADR spec: MADR's
-// `date`/`decision-makers` fields and adrkit's `affects` relation are not yet parsed (D71 is still open on
-// whether/how to adopt them; tracked in context/product-plan/systems/build-backlog/backlog.json). One
-// example decision with one example crisp rule, so `mole rules`
-// and `mole demo` have something to show immediately. Idempotent: never overwrites a file that already exists
-// (same promise as `git init` / `npm init` — re-running is always safe). `--dry-run` prints the plan and
-// writes nothing. `--json` for scripting.
+// `mole init` (T96, ux-research #3 + #5; MADR 4 + adrkit compat added T100/D71): the first-run path a new
+// user finds from `mole --help` / the README quickstart. Scaffolds `.mole/decisions/` with a real MADR 4
+// record — id/title/status/date/decision-makers (graph.ts frontMatter() + loadMoleDecisions(), T100) — plus
+// adrkit's `affects` field (github.com/mbeacom/adrkit) and Mole's own `rules:` extension, so any MADR-aware
+// tool (log4brains, adr-tools, adrkit) reads the scaffolded file too (D71, context/product-plan/
+// 7 Build vs take.md §2: "MADR + adrkit's typed `affects` ... instant compatibility with every ADR tool").
+// One example decision with one example crisp rule, so `mole rules` and `mole demo` have something to show
+// immediately. Idempotent: never overwrites a file that already exists (same promise as `git init` /
+// `npm init` — re-running is always safe). `--dry-run` prints the plan and writes nothing. `--json` for
+// scripting.
 //
 // Optionally (the `--agents-snippet` family) appends ONE precedence sentence — the exact sentence already
 // published in scripts/public-README.md's "AGENTS.md / CLAUDE.md precedence" section — to the repo's AGENTS.md
@@ -40,6 +41,11 @@ export const EXAMPLE_DECISION_TEXT = `---
 id: ${EXAMPLE_DECISION_ID}
 title: Example decision -- replace me with your team's first real one
 status: accepted
+date: ${new Date().toISOString().slice(0, 10)}
+decision-makers: [your-name]
+affects:
+  - type: path
+    pattern: src/ui/**
 rules:
   - forbid: import
     from: src/ui/
@@ -49,8 +55,11 @@ rules:
 
 ## Decision
 
-This is an example \`.mole/decisions\` record: plain YAML front matter + a markdown body, the exact format
-\`mole decisions\`, \`mole rules\` and \`mole check\` all already read. Replace it with your team's first real
+This is an example \`.mole/decisions\` record: plain YAML front matter + a markdown body, in the MADR 4 format
+(\`status\`/\`date\`/\`decision-makers\`/\`consulted\`/\`informed\`, https://github.com/adr/madr) plus adrkit's
+\`affects\` field (github.com/mbeacom/adrkit) naming what the decision governs -- any MADR-aware tool
+(log4brains, adr-tools, adrkit itself) can read this file; \`mole decisions\`, \`mole rules\` and \`mole check\`
+read the exact same fields, plus Mole's own \`rules:\` extension below. Replace it with your team's first real
 decision (\`mole decision new --id D002 --title "..." --body "..."\`), or just edit/delete this file -- it is
 not read by anything else and nothing breaks if you remove it.
 
