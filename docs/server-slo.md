@@ -21,6 +21,24 @@ because T99's own investigation found the DOMINANT remaining blocking source is
 T99's `packages/server/src/**` boundary and a new "Found, not fixed" item below. Full numbers:
 `tasks/T99-server-throughput/4 log/load.md`.
 
+**T103 (server-prcheck-async-metrics, 2026-11-05)** closes both of T99's "Found, not fixed"
+items. (1) `checkrun.ts`'s `computeCheckRun()` now calls `prCheckAsync()` (T102,
+`packages/decisions/src/check/pr-check-async.ts`'s worker_threads pool) instead of `prCheck()`
+-- the identical result, computed off this process's own event-loop thread; the pool is shut
+down on graceful close (`shutdownPrCheckAsyncPool()`, exercised by the existing SIGTERM test).
+Rerunning T98/T99's own `load.mjs` on this (heavily shared, benchmark-running) Mac shows
+queue-drain throughput 0.95 -> 1.00 job-units/sec -- a real but modest step given this run's own
+load (9-14) was substantially higher than T99's own run (6-9); see
+`tasks/T103-server-prcheck-async-metrics/4 log/load.md` for the full, honest accounting
+(including what this task did NOT change: webhook-ack/decisions-query numbers moved too, but
+that is machine-load noise on paths T103 never touched, not a claimed improvement). (2) a real
+Prometheus `/metrics` endpoint (OpenTelemetry metrics + `@opentelemetry/exporter-prometheus`,
+chosen over `prom-client` for version-exact fit with this package's existing OTel stack --
+`metrics.ts`'s own header comment cites the exact dependency versions checked): HTTP request
+duration by route/status (OTel's own `http.server.request.duration` semantic-convention metric),
+job duration + count by queue/outcome, outbox pending/dead-letter gauges, and the prCheckAsync
+pool's queue depth. Full write-up: `tasks/T103-server-prcheck-async-metrics/`.
+
 ## Audit (what existed, what was missing)
 Read: `packages/server/src/*`, `packages/server/bench/m25.ts`, `context/0 start.md` (T33/T47
 notes pointed at `tasks/T33-team-server/*` -- the team server's original build task -- and
@@ -36,7 +54,7 @@ notes pointed at `tasks/T33-team-server/*` -- the team server's original build t
 | Request/connection timeouts | **Unset.** Fastify's `requestTimeout`/`connectionTimeout` were never configured; a hung client could hold a connection indefinitely, inconsistent with GitHub's own 10s webhook delivery budget. | fixed |
 | Migrations | `db.ts`'s `runMigrations` is idempotent (`create table if not exists` + an advisory lock against concurrent-DDL races) but is not a versioned migration tool (no up/down, no migration log). | audited, NOT changed (not in the top-4 picked; see Non-goals) |
 | Structured logs | Fastify's `logger: true` already emits structured (pino) JSON logs with request IDs. | already adequate |
-| Prometheus `/metrics` | **Missing** (OTel tracing exists via `telemetry.ts`'s in-memory exporter; no metrics exporter, no `prom-client`). | audited, NOT built (see Non-goals) |
+| Prometheus `/metrics` | **Missing** (OTel tracing exists via `telemetry.ts`'s in-memory exporter; no metrics exporter, no `prom-client`). | **FIXED BY T103** (2026-11-05): OTel metrics + `@opentelemetry/exporter-prometheus`, see below. |
 
 ## Prior art (fetched + dated 2026-11-04/05)
 - Google SRE book, ch.4 "Service Level Objectives" (sre.google/sre-book/service-level-objectives)
@@ -198,7 +216,7 @@ notes pointed at `tasks/T33-team-server/*` -- the team server's original build t
    technique above, which is directly verified to detect it. Queue-drain throughput, however,
    barely moved (0.91 -> 0.95 job-units/sec) -- see finding #1b below, a NEW root cause T99
    found that T98 did not isolate.
-   1b. **NEW (T99, not fixed, deeper and larger than #1).** The dominant blocking cost on the
+   1b. **NEW (T99, not fixed, deeper and larger than #1). FIXED BY T103 (2026-11-05).** The dominant blocking cost on the
        compute-check-run job path is NOT `checkrun.ts`'s own git calls (now async) but
        `@mole/decisions`'s `prCheck()` (`packages/decisions/src/check/pr-check.ts`), which
        `computeCheckRun()` calls on every job. `prCheck` does its own ~20 `execFileSync` calls,
@@ -221,6 +239,24 @@ notes pointed at `tasks/T33-team-server/*` -- the team server's original build t
        plugin hook path, not just this server, so the blast radius and review burden are much
        higher. Time-boxed out of T99; a real follow-up task, not claimed fixed here. Evidence:
        `tasks/T99-server-throughput/4 log/red.txt` items 3-4, `4 log/load.md`.
+
+       **T103's fix**: rather than converting `prCheck`'s ~20 call sites to async in place (the
+       exact "materially larger change" T99 declined, since `packages/decisions` is shared by
+       the CLI and Claude Code hooks beyond this server), T102 (merged earlier, same wave) built
+       `prCheckAsync()` -- the identical `prCheck()` result computed inside a `worker_threads`
+       pool, so the CLI/hooks keep calling `prCheck()` directly (unaffected) while the server
+       alone gets the non-blocking path. T103 is the wiring: `checkrun.ts`'s `computeCheckRun()`
+       now calls `prCheckAsync()` instead of `prCheck()` (one call-site change; same inputs, same
+       `CheckRunResult` shape). Verified: `packages/decisions/test/pr-check-async.test.ts` (3/3,
+       prCheckAsync == prCheck on the same fixtures) and `packages/server/test/checkrun.spec.ts`'s
+       existing T45 tests (7/7, unchanged expectations, now exercising the real worker-thread
+       path). The pool is shut down on graceful close (`shutdownPrCheckAsyncPool()` in
+       `index.ts`'s `ServerHandle.close()`), proven by the existing real-child-process SIGTERM
+       test (`test/crash-restart.spec.ts`, exit code 0, unchanged). Load-test numbers (queue-drain
+       job-units/sec) are in `tasks/T103-server-prcheck-async-metrics/4 log/load.md`, measured on
+       a machine running a concurrent benchmark + full check (load 9-14) -- a real but modest
+       +5% (0.95 -> 1.00) given that noise; the structural fix itself does not depend on that
+       number (see the two test suites above).
 2. **FIXED BY T99 (2026-11-05), review round 1 BLOCKING finding corrected (2026-11-05).**
    pg-boss queue names were global to the Postgres instance, not scoped per deploy/org set: a
    server process that died (crash, redeploy, or a test harness's intentional kill) could leave
@@ -261,12 +297,31 @@ notes pointed at `tasks/T33-team-server/*` -- the team server's original build t
    this stage; would need `node-pg-migrate` (already a prior-art candidate per
    `tasks/HANDOFF.md`) or similar before a second deploy needs an actual schema migration
    (renaming/dropping a column, backfilling data).
-4. **No Prometheus `/metrics`.** OTel tracing (`telemetry.ts`) exists; a metrics exporter
-   (`prom-client` or OTel metrics SDK, per the semantic-conventions cited above) was read
-   about but not built -- picking the TOP 3-4 gaps by user impact (the task's own
-   instruction) put graceful shutdown, outbox delivery, health-check correctness, and
-   request timeouts ahead of it; the outbox's own `attempts`/`dead_letter` columns and the
-   queue-drain load-test numbers above are the closest thing to a metric this pass produced.
+4. **No Prometheus `/metrics`. FIXED BY T103 (2026-11-05).** OTel tracing (`telemetry.ts`)
+   already existed; T103 adds OTel metrics (`packages/server/src/metrics.ts`) +
+   `@opentelemetry/exporter-prometheus` (chosen over `prom-client`: its 0.300.0 dependency
+   versions -- `@opentelemetry/sdk-metrics@3.0.0`, `@opentelemetry/resources@3.0.0`,
+   `@opentelemetry/semantic-conventions@^1.29.0`, npm registry checked 2026-11-05 -- match this
+   package's already-installed OTel versions exactly, where `prom-client` would add a second,
+   unrelated metrics model alongside the tracer this package already has). `GET /metrics` calls
+   the exporter's own `getMetricsRequestHandler` against Fastify's raw req/res
+   (`reply.hijack()`); no second HTTP server/port. Metrics: `http.server.request.duration`
+   (OTel's own HTTP semantic-conventions histogram name, by `http.request.method`/`http.route`/
+   `http.response.status_code`), `mole.job.duration` + `mole.job.count` (by queue/outcome,
+   recorded in both `boss.work()` handlers in `index.ts`), `mole.outbox.pending` /
+   `mole.outbox.dead_letter` (observable gauges sampling the outbox table at scrape time), and
+   `mole.prcheck.pool.queue_depth` (the T103 prCheckAsync pool's own queue depth, exposed via
+   `getPrCheckPoolQueueDepth()`). Verified: `packages/server/test/metrics.spec.ts` (4/4) --
+   scrape returns parseable Prometheus text-exposition format, `http_server_request_duration`'s
+   count for a route increases after real requests to it, `mole_job_count_total` increases after
+   a real job completion, outbox gauges are present. One known limitation, not fixed: the
+   histogram's default bucket boundaries (`[0,5,10,25,50,75,100,...]`) are tuned for
+   millisecond-scale durations, not the second-scale unit this metric uses (`unit: 's'`) --
+   this version of `@opentelemetry/sdk-metrics` (3.0.0) has no `View`/explicit-bucket API to
+   override that (checked: `node_modules/@opentelemetry/sdk-metrics`'s own exports), so
+   sub-second request durations mostly collapse into one bucket. The `_sum`/`_count` series (used
+   by the tests above, and by rate()/avg() queries) are unaffected; only `histogram_quantile()`
+   on this specific metric would need a custom-bucket upgrade later.
 5. **Cross-test-file pg-boss contention in this package's own test suite**, unrelated to
    product code: `test/index.spec.ts` and `test/index-temporal-e2e.spec.ts`, run concurrently
    (vitest's default), can steal each other's jobs off the shared global queue and flake.
