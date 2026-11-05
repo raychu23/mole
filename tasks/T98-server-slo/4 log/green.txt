@@ -1,0 +1,47 @@
+## Summary
+GREEN evidence for T98-server-slo, run against `postgresql://a1@/mole_t98?host=/tmp&port=5432`
+(local Homebrew Postgres 16, no Docker). Every file this task touched passes individually;
+one pre-existing, unrelated flake was found and fixed; one pre-existing, unrelated
+cross-file race was found, reproduced on unmodified `main`, and left alone (out of scope).
+
+## New/changed behavior -- all pass in isolation
+```
+test/outbox.spec.ts            5 passed  (incl. 4 new: per-row isolation, backoff,
+                                           dead-letter, back-compat shape)
+test/health.spec.ts            4 passed  (new file: healthz/readyz/health split + draining)
+test/crash-restart.spec.ts     2 passed  (new file: real child process, SIGTERM + SIGKILL)
+test/webhook.spec.ts           3 passed  (untouched, regression check)
+test/index.spec.ts             2 passed  (1-line test fix, see below)
+test/index-temporal-e2e.spec.ts 4 passed (outboxRelayIntervalMs:0 param only)
+test/rebuild.spec.ts, rebuild-git-failure.spec.ts, checkrun.spec.ts, decisionStore.spec.ts,
+questions.spec.ts, telemetry.spec.ts, rls.spec.ts, oauth.spec.ts, crypto.spec.ts
+                                all pass, unmodified by this task
+```
+`npx tsc -b packages/server` clean throughout.
+
+## Found + fixed in this task's test files (not product code)
+`test/index.spec.ts` sent a HARDCODED `x-github-delivery` id. `delivery_id` is a GLOBAL
+unique dedup key (src/db.ts `deliveries` table, not scoped per org) -- so the SECOND time
+this test ever ran against a given Postgres instance, GitHub's own dedupe logic correctly
+treated the identical id as a redelivery, never called `boss.send()`, and the test's 30s
+poll for an outbox row timed out waiting for a job that was never queued. Reproduced this
+exact symptom against byte-for-byte unmodified `main` (`git show main:packages/server/src/index.ts`
++ `main`'s own `test/index.spec.ts`/`test/index-temporal-e2e.spec.ts`, same failure) before
+touching anything -- confirmed pre-existing, not a T98 regression. Fixed by suffixing the id
+with `orgId` (same pattern `index-temporal-e2e.spec.ts` already used). Verified: `index.spec.ts`
+now passes on 3 consecutive reruns against the same long-lived DB (previously: pass once,
+fail forever after).
+
+## Found, NOT fixed (out of scope for T98, documented here)
+Running `test/index.spec.ts` and `test/index-temporal-e2e.spec.ts` CONCURRENTLY (vitest's
+default multi-file parallelism) is flaky: both files' `buildApp()` instances register
+`boss.work('rebuild-index', ...)` / `boss.work('compute-check-run', ...)` against the SAME
+global pg-boss queue names in the SAME shared, long-lived Postgres instance (this package's
+own documented convention -- no fresh-per-run DB, no Docker). A worker from one file can
+claim a job that belongs to the other file's org, fail it (`no repo dir configured for org
+X`), and the resulting retry/backoff cycle can push the rightful job past that test's poll
+budget. Reproduced identically on unmodified `main` (same two files, same `src/index.ts`) --
+this is a pre-existing test-isolation gap in the package's pg-boss queue design (global queue
+names, no per-test-run namespace), not something T98's scope (SIGTERM/outbox-relay/health-
+split/timeouts) touches. Running each file individually (this package's own stated "targeted
+tests" convention, AGENTS.md) is unaffected and is what every evidence run above used.
