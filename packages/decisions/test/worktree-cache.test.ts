@@ -145,11 +145,10 @@ describe('T102 review fix: lock stale window (finding 3)', () => {
 });
 
 
-describe('T102 review r2 fix: gc safety (CRITICAL: an unregistered slot HEAD is not a gc root)', () => {
-  it('git gc --prune=now in the user repo never deletes the commit a slot has checked out (unreferenced PR head)', async () => {
-    const { root, base } = makeRepo();
+describe('T102 review r2: gc safety without touching the user repo', () => {
+  it('after git gc --prune=now removes a commit only a slot had checked out, the next call self-heals', async () => {
+    const { root, base, head } = makeRepo();
     repos.push(root);
-    // a "PR head" commit reachable from no branch/tag: commit on a temp branch, then delete the branch
     git(root, 'checkout', '-q', '-b', 'pr-tmp');
     write(root, 'src/pr.ts', 'export const pr = 1;\n');
     git(root, 'add', '-A');
@@ -161,22 +160,22 @@ describe('T102 review r2 fix: gc safety (CRITICAL: an unregistered slot HEAD is 
     await wt.release();
     git(root, 'reflog', 'expire', '--expire=now', '--all');
     git(root, 'gc', '-q', '--prune=now');
-    expect(git(root, 'cat-file', '-t', prHead)).toBe('commit');
-    expect(git(wt.dir, 'rev-parse', 'HEAD')).toBe(prHead);
-    // the pin ref is the documented mechanism, and it moves with the slot
-    expect(git(root, 'for-each-ref', '--format=%(objectname)', 'refs/mole/prcheck/')).toContain(prHead);
+    expect(() => git(root, 'cat-file', '-t', prHead)).toThrow(); // gone: the slot's HEAD is now a dangling id
     const wt2 = await acquireCachedWorktree(root, 'records', base);
     await wt2.release();
-    expect(git(root, 'for-each-ref', '--format=%(objectname)', 'refs/mole/prcheck/')).not.toContain(prHead);
+    expect(git(wt2.dir, 'rev-parse', 'HEAD')).toBe(base);
+    expect(existsSync(join(wt2.dir, 'src/pr.ts'))).toBe(false);
+    const wt3 = await acquireCachedWorktree(root, 'records', head);
+    await wt3.release();
+    expect(git(wt3.dir, 'rev-parse', 'HEAD')).toBe(head);
   });
 
-  it('clearWorktreeCache also removes the pin refs', async () => {
+  it('never creates refs, branches or tags in the user repo (a hook must leave the repo untouched)', async () => {
     const { root, head } = makeRepo();
     repos.push(root);
+    const before = git(root, 'for-each-ref', '--format=%(refname)');
     const wt = await acquireCachedWorktree(root, 'records', head);
     await wt.release();
-    expect(git(root, 'for-each-ref', '--format=%(refname)', 'refs/mole/prcheck/')).not.toBe('');
-    clearWorktreeCache(root);
-    expect(git(root, 'for-each-ref', '--format=%(refname)', 'refs/mole/prcheck/')).toBe('');
+    expect(git(root, 'for-each-ref', '--format=%(refname)')).toBe(before);
   });
 });
