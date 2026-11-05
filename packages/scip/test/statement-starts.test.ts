@@ -29,4 +29,15 @@ describe('statementStarts (Python line joining)', () => {
   it('handles CRLF line endings', () => {
     expect(statementStarts(['from . import (\r', '    a,\r', ')\r', 'x = 1\r'])).toEqual([0, 0, 0, 3]);
   });
+  it('PEP 701 nested same-quote f-strings do not desync (round-5 HIGH)', () => {
+    expect(statementStarts(['x = rf"{F"""foo"""}"', 'from . import leaf'])).toEqual([0, 1]);
+    expect(statementStarts(["x = f'{rb'a'}'", 'y = 1'])).toEqual([0, 1]);
+    expect(statementStarts(['x = f"{d["k"]:{w}}" (', ')', 'from . import z'])).toEqual([0, 0, 2]);
+    expect(statementStarts(['x = f"""{', '  a', '}"""', 'from . import q'])).toEqual([0, 0, 0, 3]);
+    expect(statementStarts(["s = f'{{literal(braces}}'", 'from . import w'])).toEqual([0, 1]);
+  });
+  it('backslash before a brace in (raw) f-strings, and \\N{...} named escapes (round-6 differential)', () => {
+    expect(statementStarts(["a = fr'\\{{{1+1}'", "b = f'\\N{EM DASH}('", 'from . import r'])).toEqual([0, 1, 2]);
+    expect(statementStarts(['c = f"{1:>3{5}}}}"', 'from . import s'])).toEqual([0, 1]);
+  });
 });

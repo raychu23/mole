@@ -128,62 +128,94 @@ const RELATIVE_IMPORT = /^\s*from\s+(\.+)([\w][\w.]*)?\s+import\b/;
 // does), and match RELATIVE_IMPORT against THAT line's text, not the occurrence's own line.
 
 /** For every line index, the index of the line that starts its logical (post-continuation) statement -- itself,
- * unless the line continues an earlier one. Follows Python's own line-joining rules (Python Language Reference,
- * "Lexical analysis" 2.1.5 explicit / 2.1.6 implicit line joining): a line continues the previous statement when
- * it starts inside an open `(`/`[`/`{`, inside a triple-quoted string, or after a line ending in `\` outside a
- * string or comment. Brackets inside `#` comments and string literals do not count (review round-3 HIGH-1: a
- * stray `(` in a comment or docstring used to shift every later statement start and mis-resolve imports). */
+ * unless the line continues an earlier one. Follows Python's own line joining (Python Language Reference,
+ * "Lexical analysis" 2.1.5 explicit / 2.1.6 implicit line joining, 2.4.1 string literals, and PEP 701 f-strings
+ * for Python 3.12+): a line continues the previous statement when it starts inside an open bracket, inside any
+ * string still open (triple-quoted, or single-quoted continued by a backslash-newline, or an f-string replacement
+ * field), or after a line ending in `\` outside a string or comment. Brackets in comments and strings never
+ * count. Review rounds 3-5: comment/docstring brackets, backslash-continued strings, nested same-quote f-strings.
+ * Verified against CPython's tokenize (tasks/T95-scip-multilang/4 log/diff-tokenize-*). */
+type LexCtx =
+  | { k: 'code'; depth: number } // top level (index 0) or an f-string replacement-field expression
+  | { k: 'str'; q: string; triple: boolean; f: boolean; raw: boolean }
+  | { k: 'spec' }; // an f-string format spec after `:`; `{...}` nests, `}` closes the field
 export function statementStarts(lines: string[]): number[] {
   const continues: boolean[] = new Array(lines.length).fill(false);
-  let depth = 0;
-  let triple: string | undefined; // an open triple-quote delimiter, carried across lines
-  let single: string | undefined; // an open '/" string continued by a backslash-newline (round-4 review HIGH-1)
+  const stack: LexCtx[] = [{ k: 'code', depth: 0 }];
   let backslash = false;
-  // Scans a single-quoted string body from k; returns the index after the closing quote, or -1 when the line
-  // ends in an escaping backslash (the string continues on the next physical line, Lang Ref 2.4.1).
-  const scanSingle = (line: string, end: number, k: number, q: string): number => {
-    while (k < end) {
-      if (line[k] === '\\') { if (k === end - 1) return -1; k += 2; continue; }
-      if (line[k] === q) return k + 1;
-      k++;
-    }
-    return end; // unterminated without a backslash: a SyntaxError in Python; do not carry it
-  };
+  const isIdent = (c: string | undefined) => c !== undefined && /[A-Za-z0-9_]/.test(c);
   for (let i = 0; i < lines.length; i++) {
-    continues[i] = depth > 0 || triple !== undefined || single !== undefined || backslash;
+    const root = stack[0] as { k: 'code'; depth: number };
+    continues[i] = stack.length > 1 || root.depth > 0 || backslash;
     backslash = false;
     const raw = lines[i]!;
     const line = raw.endsWith('\r') ? raw.slice(0, -1) : raw; // CRLF
     const end = line.length;
+    let strContinued = false; // the line ended in an escaping backslash inside a string
     let k = 0;
-    if (single !== undefined) {
-      const q = single;
-      single = undefined;
-      const r = scanSingle(line, end, 0, q);
-      if (r < 0) { single = q; continue; }
-      k = r;
-    }
     while (k < end) {
-      if (triple !== undefined) {
-        const close = line.indexOf(triple, k);
-        if (close < 0) { k = end; break; }
-        let b = close - 1, n = 0;
-        while (b >= k && line[b] === '\\') { n++; b--; }
-        if (n % 2 === 1) { k = close + 1; continue; }
-        k = close + 3; triple = undefined; continue;
-      }
+      const top = stack[stack.length - 1]!;
       const ch = line[k]!;
+      if (top.k === 'str') {
+        if (ch === '\\') {
+          if (k === end - 1) { strContinued = true; k = end; break; }
+          const next = line[k + 1];
+          // a backslash only hides the quote or another backslash from the tokenizer; `\{` in an f-string still
+          // opens a replacement field (raw or not), except the named escape `\N{...}` in a non-raw f-string
+          if (next === top.q || next === '\\') { k += 2; continue; }
+          if (top.f && !top.raw && next === 'N' && line[k + 2] === '{') {
+            const close = line.indexOf('}', k + 3);
+            k = close < 0 ? end : close + 1; continue;
+          }
+          k++; continue;
+        }
+        if (top.f && ch === '{') {
+          if (line[k + 1] === '{') { k += 2; continue; }
+          stack.push({ k: 'code', depth: 0 }); k++; continue;
+        }
+        if (top.f && ch === '}') { k += line[k + 1] === '}' ? 2 : 1; continue; }
+        if (top.triple ? line.startsWith(top.q.repeat(3), k) : ch === top.q) {
+          stack.pop(); k += top.triple ? 3 : 1; continue;
+        }
+        k++; continue;
+      }
+      if (top.k === 'spec') {
+        if (ch === '{') { stack.push({ k: 'code', depth: 0 }); k++; continue; }
+        if (ch === '}') { stack.pop(); k++; continue; } // closes the replacement field
+        k++; continue;
+      }
+      // code (top level or a replacement-field expression)
       if (ch === '#') break; // comment to end of line
       if (ch === '"' || ch === "'") {
-        if (line.startsWith(ch.repeat(3), k)) { triple = ch.repeat(3); k += 3; continue; }
-        const r = scanSingle(line, end, k + 1, ch);
-        if (r < 0) { single = ch; k = end; break; }
-        k = r; continue;
+        let p = k; // string prefix letters just before the quote (r, b, f, u and combinations)
+        while (p > 0 && /[rRbBfFuU]/.test(line[p - 1]!)) p--;
+        const prefix = isIdent(line[p - 1]) ? '' : line.slice(p, k);
+        const triple = line.startsWith(ch.repeat(3), k);
+        stack.push({ k: 'str', q: ch, triple, f: /f/i.test(prefix), raw: /r/i.test(prefix) });
+        k += triple ? 3 : 1; continue;
       }
-      if (ch === '(' || ch === '[' || ch === '{') depth++;
-      else if ((ch === ')' || ch === ']' || ch === '}') && depth > 0) depth--;
-      else if (ch === '\\' && k === line.replace(/\s+$/, '').length - 1) backslash = true;
+      if (ch === '(' || ch === '[' || ch === '{') { top.depth++; k++; continue; }
+      if (ch === ')' || ch === ']') { if (top.depth > 0) top.depth--; k++; continue; }
+      if (ch === '}') {
+        if (top.depth > 0) top.depth--;
+        else if (stack.length > 1) stack.pop(); // end of a replacement field
+        k++; continue;
+      }
+      if (ch === ':' && stack.length > 1 && top.depth === 0 && line[k + 1] !== '=') {
+        stack[stack.length - 1] = { k: 'spec' }; k++; continue;
+      }
+      if (ch === '\\' && k === line.replace(/\s+$/, '').length - 1) backslash = true;
       k++;
+    }
+    // an unterminated single-quoted string (no backslash-newline) is a SyntaxError in Python: drop it, and any
+    // replacement fields opened inside it, rather than carry it into the next line
+    if (!strContinued) {
+      let j = stack.length - 1;
+      while (j > 0) {
+        const c = stack[j]!;
+        if (c.k === 'str' && !c.triple) { stack.length = j; }
+        j--;
+      }
     }
   }
   const starts: number[] = new Array(lines.length);
