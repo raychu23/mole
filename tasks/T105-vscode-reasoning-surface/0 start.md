@@ -73,3 +73,5 @@ test-install it.
 ## Open questions for the next session
 - Whether `mole.cli.decisions`'s existing read-only dump command should be superseded by the new QuickPick
   (`mole.openDecisionRecord` with no args) for discoverability, or both kept (currently both exist).
+
+- Merge 11-05 (main 12a3f55): the export scan failed on t105-check.mjs (task path + a name in the fixture). Evidence dir is now `MOLE_PROOF_DIR` (default `$TMPDIR/mole-codelens-proof`); to refresh this task's evidence run `MOLE_PROOF_DIR="tasks/T105-vscode-reasoning-surface/4 log" node apps/vscode/scripts/t105-check.mjs`; fixture approver is `maintainer`. Screenshots checked by eye: symbol lens "Mole: decision D-symbol governs this" above governedFunction (not above otherFunction), warning squiggle on the forbidden import in view.ts, same lens from the installed vsix.

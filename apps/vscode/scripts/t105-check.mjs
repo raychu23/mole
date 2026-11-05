@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const extRoot = resolve(here, '..');
 const repoRoot = resolve(extRoot, '../..');
-const taskLog = join(repoRoot, 'tasks/T105-vscode-reasoning-surface/4 log');
+const taskLog = process.env.MOLE_PROOF_DIR ?? join(tmpdir(), 'mole-codelens-proof'); // evidence dir (set MOLE_PROOF_DIR to keep it)
 const CODE = process.env.CODE_BIN ?? 'code';
 const PORT = Number(process.env.CDP_PORT ?? 29323);
 const SHOT = process.env.OUT ?? join(taskLog, 'codelens.png');
@@ -59,7 +59,7 @@ writeFileSync(join(fixture, '.mole/decisions/D-file.md'), [
   'door: two-way',
   'scope:',
   '  - src/file-scoped.ts',
-  'approver: raymond',
+  'approver: maintainer',
   'source: T105 gate fixture (review finding 1 - the real repo has only symbol-scoped decisions on server.ts)',
   '---',
   '',
@@ -76,7 +76,7 @@ writeFileSync(join(fixture, '.mole/decisions/D-symbol.md'), [
   'door: two-way',
   'scope:',
   '  - src/symbol-scoped.ts#governedFunction',
-  'approver: raymond',
+  'approver: maintainer',
   'source: T105 gate fixture',
   '---',
   '',
