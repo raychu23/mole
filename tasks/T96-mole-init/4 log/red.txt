@@ -1,0 +1,80 @@
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ packages/daemon/test/init.test.ts:68:49
+     66|     const root = freshRepo();
+     67|     await runInit(root, { 'agents-snippet': true, 'no-agents-snippet':…
+     68|     expect(existsSync(join(root, 'AGENTS.md'))).toBe(false);
+       |                                                 ^
+     69|   });
+     70| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  packages/daemon/test/init.test.ts > T96: mole init -- end to end through the real CLI (dist/cli.js) > `mole init --json` on a fresh repo creates the example decision and prints valid JSON
+AssertionError: expected 2 to be +0 // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ 2[39m
+
+ ❯ packages/daemon/test/init.test.ts:177:22
+    175|     const root = freshRepo();
+    176|     const r = spawnSync(process.execPath, [cliDist, 'init', '--json', …
+    177|     expect(r.status).toBe(0);
+       |                      ^
+    178|     const parsed = JSON.parse(r.stdout);
+    179|     expect(parsed.ok).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  packages/daemon/test/init.test.ts > T96: mole init -- end to end through the real CLI (dist/cli.js) > `mole --help` / no-args usage mentions init
+AssertionError: expected 'usage: mole <command> [target] [--roo…' to match /\binit\b/
+
+[32m- Expected:[39m 
+/\binit\b/
+
+[31m+ Received:[39m 
+"usage: mole <command> [target] [--root DIR] [--json]
+  core:        daemon | map | impact | check | status | reindex | stop | demo
+  notes:       note add | memory | since | seen
+  decisions:   decision | decisions | rules | incident | priorities | recall | export | assurance | outcomes | proposals | compile | arguments | cascade-check | pr-check
+  agent state: runs | run | tried | agents | agent-intent | collisions | claims | steer
+  analysis:    coverage | hotspots | coupling | flows | interrogate | check-records
+  flags:       [--state-dir DIR] [--tsconfig F] [--src-dir D] [--idle-minutes N]
+  new here? -> mole demo
+"
+
+ ❯ packages/daemon/test/init.test.ts:185:38
+    183|   it('`mole --help` / no-args usage mentions init', () => {
+    184|     const r = spawnSync(process.execPath, [cliDist], { encoding: 'utf8…
+    185|     expect(`${r.stdout}${r.stderr}`).toMatch(/\binit\b/);
+       |                                      ^
+    186|   });
+    187| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  packages/daemon/test/init.test.ts > T96: mole init -- end to end through the real CLI (dist/cli.js) > a second `mole init --json` run (rerun) is idempotent end to end
+Error: ENOENT: no such file or directory, open '/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-init-test-nBVlpv/.mole/decisions/D001-example-decision.md'
+ ❯ packages/daemon/test/init.test.ts:191:20
+    189|     const root = freshRepo();
+    190|     spawnSync(process.execPath, [cliDist, 'init', '--json', '--root', …
+    191|     const before = readFileSync(join(root, EXAMPLE_DECISION_REL), 'utf…
+       |                    ^
+    192|     const r2 = spawnSync(process.execPath, [cliDist, 'init', '--json',…
+    193|     expect(r2.status).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  5 failed | 15 passed (20)
+   Start at  20:59:15
+   Duration  874ms (transform 123ms, setup 0ms, collect 198ms, tests 680ms, environment 0ms, prepare 153ms)
+

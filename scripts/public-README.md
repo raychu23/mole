@@ -137,6 +137,7 @@ and `code --install-extension <file>`. VS Code Marketplace / Open VSX listings a
 
 **CLI, any repo:**
 ```sh
+npx -y -p mole-code mole init      # new repo: scaffold .mole/decisions/ (one example decision + rule), idempotent
 npx mole-code --help
 npm install -g mole-code   # or
 ```

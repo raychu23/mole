@@ -110,6 +110,13 @@ const allowed = {
   'packages/decisions/src/priorities.ts': [/AGENTS\.md/],
   'packages/hotspots/src/index.ts': [/AGENTS\.md/],
   'packages/hotspots/src/commits.ts': [/AGENTS\.md/],
+  // T96-mole-init: `mole init --agents-snippet` reads/writes the user's OWN repo's AGENTS.md/CLAUDE.md (the
+  // generic cross-agent convention), same "legitimate use, not a private-repo reference" shape as every other
+  // AGENTS.md exception above -- the CLI dispatcher comment, the feature's own source, and the doc that
+  // explains it to users all need the literal string and cannot be reworded without breaking the feature.
+  'packages/daemon/src/cli.ts': [/AGENTS\.md/],
+  'packages/daemon/src/init.ts': [/AGENTS\.md/],
+  'docs/decisions-and-rules.md': [/AGENTS\.md/],
 };
 
 // --- comment/prose-scoped redaction (T93 review FAIL fix #1) --------------------------------------------
