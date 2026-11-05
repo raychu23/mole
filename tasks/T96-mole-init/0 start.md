@@ -1,4 +1,5 @@
 ## Summary
+status (11-05)   MERGED into main 988f2d2 · older status lines below are history
 `mole init`: first-run scaffold for a new user (ux-research #3 + #5). Writes one example
 `.mole/decisions/*.md` record (MADR-style front matter + a `rules:` block, the format the existing loader
 already accepts, D71) if none exists; idempotent (never overwrites); `--dry-run`; `--json`; optional

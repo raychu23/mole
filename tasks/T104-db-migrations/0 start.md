@@ -1,4 +1,5 @@
 state: built, needs review
+status (11-05)   MERGED into main 1fd660a · older status lines below are history
 owner: wave-i-agent-i1
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t104-db-migrations

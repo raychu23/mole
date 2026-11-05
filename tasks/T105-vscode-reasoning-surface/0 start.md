@@ -1,4 +1,5 @@
 ## Summary
+status (11-05)   MERGED into main 12a3f55 · older status lines below are history
 T105 (I2, product centre D90): decisions/rules governing the open file surface in VS Code the way
 GitLens/ADR-tools users already expect — a CodeLens above the governed file/symbol (click opens the real
 decision record), plus the existing Problems-panel rule-violation diagnostics link to the record too.

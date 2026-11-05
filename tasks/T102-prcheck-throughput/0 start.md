@@ -1,4 +1,5 @@
 ---
+status (11-05)   MERGED into main c7bd86a (pin refs later removed 1046d1a) · older status lines below are history
 state: built, needs review
 owner: deleg-t102
 repo: /Users/a1/Desktop/CS Code/Project/Mole

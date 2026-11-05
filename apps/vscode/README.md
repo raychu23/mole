@@ -65,3 +65,11 @@ MIT. Source and issues: https://github.com/raychu23/mole-code-map
 ## Status
 
 Early version (0.1). Feedback and bug reports are welcome.
+
+## Decisions above the code (CodeLens)
+
+When a file or function is governed by a decision in `.mole/decisions/`, a line above it reads
+"Mole: decision <id> governs this". Click it to open the decision record (the why: rationale, arguments).
+Rule violations in the Problems panel link to the decision behind them.
+Turn the lines off with the setting `mole.decisionsCodeLens.enabled` (default on).
+The list refreshes when decision files change, including after a `git pull`.

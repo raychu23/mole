@@ -1,4 +1,5 @@
 ---
+status (11-05)   MERGED into main f22b551 (v4.1 results: 4 log/results-v41.md) · older status lines below are history
 state: prepared
 owner: hermes-build
 repo: /Users/a1/Desktop/CS Code/Project/Mole

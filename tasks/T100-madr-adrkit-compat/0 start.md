@@ -1,4 +1,5 @@
 ## Summary
+status (11-05)   MERGED into main 70f7445 · older status lines below are history
 T100-madr-adrkit-compat (wave H, H2). D71 ("Build vs take") already chose MADR + adrkit's `affects` field;
 this task closed the implementation gap backlog tracked as `init-madr-fields-gap`: Mole's loader now reads,
 and `mole init` now writes, real MADR 4 metadata (`date`/`decision-makers`/`consulted`/`informed`) and
