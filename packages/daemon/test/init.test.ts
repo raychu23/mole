@@ -90,6 +90,30 @@ describe('T96: mole init -- existing AGENTS.md', () => {
     expect(after).toBe(before);
     expect(result.items.find((i) => i.path === 'AGENTS.md')?.action).toBe('skip-has-snippet');
   });
+
+  it('review FAIL #1: does not duplicate the sentence if it is already present WITHOUT the HTML markers', async () => {
+    const root = freshRepo();
+    // hand-typed by a user: the exact sentence text, no mole:agents-precedence markers at all
+    writeFileSync(join(root, 'AGENTS.md'), `# rules\n\n${PRECEDENCE_SENTENCE}\n`);
+    const before = readFileSync(join(root, 'AGENTS.md'), 'utf8');
+    const result = await runInit(root, { 'agents-snippet': true });
+    const after = readFileSync(join(root, 'AGENTS.md'), 'utf8');
+    expect(after).toBe(before); // no second copy appended
+    const item = result.items.find((i) => i.path === 'AGENTS.md');
+    expect(item?.action).toBe('skip-has-snippet');
+    expect(item?.reason).toBe('precedence sentence already present');
+  });
+
+  it('review FAIL #1: detects the sentence across whitespace/line-ending differences (re-wrapped, CRLF)', async () => {
+    const root = freshRepo();
+    const rewrapped = PRECEDENCE_SENTENCE.replace(/ /g, '\r\n'); // same words, re-wrapped with CRLF
+    writeFileSync(join(root, 'AGENTS.md'), `# rules\r\n\r\n${rewrapped}\r\n`);
+    const before = readFileSync(join(root, 'AGENTS.md'), 'utf8');
+    const result = await runInit(root, { 'agents-snippet': true });
+    const after = readFileSync(join(root, 'AGENTS.md'), 'utf8');
+    expect(after).toBe(before);
+    expect(result.items.find((i) => i.path === 'AGENTS.md')?.action).toBe('skip-has-snippet');
+  });
 });
 
 describe('T96: mole init -- existing CLAUDE.md (no AGENTS.md)', () => {
@@ -111,6 +135,17 @@ describe('T96: mole init -- existing CLAUDE.md (no AGENTS.md)', () => {
     expect(readFileSync(join(root, 'AGENTS.md'), 'utf8')).toContain(PRECEDENCE_SENTENCE);
     expect(readFileSync(join(root, 'CLAUDE.md'), 'utf8')).toContain(PRECEDENCE_SENTENCE);
     expect(result.items.filter((i) => i.action === 'append-snippet')).toHaveLength(2);
+  });
+
+  it('review FAIL #3: a CRLF AGENTS.md gets a CRLF-appended block, not a mixed-LF block', async () => {
+    const root = freshRepo();
+    writeFileSync(join(root, 'AGENTS.md'), '# My project rules\r\n\r\nAlways run the tests.\r\n');
+    await runInit(root, { 'agents-snippet': true });
+    const text = readFileSync(join(root, 'AGENTS.md'), 'utf8');
+    expect(text).toContain('# My project rules');
+    expect(text).toContain(PRECEDENCE_SENTENCE);
+    expect(text).not.toMatch(/[^\r]\n/); // every \n in the file is part of a \r\n pair -- no bare LF introduced
+    expect(text.includes('\r\n')).toBe(true);
   });
 });
 

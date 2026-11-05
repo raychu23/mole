@@ -1,7 +1,9 @@
 // `mole init` (T96, ux-research #3 + #5): the first-run path a new user finds from `mole --help` / the README
-// quickstart. Scaffolds `.mole/decisions/` in the MADR-style front matter `@mole/decisions`'s own loader
-// (graph.ts frontMatter()) already accepts (id/title/status + an optional `rules:` block, D71 "take the
-// format" — docs/decisions-and-rules.md): one example decision with one example crisp rule, so `mole rules`
+// quickstart. Scaffolds `.mole/decisions/` with MADR-style front matter that Mole's loader reads
+// (graph.ts frontMatter(): id/title/status + an optional `rules:` block) — not the full MADR spec: MADR's
+// `date`/`decision-makers` fields and adrkit's `affects` relation are not yet parsed (D71 is still open on
+// whether/how to adopt them; tracked in context/product-plan/systems/build-backlog/backlog.json). One
+// example decision with one example crisp rule, so `mole rules`
 // and `mole demo` have something to show immediately. Idempotent: never overwrites a file that already exists
 // (same promise as `git init` / `npm init` — re-running is always safe). `--dry-run` prints the plan and
 // writes nothing. `--json` for scripting.
@@ -68,16 +70,39 @@ function agentsSnippet(): string {
   return `${AGENTS_MARKER_START}\n${PRECEDENCE_SENTENCE}\n${AGENTS_MARKER_END}\n`;
 }
 
+/** Whitespace/line-ending-insensitive: CRLF normalized to LF, runs of whitespace collapsed, so a sentence
+ *  re-wrapped or saved with different line endings still matches. */
+function normalizeWs(text: string): string {
+  return text.replace(/\r\n/g, '\n').replace(/\s+/g, ' ').trim();
+}
+
+const NORMALIZED_SENTENCE = normalizeWs(PRECEDENCE_SENTENCE);
+
+/** True if the marker OR the precedence sentence's own text is already present (review FAIL #1: an
+ *  AGENTS.md/CLAUDE.md that already states the sentence, typed by hand without the HTML-comment markers,
+ *  must not get a second copy -- detect the text itself, not only the marker we add. */
 function hasMarker(text: string): boolean {
-  return text.includes(AGENTS_MARKER_START);
+  if (text.includes(AGENTS_MARKER_START)) return true;
+  return normalizeWs(text).includes(NORMALIZED_SENTENCE);
+}
+
+/** The file's own line ending (CRLF if it uses CRLF anywhere, else LF), so an appended block never mixes
+ *  endings with the rest of the file. */
+function detectEol(text: string): '\r\n' | '\n' {
+  return text.includes('\r\n') ? '\r\n' : '\n';
+}
+
+function toEol(text: string, eol: '\r\n' | '\n'): string {
+  return eol === '\r\n' ? text.replace(/\n/g, '\r\n') : text;
 }
 
 /** Append (never duplicate) the precedence snippet; create the file with just the snippet if it is new. */
 function withSnippet(existingText: string | undefined): string {
   if (existingText === undefined) return `${agentsSnippet()}`;
-  if (hasMarker(existingText)) return existingText; // already there: no-op, caller must not report this as a write
-  const sep = existingText.endsWith('\n') ? '\n' : '\n\n';
-  return `${existingText}${sep}${agentsSnippet()}`;
+  if (hasMarker(existingText)) return existingText; // already there (marker or bare sentence text): no-op
+  const eol = detectEol(existingText);
+  const sep = existingText.endsWith('\n') ? eol : eol + eol;
+  return `${existingText}${sep}${toEol(agentsSnippet(), eol)}`;
 }
 
 export type InitPlanItem = { path: string; action: 'create' | 'skip-exists' | 'append-snippet' | 'skip-has-snippet'; reason?: string };
@@ -88,6 +113,11 @@ async function promptYesNo(question: string): Promise<boolean> {
   try {
     const answer = (await rl.question(`${question} (y/N) `)).trim().toLowerCase();
     return answer === 'y' || answer === 'yes';
+  } catch {
+    // Ctrl-D/EOF on the prompt: readline/promises' question() rejects instead of resolving with ''.
+    // Treat it as the printed default (No) rather than letting the rejection abort the whole `mole init`
+    // (review FAIL #2) -- the decision scaffold must still get written.
+    return false;
   } finally {
     rl.close();
   }
