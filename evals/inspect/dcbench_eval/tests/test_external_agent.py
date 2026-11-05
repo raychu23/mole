@@ -8,6 +8,7 @@ against an actually-installed `claude`/`codex` CLI is exercised outside pytest (
 from __future__ import annotations
 
 import subprocess
+from pathlib import Path
 
 import pytest
 
@@ -82,3 +83,71 @@ async def test_external_agent_worktree_records_diff_and_cleans_up_via_task_clean
     # cleanup is the Task's job (cleanup_sample), not this solver's -- worktree still exists here
     from dcbench_eval.worktree_agent import remove_worktree
     remove_worktree(tiny_repo, __import__("pathlib").Path(wt))
+
+
+@pytest.mark.anyio
+async def test_external_agent_worktree_places_rules_arm_in_claude_md(tiny_repo, monkeypatch):
+    """T93 review FAIL fix #2: a 'rules' arm's text must actually reach the agent -- for claude_code/codex
+    that is CLAUDE.md/AGENTS.md on disk at the start of the run, not a discarded apply_arm() return value."""
+    from inspect_ai.solver import TaskState
+
+    rules_path = tiny_repo.parent / "RULES.md"
+    rules_path.write_text("Never leave TODOs in committed code.")
+
+    seen = {}
+
+    async def fake_as_solver_call(state, generate):
+        wt = Path(state.metadata["worktree"])
+        seen["claude_md"] = (wt / "CLAUDE.md").read_text() if (wt / "CLAUDE.md").exists() else None
+        return state
+
+    class FakeRunner:
+        def __call__(self, agent):
+            return fake_as_solver_call
+
+    monkeypatch.setattr("dcbench_eval.external_agent.as_solver", FakeRunner())
+
+    state = TaskState(model="mockllm/model", sample_id="s", epoch=0, input="do it",
+                       messages=[], metadata={"arm": f"rules:{rules_path}", "commit": "HEAD"})
+    solve = external_agent_worktree(repo=str(tiny_repo), agent="claude_code")
+    out = await solve(state, None)
+
+    assert seen["claude_md"] is not None, "CLAUDE.md must exist BEFORE the agent runs, not after"
+    assert "Never leave TODOs in committed code." in seen["claude_md"]
+    assert out.metadata["arm_info"]["instruction_file"] is not None
+
+    from dcbench_eval.worktree_agent import remove_worktree
+    remove_worktree(tiny_repo, Path(out.metadata["worktree"]))
+
+
+@pytest.mark.anyio
+async def test_external_agent_worktree_two_arms_differ_for_codex(tiny_repo, monkeypatch):
+    """Same acceptance check as test_arms.py's, exercised through the full solver for the codex path."""
+    from inspect_ai.solver import TaskState
+
+    rules_path = tiny_repo.parent / "RULES2.md"
+    rules_path.write_text("codex must run lint before finishing.")
+
+    seen = {}
+
+    async def fake_as_solver_call(state, generate):
+        wt = Path(state.metadata["worktree"])
+        seen[state.metadata["arm"]] = (wt / "AGENTS.md").read_text() if (wt / "AGENTS.md").exists() else ""
+        return state
+
+    class FakeRunner:
+        def __call__(self, agent):
+            return fake_as_solver_call
+
+    monkeypatch.setattr("dcbench_eval.external_agent.as_solver", FakeRunner())
+
+    for arm_spec in ("none", f"rules:{rules_path}"):
+        state = TaskState(model="mockllm/model", sample_id=arm_spec, epoch=0, input="do it",
+                           messages=[], metadata={"arm": arm_spec, "commit": "HEAD"})
+        solve = external_agent_worktree(repo=str(tiny_repo), agent="codex")
+        out = await solve(state, None)
+        from dcbench_eval.worktree_agent import remove_worktree
+        remove_worktree(tiny_repo, Path(out.metadata["worktree"]))
+
+    assert seen["none"] != seen[f"rules:{rules_path}"]
+    assert "codex must run lint before finishing." in seen[f"rules:{rules_path}"]

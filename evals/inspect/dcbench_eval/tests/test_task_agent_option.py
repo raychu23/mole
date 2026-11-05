@@ -41,21 +41,41 @@ def tiny_repo(tmp_path):
     return repo
 
 
-def test_default_agent_is_hermes_no_sandbox_needed(tiny_repo, tiny_dataset):
+def test_default_agent_is_claude_code_with_docker_sandbox(tiny_repo, tiny_dataset):
+    """T93 review FAIL fix #4: a public user with no hermes subscription must get a runnable default."""
     task = mole_ab(repo=str(tiny_repo), dataset=tiny_dataset, arms="none")
+    assert task.sandbox is not None
+    assert task.sandbox.type == "docker"
+
+
+def test_agent_hermes_is_still_available_opt_in_no_sandbox_needed(tiny_repo, tiny_dataset):
+    task = mole_ab(repo=str(tiny_repo), dataset=tiny_dataset, arms="none", agent="hermes")
     assert task.sandbox is None
 
 
-def test_agent_claude_code_selects_local_sandbox(tiny_repo, tiny_dataset):
+def test_agent_claude_code_selects_docker_sandbox_by_default(tiny_repo, tiny_dataset):
     task = mole_ab(repo=str(tiny_repo), dataset=tiny_dataset, arms="none", agent="claude_code")
     assert task.sandbox is not None
-    assert task.sandbox.type == "local"
+    assert task.sandbox.type == "docker"
+    assert task.sandbox.config.endswith("compose.yaml")
 
 
-def test_agent_codex_selects_local_sandbox(tiny_repo, tiny_dataset):
+def test_agent_codex_selects_docker_sandbox_by_default(tiny_repo, tiny_dataset):
     task = mole_ab(repo=str(tiny_repo), dataset=tiny_dataset, arms="none", agent="codex")
     assert task.sandbox is not None
+    assert task.sandbox.type == "docker"
+
+
+def test_agent_claude_code_can_opt_into_local_sandbox(tiny_repo, tiny_dataset):
+    """Kept for a Linux host/CI runner where the Darwin sandbox-injection limitation does not apply."""
+    task = mole_ab(repo=str(tiny_repo), dataset=tiny_dataset, arms="none", agent="claude_code", sandbox="local")
+    assert task.sandbox is not None
     assert task.sandbox.type == "local"
+
+
+def test_unknown_sandbox_rejected(tiny_repo, tiny_dataset):
+    with pytest.raises(ValueError, match="unknown sandbox"):
+        mole_ab(repo=str(tiny_repo), dataset=tiny_dataset, arms="none", agent="claude_code", sandbox="bogus")
 
 
 def test_unknown_agent_rejected(tiny_repo, tiny_dataset):

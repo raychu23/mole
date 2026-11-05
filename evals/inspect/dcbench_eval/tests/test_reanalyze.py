@@ -5,19 +5,31 @@ Expected numbers are copied verbatim from
 context/product-plan/systems/metrics-proof/productivity/results-72.md (not recomputed by hand): 72 rows,
 8 tasks x 3 arms x 3 epochs. This test never writes to raw/runs.jsonl (read-only; see dcbench_eval.reanalyze
 .load_runs, which only opens it for reading).
+
+This test file (unlike reanalyze.py itself) is private-only -- excluded from the public export by
+scripts/export-public.mjs -- so it is free to name the private data's conventional on-disk location
+directly, rather than requiring $MOLE_AB_RUNS_PATH to be set (reanalyze.py itself ships with no such
+default; see its own T93 review-FAIL fix comment).
 """
 from __future__ import annotations
 
+import os
+from pathlib import Path
+
 import pytest
 
-from dcbench_eval.reanalyze import DEFAULT_RUNS_PATH, analyze, load_runs
+from dcbench_eval.reanalyze import analyze, load_runs
 
-pytestmark = pytest.mark.skipif(not DEFAULT_RUNS_PATH.exists(), reason=f"T63 raw data not present at {DEFAULT_RUNS_PATH}")
+RUNS_PATH = Path(os.environ.get(
+    "MOLE_AB_RUNS_PATH",
+    "context/product-plan/systems/metrics-proof/productivity/raw/runs.jsonl",
+))
+pytestmark = pytest.mark.skipif(not RUNS_PATH.exists(), reason=f"T63 raw data not present at {RUNS_PATH}")
 
 
 @pytest.fixture(scope="module")
 def result():
-    records = load_runs(DEFAULT_RUNS_PATH)
+    records = load_runs(RUNS_PATH)
     assert len(records) == 72, "T63 is 72 pre-registered runs; the analysis must not drop or add rows"
     return analyze(records)
 

@@ -6,7 +6,7 @@
                         computes -- the number of outstanding questions `mole check` raises about the
                         change (0 = nothing flagged; the mean() metric reports the average across a run).
   dcbench_scorer        wraps dcbench's OWN scorer (benchmark/scorer.ts via score.mjs, same subprocess
-                        contract as context/product-plan/systems/metrics-proof/productivity/scripts/
+                        contract as the private productivity benchmark harness's own
                         run_dcbench.py's score()) so dcbench can be plugged into mole_ab as one dataset
                         among others, not a special case.
 

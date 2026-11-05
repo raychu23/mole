@@ -10,7 +10,7 @@ isolation boundary, while the agent itself (there: Claude Code in a Docker conta
 a dedicated git worktree) does its own file edits and tool calls outside Inspect's model loop. inspect-swe
 needs a model BRIDGE because Claude Code calls an LLM API Inspect must intercept to log/score/limit;
 `hermes -z --provider anthropic` does not need that bridge because it IS the thing that calls the model
-(through Raymond's hermes subscription, per the standing rule), so the solver just runs it as a subprocess
+(through this project owner's own hermes subscription, per the standing rule), so the solver just runs it as a subprocess
 and lets Inspect log the resulting transcript/usage/diff the same way a tool call would be logged.
 
 Isolation: one `git worktree add --detach <pinned commit, default HEAD>` per sample under a temp dir.
@@ -43,7 +43,7 @@ runs `git worktree prune` (drops registrations whose directory is already gone) 
 leftover `mole_ab-*` directories under the system temp dir that are older than the current run and still
 registered against `repo` -- called once per Task build, before any samples run.
 
-Per AGENTS.md: never write into a live `.mole/` of a real repo -- the worktree is always a throwaway path
+Per this project's own shared instructions file: never write into a live `.mole/` of a real repo -- the worktree is always a throwaway path
 under tempfile.mkdtemp(), never the repo's own working tree.
 """
 from __future__ import annotations
@@ -67,8 +67,16 @@ AGENT_TIMEOUT_S = 1200
 WORKTREE_PREFIX = "mole_ab-"
 
 
-def make_worktree(repo: Path, commit: str = "HEAD") -> Path:
-    wt = Path(tempfile.mkdtemp(prefix=WORKTREE_PREFIX))
+def make_worktree(repo: Path, commit: str = "HEAD", worktrees_root: Path | None = None) -> Path:
+    """`worktrees_root`: when set (mole_ab's Docker-sandboxed agent=claude_code/codex path -- see task.py
+    and compose.yaml's comment), the worktree is created UNDER it instead of the system temp dir, so a
+    single bind mount of that root (compose.yaml mounts `<repo>/.mole_ab_worktrees`'s parent, the repo
+    itself) makes the worktree visible inside the sandbox at the identical host path. Default (None, used
+    by hermes and the "local" sandbox) is unchanged: system temp dir, no bind mount needed since that
+    sandbox execs directly on the host filesystem."""
+    base = worktrees_root if worktrees_root is not None else Path(tempfile.gettempdir())
+    base.mkdir(parents=True, exist_ok=True)
+    wt = Path(tempfile.mkdtemp(prefix=WORKTREE_PREFIX, dir=str(base)))
     shutil.rmtree(wt)  # git worktree add refuses an existing non-empty dir; mkdtemp gave us a unique name
     r = subprocess.run(["git", "-C", str(repo), "worktree", "add", "-q", "--detach", str(wt), commit], capture_output=True, text=True)
     if r.returncode != 0:
@@ -120,6 +128,16 @@ def prune_stale_worktrees(repo: Path, max_age_s: float = 0.0) -> list[str]:
 
 
 def run_hermes(prompt: str, cwd: Path, model: str, provider: str, usage_path: Path, timeout: int = AGENT_TIMEOUT_S) -> tuple[int, str, str, float]:
+    # T93 review FAIL fix #4: a public user who forgets `-T agent=claude_code`/`codex` (now the exception,
+    # not the default -- see task.py's `agent` default) used to get a raw `FileNotFoundError: [Errno 2]
+    # No such file or directory: 'hermes'` from subprocess.run, which gives no hint that `agent=claude_code`
+    # or `agent=codex` are the options that don't need a hermes install/subscription at all.
+    if shutil.which("hermes") is None:
+        raise RuntimeError(
+            "mole_ab: agent='hermes' needs the `hermes` CLI on PATH (a hermes subscription). "
+            "If you don't have hermes, pass -T agent=claude_code or -T agent=codex instead "
+            "(real Claude Code / Codex, no hermes subscription needed -- see external_agent.py)."
+        )
     # -t "terminal,file" (not "" -- that is hermes_provider.py's text-only mode): this solver's whole point
     # is an agent that can edit files, same tool set run_dcbench.py uses for the identical reason.
     cmd = ["hermes", "-z", prompt, "-m", model, "--provider", provider, "-t", "terminal,file", "--safe-mode",

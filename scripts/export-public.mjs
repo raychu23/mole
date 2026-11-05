@@ -4,6 +4,7 @@
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { redactJsLikeComments, redactMarkdown, redactPyComments, redactProse } from './lib/comment-redact.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = resolve(process.argv[2] ?? '');
@@ -12,10 +13,11 @@ if (!process.argv[2]) throw new Error('usage: node scripts/export-public.mjs <ou
 const include = ['apps', 'packages', 'plugins', 'release/mole-code', 'docs', 'site', '.claude-plugin', 'LICENSE', 'package.json', 'package-lock.json', 'tsconfig.base.json', 'tsconfig.json', 'vitest.config.ts', 'scripts/bundle-daemon.mjs', 'scripts/mcp-entry.ts', 'deploy', 'server.json', 'RELEASE-NOTES-0.5.0.md',
   // T93-public-eval-kit: the Inspect AI A/B kit (mole_ab) ships too, now that it has a public-usable
   // agent option (claude_code/codex via inspect-swe, no hermes subscription needed -- see
-  // evals/inspect/dcbench_eval/external_agent.py) and no private paths in its own source (reanalyze.py's
-  // historical absolute path is now an env var with a relative default). experiments/ (T63's frozen
-  // protocol data, which cites private task history and unshipped results files) and the tests that only
-  // make sense against that private data are excluded below, not here.
+  // evals/inspect/dcbench_eval/external_agent.py) and no private paths baked into its own source
+  // (reanalyze.py's historical hardcoded default path was removed entirely -- T93 review FAIL fix #1;
+  // --runs or $MOLE_AB_RUNS_PATH is required, never a private default this export would have to rewrite).
+  // experiments/ (T63's frozen protocol data, which cites private task history and unshipped results
+  // files) and the tests that only make sense against that private data are excluded below, not here.
   'evals/inspect/dcbench_eval',
   // T91-distribution-channels: more discovery channels, same "read-only reference, publish separately" shape
   // as everything else in this list -- action.yml/smithery.yaml/glama.json/.pre-commit-hooks.yaml/
@@ -61,7 +63,11 @@ const exclude = [/(^|\/)node_modules(\/|$)/, /(^|\/)dist(\/|$)/, /(^|\/)dist-tsc
   /^evals\/inspect\/dcbench_eval\/tests\/test_reanalyze\.py$/,
   /^evals\/inspect\/dcbench_eval\/tests\/test_protocol_v3\.py$/,
   /^evals\/inspect\/dcbench_eval\/tests\/test_reanalyze_inspect_log\.py$/,
-  /^plugins\/claude-code\/test(\/|$)/];
+  /^plugins\/claude-code\/test(\/|$)/,
+  // dev-only internal proof/QA scripts that write straight into the private tasks/<slug>/4 log/ ledger
+  // (not wired to any npm script a public user would run, no value without that private directory) --
+  // same "internal evaluation artifact, not a runtime file" reasoning as the bench/test exclusion above.
+  /^apps\/vscode\/scripts\/(m26|panel-screenshot|tree-check)\.mjs$/];
 const forbidden = [/\/Users\/[a-z0-9_-]+/i, /\.hermes(?!\w)/i, /raymond/i, /CS Code/, /docs-over-chat/i, /ledger/i, /\bT\d{1,2}-[a-z0-9-]+/, /AGENTS\.md/, /BEGIN [A-Z ]*PRIVATE KEY/, /(ghp|gho|ghs|pat|sk)[-_][A-Za-z0-9]{20,}/, /\btasks\//, /(^|[^a-zA-Z])context\//, /chat log/i, /chat transcript/i];
 // exceptions that are intended: the copyright holder's name in LICENSE, the source link in package manifests, and
 // the plugin/marketplace author field (the point of a public plugin listing is crediting a real person, same as LICENSE)
@@ -75,7 +81,51 @@ const allowed = {
   'action.yml': [/raymond/i],
   // the README tells USERS to edit their own AGENTS.md (a public, cross-agent convention), not ours
   'README.md': [/AGENTS\.md/],
+  // T93-public-eval-kit: AGENTS.md here is Codex's own real, documented project-instructions convention
+  // (https://github.com/openai/codex/blob/main/docs/agents_md.md) -- a legitimate CODE string/identifier
+  // these modules read/write (AGENT_INSTRUCTION_FILENAMES, agent_instruction_path), not a private
+  // reference to this repo's own AGENTS.md; it cannot be reworded away without breaking the feature.
+  'evals/inspect/dcbench_eval/arms.py': [/AGENTS\.md/],
+  'evals/inspect/dcbench_eval/tests/test_arms.py': [/AGENTS\.md/],
+  'evals/inspect/dcbench_eval/tests/test_external_agent.py': [/AGENTS\.md/],
+  // Same reasoning: docs/experiments.md explains the real claude_code/codex CLAUDE.md/AGENTS.md
+  // convention to USERS, same crediting-the-real-thing rationale as README.md's own AGENTS.md exception.
+  'docs/experiments.md': [/AGENTS\.md/],
+  // packages/history/src/index.ts reads a GENERIC `tasks/T<n>-*` directory convention from whatever repo
+  // Mole is pointed at (the user's own, same convention this very repo happens to also use) -- a public
+  // product feature, not a private-ledger reference; the literal string is required for `git ls-tree` to
+  // find those directories and cannot be reworded without breaking the feature.
+  'packages/history/src/index.ts': [/\btasks\//],
+  // vitest.config.ts's own docstring says this file "ships to both repos unchanged": its `context/**`
+  // exclude globs are a generic "don't discover tests under a scratch/planning directory some contributors
+  // may have locally" convention, not a disclosure of this repo's own private context/ contents.
+  'vitest.config.ts': [/(^|[^a-zA-Z])context\//],
 };
+
+// --- comment/prose-scoped redaction (T93 review FAIL fix #1) --------------------------------------------
+//
+// The provenance/ledger/etc. rewrites (./lib/comment-redact.mjs) used to run as a plain global string
+// replace over the WHOLE file text of every .ts/.mjs/.cjs/.json/.md/.py file -- which happily rewrote live
+// CODE too, not just comments (concretely: evals/inspect/dcbench_eval/reanalyze.py's DEFAULT_RUNS_PATH
+// string literal became the literal text "(internal reference removed)", a private-path-shaped value
+// turned into a syntactically different runtime value no test caught). Comments/prose are the only place
+// this rewrite belongs now -- see ./lib/comment-redact.mjs for exactly how each extension is scoped:
+//   .ts/.mjs/.cjs -- real TypeScript-parser-based comment ranges only (getJsCommentRanges).
+//   .py -- real CPython `tokenize` COMMENT spans only (pyCommentSpans).
+//   .md -- prose/data, but fenced code blocks (```...```) are left byte-for-byte untouched.
+//   .json -- prose/data, rewritten whole (no "comments" concept in JSON; package.json/package-lock.json
+//     are already excluded above since .json dependency/lockfile data must never be touched at all).
+// If a forbidden string still remains in actual CODE after this (a docstring, a string literal, an
+// identifier) the private-string scan at the bottom of this file fails LOUDLY -- on purpose: that is the
+// signal to fix the SOURCE's wording, never to silently rewrite code again. See
+// scripts/export-public.test.ts for the token-stream-minus-comments equality proof that this never
+// touches code.
+function isRaymondAllowed(rel) {
+  return (allowed[rel] ?? []).some((a) => a.source === /raymond/i.source);
+}
+function redactOpts(rel) {
+  return { raymondAllowed: isRaymondAllowed(rel) };
+}
 
 rmSync(out, { recursive: true, force: true });
 const copied = [];
@@ -86,25 +136,12 @@ function walk(rel) {
   if (st.isDirectory()) return readdirSync(src).forEach((n) => walk(join(rel, n)));
   mkdirSync(dirname(join(out, rel)), { recursive: true });
   if (/\.(?:ts|mjs|cjs|json|md|py)$/.test(rel) && !/package(-lock)?\.json$/.test(rel)) {
-    // provenance comments that point into the private task ledger: `// [source: tasks/Tn-...; added: ...]`
-    // T87: a bare ledger task-slug citation in a doc comment (e.g. "prior art: tasks/T59-lesson-revises-tenet/4
-    // log/prior-art.md", "(T47-tenant-scoped via RLS FORCE)") -- never code logic, always prose provenance --
-    // is redacted the same way; this is a comment-only transform, never touches a string literal a test or
-    // runtime value depends on (those live under bench/ or test/, already excluded above). Likewise a bare
-    // "AGENTS.md" or "ledger" mention in a doc comment (both appear in otherwise-public packages' rationale
-    // comments, e.g. decisions/hotspots citing "one source of truth, AGENTS.md" or "same rule as the ledger")
-    // is redacted to neutral prose -- Mole's own "outcome ledger" feature name is affected the same way
-    // (becomes "outcome tracking log" below), which is an acceptable wording cost for a scan with zero misses.
-    let text = readFileSync(src, 'utf8')
-      .replace(/[ \t]*\/\/ \[source: [^\]]*\]/g, '')
-      .replace(/\btasks\/T\d{1,2}-[A-Za-z0-9-]+(?:\/[^\s)"'`]*)?/g, '(internal reference removed)')
-      .replace(/\bT\d{1,2}-[A-Za-z0-9][A-Za-z0-9-]*\b/g, '(internal task reference removed)')
-      .replace(/(^|[^a-zA-Z])context\/[^\s)"'`]*/g, '$1(internal reference removed)')
-      .replace(/\btasks\/[^\s)"'`]*/g, '(internal reference removed)')
-      .replace(/\bAGENTS\.md\b/g, "the project's shared instructions file")
-      .replace(/\bledger\b/gi, 'tracking log')
-      .replace(/\.hermes(?!\w)/g, '.agent-cache');
-    if (!(allowed[rel] ?? []).some((a) => a.source === /raymond/i.source)) text = text.replace(/\bRaymond(?:'s)?\b/g, 'the team');
+    const raw = readFileSync(src, 'utf8');
+    let text;
+    if (/\.(?:ts|mjs|cjs)$/.test(rel)) text = redactJsLikeComments(raw, rel, redactOpts(rel));
+    else if (/\.py$/.test(rel)) text = redactPyComments(raw, redactOpts(rel));
+    else if (/\.md$/.test(rel)) text = redactMarkdown(raw, redactOpts(rel));
+    else text = redactProse(raw, redactOpts(rel)); // .json: prose/data, no comment concept to scope to
     writeFileSync(join(out, rel), text);
   } else cpSync(src, join(out, rel));
   copied.push(rel);

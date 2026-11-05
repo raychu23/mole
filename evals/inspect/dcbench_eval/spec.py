@@ -3,7 +3,7 @@
 Builds on Inspect AI's Task (dataset/solver/scorer, see task.py) for RUNNING the experiment, and
 on OSF / AsPredicted pre-registration practice (fix hypothesis, design and analysis plan before
 data collection) for this piece, which Inspect AI does not provide on its own. See
-tasks/T90-ab-experiment-system/4 log/prior-art.md.
+this project's own internal prior-art notes.
 """
 from __future__ import annotations
 

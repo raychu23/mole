@@ -5,8 +5,14 @@ Inspect `Task` (`mole_ab`), a choice of THREE agents to run it (Claude Code, Cod
 below), two scorers (a generic any-repo one and dcbench's own), and pre-registration/stats on top
 (spec+freeze, scipy/statsmodels). Runs land in Inspect's native `.eval` format, so `inspect view`/
 `inspect log dump` work unmodified. **You do not need a hermes subscription to use this**: `agent=
-claude_code` or `agent=codex` runs the real Claude Code / Codex CLI (via inspect-swe's maintained
-external-agent wrappers) directly against whatever binary is already on your PATH, no Docker required.
+claude_code` (the default) or `agent=codex` runs the real Claude Code / Codex CLI (via inspect-swe's
+maintained external-agent wrappers) in a small Docker sandbox this repo ships (`evals/inspect/
+dcbench_eval/Dockerfile` + `compose.yaml`) against the repo you point it at.
+
+**Needs before you run this**: Docker (the default sandbox for `agent=claude_code`/`codex` -- see
+"Known platform limitation" below for why) and your own Claude Code or Codex auth/subscription (this kit
+never bundles or proxies one). No hermes install or subscription needed unless you explicitly pass
+`agent=hermes`.
 
 ## 1. Run it on your own repo
 
@@ -20,11 +26,12 @@ external-agent wrappers) directly against whatever binary is already on your PAT
   -T dataset=/path/to/your/tasks.jsonl \
   -T arms="none,decisions:/path/to/.mole/decisions" \
   -T scorer=mole_check \
-  -T agent=claude_code \
   --model anthropic/<model>   # or openai/<model>, or mockllm/model for a free dry run
 ```
 
-`dataset.jsonl`: one line per task, `{"id": "T1", "prompt": "..."}`. `arms`: comma-separated, see
+`agent` defaults to `claude_code` (no `-T agent=` needed) so this command above already runs the real
+Claude Code CLI in the bundled Docker sandbox -- Docker must be running. `dataset.jsonl`: one line per
+task, `{"id": "T1", "prompt": "..."}`. `arms`: comma-separated, see
 `evals/inspect/dcbench_eval/arms.py`'s docstring for the full syntax (`none`, `rules:PATH`,
 `decisions:PATH`, `plugin_pin:SHA:PATH`). Every (dataset row) x (arm) pair becomes one Inspect `Sample`:
 same prompt, same model, same pinned commit -- only the context in front of the agent differs between arms.
@@ -34,34 +41,44 @@ needed) and scores on the number of outstanding questions Mole itself raises abo
 **`agent=` -- pick the coding agent that actually edits the files:**
 
 ```notes
-claude_code    Real Claude Code CLI, via inspect-swe's claude_code() wrapper (github.com/UKGovernmentBEIS/
-               inspect_swe). Runs in Inspect's "local" sandbox: directly on your machine, no Docker,
-               against whatever `claude` binary is already on your PATH (version="auto"). Claude Code's
-               own model calls are bridged to and billed through Inspect's --model, not a separate Claude
-               subscription -- Claude Code is the harness here, not the model provider.
-codex          Same idea with OpenAI's Codex CLI (inspect_swe.codex_cli()), also via the "local" sandbox.
-hermes         Runs `hermes -z` as a plain subprocess (no Inspect sandbox needed at all, since hermes
-               calls the model itself through its own subscription/provider config rather than going
-               through Inspect's model loop). Needs a hermes install + subscription; most public users
-               should use claude_code or codex instead. Kept as an option, not the default in these docs.
+claude_code    DEFAULT. Real Claude Code CLI, via inspect-swe's claude_code() wrapper
+               (github.com/UKGovernmentBEIS/inspect_swe). Runs in this kit's Docker sandbox by default
+               (-T sandbox=docker, the default -- see "Known platform limitation" below), against the
+               claude binary inspect-swe installs inside the container. Claude Code's own model calls are
+               bridged to and billed through Inspect's --model, not a separate Claude subscription --
+               Claude Code is the harness here, not the model provider.
+codex          Same idea with OpenAI's Codex CLI (inspect_swe.codex_cli()), also Docker by default.
+hermes         Opt-in only (-T agent=hermes): runs `hermes -z` as a plain subprocess (no Inspect sandbox
+               needed at all, since hermes calls the model itself through its own subscription/provider
+               config rather than going through Inspect's model loop). Needs a hermes install +
+               subscription; most public users should use claude_code or codex instead. If `hermes` is not
+               on PATH, this fails with a clear message naming agent=claude_code/codex, not a raw
+               FileNotFoundError.
 ```
 
-`-T agent=claude_code` and `-T agent=codex` are the ones most public users want -- pick whichever CLI you
-already have installed and authenticated through Inspect's own `--model`/provider env vars (e.g.
-`ANTHROPIC_API_KEY` for `--model anthropic/...`, `OPENAI_API_KEY` for `--model openai/...`). `-T
+`-T agent=claude_code` (or leave it unset) and `-T agent=codex` are what most public users want -- pick
+whichever CLI you already have installed and authenticated through Inspect's own `--model`/provider env
+vars (e.g. `ANTHROPIC_API_KEY` for `--model anthropic/...`, `OPENAI_API_KEY` for `--model openai/...`). `-T
 agent_model_config=<slug>` overrides the identity the CLI presents to itself if Inspect's `--model` isn't
 one its own alignment table recognises (cosmetic only; see `external_agent.py`'s docstring).
+
+`-T sandbox=` -- `docker` (DEFAULT for `agent=claude_code`/`codex`) or `local` (exec directly on the host,
+no Docker, against whatever `claude`/`codex` binary is already on your PATH -- only works on a Linux
+host/CI runner, see below).
 
 **Known platform limitation (inspect-ai 0.3.286, verified 2026-11-04)**: `agent=claude_code`/`codex`'s
 `sandbox="local"` fails on a macOS host with `SandboxInjectionError: ... Tool support injection is not
 implemented for OS: Darwin. Only Linux containers are currently supported.` -- `sandbox_agent_bridge()`
 unconditionally calls `sandbox_with_injected_tools()`, whose container-tools injector only knows how to
 install into a Linux filesystem layout, and the local sandbox IS the host OS (Darwin here), not a
-container. This is an inspect-ai limitation, not specific to this kit: Linux hosts/CI runners are
-unaffected, and `evals/inspect/mole_eval/task.py`'s own `claude_code()` usage (T17) sidesteps it entirely
-by using a Docker sandbox instead (Docker containers run Linux regardless of host OS) -- do the same
-(`Task(sandbox=("docker", compose.yaml))`) if you need `agent=claude_code`/`codex` from a Mac. `agent=
-hermes` needs no sandbox at all (confirmed end-to-end on macOS, see below) and is unaffected.
+container. This is an inspect-ai limitation, not specific to this kit. **The fix is `-T sandbox=docker`
+(this kit's DEFAULT for these two agents)**: `evals/inspect/dcbench_eval/Dockerfile` + `compose.yaml` run a
+real Linux container (git, node 22, the `claude`/`codex` CLIs) regardless of host OS -- confirmed building
+and running locally (image build + a bind-mounted worktree exec check; see the T93 task's own evidence for
+the exact commands, since a real paid Claude Code/Codex CLI call is NOT RUN by this repo's own CI/tests --
+no paid API keys here). `-T sandbox=local` is still available for a Linux host/CI runner where the Darwin
+limitation does not apply (faster, no Docker). `agent=hermes` needs no sandbox at all (confirmed
+end-to-end on macOS, see below) and is unaffected either way.
 
 Result: a real Inspect `.eval` log under `--log-dir` (default `./logs`). Open it with
 `<venv>/bin/inspect view --log-dir <dir>`, or re-analyse it statistically:
@@ -74,12 +91,18 @@ Result: a real Inspect `.eval` log under `--log-dir` (default `./logs`). Open it
 
 ```notes
 external_agent.py     claude_code/codex via inspect-swe (see its docstring for exactly why these need
-                      Inspect's "local" sandbox and how billing/identity work).
+                      Inspect's "local"/"docker" sandbox and how billing/identity work).
 worktree_agent.py     the hermes path: creates a throwaway git worktree per sample, applies the arm's
                       context (arms.py), runs REAL `hermes -z ... --safe-mode` as a subprocess (the agent
                       edits files itself -- it is not a chat completion Inspect's generate() can wrap).
+                      Also the clear "hermes not found" error when agent=hermes is used without hermes
+                      installed.
 arms.py               what context (if any) the agent sees before the same task prompt: none | rules:PATH
                       | decisions:PATH | plugin_pin:SHA:PATH (see its own docstring for the full syntax).
+                      For claude_code/codex specifically, install_arm_for_agent() places that context the
+                      way THOSE agents actually read it (CLAUDE.md/AGENTS.md on disk, and -- for a
+                      'decisions' arm under claude_code, when this checkout's own plugin is found --
+                      Mole's real Claude Code plugin hooks installed project-locally).
 scorers.py            mole_check_scorer (generic, any repo) + dcbench_scorer (wraps dcbench's OWN
                       benchmark/scorer.ts via dcbench_score.mjs, a node subprocess). dcbench_scorer needs a
                       local dcbench checkout (-T dcbench_repo=PATH); mole_check_scorer works on any repo

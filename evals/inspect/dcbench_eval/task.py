@@ -19,6 +19,7 @@ needs -T dcbench_repo=PATH too).
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -45,6 +46,7 @@ from dcbench_eval.worktree_agent import (  # noqa: E402
 )
 
 TIME_LIMIT_S = 1800
+DOCKER_COMPOSE_PATH = EVAL_DIR / "dcbench_eval" / "compose.yaml"
 
 
 def load_dataset(path: str) -> list[dict]:
@@ -76,16 +78,27 @@ def mole_ab(
     commit: str = "HEAD",
     dcbench_repo: str | None = None,
     mole_bin: str | None = None,
-    agent: str = "hermes",
+    agent: str = "claude_code",
     agent_model_config: str | None = None,
+    sandbox: str = "docker",
 ) -> Task:
-    """agent: "hermes" (default here -- runs `hermes -z` through the user's own hermes subscription, no
-    sandbox needed) | "claude_code" | "codex" (run the real Claude Code / Codex CLI via inspect-swe's
-    maintained external-agent wrappers, in a "local" Inspect sandbox -- i.e. directly on the host against
-    whatever `claude`/`codex` binary is already on PATH, no Docker, no hermes subscription; see
-    external_agent.py's docstring for exactly how and why). PUBLIC USERS WITHOUT A HERMES SUBSCRIPTION
-    SHOULD PASS `agent=claude_code` OR `agent=codex`; "hermes" stays the default here only so existing
-    internal callers of this function are unaffected -- public docs lead with `-T agent=claude_code`."""
+    """agent: "claude_code" (DEFAULT -- real Claude Code via inspect-swe's maintained external-agent
+    wrapper, no hermes subscription needed) | "codex" (same idea, OpenAI's Codex CLI) | "hermes" (opt-in
+    only: runs `hermes -z` through a hermes subscription; raises a clear error naming `agent=claude_code`/
+    `codex` instead of a raw FileNotFoundError if `hermes` is not on PATH -- see worktree_agent.run_hermes).
+    T93 review FAIL fix #4: this used to default to "hermes", which public users without a hermes
+    subscription cannot run at all; claude_code/codex need only the CLI itself, already on most developers'
+    machines.
+
+    sandbox: only consulted for agent="claude_code"/"codex" (hermes never needs a sandbox -- see
+    worktree_agent.py's docstring). "docker" (DEFAULT, T93 review FAIL fix #3): Inspect's "local" sandbox
+    execs sandbox_agent_bridge() directly on the host, which inspect-ai's own sandbox tool-injection code
+    only implements for Linux (`Tool support injection is not implemented for OS: Darwin` on macOS -- see
+    external_agent.py's docstring); "docker" (this repo's evals/inspect/dcbench_eval/compose.yaml, a small
+    Debian + git + node22 image) runs a real Linux container instead and works on any host Docker runs on.
+    "local" is still available (faster, no Docker) for a Linux host/CI runner where the limitation above
+    does not apply.
+    """
     rows = load_dataset(dataset)
     arm_list = arms if isinstance(arms, list) else [a.strip() for a in arms.split(",")]
     arm_specs = [a.strip() for a in arm_list if a.strip()]
@@ -111,8 +124,20 @@ def mole_ab(
         chosen_solver = hermes_worktree_agent(repo=repo, model=model, provider=provider)
         chosen_sandbox = None
     elif agent in SUPPORTED_AGENTS:
-        chosen_solver = external_agent_worktree(repo=repo, agent=agent, model_config=agent_model_config)
-        chosen_sandbox = "local"  # exec directly on the host (no Docker) against the user's own claude/codex binary
+        if sandbox == "docker":
+            # see compose.yaml's own comment: it bind-mounts ${MOLE_AB_REPO_DIR} (set here, read by
+            # `docker compose` when Inspect builds the sandbox) so worktrees created under
+            # <repo>/.mole_ab_worktrees are visible inside the container at the identical host path.
+            repo_abs = str(Path(repo).resolve())
+            os.environ["MOLE_AB_REPO_DIR"] = repo_abs
+            worktrees_root = str(Path(repo_abs) / ".mole_ab_worktrees")
+            chosen_solver = external_agent_worktree(repo=repo, agent=agent, model_config=agent_model_config, worktrees_root=worktrees_root)
+            chosen_sandbox = ("docker", str(DOCKER_COMPOSE_PATH))
+        elif sandbox == "local":
+            chosen_solver = external_agent_worktree(repo=repo, agent=agent, model_config=agent_model_config)
+            chosen_sandbox = "local"  # exec directly on the host against the user's own claude/codex binary
+        else:
+            raise ValueError(f"unknown sandbox {sandbox!r}; known: docker, local")
     else:
         raise ValueError(f"unknown agent {agent!r}; known: hermes, {', '.join(sorted(SUPPORTED_AGENTS))}")
     return Task(

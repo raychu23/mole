@@ -7,13 +7,22 @@ from pathlib import Path
 
 import pytest
 
-from dcbench_eval.reanalyze import DEFAULT_RUNS_PATH, analyze, load_runs
+from dcbench_eval.reanalyze import analyze, load_runs
 from dcbench_eval.spec import assert_frozen_unedited, spec_from_dict
 from dcbench_eval.stats import sample_size_for_mde
 
 EVAL_DIR = Path(__file__).resolve().parents[2]
 SPEC_PATH = EVAL_DIR / "dcbench_eval" / "experiments" / "protocol-v3.json"
 FROZEN_PATH = EVAL_DIR / "dcbench_eval" / "experiments" / "FROZEN-v3.sha256"
+# This test file is private-only (excluded from the public export); see test_reanalyze.py's comment on
+# why it is free to name the private data's conventional location directly rather than requiring
+# $MOLE_AB_RUNS_PATH (reanalyze.py itself ships with no such default -- T93 review-FAIL fix).
+import os
+
+RUNS_PATH = Path(os.environ.get(
+    "MOLE_AB_RUNS_PATH",
+    "context/product-plan/systems/metrics-proof/productivity/raw/runs.jsonl",
+))
 
 
 def test_protocol_v3_parses_and_validates():
@@ -27,14 +36,14 @@ def test_protocol_v3_is_frozen_and_unedited():
     assert_frozen_unedited(SPEC_PATH, FROZEN_PATH)  # raises if missing or drifted
 
 
-@pytest.mark.skipif(not DEFAULT_RUNS_PATH.exists(), reason=f"T63 raw data not present at {DEFAULT_RUNS_PATH}")
+@pytest.mark.skipif(not RUNS_PATH.exists(), reason=f"T63 raw data not present at {RUNS_PATH}")
 def test_sample_size_matches_measured_sds_not_a_guess():
     """Recompute the sd(diff) per pair from T63's own 72 runs and confirm v3's runs_per_arm_per_task=21
     is exactly sample_size_for_mde() on the PRIMARY (R-M) pair's measured sd at mde=15 -- not copied
     from v1/v2 (which used 3, uncomputed) and not hand-picked."""
     import statistics
 
-    records = load_runs(DEFAULT_RUNS_PATH)
+    records = load_runs(RUNS_PATH)
     result = analyze(records)
     task_pct = result["per_task_pct"]
     tasks = list(task_pct.keys())

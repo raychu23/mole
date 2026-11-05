@@ -61,31 +61,41 @@ def build_external_agent(agent: str, cwd: str, model_config: str | None = None) 
 
 
 @solver
-def external_agent_worktree(repo: str, agent: str = "claude_code", model_config: str | None = None) -> Solver:
+def external_agent_worktree(repo: str, agent: str = "claude_code", model_config: str | None = None, worktrees_root: str | None = None) -> Solver:
     """Same per-sample isolation contract as `hermes_worktree_agent` (one throwaway git worktree per
     sample, same `state.metadata["worktree"/"repo"/"diff"]` keys the scorers already read), but the agent
     doing the editing is Claude Code or Codex (via inspect-swe), run through Inspect's own agent/solver
     boundary (`as_solver`) instead of a bare subprocess -- so Inspect's transcript, token usage and cost
     tracking all work natively here (unlike the hermes path, which has to record its own `--usage-file`
-    since hermes never reports through Inspect's model loop at all)."""
+    since hermes never reports through Inspect's model loop at all).
+
+    `worktrees_root`: forwarded to `make_worktree` -- set by task.py to `<repo>/.mole_ab_worktrees` when
+    `sandbox="docker"` (the T93 review FAIL fix #3 default for this agent), so the worktree lands inside
+    the one directory compose.yaml bind-mounts into the sandbox (see that file's comment). Left `None` for
+    `sandbox="local"` (system temp dir, no mount needed -- the local sandbox IS the host filesystem)."""
     if agent not in SUPPORTED_AGENTS:
         raise ValueError(f"unknown agent {agent!r}; known: {sorted(SUPPORTED_AGENTS)}")
     repo_path = Path(repo)
+    wt_root = Path(worktrees_root) if worktrees_root else None
 
     async def solve(state: TaskState, generate: Generate) -> TaskState:
         arm_spec = state.metadata["arm"]
         arm = parse_arm(arm_spec) if isinstance(arm_spec, str) else arm_spec
         commit = state.metadata.get("commit", "HEAD")
-        wt = make_worktree(repo_path, commit)
+        wt = make_worktree(repo_path, commit, worktrees_root=wt_root)
         state.metadata["worktree"] = str(wt)
         state.metadata["repo"] = str(repo_path)
         try:
-            from .arms import apply_arm
+            from .arms import install_arm_for_agent
 
-            apply_arm(arm, wt, state.input_text)  # places context in the worktree; the agent discovers
-            # it itself (AGENTS.md/.claude files on disk), since -- unlike hermes -- the prompt sent to
-            # Claude Code/Codex here is the sample's own input text, not a hand-assembled string: both
-            # wrappers read conversation state (`state.messages`), not a return value from this function.
+            # T93 review FAIL fix: the old code called apply_arm() and discarded its return value, which
+            # silently no-op'd a "rules" arm (its whole point is the returned prefixed-prompt text, which
+            # nothing here ever used -- Claude Code/Codex read conversation state, not this function's
+            # return) and left a "decisions" arm's files under .mole/decisions/, where neither CLI looks on
+            # its own. install_arm_for_agent() (arms.py; see its module-level comment for the citations)
+            # places each arm's context the way THIS agent actually reads it at startup instead.
+            arm_info = install_arm_for_agent(arm, wt, agent)
+            state.metadata["arm_info"] = arm_info
             agent_obj = build_external_agent(agent, cwd=str(wt), model_config=model_config)
             state = await as_solver(agent_obj)(state, generate)
             state.metadata["diff"] = worktree_diff(wt)
