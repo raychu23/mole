@@ -1,0 +1,47 @@
+GREEN (after this task's changes):
+
+1. `npx tsc -b packages/server packages/decisions packages/temporal` -> clean, no output.
+
+2. Baseline migration: empty database and a hand-built pre-T104 ("legacy") database both end
+   with byte-identical `pg_dump --schema-only --no-owner --no-privileges` output (after
+   stripping pg_dump 17's per-run random \restrict/\unrestrict tokens). Verified twice: once by
+   hand (mole_t104_smoke vs mole_t104_preexisting, `diff` after grep -v), once as an automated
+   vitest test (migrations.spec.ts).
+   $ M25_DATABASE_URL="postgres://localhost:5432/postgres?host=/tmp" \
+     npx vitest run packages/server/test/migrations.spec.ts --reporter=verbose
+       ✓ baseline builds the schema from empty AND is a no-op on an existing (pre-T104)
+         database -- identical pg_dump --schema-only   15156ms
+       ✓ a migration already applied is never re-applied: pgmigrations has exactly one row
+         after two runMigrations calls   131ms
+       ✓ two concurrent processes starting at once apply the baseline migration exactly once
+         (advisory-lock serialized)   37656ms
+       Test Files  1 passed (1)
+       Tests  3 passed (3)
+
+3. `mole-server migrate` CLI smoke test (node dist/src/cli.js migrate, DATABASE_URL set):
+   $ DATABASE_URL="postgres://localhost:5432/mole_t104_cli_test?host=/tmp" \
+     node packages/server/dist/src/cli.js migrate
+       migrations applied
+   $ (same command again) -> migrations applied   (idempotent, pgmigrations row count 1)
+   8 tables present afterward incl. pgmigrations.
+
+4. outbox.spec.ts, same database, 3 runs in a row (the documented bug's exact repro, now
+   passing every time):
+   $ createdb -h /tmp -p 5432 mole_t104_baseline_red   (fresh, after the RED repro's DB dropped)
+   RUN 1: Test Files 1 passed (1) / Tests 5 passed (5)   3.98s
+   RUN 2: Test Files 1 passed (1) / Tests 5 passed (5)   1.63s
+   RUN 3: Test Files 1 passed (1) / Tests 5 passed (5)   1.15s
+
+5. Full packages/server suite (72 tests, 20 files), same shared database, 3 runs in a row,
+   `--pool=forks --poolOptions.forks.maxForks=2` (reduced parallelism per the shared-benchmark-
+   host rule in briefs/G-wave.md):
+   RUN 1: Test Files 19 passed | 1 failed (20) / Tests 71 passed | 1 failed (72)
+     (metrics.spec.ts "mole.job.count increases..." -- an in-process OTel-counter race under
+      fork concurrency, confirmed pre-existing and unrelated: passes alone --
+      `npx vitest run packages/server/test/metrics.spec.ts` -> 4/4 green -- and this task
+      touched neither metrics.ts nor outbox.ts/db.ts's migration-count logic)
+   RUN 2: Test Files 20 passed (20) / Tests 72 passed (72)
+   RUN 3: Test Files 20 passed (20) / Tests 72 passed (72)
+
+All probe databases (mole_t104_smoke, mole_t104_preexisting, mole_t104_concurrent,
+mole_t104_baseline_red, mole_t104_cli_test, mole_t104_fullsuite) dropped after use.

@@ -10,11 +10,45 @@
 // and https://github.com/sourcegraph/scip/blob/main/scip.proto for the grammar comment this reads).
 // Mole reads that suffix to tell an import-like reference (namespace/meta: a module as a whole) from
 // a call-like reference (method), instead of hand-writing a parser per language (task stop condition).
+//
+// T106: bindings switched from `@c4312/scip` (a stale mirror of `sourcegraph/scip`'s old TypeScript
+// bindings, last generated against the deprecated `repeated int32 range = 1` encoding) to
+// `@scip-code/scip` (the maintained org's own published npm package, version-paired with the Go
+// bindings `scip-go` itself depends on). `sourcegraph/scip` moved to `scip-code/scip` and, in PR #387
+// ("Make ranges typed oneofs"), replaced the deprecated flat `range`/`enclosing_range` int32 arrays
+// with a typed `oneof { SingleLineRange single_line_range = 8; MultiLineRange multi_line_range = 9; }`
+// -- current `scip-go` (v0.2.9, confirmed 2026-11-05) writes ONLY the typed form, never the deprecated
+// field. `@c4312/scip`'s stale-schema decoder didn't know field 8/9 and silently dropped them into its
+// unknown-fields bucket, decoding `occ.range` as `[]` for every occurrence -- not a scip-go bug (T95's
+// "ranges are empty" finding was a stale-bindings bug in Mole's own decoder, not in the indexer).
+// `occurrenceRange()` below normalizes either encoding to the flat array shape the rest of this file
+// already expects, so scip-python (still deprecated-field-only, verified unchanged) and scip-go (typed
+// only) both work through the same code.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { deserializeSCIP, type Index, type Occurrence } from '@c4312/scip';
+import { fromBinary } from '@bufbuild/protobuf';
+import { IndexSchema, type Index, type Occurrence } from '@scip-code/scip';
 
-export type { Index } from '@c4312/scip';
+export type { Index } from '@scip-code/scip';
+
+/** `occ`'s source range as a flat `[startLine, startChar, endChar]` / `[startLine, startChar, endLine,
+ * endChar]` array, whichever encoding `occ` actually carries (see the T106 comment above): the typed
+ * `single_line_range`/`multi_line_range` oneof takes precedence when set (scip.proto's own documented
+ * precedence rule), falling back to the deprecated `range` field for indexers that still only write it. */
+export function occurrenceRange(occ: Occurrence): number[] {
+  switch (occ.typedRange?.case) {
+    case 'singleLineRange': {
+      const r = occ.typedRange.value;
+      return [r.line, r.startCharacter, r.endCharacter];
+    }
+    case 'multiLineRange': {
+      const r = occ.typedRange.value;
+      return [r.startLine, r.startCharacter, r.endLine, r.endCharacter];
+    }
+    default:
+      return occ.range ?? [];
+  }
+}
 
 export interface ImportSite {
   file: string; // document relative_path the reference was read in
@@ -43,7 +77,7 @@ export interface ScipSites {
 
 /** Read and decode an `index.scip` file (protobuf, github.com/sourcegraph/scip wire format). */
 export function readScipIndex(path: string): Index {
-  return deserializeSCIP(readFileSync(path));
+  return fromBinary(IndexSchema, readFileSync(path));
 }
 
 // scip.proto Symbol grammar: the last descriptor's suffix character says what kind of symbol this is.
@@ -81,7 +115,7 @@ function packageOf(symbol: string): { manager: string; name: string } | undefine
 }
 
 function lineOf(occ: Occurrence): number {
-  return (occ.range[0] ?? 0) + 1;
+  return (occurrenceRange(occ)[0] ?? 0) + 1;
 }
 
 /** Read (and cache) a source file's lines, from disk -- SCIP indexes do not ship document text by default
@@ -102,10 +136,11 @@ function sourceLines(root: string, file: string, cache: Map<string, string[] | u
  * tell a call `q()` apart from a plain name reference to the same method-shaped symbol (e.g. the `q` of
  * `from a import q`) -- a one-character check common to every call syntax Mole already supports. */
 function nextNonSpaceChar(root: string, file: string, occ: Occurrence, cache: Map<string, string[] | undefined>): string | undefined {
+  const range = occurrenceRange(occ);
   const lines = sourceLines(root, file, cache);
-  const line = lines?.[occ.range[0] ?? 0];
+  const line = lines?.[range[0] ?? 0];
   if (line === undefined) return undefined;
-  const endChar = occ.range.length === 4 ? occ.range[3]! : occ.range[2]!;
+  const endChar = range.length === 4 ? range[3]! : range[2]!;
   let i = endChar;
   while (i < line.length && /\s/.test(line[i]!)) i++;
   return line[i];
@@ -307,7 +342,7 @@ export function scipSites(index: Index, root: string): ScipSites {
         if (occ.symbolRoles & 1 /* Definition */) continue;
         const sym = occ.symbol;
         if (!sym || sym.startsWith('local ') || !MODULE_SUFFIX.test(sym) || definedIn.has(sym) || relativeResolved.has(sym)) continue;
-        const occLine = occ.range[0] ?? 0;
+        const occLine = occurrenceRange(occ)[0] ?? 0; // typed ranges leave occ.range empty (T106 review)
         const startLine = starts[occLine] ?? occLine;
         const resolved = resolveRelativeImport(file, lines[startLine] ?? '', descriptorNames(sym), fileSet);
         if (resolved) relativeResolved.set(sym, resolved);

@@ -1,0 +1,10 @@
+# T63-productivity-v4.2 tooling freeze -- companion to experiments/protocol-v4.2.sha256
+# freeze.py's own ExperimentSpec schema only hashes the JSON spec; the runner/scorer/pinned-tarball
+# hashes below are recorded here (sha256sum-format) so a drift in any of them is detectable the same way.
+# Frozen: 2026-11-05T14:34:58Z
+# run_dcbench_v4.py and score.mjs (the v4.1 files these were copied from) are UNTOUCHED: their own hashes
+# stay exactly as recorded in protocol-v4.1.tooling-sha256.txt (a8be16f4... / 8049a53a...). v4.2 adds two
+# NEW files, hashed here for the first time.
+9cfc91eed72fa36a375129fabe67cc3fc196fd9f6ee226ffda929d8ccbcf6ee7  context/product-plan/systems/metrics-proof/productivity/scripts/run_dcbench_v42.py
+8cd0e97eab0f6b82d701dec7bf6accb1fc9ada481f44d7d8d7fefa0825d12d1f  context/product-plan/systems/metrics-proof/productivity/scripts/score-v42.mjs
+f0bbc96596d5102bfb9ebcf21cf6c0129d4d9164b53f6b9bb2fc20a92f2f4ea1  mole-pinned/dist/cli.js+scripts (release/mole-code-0.1.0.tgz, source_commit=e4eafe21e0b5f7e83fd91b85124ece2c0dbdac3f -- UNCHANGED from v4.1; reused read-only, not rebuilt; arm A does not exercise it but the shared MOLE_PINNED guard in run_dcbench_v42.py still requires it at import time)

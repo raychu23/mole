@@ -1,0 +1,7 @@
+# T63-productivity-v4.2 — frozen before run 1
+# Frozen: 2026-11-05T14:34:58+00:00
+# Any edit to the spec file after this point must produce a NEW spec (e.g. "-v2") and a
+# fresh freeze; the old one is refused by assert_frozen_unedited().
+#
+# sha256                                                            path
+f9d0adaeb6003a360662d21d8af04545f6b5f70444a37b57d5d3743a08143211  evals/inspect/dcbench_eval/experiments/protocol-v4.2.json

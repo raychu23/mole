@@ -58,3 +58,45 @@ def test_refuses_to_refreeze(tmp_path):
                        capture_output=True, text=True)
     assert r.returncode == 2
     assert "already exists" in r.stderr
+
+
+def test_single_arm_spec_freezes(tmp_path):
+    """T107/v4.2: a single-arm base-rate/descriptive spec (no comparison arm) must freeze cleanly --
+    validate() was loosened from arms>=2 to arms>=1 (spec.py) for exactly this design."""
+    spec = {
+        "id": "single-arm-smoke-test",
+        "hypothesis": "a single-arm base-rate smoke test",
+        "arms": [{"id": "a", "description": "only arm"}],
+        "tasks": ["T1"],
+        "primary_metric": "m",
+        "analysis_plan": "p",
+        "sample_size": {"runs_per_arm_per_task": 8, "power": 0.8, "alpha": 0.05, "mde": 0.2},
+        "stop_rules": ["r"],
+    }
+    spec_path = tmp_path / "spec.json"
+    spec_path.write_text(json.dumps(spec))
+    frozen_path = tmp_path / "spec.sha256"
+    r = subprocess.run([sys.executable, str(FREEZE_PY), str(spec_path), "--frozen", str(frozen_path)],
+                       capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+    assert frozen_path.exists()
+
+
+def test_zero_arm_spec_refused(tmp_path):
+    spec = {
+        "id": "zero-arm-smoke-test",
+        "hypothesis": "h",
+        "arms": [],
+        "tasks": ["T1"],
+        "primary_metric": "m",
+        "analysis_plan": "p",
+        "sample_size": {"runs_per_arm_per_task": 8, "power": 0.8, "alpha": 0.05, "mde": 0.2},
+        "stop_rules": ["r"],
+    }
+    spec_path = tmp_path / "spec.json"
+    spec_path.write_text(json.dumps(spec))
+    frozen_path = tmp_path / "spec.sha256"
+    r = subprocess.run([sys.executable, str(FREEZE_PY), str(spec_path), "--frozen", str(frozen_path)],
+                       capture_output=True, text=True)
+    assert r.returncode == 1
+    assert "at least 1 entry" in r.stderr

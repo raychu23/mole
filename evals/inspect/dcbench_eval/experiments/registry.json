@@ -42,7 +42,17 @@
       "spec": "evals/inspect/dcbench_eval/experiments/protocol-v4.1.json",
       "frozen": "evals/inspect/dcbench_eval/experiments/protocol-v4.1.sha256",
       "tooling_frozen": "evals/inspect/dcbench_eval/experiments/protocol-v4.1.tooling-sha256.txt (runner + scorer + pinned Mole tarball hashes)",
-      "run": "SMOKE ONLY (1 real run per arm, TASK-013, through the updated runner -- see tasks/T97-benchmark-v4-blocking/4 log/evidence.md). Full 44-run pilot (2 crisp tasks x 8 epochs + 6 other tasks x 1 epoch, 2 arms) NOT RUN: needs Raymond's go; launch command in tasks/T97-benchmark-v4-blocking/4 log/launch-command.md. Primary-outcome MDE at n=8/arm/task on points is ~46 (honestly underpowered for a real effect; see protocol-v4.1.json's sample_size_arithmetic) -- this is a feasibility/smoke pilot, not a confirmatory design."
+      "run": "SMOKE ONLY (1 real run per arm, TASK-013, through the updated runner -- see tasks/T97-benchmark-v4-blocking/4 log/evidence.md). Full 44-run pilot (2 crisp tasks x 8 epochs + 6 other tasks x 1 epoch, 2 arms) NOT RUN: needs Raymond's go; launch command in tasks/T97-benchmark-v4-blocking/4 log/launch-command.md. Primary-outcome MDE at n=8/arm/task on points is ~46 (honestly underpowered for a real effect; see protocol-v4.1.json's sample_size_arithmetic) -- this is a feasibility/smoke pilot, not a confirmatory design.",
+      "finding": "v4.1 WAS run in full (44/44 runs, see results-v41.md): 0 of 16 R runs and 0 of 16 M-block runs ended with the crisp D-001/D-005 violation in the final diff -- the blocking hooks never had anything to block. Next step named in results-v41.md: measure the base rate with no context at all (v4.2)."
+    },
+    {
+      "id": "T63-productivity-v4.2",
+      "idea": "Pre-registered follow-up to v4.1's own next step (results-v41.md: 0/32 crisp-task violations in either arm across the pilot -- the blocking mechanism was never exercised, so a null result there says nothing about D102). v4.2 measures the BASE RATE of the two crisp mistakes (D-001 CalendarRange, D-005 PulseLoader) with NO context at all (dcbench Config A: no CLAUDE.md, no Mole), 8 epochs each on TASK-001/TASK-013 (16 runs), reported as a Wilson 95% CI (stats.py's wilson). Decision rule fixed in advance: pooled CI upper bound < 20% -> dcbench cannot usefully test blocking, next step is a seeded-trap benchmark; >= 20% -> the mistake is common enough to run a powered R vs M-block comparison. Also fixes at the source (not post-hoc) results-v41.md's scorer finding that an arm's own setup files (.mole/, CLAUDE.md) can appear in the scored diff: score-v42.mjs excludes both paths from every git diff/ls-files call, identically for every arm.",
+      "status": "pre-registered",
+      "spec": "evals/inspect/dcbench_eval/experiments/protocol-v4.2.json",
+      "frozen": "evals/inspect/dcbench_eval/experiments/protocol-v4.2.sha256",
+      "tooling_frozen": "evals/inspect/dcbench_eval/experiments/protocol-v4.2.tooling-sha256.txt (run_dcbench_v42.py + score-v42.mjs hashes; run_dcbench_v4.py/score.mjs themselves UNTOUCHED, still match protocol-v4.1.tooling-sha256.txt)",
+      "run": "SMOKE ONLY (1 real run, arm A, TASK-001 -- see tasks/T107-benchmark-v42-base-rate/4 log/evidence.md). Full 16-run base-rate measurement (arm A x TASK-001/TASK-013 x 8 epochs) NOT RUN: needs Raymond's go; exact detached/resumable launch command in tasks/T107-benchmark-v42-base-rate/4 log/launch-command.md."
     }
   ]
 }
