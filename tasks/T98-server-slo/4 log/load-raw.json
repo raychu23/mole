@@ -1,0 +1,66 @@
+{
+  "generatedAt": "2026-11-05T03:53:54.862Z",
+  "machine": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpuModel": "Apple M1 Pro",
+    "cpuCount": 8,
+    "totalMemGiB": 16,
+    "nodeVersion": "v22.21.0",
+    "loadavgBefore": [
+      3.9853515625,
+      3.86767578125,
+      5.23974609375
+    ],
+    "loadavgAfter": [
+      4.9208984375,
+      4.185546875,
+      5.25634765625
+    ]
+  },
+  "webhookAck": {
+    "endpoint": "POST /webhook (ack-only, intake path)",
+    "durationSec": 10,
+    "connections": 20,
+    "requestsTotal": 2419,
+    "throughputReqPerSec": 227.14,
+    "latencyMs": {
+      "p50": 10.29,
+      "p95": 1166.04,
+      "p99": 1267.49,
+      "max": 2341.83,
+      "mean": 87.802
+    },
+    "errors": 0,
+    "statusCounts": {
+      "202": 2419
+    }
+  },
+  "decisionsQuery": {
+    "endpoint": "GET /reconcile/:orgId (decisions query, reads temporal + graph index)",
+    "durationSec": 10,
+    "connections": 20,
+    "requestsTotal": 6869,
+    "throughputReqPerSec": 686.28,
+    "latencyMs": {
+      "p50": 26.8,
+      "p95": 43.26,
+      "p99": 62.66,
+      "max": 103.57,
+      "mean": 29.128
+    },
+    "errors": 0,
+    "statusCounts": {
+      "200": 6869
+    }
+  },
+  "queueDrain": {
+    "jobsEnqueued": 15,
+    "jobUnitsExpected": 30,
+    "enqueueMs": 90,
+    "jobUnitsCompleted": 30,
+    "drainMs": 32981,
+    "jobUnitsPerSec": 0.91,
+    "note": "rebuild.ts/checkrun.ts call execFileSync for every git read; each job does several synchronous git subprocess calls that block the Node event loop for their duration. This throughput number is bounded by that, not by Postgres or the HTTP layer."
+  }
+}

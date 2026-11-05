@@ -1,0 +1,3 @@
+   × statementStarts (Python line joining) > a backslash-newline inside a single-quoted string keeps the next line inside the string (round-4 HIGH-1) 7ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 7 passed (8)

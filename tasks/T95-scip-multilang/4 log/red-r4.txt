@@ -1,0 +1,40 @@
+[2m      "line": 1,[22m
+[2m      "target": "src/pkg/leaf.py",[22m
+[2m    },[22m
+[2m    {[22m
+[2m      "file": "src/pkg/sub/case_comment_paren.py",[22m
+[32m-     "isPath": true,[39m
+[31m+     "isPath": false,[39m
+[2m      "line": 2,[22m
+[32m-     "target": "src/pkg/sub/decoy.py",[39m
+[31m+     "target": "decoy",[39m
+[2m    },[22m
+[2m    {[22m
+[2m      "file": "src/pkg/sub/case_comment_paren.py",[22m
+[32m-     "isPath": true,[39m
+[31m+     "isPath": false,[39m
+[2m      "line": 4,[22m
+[32m-     "target": "src/pkg/leaf.py",[39m
+[31m+     "target": "leaf",[39m
+[2m    },[22m
+[2m    {[22m
+[2m      "file": "src/pkg/sub/case_multiline_dotdot.py",[22m
+[2m      "isPath": true,[22m
+[2m      "line": 1,[22m
+
+ ❯ packages/scip/test/counterfixture.test.ts:85:17
+     83|     const got = imports.map(normalize).sort((a, b) => a.file.localeCom…
+     84|     const want = GROUND_TRUTH_IMPORTS.map((s) => normalize(s as never)…
+     85|     expect(got).toEqual(want);
+       |                 ^
+     86|   });
+     87| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  20:32:58
+   Duration  631ms (transform 90ms, setup 0ms, collect 205ms, tests 54ms, environment 0ms, prepare 99ms)
+

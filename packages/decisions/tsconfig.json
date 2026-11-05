@@ -23,6 +23,9 @@
     },
     {
       "path": "../reviews"
+    },
+    {
+      "path": "../scip"
     }
   ]
 }

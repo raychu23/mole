@@ -131,6 +131,7 @@ async function main(): Promise<number> {
   if (cmd === 'pr-check') return (await import('@mole/decisions')).prCheckCli(pos, flags, root);
   if (cmd === 'flows') return (await import('@mole/flows')).flowsCli(pos, flags, root); // runtime call flows recorded from tests (T28), no daemon needed
   if (cmd === 'rules') return (await import('@mole/decisions')).rulesCli(pos, flags, root);
+  if (cmd === 'scip') return (await import('@mole/scip')).scipCli(pos, flags, root); // `mole scip stamp`: content-hash manifest for mole rules' SCIP staleness check (T95 review round-2)
   if (cmd === 'compile') return (await import('@mole/decisions')).compileCli(pos, flags, root); // T46: compile-at-capture (draft/approve/reject/status)
   if (cmd === 'arguments') return (await import('@mole/decisions')).argumentsCli(pos, flags, root); // T80: captured-argument capture/approve/reject/list
   if (cmd === 'cascade-check') return (await import('@mole/decisions')).cascadeCheckCli(pos, flags, root); // T46: zero-LLM tier then one-call LLM escalation
@@ -251,7 +252,7 @@ async function main(): Promise<number> {
     'usage: mole <command> [target] [--root DIR] [--json]\n' +
       '  core:        daemon | map | impact | check | status | reindex | stop | demo | init\n' +
       '  notes:       note add | memory | since | seen\n' +
-      '  decisions:   decision | decisions | rules | incident | priorities | recall | export | assurance | outcomes | proposals | compile | arguments | cascade-check | pr-check\n' +
+      '  decisions:   decision | decisions | rules | incident | priorities | recall | export | assurance | outcomes | proposals | compile | arguments | cascade-check | pr-check | scip stamp\n' +
       '  agent state: runs | run | tried | agents | agent-intent | collisions | claims | steer\n' +
       '  analysis:    coverage | hotspots | coupling | flows | interrogate | check-records\n' +
       '  flags:       [--state-dir DIR] [--tsconfig F] [--src-dir D] [--idle-minutes N]\n' +

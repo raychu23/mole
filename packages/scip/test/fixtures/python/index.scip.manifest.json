@@ -1,0 +1,13 @@
+{
+  "indexSha256": "936db50be0b6ab0d0635085157c950c4a87d5612cd35b1f1f731be939f279abc",
+  "tool": "scip-python 0.6.8",
+  "files": {
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/api/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/api/client.py": "628f6a13fde09fd20e3c3183d422de95c0e9cd9867727d7d5a8cb2a7d9ee5a36",
+    "src/db/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/db/query.py": "aa5cc162122ec64be66e3744a0e41e4e495788575cd63ada79171f97808173d2",
+    "src/ui/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/ui/view.py": "208807b7fa6330b3dcc671f99ef614a27c4820bf45e0020459acadaed1f9f680"
+  }
+}

@@ -5,4 +5,5 @@ export { CALL_RULES_FILE, DEPCRUISE_FILE } from './types.js';
 export { loadRules } from './parse.js';
 export { depcruiseRuleSet } from './compile.js';
 export { checkRules } from './check.js';
+export { StaleScipIndexError, scipStaleness, findScipIndex } from './scip.js';
 export { emitConfig, formatRules, rulesCli } from './cli.js';
