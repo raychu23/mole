@@ -1,0 +1,175 @@
+=== packages/server/test/checkrun.spec.ts run 1 ===
+ ✓ packages/server/test/checkrun.spec.ts (7 tests) 1907ms
+   ✓ computeCheckRun uses the push range base, not just the last commit (T45 review 2 P1) > falls back to ref^ when `before` is not an ancestor of ref (a force push rewrote history)  340ms
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+=== packages/server/test/checkrun.spec.ts run 2 ===
+ ✓ packages/server/test/checkrun.spec.ts (7 tests) 1808ms
+   ✓ computeCheckRun uses the push range base, not just the last commit (T45 review 2 P1) > falls back to ref^ when `before` is not an ancestor of ref (a force push rewrote history)  324ms
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+=== packages/server/test/crash-restart.spec.ts run 1 ===
+[checkrun] prCheck failed, falling back to file-count-only title {
+  error: [32m'Command failed: git -C /private/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-m25-org-sigterm-1793856178951-cRdkc0 -c core.quotepath=off rev-parse --verify 4b825dc642cb6eb9a060e54bf8d69288fbee4904^{commit}\n'[39m +
+[checkrun] prCheck failed, falling back to file-count-only title {
+  error: [32m'Command failed: git -C /private/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-m25-org-sigkill-1793856180339-Q46wDB -c core.quotepath=off rev-parse --verify 4b825dc642cb6eb9a060e54bf8d69288fbee4904^{commit}\n'[39m +
+ ✓ packages/server/test/crash-restart.spec.ts (2 tests) 2506ms
+   ✓ crash/restart durability + graceful shutdown (T98 server-slo, real child process) > SIGTERM drains gracefully: the process exits 0 and the already-enqueued job still completes exactly once  1389ms
+   ✓ crash/restart durability + graceful shutdown (T98 server-slo, real child process) > kill -9 mid-queue, restart: the job is still completed exactly once, no duplicate effect  1103ms
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+=== packages/server/test/crash-restart.spec.ts run 2 ===
+[checkrun] prCheck failed, falling back to file-count-only title {
+  error: [32m'Command failed: git -C /private/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-m25-org-sigterm-1793856182936-xZD1Gr -c core.quotepath=off rev-parse --verify 4b825dc642cb6eb9a060e54bf8d69288fbee4904^{commit}\n'[39m +
+[checkrun] prCheck failed, falling back to file-count-only title {
+  error: [32m'Command failed: git -C /private/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-m25-org-sigkill-1793856184099-OOr7Zs -c core.quotepath=off rev-parse --verify 4b825dc642cb6eb9a060e54bf8d69288fbee4904^{commit}\n'[39m +
+ ✓ packages/server/test/crash-restart.spec.ts (2 tests) 2328ms
+   ✓ crash/restart durability + graceful shutdown (T98 server-slo, real child process) > SIGTERM drains gracefully: the process exits 0 and the already-enqueued job still completes exactly once  1163ms
+   ✓ crash/restart durability + graceful shutdown (T98 server-slo, real child process) > kill -9 mid-queue, restart: the job is still completed exactly once, no duplicate effect  1122ms
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+=== packages/server/test/crypto.spec.ts run 1 ===
+ ✓ packages/server/test/crypto.spec.ts (4 tests) 2ms
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+=== packages/server/test/crypto.spec.ts run 2 ===
+ ✓ packages/server/test/crypto.spec.ts (4 tests) 2ms
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+=== packages/server/test/decisionStore.spec.ts run 1 ===
+ ✓ packages/server/test/decisionStore.spec.ts (2 tests) 340ms
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+=== packages/server/test/decisionStore.spec.ts run 2 ===
+ ✓ packages/server/test/decisionStore.spec.ts (2 tests) 392ms
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+=== packages/server/test/event-loop.spec.ts run 1 ===
+ ✓ packages/server/test/event-loop.spec.ts (1 test) 1642ms
+   ✓ rebuild-index job path stays non-blocking under concurrency (T99) > max gap between heartbeat ticks stays far below a single blocking git call's duration under concurrency  1607ms
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+=== packages/server/test/event-loop.spec.ts run 2 ===
+ ✓ packages/server/test/event-loop.spec.ts (1 test) 1671ms
+   ✓ rebuild-index job path stays non-blocking under concurrency (T99) > max gap between heartbeat ticks stays far below a single blocking git call's duration under concurrency  1626ms
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+=== packages/server/test/health.spec.ts run 1 ===
+ ✓ packages/server/test/health.spec.ts (5 tests) 112ms
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+=== packages/server/test/health.spec.ts run 2 ===
+ ✓ packages/server/test/health.spec.ts (5 tests) 122ms
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+=== packages/server/test/index-temporal-e2e.spec.ts run 1 ===
+[checkrun] prCheck failed, falling back to file-count-only title {
+  error: [32m'Command failed: git -C /private/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-m25-org-t69-e2e-a-1793856199134-7K0o3H -c core.quotepath=off rev-parse --verify 4b825dc642cb6eb9a060e54bf8d69288fbee4904^{commit}\n'[39m +
+ ✓ packages/server/test/index-temporal-e2e.spec.ts (4 tests) 2361ms
+   ✓ T69 review-1 #3: an approved decision is readable via temporal current+asOf for its tenant only, END TO END THROUGH THE SERVER > a webhook-triggered rebuild through the real app makes the decision current+asOf for orgA, and null for orgB (RLS, same decision id)  2050ms
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+=== packages/server/test/index-temporal-e2e.spec.ts run 2 ===
+[checkrun] prCheck failed, falling back to file-count-only title {
+  error: [32m'Command failed: git -C /private/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-m25-org-t69-e2e-a-1793856202934-HZUJWh -c core.quotepath=off rev-parse --verify 4b825dc642cb6eb9a060e54bf8d69288fbee4904^{commit}\n'[39m +
+ ✓ packages/server/test/index-temporal-e2e.spec.ts (4 tests) 2870ms
+   ✓ T69 review-1 #3: an approved decision is readable via temporal current+asOf for its tenant only, END TO END THROUGH THE SERVER > a webhook-triggered rebuild through the real app makes the decision current+asOf for orgA, and null for orgB (RLS, same decision id)  2559ms
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+=== packages/server/test/index.spec.ts run 1 ===
+[checkrun] prCheck failed, falling back to file-count-only title {
+  error: [32m'Command failed: git -C /private/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-m25-org-index-wiring-1793856207288-9DOvOS -c core.quotepath=off rev-parse --verify 4b825dc642cb6eb9a060e54bf8d69288fbee4904^{commit}\n'[39m +
+ ✓ packages/server/test/index.spec.ts (2 tests) 2753ms
+   ✓ server index.ts is wired to real workers (final-build verification) > a webhook delivery through the real app produces a real outbox check-run row, with no bench-only wiring  2558ms
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+=== packages/server/test/index.spec.ts run 2 ===
+[checkrun] prCheck failed, falling back to file-count-only title {
+  error: [32m'Command failed: git -C /private/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-m25-org-index-wiring-1793856216382-Losdlu -c core.quotepath=off rev-parse --verify 4b825dc642cb6eb9a060e54bf8d69288fbee4904^{commit}\n'[39m +
+ ✓ packages/server/test/index.spec.ts (2 tests) 2981ms
+   ✓ server index.ts is wired to real workers (final-build verification) > a webhook delivery through the real app produces a real outbox check-run row, with no bench-only wiring  2272ms
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+=== packages/server/test/oauth.spec.ts run 1 ===
+ ✓ packages/server/test/oauth.spec.ts (3 tests) 29ms
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+=== packages/server/test/oauth.spec.ts run 2 ===
+ ✓ packages/server/test/oauth.spec.ts (3 tests) 56ms
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+=== packages/server/test/outbox.spec.ts run 1 ===
+ ❯ packages/server/test/outbox.spec.ts (5 tests | 1 failed) 557ms
+   × transactional outbox (M25 "0 lost notifications") > a written notification is eventually relayed exactly once 174ms
+   ✓ outbox retry/backoff + dead-letter + per-row isolation (T98 server-slo) > a failing row never rolls back another row that was already delivered in the same tick 76ms
+   ✓ outbox retry/backoff + dead-letter + per-row isolation (T98 server-slo) > backs off exponentially and is not re-claimed before next_attempt_at 24ms
+   ✓ outbox retry/backoff + dead-letter + per-row isolation (T98 server-slo) > dead-letters after maxAttempts and stops being selected at all 37ms
+   ✓ outbox retry/backoff + dead-letter + per-row isolation (T98 server-slo) > relayOutboxOnce (back-compat shape) still returns a delivered count 13ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+=== packages/server/test/outbox.spec.ts run 2 ===
+ ✓ packages/server/test/outbox.spec.ts (5 tests) 1336ms
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+=== packages/server/test/questions.spec.ts run 1 ===
+ ✓ packages/server/test/questions.spec.ts (3 tests) 848ms
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+=== packages/server/test/questions.spec.ts run 2 ===
+ ✓ packages/server/test/questions.spec.ts (3 tests) 1264ms
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+=== packages/server/test/queue-prefix.spec.ts run 1 ===
+ ✓ packages/server/test/queue-prefix.spec.ts (8 tests) 5590ms
+   ✓ queue.ts namespacing (T99 server-throughput) > live isolation: two prefixes on the same database never share jobs > a job sent under prefix A is received by prefix A's worker, never prefix B's  2578ms
+   ✓ queue.ts namespacing (T99 server-throughput) > in-place upgrade: a job queued under the old name survives a restart with the env unset > boss instance #2 (simulating the restarted process) still claims a job boss instance #1 enqueued before it closed  487ms
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+=== packages/server/test/queue-prefix.spec.ts run 2 ===
+ ✓ packages/server/test/queue-prefix.spec.ts (8 tests) 3754ms
+   ✓ queue.ts namespacing (T99 server-throughput) > live isolation: two prefixes on the same database never share jobs > a job sent under prefix A is received by prefix A's worker, never prefix B's  2678ms
+   ✓ queue.ts namespacing (T99 server-throughput) > in-place upgrade: a job queued under the old name survives a restart with the env unset > boss instance #2 (simulating the restarted process) still claims a job boss instance #1 enqueued before it closed  633ms
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+=== packages/server/test/rebuild-git-failure.spec.ts run 1 ===
+ ✓ packages/server/test/rebuild-git-failure.spec.ts (2 tests) 1437ms
+   ✓ rebuild.ts git-failure handling (M25 regression, review round 2 blocking finding) > listMoleFilesAtRef throws (never returns []) when the ref/dir is unreadable  322ms
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+=== packages/server/test/rebuild-git-failure.spec.ts run 2 ===
+ ✓ packages/server/test/rebuild-git-failure.spec.ts (2 tests) 820ms
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+=== packages/server/test/rebuild.spec.ts run 1 ===
+ ✓ packages/server/test/rebuild.spec.ts (1 test) 650ms
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+=== packages/server/test/rebuild.spec.ts run 2 ===
+ ✓ packages/server/test/rebuild.spec.ts (1 test) 756ms
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+=== packages/server/test/rls.spec.ts run 1 ===
+ ✓ packages/server/test/rls.spec.ts (2 tests) 968ms
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+=== packages/server/test/rls.spec.ts run 2 ===
+ ✓ packages/server/test/rls.spec.ts (2 tests) 1169ms
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+=== packages/server/test/telemetry.spec.ts run 1 ===
+ ✓ packages/server/test/telemetry.spec.ts (2 tests) 573ms
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+=== packages/server/test/telemetry.spec.ts run 2 ===
+ ✓ packages/server/test/telemetry.spec.ts (2 tests) 464ms
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+=== packages/server/test/webhook.spec.ts run 1 ===
+ ✓ packages/server/test/webhook.spec.ts (3 tests) 411ms
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+=== packages/server/test/webhook.spec.ts run 2 ===
+ ✓ packages/server/test/webhook.spec.ts (3 tests) 443ms
+ Test Files  1 passed (1)
+      Tests  3 passed (3)

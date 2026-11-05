@@ -4,9 +4,13 @@ individually via `npx vitest run <file>` from packages/server (this package's ow
 per docs/server-slo.md -- its test suite has a pre-existing cross-test pg-boss/pg_extension
 race when files run CONCURRENTLY, reproduced on unmodified main too, not a T99 regression).
 
-test/queue-prefix.spec.ts          5 passed  (new: queueName/resolveQueuePrefix pure tests +
-                                               live two-prefix isolation on one Postgres instance)
-test/event-loop.spec.ts            1 passed  (new: rebuild-index job path event-loop delay)
+test/queue-prefix.spec.ts          8 passed  (new: queueName/resolveQueuePrefix pure tests +
+                                               live two-prefix isolation + live restart-upgrade
+                                               persistence test on one Postgres instance)
+test/event-loop.spec.ts            1 passed  (rewritten in review round 1 -- see
+                                               4 log/event-loop-review1.txt for why and for the
+                                               current red/green numbers; this line's original
+                                               `monitorEventLoopDelay`-based numbers are stale)
 test/rebuild-git-failure.spec.ts   2 passed
 test/rebuild.spec.ts               1 passed
 test/checkrun.spec.ts              7 passed

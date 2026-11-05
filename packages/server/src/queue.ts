@@ -15,21 +15,47 @@ export type QueueBaseName = (typeof QUEUES)[number];
  * documented pg-boss cross-test flake) pointed at the same database silently share
  * 'rebuild-index' etc and can claim/fail/dead-letter each other's jobs. Every real queue name
  * on the wire is now `${prefix}:${base}` for a configurable prefix; `prefix === ''`
- * reproduces the EXACT pre-T99 literal names (full backward compatibility: a deploy upgrading
- * in place with no new env var keeps draining whatever it already queued under the old
- * scheme -- this is the "migration path for existing queued jobs" the task asks for: there
- * is none needed as long as MOLE_QUEUE_PREFIX is left unset until the existing backlog is
- * drained, then set it and restart; setting it before the backlog drains would leave the old
- * un-prefixed jobs queued but un-worked until the prefix is unset again).
+ * reproduces the EXACT pre-T99 literal names.
+ *
+ * Review round 1 BLOCKING finding (2026-11-05): the first cut of this file defaulted the
+ * prefix to the connection string's database name whenever MOLE_QUEUE_PREFIX was unset. That
+ * silently renamed every existing deployment's queues on a plain in-place upgrade (no env var
+ * touched): a freshly-restarted worker registers `boss.work()` under the NEW prefixed names,
+ * so anything already queued under the OLD literal names ('rebuild-index' etc) is never
+ * claimed again, and vice versa for a webhook that lands after the restart but is still
+ * enqueued before an operator notices and sets the var. That is exactly the silent-breakage
+ * shape this file's own comment above claims NOT to have, and contradicts docs/server-slo.md.
+ *
+ * Fixed: the default (MOLE_QUEUE_PREFIX unset) is now '' -- the exact pre-T99 literal names,
+ * matching createQueue()'s own default below, zero behavior change on any upgrade. Namespacing
+ * is opt-in, two ways:
+ *   - `MOLE_QUEUE_PREFIX=<name>` -- an explicit, stable prefix you choose (team/env name).
+ *   - `MOLE_QUEUE_PREFIX=auto`   -- derive the prefix from the connection string's database
+ *     name (`defaultQueuePrefixFromUrl`), for deployments that already use one database per
+ *     environment and want that name reused as the prefix for free.
+ *
+ * When to set it: ONLY when two deployments (or two server processes / test suites) point at
+ * the SAME Postgres instance and schema, and would otherwise claim/fail/dead-letter each
+ * other's jobs -- the T98 finding this file fixes. A deployment with its own dedicated
+ * database never needs MOLE_QUEUE_PREFIX.
+ *
+ * How to turn it on without stranding in-flight jobs: before the FIRST restart with
+ * MOLE_QUEUE_PREFIX set, drain the existing unprefixed backlog (deploy with it still unset
+ * until this query returns 0 rows for every base queue name: `select name, count(*) from
+ * pgboss.job where name = any(array['rebuild-index','compute-check-run','relay-outbox']) and
+ * state not in ('completed','cancelled','failed') group by name;`), THEN set the var and
+ * restart. Setting it before the backlog drains does not lose those jobs -- no worker is
+ * registered under the old unprefixed names once a prefix is in effect, so they simply sit
+ * un-worked until MOLE_QUEUE_PREFIX is unset again -- but draining first avoids that window.
  */
 export function queueName(prefix: string, base: QueueBaseName | string): string {
   return prefix ? `${prefix}:${base}` : base;
 }
 
-/** Default prefix when MOLE_QUEUE_PREFIX is unset: the database name parsed out of the
- * connection string. Stable for a given deployment, distinct across deployments that (as is
- * typical) use distinct database names, without requiring any new configuration. Falls back
- * to '' (the old, unprefixed behavior) if the connection string can't be parsed as a URL. */
+/** Derives a prefix from the connection string's database name. Only used when
+ * MOLE_QUEUE_PREFIX is explicitly set to the literal string 'auto' (see resolveQueuePrefix) --
+ * never a silent default, since that was the exact review-finding bug (see the file header
+ * comment above). Falls back to '' if the connection string can't be parsed as a URL. */
 export function defaultQueuePrefixFromUrl(connectionString: string): string {
   try {
     const u = new URL(connectionString);
@@ -39,9 +65,16 @@ export function defaultQueuePrefixFromUrl(connectionString: string): string {
   }
 }
 
+/** MOLE_QUEUE_PREFIX unset -> '' (exact pre-T99 literal queue names; safe zero-config default
+ * for every existing deployment). MOLE_QUEUE_PREFIX=auto -> derive from the connection
+ * string's database name. Anything else (including explicit '') is used verbatim -- an
+ * operator opting back into unprefixed names, or into their own fixed name, must be respected
+ * exactly, never silently overridden. */
 export function resolveQueuePrefix(connectionString: string, env: NodeJS.ProcessEnv = process.env): string {
-  if (env.MOLE_QUEUE_PREFIX !== undefined) return env.MOLE_QUEUE_PREFIX;
-  return defaultQueuePrefixFromUrl(connectionString);
+  const raw = env.MOLE_QUEUE_PREFIX;
+  if (raw === undefined) return '';
+  if (raw === 'auto') return defaultQueuePrefixFromUrl(connectionString);
+  return raw;
 }
 
 /**

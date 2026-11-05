@@ -1,0 +1,54 @@
+T99 event-loop.spec.ts round-1-review evidence (2026-11-05). Replaces the earlier
+event-loop-t99 numbers in red.txt/green.txt above (that version used
+`perf_hooks.monitorEventLoopDelay` against real, un-stubbed git calls on tiny fixtures and was
+found non-discriminating AND flaky -- see the new test file's own header comment for the full
+root-cause writeup). This file documents the REPLACEMENT test's own red/green proof.
+
+## Methodology
+A fake `git` placed first on PATH sleeps 300ms then execs the real git with the same argv, so
+every `ls-tree`/`show` call the rebuild-index job path makes costs >= 300ms deterministically
+(not dependent on machine load or fixture size). 4 orgs x (1 ls-tree + 3 show) = 16 slow calls
+per run, fired via `Promise.all` (no bounding across orgs, matching a burst of concurrent
+webhook-triggered jobs). A `setInterval` heartbeat (10ms) runs concurrently; the test asserts
+`maxHeartbeatGapMs < 150` (half of one call's own 300ms sleep -- wide margin either way).
+
+IMPORTANT FINDING during this work: `perf_hooks.monitorEventLoopDelay` does NOT register delay
+from `execFileSync`/`spawnSync` blocking at all on this Node version (v22.21.0), even for an
+unmistakable, deliberately huge block -- verified directly, independent of this task's fixtures:
+  - `execFileSync('sleep', ['0.3'])` x4 back-to-back (1.2s of real, wall-clock-confirmed
+    blocking) -> monitorEventLoopDelay max = 0ms.
+  - A plain synchronous `while (Date.now() < until) {}` busy-spin for 1.2s (no subprocess,
+    unambiguous single-thread CPU block) -> monitorEventLoopDelay max = 0ms too.
+  - The SAME two scenarios measured with a `setInterval` heartbeat instead: max gap ~1269ms
+    (sync busy-spin) / ~13ms (async `execFile`) -- correctly discriminates.
+This is why the ORIGINAL event-loop.spec.ts's `monitorEventLoopDelay`-based assertion never
+failed against the pre-T99 rebuild-index-only scenario either (4 log/red.txt's own earlier
+"rebuild-only, 2/6 concurrent orgs: p99 ~5-19ms (pre-T99 sync code)" entries) -- the instrument
+itself cannot see this bug class, independent of fixture size or load. Switched to a
+`setInterval`-heartbeat-based assertion, which is directly verified to detect it.
+
+## Red: against pre-T99 synchronous execFileSync rebuild.ts (packages/server/src/rebuild.ts
+   temporarily replaced with `git show f22b551:packages/server/src/rebuild.ts`, tsc -b rebuilt,
+   then restored and rebuilt again afterward)
+run 1: maxHeartbeatGapMs: 5516  FAIL (expected < 150)
+run 2: maxHeartbeatGapMs: 5481  FAIL (expected < 150)
+run 3: maxHeartbeatGapMs: 5416  FAIL (expected < 150)
+run 4: maxHeartbeatGapMs: 5563  FAIL (expected < 150)
+run 5: maxHeartbeatGapMs: 5505  FAIL (expected < 150)
+5/5 failed, consistently ~5.4-5.6s (close to the full 16 x 300ms = 4.8s of serialized blocking
+calls plus DB/migration overhead), as expected: the sync code runs every slow git call on the
+main thread with no yield point in between, so the heartbeat starves for the whole batch.
+
+## Green: against the current (fixed) async execFile + mapLimit rebuild.ts (this commit)
+run 1: maxHeartbeatGapMs: 14  PASS
+run 2: maxHeartbeatGapMs: 13  PASS
+run 3: maxHeartbeatGapMs: 13  PASS
+run 4: maxHeartbeatGapMs: 18  PASS
+run 5: maxHeartbeatGapMs: 19  PASS
+5/5 passed, all under 20ms (>7x margin under the 150ms threshold, >15x margin under the full
+300ms single-call sleep): the async code yields on every `await`, so concurrent subprocess
+sleeps overlap in child processes instead of serializing on the main thread, and the heartbeat
+never falls meaningfully behind its own 10ms interval.
+
+Build: `npx tsc -b packages/server` clean (0 errors) both before swapping in the old rebuild.ts
+and after restoring the fixed one.

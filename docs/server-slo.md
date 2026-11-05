@@ -100,8 +100,9 @@ notes pointed at `tasks/T33-team-server/*` -- the team server's original build t
   subprocess-reads run at once), different mechanism, documented honestly in
   `concurrency.ts`'s header comment.
 - GitHub webhook best practices (cited above, unchanged): this task's queue-prefix default
-  (derived from the connection string's database name) follows the same "sensible default,
-  explicit override" shape GitHub's own guidance uses for retry/backoff config.
+  ('' -- the exact pre-T99 unprefixed names, fixed after review round 1 below) follows the same
+  "safe zero-config default, explicit opt-in" shape GitHub's own guidance uses for retry/backoff
+  config.
 
 ## What was built (file:line)
 - `packages/server/src/index.ts`: `/healthz` (pure liveness, never touches the DB),
@@ -148,7 +149,9 @@ notes pointed at `tasks/T33-team-server/*` -- the team server's original build t
   `@mole/decisions`'s `prCheck()` inside this function still blocks, NOT fixed here.)
 - `packages/server/src/queue.ts`: `queueName()`, `defaultQueuePrefixFromUrl()`,
   `resolveQueuePrefix()`; `createQueue()` takes an optional `prefix` (default `''`, exact
-  pre-T99 behavior).
+  pre-T99 behavior). `resolveQueuePrefix()`'s own default (MOLE_QUEUE_PREFIX unset) is ALSO `''`
+  as of review round 1 (2026-11-05) -- see "Found, not fixed" #2 below for why that review round
+  existed (the first cut defaulted to the database name, a blocking finding).
 - `packages/server/src/webhook.ts`: `WebhookHandlerOptions.queuePrefix` (default `''`); sends
   to `queueName(prefix, 'rebuild-index'|'compute-check-run')` instead of the literal names.
 - `packages/server/src/index.ts`: `buildApp()` resolves `queuePrefix` via
@@ -156,10 +159,13 @@ notes pointed at `tasks/T33-team-server/*` -- the team server's original build t
   registers `boss.work()` under the prefixed names; both job handlers run their batch through
   `mapLimit` (`MOLE_REBUILD_CONCURRENCY` default 2, `MOLE_CHECKRUN_CONCURRENCY` default 4)
   instead of a sequential `for` loop.
-- Tests: `packages/server/test/queue-prefix.spec.ts` (new, 5 tests: pure `queueName`/
-  `resolveQueuePrefix` behavior + a live two-`Boss`-instance isolation test on one Postgres
-  database), `packages/server/test/event-loop.spec.ts` (new, 1 test: `monitorEventLoopDelay`
-  p99 < 100ms for the rebuild-index job path under 6 concurrent rebuilds).
+- Tests: `packages/server/test/queue-prefix.spec.ts` (8 tests: pure `queueName`/
+  `resolveQueuePrefix` behavior including the unset-default and `auto` opt-in, a live
+  two-`Boss`-instance isolation test, and a live restart-simulation test proving a job queued
+  under the old unprefixed name before a restart is still claimed after it with the env unset),
+  `packages/server/test/event-loop.spec.ts` (1 test, rewritten in review round 1 -- see "Found,
+  not fixed" #1 below: a fake, sleeping `git` on PATH plus a `setInterval` heartbeat, not
+  `monitorEventLoopDelay`, which was found blind to this exact bug class on this Node version).
 - Load test rerun: `tasks/T99-server-throughput/scripts/load.mjs` (a copy of T98's script, same
   parameters), `tasks/T99-server-throughput/4 log/load.md` (before/after table) +
   `load-after-raw.json`.
@@ -176,11 +182,22 @@ notes pointed at `tasks/T33-team-server/*` -- the team server's original build t
    converted both to `promisify(execFile)` with bounded concurrency (`concurrency.ts`'s
    `mapLimit`, `MOLE_REBUILD_CONCURRENCY`/`MOLE_CHECKRUN_CONCURRENCY`/
    `MOLE_REBUILD_FILE_CONCURRENCY` env vars). Measured effect: webhook-ack p95 under the same
-   load dropped 1,166ms -> 14ms (a 99% reduction); the rebuild-index job path alone keeps the
-   event loop responsive under concurrent jobs (`test/event-loop.spec.ts`, p99 < 100ms vs a
-   pre-fix p99 of 1,210-2,928ms on the combined scenario, `tasks/T99-server-throughput/4 log/
-   red.txt`). Queue-drain throughput, however, barely moved (0.91 -> 0.95 job-units/sec) --
-   see finding #1b below, a NEW root cause T99 found that T98 did not isolate.
+   load dropped 1,166ms -> 14ms (a 99% reduction). Verified non-blocking directly:
+   `test/event-loop.spec.ts` puts a fake, sleeping `git` on PATH (every call costs >= 300ms
+   deterministically, not fixture-size- or load-dependent) and asserts a concurrent
+   `setInterval` heartbeat never falls more than 150ms behind -- 5/5 runs pass at 13-19ms max
+   against this fix, 5/5 runs FAIL at 5.4-5.6s max against the pre-T99 synchronous code
+   (`tasks/T99-server-throughput/4 log/event-loop-review1.txt`). That file also documents a
+   review round 1 finding independent of this task's own code: `perf_hooks.
+   monitorEventLoopDelay` (this test's ORIGINAL technique, and the one `4 log/red.txt`'s
+   isolated `node --input-type=module` measurements also used) does not register delay from
+   `execFileSync`/`spawnSync` blocking at all on this Node version (v22.21.0), verified with a
+   standalone reproduction completely outside this task's fixtures -- so the original
+   event-loop.spec.ts's p99 < 100ms assertion was not just thin-margin-flaky (2/4 CI runs) but
+   structurally blind to the exact bug class it claimed to guard; replaced with the heartbeat
+   technique above, which is directly verified to detect it. Queue-drain throughput, however,
+   barely moved (0.91 -> 0.95 job-units/sec) -- see finding #1b below, a NEW root cause T99
+   found that T98 did not isolate.
    1b. **NEW (T99, not fixed, deeper and larger than #1).** The dominant blocking cost on the
        compute-check-run job path is NOT `checkrun.ts`'s own git calls (now async) but
        `@mole/decisions`'s `prCheck()` (`packages/decisions/src/check/pr-check.ts`), which
@@ -191,29 +208,55 @@ notes pointed at `tasks/T33-team-server/*` -- the team server's original build t
        ~line 50-88). Isolated measurement (4 concurrent `computeCheckRun()` calls):
        p99 event-loop delay 1,262ms with `checkrun.ts`'s OLD wrapper calls, STILL 733ms (a real
        ~42% improvement, not a fix) after T99's fix to `checkrun.ts`'s own wrapper functions --
-       confirming `prCheck` itself, not `checkrun.ts`, is the larger remaining cost. Converting
-       `prCheck`'s ~20 call sites to async is a materially larger change than T99's
-       `packages/server/src/**` boundary: `packages/decisions` is also the CLI's
-       `mole pr-check` and the Claude Code plugin hook path, not just this server, so the
-       blast radius and review burden are much higher. Time-boxed out of T99; a real follow-up
-       task, not claimed fixed here. Evidence: `tasks/T99-server-throughput/4 log/red.txt`
-       items 3-4, `4 log/load.md`.
-2. **FIXED BY T99 (2026-11-05).** pg-boss queue names were global to the Postgres instance, not
-   scoped per deploy/org set: a server process that died (crash, redeploy, or a test harness's
-   intentional kill) could leave jobs queued for orgs it alone knew the repo dir for; any other
-   process sharing the same queue names in the same DB would then claim, fail (`no repo dir
-   configured for org X`), and retry/eventually dead-letter them -- consuming worker capacity
-   meant for its own, unrelated jobs. T99: every real pg-boss queue name is now
-   `${prefix}:${base}` (`queue.ts`'s `queueName()`), with `prefix` resolved from
-   `MOLE_QUEUE_PREFIX` or (default) the database name parsed from the connection string
-   (`resolveQueuePrefix()`/`defaultQueuePrefixFromUrl()`). `prefix === ''` reproduces the exact
-   pre-T99 literal names, so an in-place upgrade with `MOLE_QUEUE_PREFIX` left unset keeps
-   draining its existing backlog under the old names with no migration step; setting a non-
-   empty prefix (or relying on the new DB-name default) takes effect on the next restart and
-   only affects NEWLY enqueued jobs -- any already-queued un-prefixed jobs are drained first
-   (or left un-prefixed indefinitely if the env var is never set). Verified: `test/queue-prefix
-   .spec.ts` (5/5), including a LIVE test with two `Boss` instances on one Postgres database,
-   two different prefixes, proving a job sent under one prefix is never received by the other.
+       confirming `prCheck` itself, not `checkrun.ts`, is the larger remaining cost. (Those two
+       numbers were measured with `monitorEventLoopDelay`, same as the original event-loop.spec
+       .ts; given the blind spot documented above for plain `execFileSync` calls, `prCheck`'s
+       own unconditional `git worktree add`/`remove` + `tar -x` calls evidently involve enough
+       incidental I/O/yield points for that instrument to pick up a signal here, unlike the
+       simpler `git show`/`ls-tree` calls on rebuild.ts's own path -- this is a secondary,
+       unverified observation, not re-confirmed with the heartbeat technique, since converting
+       `prCheck` itself is out of this task's boundary regardless.) Converting `prCheck`'s ~20
+       call sites to async is a materially larger change than T99's `packages/server/src/**`
+       boundary: `packages/decisions` is also the CLI's `mole pr-check` and the Claude Code
+       plugin hook path, not just this server, so the blast radius and review burden are much
+       higher. Time-boxed out of T99; a real follow-up task, not claimed fixed here. Evidence:
+       `tasks/T99-server-throughput/4 log/red.txt` items 3-4, `4 log/load.md`.
+2. **FIXED BY T99 (2026-11-05), review round 1 BLOCKING finding corrected (2026-11-05).**
+   pg-boss queue names were global to the Postgres instance, not scoped per deploy/org set: a
+   server process that died (crash, redeploy, or a test harness's intentional kill) could leave
+   jobs queued for orgs it alone knew the repo dir for; any other process sharing the same queue
+   names in the same DB would then claim, fail (`no repo dir configured for org X`), and
+   retry/eventually dead-letter them -- consuming worker capacity meant for its own, unrelated
+   jobs. T99: every real pg-boss queue name is now `${prefix}:${base}` (`queue.ts`'s
+   `queueName()`). `prefix === ''` reproduces the exact pre-T99 literal names.
+
+   The FIRST cut of this fix defaulted an unset `MOLE_QUEUE_PREFIX` to the database name parsed
+   from the connection string -- review round 1 caught this as BLOCKING: it silently renamed
+   every existing deployment's queues on a plain in-place upgrade (no env var touched), which is
+   the exact silent-breakage shape this writeup originally (incorrectly) claimed did not exist.
+   Corrected: `resolveQueuePrefix()`'s default (MOLE_QUEUE_PREFIX unset) is now `''` -- zero
+   behavior change on any upgrade, matching `createQueue()`'s own long-standing default.
+   Namespacing is opt-in: `MOLE_QUEUE_PREFIX=<name>` for an explicit prefix, or
+   `MOLE_QUEUE_PREFIX=auto` to derive one from the connection string's database name (the old
+   default, now explicit). Set it ONLY when two deployments (or two server processes / test
+   suites) share ONE Postgres instance and schema and would otherwise steal each other's jobs
+   (the T98 finding above) -- a deployment with its own dedicated database never needs it.
+
+   How to turn it on without stranding in-flight jobs: before the first restart with
+   `MOLE_QUEUE_PREFIX` set, drain the existing unprefixed backlog (deploy with it left unset
+   until `select name, count(*) from pgboss.job where name = any(array['rebuild-index',
+   'compute-check-run','relay-outbox']) and state not in ('completed','cancelled','failed')
+   group by name;` returns 0 rows for every name), THEN set the var and restart. Setting it
+   before the backlog drains does not lose those jobs -- no worker is registered under the old
+   unprefixed names once a prefix is in effect, so they sit un-worked until the var is unset
+   again -- but draining first avoids that window entirely.
+
+   Verified: `test/queue-prefix.spec.ts` (8/8), including a LIVE test with two `Boss` instances
+   on one Postgres database with two different prefixes (proving a job sent under one prefix is
+   never received by the other) and a LIVE restart-simulation test (a job sent by one `Boss`
+   instance under the unprefixed name, that instance closed, then a SECOND `Boss` instance
+   created with the same unset-env resolution still claims it -- the actual in-place-upgrade
+   scenario, not just the pure default value).
 3. **Migrations are idempotent `CREATE TABLE IF NOT EXISTS`, not a versioned tool.** Fine for
    this stage; would need `node-pg-migrate` (already a prior-art candidate per
    `tasks/HANDOFF.md`) or similar before a second deploy needs an actual schema migration
