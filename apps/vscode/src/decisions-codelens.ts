@@ -41,7 +41,22 @@ export class DecisionsCodeLensProvider implements vscode.CodeLensProvider {
     this.emitter.fire();
   }
 
+  /** `mole.decisionsCodeLens.enabled` (default on, like GitLens's per-feature CodeLens toggles —
+   *  https://github.com/gitkraken/vscode-gitlens docs on `gitlens.codeLens.enabled`, fetched 2026-11-05):
+   *  re-check on every provide call (cheap, config is cached by VS Code) so a live setting change takes
+   *  effect on the next lens recompute, which `configChanged()` below triggers immediately. */
+  private enabled(): boolean {
+    return vscode.workspace.getConfiguration('mole').get<boolean>('decisionsCodeLens.enabled', true);
+  }
+
+  /** Call from the extension's `onDidChangeConfiguration` handler: forces VS Code to recompute lenses now,
+   *  instead of waiting for the next unrelated trigger (file switch, decisions refresh). */
+  configChanged(): void {
+    this.emitter.fire();
+  }
+
   async provideCodeLenses(doc: vscode.TextDocument): Promise<vscode.CodeLens[]> {
+    if (!this.enabled()) return [];
     const file = toRepoPath(this.root, doc.uri.fsPath);
     if (!file || this.decisions.length === 0) return [];
     let symbols: SymbolSpan[] = [];

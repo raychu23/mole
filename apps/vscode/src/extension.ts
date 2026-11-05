@@ -242,6 +242,13 @@ function registerDecisionsCodeLens(ctx: vscode.ExtensionContext, root: string, c
       });
     });
   const refresh = (): void => void loadDecisions().then((d) => { current = d; provider.setDecisions(d); });
+  // T105 (4): an in-editor save only catches edits made through this window; `.mole/decisions/*` also
+  // changes from outside it (git checkout/pull, `mole init`, another agent's worktree, a teammate's commit
+  // landing via sync) — a FileSystemWatcher on the whole directory catches create/change/delete too, same
+  // idiom as tree-provider.ts's `.mole/**` watcher. Debounced: a branch switch or `git pull` touches many
+  // decision files at once, and each would otherwise re-spawn the CLI.
+  const debouncedRefresh = debounce(() => refresh(), 300);
+  const decisionsWatcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, '.mole/decisions/**'));
   ctx.subscriptions.push(
     vscode.languages.registerCodeLensProvider([{ language: 'typescript', scheme: 'file' }, { language: 'typescriptreact', scheme: 'file' }], provider),
     // CodeLens click passes (id, file, line) directly; a command-palette invocation passes nothing, so it
@@ -257,9 +264,18 @@ function registerDecisionsCodeLens(ctx: vscode.ExtensionContext, root: string, c
       );
       if (pick) await openDecisionRecord(root, pick.d.id, pick.d.file, pick.d.line);
     }),
-    // decision records change rarely: refetch only when one is saved, plus once at startup
+    // in-editor saves refresh immediately (no debounce: one save = one deliberate edit)
     vscode.workspace.onDidSaveTextDocument((doc) => {
       if (toRepoPath(root, doc.uri.fsPath)?.startsWith('.mole/decisions/')) refresh();
+    }),
+    decisionsWatcher,
+    decisionsWatcher.onDidCreate(debouncedRefresh),
+    decisionsWatcher.onDidChange(debouncedRefresh),
+    decisionsWatcher.onDidDelete(debouncedRefresh),
+    // `mole.decisionsCodeLens.enabled` toggled live (GitLens-style per-feature CodeLens setting; see
+    // decisions-codelens.ts's `enabled()`/`configChanged()` doc comment for the cited prior art).
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('mole.decisionsCodeLens.enabled')) provider.configChanged();
     }),
   );
   refresh();
@@ -349,41 +365,94 @@ async function m26Check(mole: MolePanel, panelView: MolePanelView | undefined, r
 }
 
 /**
- * MOLE_T105_CHECK=<json path>: {out, file, symbolLine}. T105's own proof (apps/vscode/scripts/t105-check.mjs),
- * run inside a real Extension Development Host. Opens `file` (a real TypeScript file this repo's own
- * `.mole/decisions/*.md` scope anchors govern, dogfooding Mole on itself), asks VS Code for its CodeLenses
- * through the same `vscode.executeCodeLensProvider` command a user's click would resolve, records their
- * titles + lines, resolves the whole-file lens's command to prove it really opens the decision record
- * (mole.openDecisionRecord), and records the rules diagnostics collection + the palette command, then quits.
+ * MOLE_T105_CHECK=<json path>: {out, fileScopedFile, symbolScopedFile, governedSymbolLine, otherSymbolLine,
+ * ruleViolationFile, shot}. T105's own proof (apps/vscode/scripts/t105-check.mjs), run inside a real Extension
+ * Development Host against a small DEDICATED fixture repo (not this repo's own dogfood decisions, which are
+ * symbol-scoped on `server.ts` and can never prove a file-level lens exists — the FAIL this replaces). The
+ * fixture has one file-scoped decision, one symbol-scoped decision, and one crisp rule violation (review
+ * finding 1). Asks VS Code for its CodeLenses through `vscode.executeCodeLensProvider` exactly as a user's
+ * click would resolve them, resolves a lens's command to prove click-through opens the decision record, and
+ * reads the Problems-panel diagnostics (DiagnosticRelatedInformation -> the record) for the rule violation.
  */
 async function t105Check(root: string, cfgPath: string): Promise<void> {
-  const cfg = JSON.parse(readFileSync(cfgPath, 'utf8')) as { out: string; file: string; shot?: string };
+  const cfg = JSON.parse(readFileSync(cfgPath, 'utf8')) as {
+    out: string;
+    fileScopedFile: string;
+    symbolScopedFile: string;
+    governedSymbolLine: number; // 0-based line of `governedFunction`'s declaration
+    otherSymbolLine: number; // 0-based line of `otherFunction`'s declaration (must get NO lens)
+    ruleViolationFile: string;
+    shot?: string;
+  };
   const out: Record<string, unknown> = {};
-  try {
-    await vscode.commands.executeCommand('workbench.action.closeAuxiliaryBar');
-    const uri = vscode.Uri.file(join(root, cfg.file));
-    const editor = await vscode.window.showTextDocument(uri, { viewColumn: vscode.ViewColumn.One, preview: false });
-    // decisions load async (child_process); poll for lenses instead of a fixed sleep
+  const lensesFor = async (uri: vscode.Uri): Promise<vscode.CodeLens[]> => {
     let lenses: vscode.CodeLens[] = [];
-    for (let i = 0; i < 40 && lenses.length === 0; i++) {
+    for (let i = 0; i < 90 && lenses.length === 0; i++) {
       lenses = (await vscode.commands.executeCommand<vscode.CodeLens[]>('vscode.executeCodeLensProvider', uri)) ?? [];
       if (lenses.length === 0) await new Promise((r) => setTimeout(r, 500));
     }
-    out.lenses = lenses.map((l) => ({ line: l.range.start.line, title: l.command?.title, command: l.command?.command, args: l.command?.arguments }));
-    // click-through: run the whole-file lens's command exactly as VS Code would on a real click
-    const fileLens = lenses.find((l) => l.range.start.line === 0);
-    if (fileLens?.command) {
-      await vscode.commands.executeCommand(fileLens.command.command, ...(fileLens.command.arguments ?? []));
+    return lenses;
+  };
+  try {
+    await vscode.commands.executeCommand('workbench.action.closeAuxiliaryBar');
+
+    // Decisions load async (spawns the CLI as a child process; can take a while under CPU contention from
+    // other work on a shared machine). Prime the provider's decision cache on the symbol-scoped file FIRST
+    // (retrying up to 45s) so the file-scoped query below never races a cold CLI spawn.
+    const symUri = vscode.Uri.file(join(root, cfg.symbolScopedFile));
+    const symEditor = await vscode.window.showTextDocument(symUri, { viewColumn: vscode.ViewColumn.One, preview: false });
+    const symLenses = await lensesFor(symUri);
+    out.symbolLenses = symLenses.map((l) => ({ line: l.range.start.line, title: l.command?.title, command: l.command?.command, args: l.command?.arguments }));
+    const governedLens = symLenses.find((l) => l.range.start.line === cfg.governedSymbolLine);
+    const otherLens = symLenses.find((l) => l.range.start.line === cfg.otherSymbolLine);
+    out.symbolLensOnGovernedLine = Boolean(governedLens);
+    out.symbolLensOnOtherLine = Boolean(otherLens); // must be false: otherFunction is NOT governed
+
+    // click-through: resolve the symbol-level lens's command exactly as a real click would
+    if (governedLens?.command) {
+      await vscode.commands.executeCommand(governedLens.command.command, ...(governedLens.command.arguments ?? []));
       await new Promise((r) => setTimeout(r, 500));
       const opened = vscode.window.activeTextEditor;
-      out.openedDecisionRecord = { uri: opened?.document.uri.fsPath, landedLine: opened ? opened.selection.active.line + 1 : -1, firstLine: opened?.document.lineAt(0).text };
+      const head = opened ? opened.document.getText(new vscode.Range(0, 0, Math.min(8, opened.document.lineCount - 1), 0)) : undefined;
+      out.openedDecisionRecord = { uri: opened?.document.uri.fsPath, landedLine: opened ? opened.selection.active.line + 1 : -1, headSnippet: head };
     }
-    await vscode.window.showTextDocument(uri, { viewColumn: vscode.ViewColumn.One, preview: false });
+    await vscode.window.showTextDocument(symUri, { viewColumn: vscode.ViewColumn.One, preview: false, selection: symEditor.selection });
+
+    // (a) file-level lens, on the file-scoped fixture — decisions are already loaded by now (primed above)
+    const fileUri = vscode.Uri.file(join(root, cfg.fileScopedFile));
+    await vscode.window.showTextDocument(fileUri, { viewColumn: vscode.ViewColumn.One, preview: false });
+    const fileLenses = await lensesFor(fileUri);
+    out.fileLenses = fileLenses.map((l) => ({ line: l.range.start.line, title: l.command?.title, command: l.command?.command, args: l.command?.arguments }));
+    const wholeFileLens = fileLenses.find((l) => l.range.start.line === 0);
+    out.hasFileLevelCodeLens = Boolean(wholeFileLens);
+    if (wholeFileLens?.command) {
+      await vscode.commands.executeCommand(wholeFileLens.command.command, ...(wholeFileLens.command.arguments ?? []));
+      await new Promise((r) => setTimeout(r, 500));
+      const opened = vscode.window.activeTextEditor;
+      const head = opened ? opened.document.getText(new vscode.Range(0, 0, Math.min(8, opened.document.lineCount - 1), 0)) : undefined;
+      out.openedDecisionRecordFromFileLens = { uri: opened?.document.uri.fsPath, landedLine: opened ? opened.selection.active.line + 1 : -1, headSnippet: head };
+      await vscode.window.showTextDocument(fileUri, { viewColumn: vscode.ViewColumn.One, preview: false });
+    }
+
+    // (d) Problems diagnostic for the crisp rule violation, relatedInformation -> the decision record
+    const ruleUri = vscode.Uri.file(join(root, cfg.ruleViolationFile));
+    await vscode.window.showTextDocument(ruleUri, { viewColumn: vscode.ViewColumn.Two, preview: false });
+    let moleDiags: vscode.Diagnostic[] = [];
+    for (let i = 0; i < 40 && moleDiags.length === 0; i++) {
+      moleDiags = vscode.languages.getDiagnostics(ruleUri).filter((d) => d.source === 'mole');
+      if (moleDiags.length === 0) await new Promise((r) => setTimeout(r, 500));
+    }
+    out.ruleDiagnostics = moleDiags.map((d) => ({
+      message: d.message,
+      line: d.range.start.line,
+      relatedInformation: (d.relatedInformation ?? []).map((ri) => ({ uri: ri.location.uri.fsPath, line: ri.location.range.start.line, message: ri.message })),
+    }));
+
     out.commands = (await vscode.commands.getCommands(true)).filter((c) => c.startsWith('mole.'));
     out.diagnosticsCollectionNames = ['mole-rules'];
-    out.diagnosticsCount = vscode.languages.getDiagnostics().reduce((n, [, ds]) => n + ds.filter((d) => d.source === 'mole').length, 0);
     if (cfg.shot) {
-      await vscode.window.showTextDocument(uri, { viewColumn: vscode.ViewColumn.One, preview: false, selection: editor.selection });
+      await vscode.commands.executeCommand('vscode.setEditorLayout', { orientation: 0, groups: [{ size: 0.5 }, { size: 0.5 }] });
+      await vscode.window.showTextDocument(symUri, { viewColumn: vscode.ViewColumn.One, preview: false, selection: symEditor.selection });
       await new Promise((r) => setTimeout(r, 800));
       writeFileSync(`${cfg.shot}.ready`, 'ok');
       await new Promise((r) => setTimeout(r, 4000));

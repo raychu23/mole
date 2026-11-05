@@ -1,13 +1,51 @@
 {
-  "file": "packages/daemon/src/server.ts",
-  "lenses": [],
-  "hasFileLevelCodeLens": false,
-  "hasSymbolLevelCodeLens": false,
-  "clickThroughOpensDecisionRecord": false,
+  "hasFileLevelCodeLens": true,
+  "hasSymbolLevelCodeLens": true,
+  "clickThroughOpensDecisionRecord": true,
+  "clickThroughFileLens": true,
+  "clickThroughSymbolLens": true,
+  "ruleDiagnostics": [
+    {
+      "message": "mole rules: mole-D-rule-1 forbids this (decision D-rule: the UI goes through the API so the db can move) — target ../db/query.js",
+      "line": 0,
+      "relatedInformation": [
+        {
+          "uri": "/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-t105-1793892294699/fixture/.mole/decisions/D-rule.md",
+          "line": 5,
+          "message": "decision D-rule record"
+        }
+      ]
+    }
+  ],
+  "diagnosticRelatedInfoLinksToRecord": true,
   "paletteCommandRegistered": true,
   "diagnosticsCollectionNames": [
     "mole-rules"
   ],
-  "diagnosticsCountSource_mole": 0,
-  "screenshot": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T105-vscode-reasoning-surface/tasks/T105-vscode-reasoning-surface/4 log/codelens.png"
+  "fileLenses": [
+    {
+      "line": 0,
+      "title": "Mole: 1 decision governs this file — file-scoped.ts only ever holds pure constants",
+      "command": "mole.openDecisionRecord",
+      "args": [
+        "D-file",
+        ".mole/decisions/D-file.md",
+        1
+      ]
+    }
+  ],
+  "symbolLenses": [
+    {
+      "line": 0,
+      "title": "Mole: decision D-symbol governs this — governedFunction must stay pure",
+      "command": "mole.openDecisionRecord",
+      "args": [
+        "D-symbol",
+        ".mole/decisions/D-symbol.md",
+        1
+      ]
+    }
+  ],
+  "screenshot": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T105-vscode-reasoning-surface/tasks/T105-vscode-reasoning-surface/4 log/codelens.png",
+  "screenshotMethod": "cdp (Page.captureScreenshot)"
 }
