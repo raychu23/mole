@@ -1,11 +1,37 @@
 // Index rebuild from `.mole/` files in git (R0 prior-art.md §3 Backstage processors, §4
 // zoekt/Sourcegraph: the index is a rebuildable derived artifact of the versioned source;
 // git stays the source of truth). Parses a minimal front-matter record format.
-import { execFileSync } from 'node:child_process';
+//
+// T99 server-throughput: these git reads used to be execFileSync (T98's load test measured
+// the resulting queue-drain throughput ceiling at <1 job/sec, docs/server-slo.md "Found, not
+// fixed" #1, because execFileSync blocks Node's single event-loop thread for the whole
+// subprocess lifetime -- including the time it spends waiting on the OS, not just CPU time --
+// so a webhook ACK or health check arriving while a rebuild job's git calls are in flight
+// queues up behind them on the SAME thread). Node's own child_process docs recommend the
+// async family (execFile/spawn) for exactly this reason ("the synchronous methods can have
+// significant impact... blocking the event loop while [they] complete", nodejs.org/api/
+// child_process.html, "Asynchronous Process Creation" vs "Synchronous Process Creation",
+// fetched 2026-11-05); `util.promisify(execFile)` (Node core, no new dependency) was chosen
+// over simple-git (a third-party wrapper library) because every call here is already a single
+// plain `git <args>` invocation with no need for simple-git's chained-command builder, and
+// T101 (package-size, same wave) is independently working to keep this tarball's runtime
+// dependency count down -- a one-line promisify of a function already imported from
+// node:child_process costs nothing there.
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import crypto from 'node:crypto';
 import type { Pool as TemporalPool } from 'pg';
 import type { Pool } from './db.js';
 import { recordDecisionRevision } from './decisionStore.js';
+import { mapLimit } from './concurrency.js';
+
+const execFileAsync = promisify(execFile);
+
+// Bounds how many of a single rebuild's own `git show` calls (one per changed/tracked
+// `.mole/` file) run concurrently. Unlike the job-level MOLE_REBUILD_CONCURRENCY (how many
+// *jobs*/orgs run at once, index.ts), this bounds subprocess fan-out WITHIN one job so a repo
+// with hundreds of decision files doesn't spawn hundreds of `git` processes at once.
+const FILE_READ_CONCURRENCY = Number(process.env.MOLE_REBUILD_FILE_CONCURRENCY ?? 8);
 
 export interface MoleRecord {
   id: string;
@@ -16,8 +42,9 @@ export interface MoleRecord {
   owner?: string;
 }
 
-function git(cwd: string, args: string[]): string {
-  return execFileSync('git', args, { cwd, encoding: 'utf8' });
+async function git(cwd: string, args: string[]): Promise<string> {
+  const { stdout } = await execFileAsync('git', args, { cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  return stdout;
 }
 
 /**
@@ -42,10 +69,10 @@ export class GitReadError extends Error {
   }
 }
 
-function listMoleFilesAtRef(repoDir: string, ref: string): string[] {
+async function listMoleFilesAtRef(repoDir: string, ref: string): Promise<string[]> {
   let out: string;
   try {
-    out = git(repoDir, ['ls-tree', '-r', '--name-only', ref, '--', '.mole']);
+    out = await git(repoDir, ['ls-tree', '-r', '--name-only', ref, '--', '.mole']);
   } catch (e) {
     // NEVER return [] here: that's indistinguishable from "ref has no .mole/ files" and
     // would make rebuildIndexFromGit wipe the index on a missing ref/dir (the review
@@ -58,7 +85,7 @@ function listMoleFilesAtRef(repoDir: string, ref: string): string[] {
     .filter((s) => s.endsWith('.md'));
 }
 
-function readFileAtRef(repoDir: string, ref: string, file: string): string {
+async function readFileAtRef(repoDir: string, ref: string, file: string): Promise<string> {
   return git(repoDir, ['show', `${ref}:${file}`]);
 }
 
@@ -115,8 +142,12 @@ export async function rebuildIndexFromGit(
   opts: RebuildOptions = {}
 ): Promise<string> {
   const run = async () => {
-    const files = listMoleFilesAtRef(repoDir, ref);
-    const records = files.map((f) => parseMoleRecord(readFileAtRef(repoDir, ref, f), f));
+    const files = await listMoleFilesAtRef(repoDir, ref);
+    // T99: each file read is its own `git show` subprocess; mapLimit bounds how many run at
+    // once (FILE_READ_CONCURRENCY) instead of either serializing them (no faster than the old
+    // execFileSync loop) or firing them all at once (unbounded fan-out on a repo with many
+    // decision files).
+    const records = await mapLimit(files, FILE_READ_CONCURRENCY, async (f) => parseMoleRecord(await readFileAtRef(repoDir, ref, f), f));
 
     const client = await pool.connect();
     try {
