@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -294,6 +295,13 @@ def install_arm_for_agent(arm: ArmConfig, worktree: Path, agent: str, mole_packa
                 info["plugin_hooks_installed"] = True
                 info["mechanism"] = result["mechanism"]
                 return info
+            # round-4 review LOW: make the degrade visible outside sample metadata, never only buried in it
+            warnings.warn(
+                "mole_ab: could not install the mole-code package for the 'decisions' arm "
+                f"(source: {mole_package or DEFAULT_MOLE_PACKAGE_URL}); falling back to writing the decisions into "
+                f"{instr_path.name}, so this arm tests shown text, not Mole's hooks. Pass -T mole_package=<tarball>.",
+                RuntimeWarning, stacklevel=2,
+            )
         text = render_decisions_for_instructions(arm.path)
         _append_instruction(
             instr_path,

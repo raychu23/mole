@@ -103,9 +103,11 @@ arms.py               what context (if any) the agent sees before the same task 
                       way THOSE agents actually read it (CLAUDE.md/AGENTS.md on disk, and -- for a
                       'decisions' arm under claude_code -- the real `mole-code` package installed into the
                       worktree, its Claude Code hooks wired via .claude/settings.json). Package source:
-                      -T mole_package=PATH_OR_URL, default the latest GitHub release asset. A preflight
-                      fails the sample loudly if Mole doesn't resolve or the installed hooks predate
-                      blocking (D102), so a 'decisions' arm never silently tests nothing or an old Mole.
+                      -T mole_package=PATH_OR_URL, default the latest GitHub release asset. If the
+                      package installs, a preflight fails the sample loudly when Mole doesn't resolve or
+                      its hooks predate blocking (D102). If it can't be installed at all (no npm, download
+                      fails), the arm falls back to writing the decisions into CLAUDE.md, warns, and
+                      records mechanism=instruction_file in the sample metadata: check that field.
                       The worktrees dir (.mole_ab_worktrees/) is added to git's info/exclude, never your
                       .gitignore.
 scorers.py            mole_check_scorer (generic, any repo) + dcbench_scorer (wraps dcbench's OWN
