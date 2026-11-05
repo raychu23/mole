@@ -42,7 +42,7 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, mkdirSync, readdirSync, realpathSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
-import { isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { lock as lockFile } from 'proper-lockfile';
 
 /** Was 120_000 (T102 review finding 3): a killed hook now blocks the next caller for at most ~this long, since
@@ -140,6 +140,23 @@ function ensureLinked(root: string, admin: string, tree: string, rev: string): v
 /** Re-point `tree` at `rev`: the SAME recipe the original design used (review-proven correct; only its disk
  *  location and worktree registration were the problem) -- `checkout --detach --force` then `clean -fdx` removes
  *  every file not tracked at `rev`, leaving `tree` byte-identical to a fresh checkout. */
+// T102 review r2 CRITICAL: an unregistered attachment's HEAD is not a gc reachability root (gc walks refs, the
+// main HEAD/index, reflogs and $GIT_COMMON_DIR/worktrees/*, git-gc(1) + gitrepository-layout(5)), so a checked-out
+// commit that no branch reaches (a fetched PR head) could be pruned by `git gc --prune=now`. A plain ref is a root
+// with no worktree registration: refs/mole/prcheck/<slot> always points at the slot's commit; eviction deletes it.
+const PIN_PREFIX = 'refs/mole/prcheck/';
+function pinRef(root: string, slotDir: string, rev: string): void {
+  const commit = git(['-C', root, 'rev-parse', '--verify', '--quiet', `${rev}^{commit}`]).trim();
+  git(['-C', root, 'update-ref', '-m', 'mole prcheck cache pin', `${PIN_PREFIX}${basename(slotDir)}`, commit]);
+}
+function unpinRef(root: string, slotName: string): void {
+  try {
+    git(['-C', root, 'update-ref', '-d', `${PIN_PREFIX}${slotName}`]);
+  } catch {
+    // already gone
+  }
+}
+
 function checkoutInto(tree: string, rev: string): void {
   git(['-C', tree, '-c', 'core.hooksPath=/dev/null', 'checkout', '--detach', '--force', '--quiet', rev]);
   git(['-C', tree, 'clean', '-fdx', '-q']);
@@ -181,7 +198,7 @@ function dirBytes(p: string): number {
 
 /** Age/size-based eviction of other slots under this repo's cache root; never touches `keepSlot` (the one about
  *  to be used). Cheap: a repo normally has 1-2 slots per worktree (`records`, `rules-head`). */
-function evict(cacheRoot: string, keepSlot: string): void {
+function evict(root: string, cacheRoot: string, keepSlot: string): void {
   let names: string[];
   try {
     names = readdirSync(cacheRoot);
@@ -205,6 +222,7 @@ function evict(cacheRoot: string, keepSlot: string): void {
     }
     if (now - st.mtimeMs > MAX_PURPOSE_AGE_MS) {
       rmSync(p, { recursive: true, force: true });
+      unpinRef(root, name);
       continue;
     }
     infos.push({ path: p, mtimeMs: st.mtimeMs, bytes: dirBytes(p) });
@@ -215,6 +233,7 @@ function evict(cacheRoot: string, keepSlot: string): void {
   for (const i of infos) {
     if (total <= MAX_CACHE_BYTES) break;
     rmSync(i.path, { recursive: true, force: true });
+    unpinRef(root, basename(i.path));
     total -= i.bytes;
   }
 }
@@ -237,7 +256,7 @@ export async function acquireCachedWorktree(root: string, purpose: string, rev: 
   const slot = join(cacheRoot, slotName(root, purpose));
   mkdirSync(slot, { recursive: true });
   assertSafeSlot(slot, root, cacheRootReal);
-  evict(cacheRoot, slot);
+  evict(root, cacheRoot, slot);
 
   const admin = join(slot, 'admin');
   const tree = join(slot, 'tree');
@@ -245,6 +264,7 @@ export async function acquireCachedWorktree(root: string, purpose: string, rev: 
   try {
     assertSafeSlot(admin, root, cacheRootReal);
     assertSafeSlot(tree, root, cacheRootReal);
+    pinRef(root, slot, rev); // before checkout, so a concurrent gc can never prune the commit mid-checkout
     ensureCheckedOut(root, admin, tree, rev);
     utimesSync(slot, new Date(), new Date()); // mark as recently used so eviction leaves it alone
   } catch (e) {
@@ -259,4 +279,11 @@ export async function acquireCachedWorktree(root: string, purpose: string, rev: 
  *  docs/pr-check.md). */
 export function clearWorktreeCache(root: string): void {
   rmSync(cacheRootOf(root), { recursive: true, force: true });
+  let refs = '';
+  try {
+    refs = git(['-C', root, 'for-each-ref', '--format=%(refname)', PIN_PREFIX]);
+  } catch {
+    return;
+  }
+  for (const ref of refs.split('\n').filter(Boolean)) unpinRef(root, ref.slice(PIN_PREFIX.length));
 }

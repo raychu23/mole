@@ -32,6 +32,9 @@ Consequences of living inside `.git`:
 
 ## Deleting it
 
+Each slot also keeps one ref, `refs/mole/prcheck/<slot>`, pointing at the commit it has checked out, so `git gc`
+never prunes a commit only the cache uses (an unregistered checkout's HEAD is not a gc root). Delete those with
+`git for-each-ref --format='%(refname)' refs/mole/prcheck/ | xargs -n1 git update-ref -d`.
 `rm -rf $(git rev-parse --git-common-dir)/mole` (or just `rm -rf .git/mole` from the repo root) removes every
 slot for every purpose and every worktree of that repo. `prCheck`'s next call rebuilds whatever it needs.
 Programmatically: `clearWorktreeCache(root)` in `worktree-cache.ts` (test/ops hook; never called by `prCheck`
