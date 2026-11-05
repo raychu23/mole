@@ -38,6 +38,7 @@ const exclude = [/(^|\/)node_modules(\/|$)/, /(^|\/)dist(\/|$)/, /(^|\/)dist-tsc
   // T97: this test drives the private benchmark copy (scratch dcbench-v4 + the gitignored context/ scorer); it has no
   // meaning outside the author's machine, so it never ships (the export scan caught its absolute paths).
   /(^|\/)evals\/inspect\/dcbench_eval\/tests\/test_v4_score_intent_to_add\.py$/,
+  /(^|\/)evals\/inspect\/dcbench_eval\/tests\/test_v42_score_exclude_setup_files\.py$/, // T107: same private benchmark copy
   // T87: these two packages are built around the author's own private build process, not an end-user-facing
   // Mole feature -- agentstate reads the author's own ~/.hermes/state.db, ~/.claude and ~/.codex session
   // directories to attribute the author's own agent runs; coverage's commit attribution depends on the
