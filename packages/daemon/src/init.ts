@@ -53,20 +53,40 @@ rules:
     why: UI code must go through a service layer, not the database directly (example only, edit or delete)
 ---
 
-## Decision
+## Context and Problem Statement
 
 This is an example \`.mole/decisions\` record: plain YAML front matter + a markdown body, in the MADR 4 format
 (\`status\`/\`date\`/\`decision-makers\`/\`consulted\`/\`informed\`, https://github.com/adr/madr) plus adrkit's
 \`affects\` field (github.com/mbeacom/adrkit) naming what the decision governs -- any MADR-aware tool
 (log4brains, adr-tools, adrkit itself) can read this file; \`mole decisions\`, \`mole rules\` and \`mole check\`
-read the exact same fields, plus Mole's own \`rules:\` extension below. Replace it with your team's first real
-decision (\`mole decision new --id D002 --title "..." --body "..."\`), or just edit/delete this file -- it is
-not read by anything else and nothing breaks if you remove it.
+read the exact same fields, plus Mole's own \`rules:\` extension above.
 
-The \`rules:\` block above is what makes a decision **enforced**: \`mole rules\` fails if any import matches the
-\`from:\`/\`to:\` paths given here, so you never have to re-check it by hand, and (in Claude Code) the Stop hook
-runs the identical check at the end of every agent session. Full syntax: \`docs/decisions-and-rules.md\`. A
-30-second worked example with a deliberately broken rule: \`mole demo\`.
+<!-- This is an optional element (MADR 4 "Decision Drivers"). Feel free to remove. -->
+## Decision Drivers
+
+* UI code should not be able to reach the database directly, bypassing the service layer
+
+## Considered Options
+
+* Enforce the boundary by convention/code review only (no automated check)
+* Enforce it with a Mole \`rules:\` block (chosen -- see front matter above)
+
+## Decision Outcome
+
+Chosen option: enforce the boundary with the \`rules:\` block above, because \`mole rules\` then fails on any
+import matching the \`from:\`/\`to:\` paths given there, so the convention never silently rots, and (in Claude
+Code) the Stop hook runs the identical check at the end of every agent session. Replace this whole record with
+your team's first real decision (\`mole decision new --id D002 --title "..." --body "..."\`), or just edit/
+delete this file -- it is not read by anything else and nothing breaks if you remove it.
+
+<!-- This is an optional element (MADR 4 "Consequences"). Feel free to remove. -->
+### Consequences
+
+* Good, because \`mole rules\` (and the Claude Code Stop hook) now catches the forbidden import automatically
+* Bad, because a legitimate exception needs its own decision/rule change, not a one-off bypass
+
+Full \`rules:\` syntax: \`docs/decisions-and-rules.md\`. A 30-second worked example with a deliberately broken
+rule: \`mole demo\`.
 `;
 
 export const AGENTS_MARKER_START = '<!-- mole:agents-precedence:start -->';

@@ -3,7 +3,10 @@ T100-madr-adrkit-compat (wave H, H2). D71 ("Build vs take") already chose MADR +
 this task closed the implementation gap backlog tracked as `init-madr-fields-gap`: Mole's loader now reads,
 and `mole init` now writes, real MADR 4 metadata (`date`/`decision-makers`/`consulted`/`informed`) and
 adrkit's `affects`, without losing Mole's own `rules:` extension or breaking any pre-existing
-`.mole/decisions` file. Interop proven against adrkit's own CLI. Done; branch not merged.
+`.mole/decisions` file. Interop proven against adrkit's own CLI. Round-2 review (`deleg_9dadfbcf`) FAILed 5
+findings (CRITICAL: `affects` folded into scope with a literal, non-glob anchor check, flagging every real
+use -- including `mole init`'s own scaffold -- red; HIGH: a personal name in the public docs; 2x MEDIUM;
+item 5 behavior-change note) -- all fixed, see `4 log/round2-review-fix.md`. Done; branch not merged.
 
 ## Goal / scope
 - `packages/decisions/src/graph.ts` `loadMoleDecisions()`: parse MADR 4's `date`, `decision-makers`

@@ -79,9 +79,12 @@ export interface GraphNode extends Loc {
   // adrkit (github.com/mbeacom/adrkit, Apache-2.0, fetched 2026-11-05, adrkit.dev/quickstart): a decision
   // record is typed data with one field, `affects`, that names what the decision governs -- each entry is
   // `{ type: path|package|api|resource|entity|data, pattern: <glob or id> }`. Mole keeps the raw list for a
-  // faithful MADR/adrkit round trip AND folds every entry into `scope`/`applies_to` edges below (Builder.node
-  // call site), so existing Mole consumers of scope (flag computation, `mole decisions --scope`) see adrkit's
-  // `affects` for free without a second code path.
+  // faithful MADR/adrkit round trip. Review FAIL #1 (T100 round 2): `affects` names what a decision GOVERNS,
+  // a forward-looking convention area, not a Mole `scope:` evidence anchor asserting code already exists --
+  // so only `type: path` entries fold into `scope`/`applies_to` edges below (Builder.node call site), and they
+  // fold in as a GLOB pattern (anchors.ts checkAnchor/checkGlobAnchor), never a literal file/dir lookup. A
+  // `package`/`api`/`resource`/`entity`/`data` entry is never anchored (it names a dependency, endpoint, etc.,
+  // not a path in this repo's tree).
   affects?: Array<{ type: string; pattern: string }>;
   scope: Anchor[];
   evidence: EvidenceRef[];

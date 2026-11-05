@@ -298,11 +298,32 @@ function loadMoleDecisions(b: Builder): void {
       const items = (field.items ?? []).map((i) => i.value).filter(Boolean);
       return items.length ? items : undefined;
     };
-    const affectsItems = (f.get('affects')?.items ?? []).map((i) => ({ type: i.map?.type ?? '', pattern: i.map?.pattern ?? i.value, line: i.line })).filter((a) => a.pattern);
+    // review FAIL #1 (CRITICAL): adrkit's `affects` names what a decision GOVERNS (path/package/api/resource/
+    // entity/data), not a Mole `scope:` evidence anchor -- only `type: path` entries anchor at all, and they
+    // anchor as a GLOB (anchors.ts checkAnchor/checkGlobAnchor), never a literal file/dir lookup. A `package`/
+    // `api`/`resource`/`entity`/`data` entry is kept on `affects` for a faithful round trip but never becomes
+    // a scope anchor or an `applies_to` edge (a `package` entry could additionally be cross-checked against
+    // package.json's dependencies; not done here -- see docs/decisions-and-rules.md "MADR 4 and adrkit
+    // compatibility" for that scoping note).
+    // review FAIL #3 (MEDIUM): an entry with no `pattern:` is malformed, not "pattern defaults to the type
+    // value" (the previous `i.map?.pattern ?? i.value` fallback resolved to the TYPE string itself, e.g. a
+    // bare `- type: path` silently became `pattern: 'path'`) -- report it and drop it, same convention as
+    // every other malformed-field case in this loader (never a silent wrong value).
+    const affectsItems: Array<{ type: string; pattern: string; line: number }> = [];
+    for (const i of f.get('affects')?.items ?? []) {
+      const type = i.map?.type ?? '';
+      const pattern = i.map?.pattern;
+      if (!pattern) {
+        b.problems.push({ file, line: i.line, message: `affects: entry has no pattern (type: ${type || 'unknown'}) -- dropped` });
+        continue;
+      }
+      affectsItems.push({ type, pattern, line: i.line });
+    }
     const affects: Array<{ type: string; pattern: string }> = affectsItems.map((a) => ({ type: a.type, pattern: a.pattern }));
     // same convention as `scope:` above: each entry's OWN line, not the `affects:` key's line, so two
     // entries in one list cite different file:line (review-friendly, matches scope's existing promise).
-    const affectsScope: Anchor[] = affectsItems.map((a) => ({ target: a.pattern, file, line: a.line }));
+    // Only `type: path` entries anchor -- `package`/`api`/`resource`/`entity`/`data` never participate.
+    const affectsScope: Anchor[] = affectsItems.filter((a) => a.type === 'path').map((a) => ({ target: a.pattern, file, line: a.line }));
     b.node({
       id,
       kind: 'decision',

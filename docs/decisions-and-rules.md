@@ -62,11 +62,43 @@ key), `consulted`, `informed` — as a sequence (`[a, b]` / `- a\n  - b`) or a c
 own template wording, "list everyone..."). Adding any of these fields is optional and additive: a record
 written before this support, with none of them, still loads exactly as before.
 
+`mole init`'s scaffold and `mole decision new`'s body now use MADR 4's three **required** body sections —
+`## Context and Problem Statement`, `## Considered Options`, `## Decision Outcome`
+([template](https://github.com/adr/madr/blob/4.0.0/template/adr-template.md)) — with the template's optional
+sections (`Decision Drivers`, `Consequences`, ...) kept as the same `<!-- This is an optional element. -->`
+comment the upstream template uses. Mole's own rationale extraction
+(`packages/decisions/src/rationale.ts`, read by `mole decisions`/the MCP tools/the Claude Code hook) already
+recognized `Context and Problem Statement`/`Considered Options` as context-bucket headings and `Decision
+Outcome` as the decision-bucket heading, so no loader change was needed to stay compatible with the new body
+shape.
+
 Mole also reads [adrkit](https://github.com/mbeacom/adrkit)'s `affects` field — a list of
 `{ type: path|package|api|resource|entity|data, pattern: <glob or id> }` entries naming what a decision
-governs. Every `affects` entry is folded into the same `scope` / `applies_to` graph edges a plain `scope:`
-entry produces (file:line-cited), so existing Mole consumers (the flag computation, `mole decisions`) see
-`affects` for free, and the raw `affects` list is also kept on the node for a faithful round trip.
+governs. Only `type: path` entries participate in Mole's own flag computation: each is matched as a **glob**
+against the repo's current files (`node:path`'s
+[`matchesGlob`](https://nodejs.org/api/path.html#pathmatchesglobpath-pattern), added Node 22.5 — this repo
+already requires Node ≥22.13) and folded into the same `scope` / `applies_to` graph edges a plain `scope:`
+entry produces (file:line-cited), so existing Mole consumers (the flag computation, `mole decisions`) see a
+`type: path` entry for free. `package`/`api`/`resource`/`entity`/`data` entries are **never** anchored — they
+name a dependency, endpoint, etc., not a path in this repo's tree (a `package` entry could additionally be
+cross-checked against `package.json`'s dependencies; not implemented). The raw `affects` list is always kept
+on the node for a faithful round trip, regardless of type. An `affects` entry with no `pattern:` is malformed
+and is dropped with a warning (`mole decisions`/`mole rules` report it at its file:line) rather than silently
+matching nothing or everything.
+
+Because `affects` names what a decision **governs** — a forward-looking convention area — rather than
+asserting code already exists there (unlike Mole's own `scope:`), a `type: path` glob that currently matches
+no file is not automatically "orphaned": it only turns red when git history shows the pattern *used to* match
+something at the record's confirmed/last-committed sha and no longer does (a real removal). A glob that has
+never matched anything (e.g. `mole init`'s own scaffold, `affects: [{type: path, pattern: src/ui/**}]`, in a
+brand-new repo with no `src/ui/` yet) stays unflagged on that account alone.
+
+**Behavior change for an existing `affects:` record** (round 2 fix, same task as the compatibility note below):
+before this fix, every `affects` entry — any `type`, and literal-path-only matching (no glob support) — was
+folded into `scope`, so a `pattern` containing `**` or any non-`path` type (e.g. `package`) could never
+anchor and read as permanently red/orphaned. If you already added `affects:` before this fix shipped, re-run
+`mole decisions`/`mole rules`: a record that was wrongly red for this reason now computes its flag correctly
+(green when its path pattern's glob currently matches, not auto-orphaned when it does not).
 
 ```yaml
 ---
@@ -74,7 +106,7 @@ id: D010-use-pg-boss
 title: Use pg-boss for the job queue
 status: accepted
 date: 2026-11-04
-decision-makers: [raymond]
+decision-makers: [alice, bob]
 consulted: [platform-team]
 affects:
   - type: path

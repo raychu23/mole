@@ -6,7 +6,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { loadGraph } from '../src/index.js';
+import { computeFlags, loadGraph } from '../src/index.js';
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -88,7 +88,7 @@ describe('T100: MADR 4 fields (date, decision-makers, consulted, informed)', () 
 });
 
 describe('T100: adrkit `affects` (github.com/mbeacom/adrkit)', () => {
-  it('each affects entry is kept raw on the node AND folds into scope + an applies_to edge, same as a plain scope: entry', () => {
+  it('a type: path entry is kept raw on the node AND folds into scope + an applies_to edge, same as a plain scope: entry; a non-path type (package) is kept raw but never anchored (review FAIL #1)', () => {
     const root = repo({ '.mole/decisions/D010-use-pg-boss.md': MADR4_RECORD });
     const g = loadGraph(root);
     const d = g.nodes.find((n) => n.id === 'D010-use-pg-boss');
@@ -96,18 +96,12 @@ describe('T100: adrkit `affects` (github.com/mbeacom/adrkit)', () => {
       { type: 'path', pattern: 'packages/server/src/queue/**' },
       { type: 'package', pattern: 'pg-boss' },
     ]);
-    expect(d?.scope).toEqual(
-      expect.arrayContaining([
-        { target: 'packages/server/src/queue/**', file: '.mole/decisions/D010-use-pg-boss.md', line: 10 },
-        { target: 'pg-boss', file: '.mole/decisions/D010-use-pg-boss.md', line: 12 },
-      ]),
-    );
+    // only the type: path entry anchors -- 'pg-boss' (type: package) names a dependency, not a repo path
+    expect(d?.scope).toEqual([{ target: 'packages/server/src/queue/**', file: '.mole/decisions/D010-use-pg-boss.md', line: 10 }]);
     expect(g.edges).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ from: 'D010-use-pg-boss', to: 'packages/server/src/queue/**', type: 'applies_to' }),
-        expect.objectContaining({ from: 'D010-use-pg-boss', to: 'pg-boss', type: 'applies_to' }),
-      ]),
+      expect.arrayContaining([expect.objectContaining({ from: 'D010-use-pg-boss', to: 'packages/server/src/queue/**', type: 'applies_to' })]),
     );
+    expect(g.edges.some((e) => e.to === 'pg-boss')).toBe(false);
   });
 
   it('a record with no affects: key has no extra scope/edges (back-compat: affects is purely additive)', () => {
@@ -120,6 +114,17 @@ describe('T100: adrkit `affects` (github.com/mbeacom/adrkit)', () => {
     expect(d?.scope).toEqual([]);
   });
 
+  it('an affects entry with no pattern: is dropped with a warning, not silently given pattern = the type value (review FAIL #3)', () => {
+    const root = repo({
+      '.mole/decisions/D014-malformed.md': '---\nid: D014-malformed\ntitle: Malformed affects\nstatus: accepted\naffects:\n  - type: path\n  - type: package\n    pattern: good-pkg\n---\n',
+    });
+    const g = loadGraph(root);
+    const d = g.nodes.find((n) => n.id === 'D014-malformed');
+    // the good entry (has a pattern) still loads; the malformed one (no pattern) does not become 'path' itself
+    expect(d?.affects).toEqual([{ type: 'package', pattern: 'good-pkg' }]);
+    expect(g.problems).toEqual(expect.arrayContaining([expect.objectContaining({ file: '.mole/decisions/D014-malformed.md', message: expect.stringContaining('affects: entry has no pattern') })]));
+  });
+
   it("Mole's own rules: block survives unchanged alongside the new MADR 4 / adrkit fields (D71: not losing rules:)", () => {
     const root = repo({ '.mole/decisions/D010-use-pg-boss.md': MADR4_RECORD });
     const text = MADR4_RECORD;
@@ -129,5 +134,54 @@ describe('T100: adrkit `affects` (github.com/mbeacom/adrkit)', () => {
     // adding MADR 4 / adrkit parsing to graph.ts did not require removing or renaming the rules: field.
     const g = loadGraph(root);
     expect(g.problems).toEqual([]);
+  });
+});
+
+describe('T100 review round 2 (FAIL #1 fix): affects glob anchoring in computeFlags, not a literal file/dir lookup', () => {
+  const affectsRecord = (pattern: string, type = 'path') =>
+    `---\nid: D010-use-pg-boss\ntitle: Use pg-boss for the job queue\nstatus: accepted\naffects:\n  - type: ${type}\n    pattern: ${pattern}\n---\n\n## Decision\n\nUse pg-boss.\n`;
+
+  it("the docs' D010 example: the governed dir is present -> green (glob match, not a literal 'packages/server/src/queue/**' path lookup)", () => {
+    const root = repo({
+      '.mole/decisions/D010-use-pg-boss.md': affectsRecord('packages/server/src/queue/**'),
+      'packages/server/src/queue/index.ts': 'export const q = 1;\n',
+    });
+    const [flag] = computeFlags(loadGraph(root));
+    expect(flag!.flag).toBe('green');
+  });
+
+  it("the docs' D010 example: the governed dir existed at the confirmed commit and was since removed -> orphaned (red)", () => {
+    const root = repo({
+      '.mole/decisions/D010-use-pg-boss.md': affectsRecord('packages/server/src/queue/**'),
+      'packages/server/src/queue/index.ts': 'export const q = 1;\n',
+    });
+    rmSync(join(root, 'packages/server/src/queue'), { recursive: true, force: true });
+    const [flag] = computeFlags(loadGraph(root));
+    expect(flag!.flag).toBe('red');
+    expect(flag!.reasons.some((r) => r.code === 'orphaned')).toBe(true);
+  });
+
+  it("mole init's own scaffold (affects: [{type: path, pattern: src/ui/**}]) right after init, no src/ui/ built yet -> NOT red (a glob that never matched anything is not an 'orphaned' asserted-evidence anchor)", () => {
+    const root = repo({ '.mole/decisions/D001-example-decision.md': affectsRecord('src/ui/**') });
+    const [flag] = computeFlags(loadGraph(root));
+    expect(flag!.flag).not.toBe('red');
+  });
+
+  it('a package-type affects entry never anchors: it does not contribute to the flag at all (a repo with no matching dependency file stays green)', () => {
+    const root = repo({ '.mole/decisions/D010-use-pg-boss.md': affectsRecord('pg-boss', 'package') });
+    const [flag] = computeFlags(loadGraph(root));
+    expect(flag!.flag).toBe('green');
+  });
+
+  it('review round 2 (item 5): a pre-existing affects: record changes behavior -- a glob pattern that never fully resolves to a literal path used to read permanently orphaned, now reads green once its target exists', () => {
+    const root = repo({
+      '.mole/decisions/D015-pre-existing.md': affectsRecord('src/widgets/**'),
+      'src/widgets/button.ts': 'export {};\n',
+    });
+    const [flag] = computeFlags(loadGraph(root));
+    // before this fix: checkAnchor did isFile/isDir('src/widgets/**') literally -- always false -- so this
+    // record was always 'red'/'orphaned' no matter what existed on disk (docs/decisions-and-rules.md's
+    // "Behavior change for an existing affects: record" note).
+    expect(flag!.flag).toBe('green');
   });
 });
