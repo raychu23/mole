@@ -13,14 +13,30 @@ import { codeownersAt, parseCodeowners } from './codeowners.js';
 import { parseGitDiff, type ChangedFile, type Hunk } from './diff.js';
 import { contentAnchorsOf, exportConventionRanges, fileHasTitledResource, hasTitleTerm, isCommentOnlyHunk, isExportConventionTitle, isTestPath, isTfBareBlock, isTsSource, isVersionOnlyHunk, MAX_MATCH_LINE, titleTermsOf, type ContentAnchor } from './options.js';
 import type { CheckAnnotation, CheckRunPayload, GovernedRecord, PrCheckOptions, PrCheckResult, PrQuestion, RecordChange, UnanchoredRecord } from './types.js';
+import { acquireCachedWorktree } from './worktree-cache.js';
 
 export const CHECK_NAME = 'mole';
 export const MAX_ANNOTATIONS = 50; // GitHub accepts at most 50 annotations per check-run request
 /** statuses that never govern lines: their successor (or nothing) does */
 const NOT_GOVERNING = new Set(['superseded', 'deprecated', 'rejected', 'retired']);
 
+// T102 profiling: when MOLE_PRCHECK_PROFILE=1, every git subprocess this file spawns (through git()/gitOrNull()/
+// execGit()) is timed and appended here; `tasks/T102-prcheck-throughput/4 log/profile-*.mjs` reads this array
+// after one prCheck() call. Zero cost when unset (a single env read per call, no array growth).
+const PROFILE = process.env.MOLE_PRCHECK_PROFILE === '1';
+export const profileCalls: Array<{ args: string[]; ms: number }> = [];
+function timed<T>(args: string[], fn: () => T): T {
+  if (!PROFILE) return fn();
+  const t0 = performance.now();
+  try {
+    return fn();
+  } finally {
+    profileCalls.push({ args, ms: performance.now() - t0 });
+  }
+}
+
 function git(root: string, args: string[]): string {
-  return execFileSync('git', ['-C', root, '-c', 'core.quotepath=off', ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 512 * 1024 * 1024 });
+  return timed(args, () => execFileSync('git', ['-C', root, '-c', 'core.quotepath=off', ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 512 * 1024 * 1024 }));
 }
 function gitOrNull(root: string, args: string[]): string | null {
   try {
@@ -29,13 +45,18 @@ function gitOrNull(root: string, args: string[]): string | null {
     return null;
   }
 }
+/** Same timing/profiling as git()/gitOrNull() for the lower-level execFileSync('git', ...) calls below (worktree
+ *  add/remove, archive) that need custom stdio/encoding and so cannot go through the git() helper directly. */
+function execGit(args: string[], opts: Parameters<typeof execFileSync>[2]): Buffer | string {
+  return timed(args, () => execFileSync('git', args, opts));
+}
 
 /** T49: cheap pre-check (one `git grep` at `head`, no checkout) so rules wiring costs nothing on the common case
  *  (no decision in this repo has a `rules:` item -- true of every M2 bench ADR, since none author rules items).
  *  Only when this is true do we pay for a worktree checkout + a real dependency-cruiser cruise below. */
 function hasRuleRecords(root: string, head: string): boolean {
   try {
-    const out = execFileSync('git', ['-C', root, 'grep', '-I', '-l', '-e', '^\\s*rules\\s*:', head, '--', MOLE_DIR], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    const out = execGit(['-C', root, 'grep', '-I', '-l', '-e', '^\\s*rules\\s*:', head, '--', MOLE_DIR], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }) as string;
     return out.trim().length > 0;
   } catch {
     return false; // git grep exits 1 on "no match" (not an error) and on any other failure -- either way, skip
@@ -54,16 +75,15 @@ async function ruleViolationsAtHead(root: string, head: string, mergeBase: strin
   if (!hasRuleRecords(root, mergeBase) && !hasRuleRecords(root, head)) {
     return byDecision;
   }
-  const tmp = mkdtempSync(join(tmpdir(), 'mole-rules-head-'));
+  const { dir: tmp, release } = await acquireCachedWorktree(root, 'rules-head', head);
   try {
-    execFileSync('git', ['-C', root, 'worktree', 'add', '--detach', '-f', tmp, head], { stdio: 'ignore' });
     // review 1 P1-1 invariant, extended to rules: a PR must not be able to silence its own rules check by editing
     // or deleting the rule item in the SAME diff -- the records are the merge base's, same as every other anchor
     // kind in this file; only the SOURCE CODE being scanned for a violation is the PR's own head.
     for (const p of recordPaths) {
       try {
         rmSync(join(tmp, p), { recursive: true, force: true });
-        const archive = execFileSync('git', ['-C', root, 'archive', mergeBase, '--', p]);
+        const archive = execGit(['-C', root, 'archive', mergeBase, '--', p], {}) as Buffer;
         execFileSync('tar', ['-x', '-C', tmp], { input: archive });
       } catch {
         // the path may not exist at the merge base (a record only added by this PR) -- leave head's copy, if any
@@ -77,12 +97,7 @@ async function ruleViolationsAtHead(root: string, head: string, mergeBase: strin
   } catch {
     // additive: a broken rules engine run never blocks the content/scope-anchor governance below
   } finally {
-    try {
-      execFileSync('git', ['-C', root, 'worktree', 'remove', '--force', tmp]);
-    } catch {
-      // the worktree metadata is cleaned up by rmSync below either way
-    }
-    rmSync(tmp, { recursive: true, force: true });
+    await release();
   }
   return byDecision;
 }
@@ -158,17 +173,17 @@ const levelOf = (flag: Flag): CheckAnnotation['annotation_level'] => (flag === '
 const fmtRanges = (rs: Range[]) => rs.map(([a, b]) => (a === b ? `${a}` : `${a}-${b}`)).join(', ');
 
 export async function prCheck(opts: PrCheckOptions): Promise<PrCheckResult> {
-  const cleanups: Array<() => void> = []; // merge-base worktree / head snapshot of the records, removed when the check is done
+  const cleanups: Array<() => void | Promise<void>> = []; // merge-base worktree lock / head snapshot of the records, released when the check is done
   try {
     return await prCheckIn(opts, cleanups);
   } finally {
-    for (const c of cleanups.reverse()) c();
+    for (const c of cleanups.reverse()) await c();
   }
 }
 
 const posixRel = (from: string, to: string) => relative(from, to).split(sep).join('/');
 
-async function prCheckIn(opts: PrCheckOptions, cleanups: Array<() => void>): Promise<PrCheckResult> {
+async function prCheckIn(opts: PrCheckOptions, cleanups: Array<() => void | Promise<void>>): Promise<PrCheckResult> {
   const t0 = performance.now();
   const root = git(resolve(opts.root), ['rev-parse', '--show-toplevel']).trim();
   const head = git(root, ['rev-parse', '--verify', `${opts.head}^{commit}`]).trim();
@@ -207,24 +222,21 @@ async function prCheckIn(opts: PrCheckOptions, cleanups: Array<() => void>): Pro
         if (!m) continue;
         const dest = join(dir, m[2]!);
         mkdirSync(dirname(dest), { recursive: true });
-        writeFileSync(dest, execFileSync('git', ['-C', root, 'cat-file', 'blob', m[1]!], { maxBuffer: 64 * 1024 * 1024 }));
+        writeFileSync(dest, execGit(['-C', root, 'cat-file', 'blob', m[1]!], { maxBuffer: 64 * 1024 * 1024 }) as Buffer);
       }
     }
     return join(dir, prefix);
   };
-  // the merge base as a detached temporary worktree: records, notes AND the files their anchors name are the base's, and
-  // its HEAD is the merge base, so the citator flags (anchor drift since the record was confirmed) are the base's too.
-  // Hooks are off (core.hooksPath) so no repository script runs; the worktree is removed when the check is done.
-  const baseTree = (): string => {
-    const dir = realpathSync(mkdtempSync(join(tmpdir(), 'mole-pr-base-')));
-    cleanups.push(() => {
-      gitOrNull(root, ['worktree', 'remove', '--force', dir]); // removes its admin entry too (no global `worktree prune`)
-      rmSync(dir, { recursive: true, force: true });
-    });
-    git(root, ['-c', 'core.hooksPath=/dev/null', 'worktree', 'add', '--detach', '--quiet', dir, mergeBase]);
+  // the merge base as a cached, reused detached worktree (T102): records, notes AND the files their anchors name
+  // are the base's, and its HEAD is the merge base, so the citator flags (anchor drift since the record was
+  // confirmed) are the base's too. Hooks are off (core.hooksPath) so no repository script runs; the worktree
+  // directory is kept (not removed) for the next prCheck call against this repo -- see worktree-cache.ts.
+  const baseTree = async (): Promise<string> => {
+    const { dir, release } = await acquireCachedWorktree(root, 'records', mergeBase);
+    cleanups.push(release);
     return prefix ? join(dir, prefix) : dir;
   };
-  const recordsRoot = inRepo ? baseTree() : recordsRootAbs;
+  const recordsRoot = inRepo ? await baseTree() : recordsRootAbs;
   const graph = loadGraph(recordsRoot, { adrDirs: opts.adrDirs });
   const flags = new Map<string, Flag>();
   if (sameRepo) for (const f of computeFlags(graph)) flags.set(f.id, f.flag);

@@ -1,0 +1,81 @@
+{
+  "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+  "base": "HEAD~15",
+  "head": "HEAD",
+  "cold": {
+    "totalMs": 1750.729167,
+    "gitMs": 329.70745799999963,
+    "byKind": {
+      "rev-parse": {
+        "count": 4,
+        "ms": 56.665040999999974
+      },
+      "merge-base": {
+        "count": 1,
+        "ms": 14.114708000000007
+      },
+      "diff": {
+        "count": 2,
+        "ms": 74.46495900000002
+      },
+      "grep": {
+        "count": 1,
+        "ms": 16.562833999999953
+      },
+      "archive": {
+        "count": 1,
+        "ms": 20.843917000000033
+      },
+      "show": {
+        "count": 2,
+        "ms": 28.225582999999688
+      },
+      "checkout --detach": {
+        "count": 2,
+        "ms": 47.537207999999964
+      },
+      "clean -fdx": {
+        "count": 2,
+        "ms": 71.29320799999999
+      }
+    }
+  },
+  "warm": {
+    "totalMs": 1422.339791,
+    "gitMs": 328.7462490000005,
+    "byKind": {
+      "rev-parse": {
+        "count": 4,
+        "ms": 50.12116600000013
+      },
+      "merge-base": {
+        "count": 1,
+        "ms": 13.806583000000046
+      },
+      "diff": {
+        "count": 2,
+        "ms": 85.17262600000004
+      },
+      "grep": {
+        "count": 1,
+        "ms": 17.05120799999986
+      },
+      "archive": {
+        "count": 1,
+        "ms": 16.61554100000012
+      },
+      "show": {
+        "count": 2,
+        "ms": 28.48850100000027
+      },
+      "checkout --detach": {
+        "count": 2,
+        "ms": 39.064082999999755
+      },
+      "clean -fdx": {
+        "count": 2,
+        "ms": 78.42654100000027
+      }
+    }
+  }
+}

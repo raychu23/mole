@@ -199,6 +199,13 @@ describe('P1-1 citator flags are computed at the merge base too', () => {
     const atBase = await prCheck({ root, base, head: heads.silence!, history: false });
     expect(atHead.governed.map((g) => [g.id, g.flag])).toEqual([['0001', 'green']]);
     expect(atBase.governed.map((g) => [g.id, g.flag])).toEqual([['0001', 'green']]);
-    expect(execFileSync('git', ['-C', root, 'worktree', 'list'], { encoding: 'utf8' }).trim().split('\n').length).toBe(1); // no leftover worktree
+    // T102: prCheck now reuses ONE cached worktree per (repo, purpose) across calls instead of creating/removing
+    // one every call (see worktree-cache.ts) -- so this repo's own checkout plus that one cached worktree is the
+    // expected count, and a THIRD call must not add another (reuse, not a leak).
+    const countNow = () => execFileSync('git', ['-C', root, 'worktree', 'list'], { encoding: 'utf8' }).trim().split('\n').length;
+    const afterTwoCalls = countNow();
+    expect(afterTwoCalls).toBeLessThanOrEqual(2);
+    await prCheck({ root, base, head: heads.silence!, history: false });
+    expect(countNow()).toBe(afterTwoCalls); // no growth on a third call: the worktree is reused, not re-created
   });
 });

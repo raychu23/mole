@@ -1,0 +1,189 @@
+{
+  "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+  "base": "HEAD~5",
+  "head": "HEAD",
+  "totalMs": 5024.7775,
+  "calls": [
+    {
+      "args": [
+        "rev-parse",
+        "--show-toplevel"
+      ],
+      "ms": 13.60737499999999
+    },
+    {
+      "args": [
+        "rev-parse",
+        "--verify",
+        "HEAD^{commit}"
+      ],
+      "ms": 13.348749999999995
+    },
+    {
+      "args": [
+        "rev-parse",
+        "--verify",
+        "HEAD~5^{commit}"
+      ],
+      "ms": 17.128332999999998
+    },
+    {
+      "args": [
+        "merge-base",
+        "e4eafe21e0b5f7e83fd91b85124ece2c0dbdac3f",
+        "1565deea77d7f8fb9d328200c40311417d50484f"
+      ],
+      "ms": 25.219875000000002
+    },
+    {
+      "args": [
+        "diff",
+        "-M",
+        "-U0",
+        "--no-color",
+        "--no-ext-diff",
+        "e4eafe21e0b5f7e83fd91b85124ece2c0dbdac3f",
+        "1565deea77d7f8fb9d328200c40311417d50484f"
+      ],
+      "ms": 40.95187500000003
+    },
+    {
+      "args": [
+        "rev-parse",
+        "--show-toplevel"
+      ],
+      "ms": 12.757790999999997
+    },
+    {
+      "args": [
+        "-c",
+        "core.hooksPath=/dev/null",
+        "worktree",
+        "add",
+        "--detach",
+        "--quiet",
+        "/private/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-pr-base-MyCB7N",
+        "e4eafe21e0b5f7e83fd91b85124ece2c0dbdac3f"
+      ],
+      "ms": 990.3422499999999
+    },
+    {
+      "args": [
+        "-C",
+        "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "grep",
+        "-I",
+        "-l",
+        "-e",
+        "^\\s*rules\\s*:",
+        "e4eafe21e0b5f7e83fd91b85124ece2c0dbdac3f",
+        "--",
+        ".mole"
+      ],
+      "ms": 14.58075000000008
+    },
+    {
+      "args": [
+        "-C",
+        "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "worktree",
+        "add",
+        "--detach",
+        "-f",
+        "/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-rules-head-JuGp5Q",
+        "1565deea77d7f8fb9d328200c40311417d50484f"
+      ],
+      "ms": 539.728709
+    },
+    {
+      "args": [
+        "-C",
+        "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "archive",
+        "e4eafe21e0b5f7e83fd91b85124ece2c0dbdac3f",
+        "--",
+        ".mole"
+      ],
+      "ms": 105.43670900000006
+    },
+    {
+      "args": [
+        "-C",
+        "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+        "worktree",
+        "remove",
+        "--force",
+        "/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-rules-head-JuGp5Q"
+      ],
+      "ms": 824.5975840000001
+    },
+    {
+      "args": [
+        "show",
+        "1565deea77d7f8fb9d328200c40311417d50484f:packages/daemon/src/cli.ts"
+      ],
+      "ms": 19.259375000000546
+    },
+    {
+      "args": [
+        "show",
+        "e4eafe21e0b5f7e83fd91b85124ece2c0dbdac3f:packages/daemon/src/cli.ts"
+      ],
+      "ms": 17.386083999999755
+    },
+    {
+      "args": [
+        "diff",
+        "-U0",
+        "--no-color",
+        "--no-ext-diff",
+        "e4eafe21e0b5f7e83fd91b85124ece2c0dbdac3f",
+        "1565deea77d7f8fb9d328200c40311417d50484f"
+      ],
+      "ms": 29.379084000000148
+    },
+    {
+      "args": [
+        "worktree",
+        "remove",
+        "--force",
+        "/private/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-pr-base-MyCB7N"
+      ],
+      "ms": 544.5325419999999
+    }
+  ],
+  "byKind": {
+    "rev-parse": {
+      "count": 4,
+      "ms": 56.84224899999998
+    },
+    "merge-base": {
+      "count": 1,
+      "ms": 25.219875000000002
+    },
+    "diff": {
+      "count": 2,
+      "ms": 70.33095900000018
+    },
+    "worktree add": {
+      "count": 2,
+      "ms": 1530.070959
+    },
+    "grep": {
+      "count": 1,
+      "ms": 14.58075000000008
+    },
+    "archive": {
+      "count": 1,
+      "ms": 105.43670900000006
+    },
+    "worktree remove": {
+      "count": 2,
+      "ms": 1369.130126
+    },
+    "show": {
+      "count": 2,
+      "ms": 36.6454590000003
+    }
+  }
+}

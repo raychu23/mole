@@ -1,0 +1,32 @@
+{
+  "root": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T102-prcheck-throughput",
+  "base": "c32478ac89313d914e5556725f93b6d08063a168",
+  "head": "1565deea77d7f8fb9d328200c40311417d50484f",
+  "oldTimesMs": [
+    2805.6,
+    3110.4,
+    2967.7,
+    3116.5,
+    2817.8,
+    3032.6,
+    3207.8,
+    2894.2,
+    3071.1,
+    2975.1
+  ],
+  "newTimesMs": [
+    2094.2,
+    1628,
+    2158.4,
+    1872.1,
+    2399,
+    2676.3,
+    1867.2,
+    1950.9,
+    1594.8,
+    1484.2
+  ],
+  "oldMedianMs": 3003.8,
+  "newMedianMs": 1911.5,
+  "speedup": 1.57
+}
