@@ -288,6 +288,42 @@ function loadMoleDecisions(b: Builder): void {
       return { test: i.map?.test ?? i.value, file, line: i.line };
     });
     const statusText = str(f.get('status'));
+    // T100 (D71 MADR 4 + adrkit): all optional, so a pre-T100 record (none of these keys) is unaffected.
+    const strList = (key: string): string[] | undefined => {
+      const field = f.get(key);
+      if (!field) return undefined;
+      // a plain scalar (MADR's own template prose: "list everyone...", log4brains' `* Deciders: a, b`)
+      // is comma-separated; only a real YAML sequence (field.value undefined) uses one string per item.
+      if (field.value !== undefined) return field.value ? field.value.split(',').map((s) => s.trim()).filter(Boolean) : undefined;
+      const items = (field.items ?? []).map((i) => i.value).filter(Boolean);
+      return items.length ? items : undefined;
+    };
+    // review FAIL #1 (CRITICAL): adrkit's `affects` names what a decision GOVERNS (path/package/api/resource/
+    // entity/data), not a Mole `scope:` evidence anchor -- only `type: path` entries anchor at all, and they
+    // anchor as a GLOB (anchors.ts checkAnchor/checkGlobAnchor), never a literal file/dir lookup. A `package`/
+    // `api`/`resource`/`entity`/`data` entry is kept on `affects` for a faithful round trip but never becomes
+    // a scope anchor or an `applies_to` edge (a `package` entry could additionally be cross-checked against
+    // package.json's dependencies; not done here -- see docs/decisions-and-rules.md "MADR 4 and adrkit
+    // compatibility" for that scoping note).
+    // review FAIL #3 (MEDIUM): an entry with no `pattern:` is malformed, not "pattern defaults to the type
+    // value" (the previous `i.map?.pattern ?? i.value` fallback resolved to the TYPE string itself, e.g. a
+    // bare `- type: path` silently became `pattern: 'path'`) -- report it and drop it, same convention as
+    // every other malformed-field case in this loader (never a silent wrong value).
+    const affectsItems: Array<{ type: string; pattern: string; line: number }> = [];
+    for (const i of f.get('affects')?.items ?? []) {
+      const type = i.map?.type ?? '';
+      const pattern = i.map?.pattern;
+      if (!pattern) {
+        b.problems.push({ file, line: i.line, message: `affects: entry has no pattern (type: ${type || 'unknown'}) -- dropped` });
+        continue;
+      }
+      affectsItems.push({ type, pattern, line: i.line });
+    }
+    const affects: Array<{ type: string; pattern: string }> = affectsItems.map((a) => ({ type: a.type, pattern: a.pattern }));
+    // same convention as `scope:` above: each entry's OWN line, not the `affects:` key's line, so two
+    // entries in one list cite different file:line (review-friendly, matches scope's existing promise).
+    // Only `type: path` entries anchor -- `package`/`api`/`resource`/`entity`/`data` never participate.
+    const affectsScope: Anchor[] = affectsItems.filter((a) => a.type === 'path').map((a) => ({ target: a.pattern, file, line: a.line }));
     b.node({
       id,
       kind: 'decision',
@@ -299,15 +335,20 @@ function loadMoleDecisions(b: Builder): void {
       approver: str(f.get('approver')),
       confirmed: str(f.get('confirmed')) || undefined,
       source: str(f.get('source')),
+      date: str(f.get('date')),
+      deciders: strList('decision-makers') ?? strList('deciders'), // MADR 4 name, falling back to MADR <=3/log4brains
+      consulted: strList('consulted'),
+      informed: strList('informed'),
+      affects: affects.length ? affects : undefined,
       file,
       line: 1,
-      scope,
+      scope: [...scope, ...affectsScope],
       evidence,
       fields: lines,
     });
     if (!b.has(id) || b.nodes[b.nodes.length - 1]?.file !== file) continue; // duplicate id: keep the first record's edges only
     relationEdges(b, id, f, file);
-    for (const a of scope) b.edge({ from: id, to: a.target, type: 'applies_to', file, line: a.line });
+    for (const a of [...scope, ...affectsScope]) b.edge({ from: id, to: a.target, type: 'applies_to', file, line: a.line });
   }
 }
 

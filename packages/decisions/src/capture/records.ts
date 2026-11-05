@@ -35,8 +35,13 @@ function yamlString(value: string): string {
   return JSON.stringify(value);
 }
 
+// T100 (D71 MADR 4): headings an identical import must strip from the body before comparing (renderNew's own
+// template), same spirit as the old `## Decision`-only strip -- extended to the 3 MADR-4-required headings
+// renderNew now emits (https://github.com/adr/madr/blob/4.0.0/template/adr-template.md).
+const RENDERED_HEADING = /^#{1,3}\s*(context and problem statement|considered options|decision outcome|decision)\s*$/i;
+
 function renderNew(input: Required<Pick<NewDecisionInput, 'id' | 'title' | 'status'>> & Pick<NewDecisionInput, 'body'>): string {
-  return `---\nid: '${input.id}'\ntitle: ${yamlString(input.title)}\nstatus: ${input.status}\n---\n\n## Decision\n\n${input.body ?? ''}`;
+  return `---\nid: '${input.id}'\ntitle: ${yamlString(input.title)}\nstatus: ${input.status}\n---\n\n## Context and Problem Statement\n\n## Considered Options\n\n## Decision Outcome\n\n${input.body ?? ''}`;
 }
 
 function writeNewExclusive(file: string, text: string): void {
@@ -87,8 +92,8 @@ export function readDecisionRecords(root: string): Array<{ id: string; title: st
     if (!fm || 'error' in fm || !id || !title) throw new CaptureError(`malformed record (needs front matter with id and title): ${rel}`);
     const lines = text.split(/\r?\n/);
     const close = lines.indexOf('---', 1);
-    // the body as written, minus the template's own '## Decision' heading (renderNew), so an identical import matches exactly
-    const body = close > 0 ? lines.slice(close + 1).filter((l) => !/^#{1,3}\s*decision\s*$/i.test(l.trim())).join('\n').trim() : '';
+    // the body as written, minus renderNew's own MADR-4 heading boilerplate (RENDERED_HEADING), so an identical import matches exactly
+    const body = close > 0 ? lines.slice(close + 1).filter((l) => !RENDERED_HEADING.test(l.trim())).join('\n').trim() : '';
     out.push({ id, title, body });
   }
   return out;

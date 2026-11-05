@@ -22,7 +22,7 @@ describe('mole decision new', () => {
     const code = decisionCli(['new'], { id: 'D-42', title: 'Keep records local' }, root);
     expect(code).toBe(0);
     expect(readFileSync(join(root, '.mole/decisions/D-42.md'), 'utf8')).toBe(
-      "---\nid: 'D-42'\ntitle: \"Keep records local\"\nstatus: proposed\n---\n\n## Decision\n\n",
+      "---\nid: 'D-42'\ntitle: \"Keep records local\"\nstatus: proposed\n---\n\n## Context and Problem Statement\n\n## Considered Options\n\n## Decision Outcome\n\n",
     );
   });
 });

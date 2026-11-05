@@ -53,6 +53,92 @@ mole rules --emit     # also write .dependency-cruiser.mole.cjs + .mole-call-rul
 
 Try the whole loop without touching your own repo: `npx mole-code demo`.
 
+## MADR 4 and adrkit compatibility (D71)
+
+`.mole/decisions/*.md` is a real [MADR 4](https://github.com/adr/madr) file: Mole's loader
+(`packages/decisions/src/graph.ts`) reads and `mole init` writes MADR 4's optional metadata fields —
+`status`, `date` (`YYYY-MM-DD`), `decision-makers` (also accepts the legacy MADR ≤3 / log4brains `deciders:`
+key), `consulted`, `informed` — as a sequence (`[a, b]` / `- a\n  - b`) or a comma-separated scalar (MADR's
+own template wording, "list everyone..."). Adding any of these fields is optional and additive: a record
+written before this support, with none of them, still loads exactly as before.
+
+`mole init`'s scaffold and `mole decision new`'s body now use MADR 4's three **required** body sections —
+`## Context and Problem Statement`, `## Considered Options`, `## Decision Outcome`
+([template](https://github.com/adr/madr/blob/4.0.0/template/adr-template.md)) — with the template's optional
+sections (`Decision Drivers`, `Consequences`, ...) kept as the same `<!-- This is an optional element. -->`
+comment the upstream template uses. Mole's own rationale extraction
+(`packages/decisions/src/rationale.ts`, read by `mole decisions`/the MCP tools/the Claude Code hook) already
+recognized `Context and Problem Statement`/`Considered Options` as context-bucket headings and `Decision
+Outcome` as the decision-bucket heading, so no loader change was needed to stay compatible with the new body
+shape.
+
+Mole also reads [adrkit](https://github.com/mbeacom/adrkit)'s `affects` field — a list of
+`{ type: path|package|api|resource|entity|data, pattern: <glob or id> }` entries naming what a decision
+governs. Only `type: path` entries participate in Mole's own flag computation: each is matched as a **glob**
+against the repo's current files (`node:path`'s
+[`matchesGlob`](https://nodejs.org/api/path.html#pathmatchesglobpath-pattern), added Node 22.5 — this repo
+already requires Node ≥22.13) and folded into the same `scope` / `applies_to` graph edges a plain `scope:`
+entry produces (file:line-cited), so existing Mole consumers (the flag computation, `mole decisions`) see a
+`type: path` entry for free. `package`/`api`/`resource`/`entity`/`data` entries are **never** anchored — they
+name a dependency, endpoint, etc., not a path in this repo's tree (a `package` entry could additionally be
+cross-checked against `package.json`'s dependencies; not implemented). The raw `affects` list is always kept
+on the node for a faithful round trip, regardless of type. An `affects` entry with no `pattern:` is malformed
+and is dropped with a warning (`mole decisions`/`mole rules` report it at its file:line) rather than silently
+matching nothing or everything.
+
+Because `affects` names what a decision **governs** — a forward-looking convention area — rather than
+asserting code already exists there (unlike Mole's own `scope:`), a `type: path` glob that currently matches
+no file is not automatically "orphaned": it only turns red when git history shows the pattern *used to* match
+something at the record's confirmed/last-committed sha and no longer does (a real removal). A glob that has
+never matched anything (e.g. `mole init`'s own scaffold, `affects: [{type: path, pattern: src/ui/**}]`, in a
+brand-new repo with no `src/ui/` yet) stays unflagged on that account alone.
+
+**Behavior change for an existing `affects:` record** (round 2 fix, same task as the compatibility note below):
+before this fix, every `affects` entry — any `type`, and literal-path-only matching (no glob support) — was
+folded into `scope`, so a `pattern` containing `**` or any non-`path` type (e.g. `package`) could never
+anchor and read as permanently red/orphaned. If you already added `affects:` before this fix shipped, re-run
+`mole decisions`/`mole rules`: a record that was wrongly red for this reason now computes its flag correctly
+(green when its path pattern's glob currently matches, not auto-orphaned when it does not).
+
+```yaml
+---
+id: D010-use-pg-boss
+title: Use pg-boss for the job queue
+status: accepted
+date: 2026-11-04
+decision-makers: [alice, bob]
+consulted: [platform-team]
+affects:
+  - type: path
+    pattern: packages/server/src/queue/**
+  - type: package
+    pattern: pg-boss
+rules:               # Mole's own extension -- not part of MADR or adrkit
+  - forbid: import
+    from: src/ui/
+    to: src/db/
+    why: ...
+---
+```
+
+**Interop, verified 2026-11-05** (`npx @adrkit/cli@0.20.0`, `tasks/T100-madr-adrkit-compat/4 log/`): a
+Mole-written MADR 4 + `affects` file run through adrkit's own `adr migrate --from madr` round-trips
+`title`/`status`/`date`/`affects` (type and pattern) correctly. Three things do **not** round-trip, and all
+three are adrkit's own format boundary, not something Mole's loader is missing:
+- adrkit's `madr` importer still reads the legacy `deciders:` key, not MADR 4's renamed `decision-makers:` —
+  a decision written with only `decision-makers:` imports into adrkit with an empty `deciders: []`.
+- `adr migrate` drops Mole's `rules:` block entirely (an unrecognized key); adrkit's own strict `adr lint`
+  rejects both `decision-makers` and `rules` as `strict-unknown-key` on an unmigrated file.
+- adrkit requires a 4+-digit numeric or ULID `id` (`adr lint`: `invalid-format`); Mole's own id scheme
+  (`D001-example-decision`) is not an adrkit-valid id until `adr migrate` rewrites it.
+
+Net: a Mole decisions directory round-trips through `adr migrate --from madr` without hand-editing, which is
+the compatibility D71 asked for ("any ADR tool reads them"); becoming a fully-validating adrkit corpus
+additionally needs `deciders:` (not just `decision-makers:`) and a numeric/ULID id, which `adr migrate`
+itself already handles. `mole decisions --export madr` was not needed: `.mole/decisions/*.md` already **is**
+MADR 4, so there is nothing to export — only `adr migrate` (adrkit's own importer) is needed to add adrkit's
+remaining required fields.
+
 ## What it reads / writes
 
 - **Reads:** every `.mole/decisions/*.md` file's YAML front matter and body; the repo's source tree (import

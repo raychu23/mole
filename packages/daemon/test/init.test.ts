@@ -7,7 +7,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
-import { AGENTS_MARKER_START, EXAMPLE_DECISION_REL, PRECEDENCE_SENTENCE, planInit, runInit } from '../src/init.js';
+import { AGENTS_MARKER_START, EXAMPLE_DECISION_ID, EXAMPLE_DECISION_REL, PRECEDENCE_SENTENCE, planInit, runInit } from '../src/init.js';
+import { computeFlags, loadGraph } from '@mole/decisions';
 
 const pkg = join(dirname(fileURLToPath(import.meta.url)), '..');
 const cliDist = join(pkg, 'dist/cli.js');
@@ -36,6 +37,40 @@ describe('T96: mole init -- fresh repo', () => {
     expect(text).toContain('status: accepted');
     expect(text).toContain('rules:');
     expect(text).toContain('forbid: import');
+  });
+
+  it('T100 (D71): writes real MADR 4 fields (date, decision-makers) plus adrkit\'s affects, loadable by loadGraph', async () => {
+    const root = freshRepo();
+    await runInit(root, {});
+    const text = readFileSync(join(root, EXAMPLE_DECISION_REL), 'utf8');
+    expect(text).toMatch(/\ndate: \d{4}-\d{2}-\d{2}\n/);
+    expect(text).toContain('decision-makers:');
+    expect(text).toContain('affects:');
+    expect(text).toContain('type: path');
+    const g = loadGraph(root);
+    expect(g.problems).toEqual([]);
+    const d = g.nodes.find((n) => n.id === EXAMPLE_DECISION_ID);
+    expect(d?.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(d?.deciders).toEqual(['your-name']);
+    expect(d?.affects).toEqual([{ type: 'path', pattern: 'src/ui/**' }]);
+  });
+
+  it('T100 review round 2 (review FAIL #1): the scaffold\'s own affects glob (src/ui/**) is not red right after init, even though no src/ui/ exists yet', async () => {
+    const root = freshRepo();
+    await runInit(root, {});
+    const flags = computeFlags(loadGraph(root));
+    const scaffold = flags.find((f) => f.id === EXAMPLE_DECISION_ID);
+    expect(scaffold).toBeDefined();
+    expect(scaffold?.flag).not.toBe('red');
+  });
+
+  it('T100 (D71): the scaffold\'s MADR 4 body carries the 3 required sections (Context and Problem Statement, Considered Options, Decision Outcome)', async () => {
+    const root = freshRepo();
+    await runInit(root, {});
+    const text = readFileSync(join(root, EXAMPLE_DECISION_REL), 'utf8');
+    expect(text).toContain('## Context and Problem Statement');
+    expect(text).toContain('## Considered Options');
+    expect(text).toContain('## Decision Outcome');
   });
 
   it('with no --agents-snippet / --yes / TTY, never touches AGENTS.md or CLAUDE.md (non-interactive default: off)', async () => {
