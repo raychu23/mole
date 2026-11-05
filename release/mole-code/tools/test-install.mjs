@@ -165,7 +165,12 @@ await step('mole steer query', () => {
 
 // 9. mole-mcp: JSON-RPC initialize + tools/list over stdio, then tools/call for the 5 agentstate/coverage tools
 await step('mole-mcp initialize + tools/list + agentstate/coverage tools/call', async () => {
-  const p = spawn(binMcp, [], { cwd: fixture, stdio: ['pipe', 'pipe', 'pipe'] });
+  // Hermetic: the agentstate/coverage tools scan ~/.claude, ~/.codex, ~/.hermes (agentstate/src/sources.ts
+  // homedir()). On a machine with a large agent history that scan made this step time out at random tools
+  // (seen 11-04 on main and branches). Point HOME at an empty temp dir so the check tests the package, not
+  // this machine's history.
+  const fakeHome = mkdtempSync(join(tmpdir(), 'mole-code-home-'));
+  const p = spawn(binMcp, [], { cwd: fixture, stdio: ['pipe', 'pipe', 'pipe'], env: { ...process.env, HOME: fakeHome, USERPROFILE: fakeHome } });
   let buf = '';
   let errBuf = '';
   p.stdout.on('data', (d) => (buf += d.toString()));
