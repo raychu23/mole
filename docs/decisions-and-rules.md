@@ -71,6 +71,11 @@ Try the whole loop without touching your own repo: `npx mole-code demo`.
   mole scip stamp                         # writes index.scip.manifest.json next to it
   mole scip stamp --index path/to/other.scip   # names a different index (default: root/index.scip)
   ```
+  Line endings count as content: a repo checked out with `core.autocrlf=true` on Windows hashes differently from
+  the LF checkout that was stamped, so stamp in the same checkout that runs `mole rules` (e.g. index + stamp in CI
+  after checkout), or keep Python sources LF via `.gitattributes` (`*.py text eol=lf`).
+  Relative imports are resolved from the import statement's own text with Python's line-joining rules (brackets
+  and backslashes inside comments and strings are ignored), so multi-line `from . import (\n a,\n)` works.
   `mole rules` then compares every CURRENT source file of the index's own language(s) (by extension; walked with
   `git ls-files --cached --others --exclude-standard` when the repo is a git repo, so `.gitignore` is respected
   and a huge ignored directory like `.venv/` costs nothing — otherwise a plain walk skipping `node_modules`,

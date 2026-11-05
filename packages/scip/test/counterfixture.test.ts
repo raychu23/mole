@@ -46,6 +46,9 @@ const GROUND_TRUTH_IMPORTS = [
   // from .. import (leaf,\n other) -- two names in one parenthesized two-dot relative import, each on its own line
   { file: 'src/pkg/sub/case_multiline_dotdot.py', line: 1, target: 'src/pkg/leaf.py', isPath: true },
   { file: 'src/pkg/sub/case_multiline_dotdot.py', line: 2, target: 'src/pkg/other.py', isPath: true },
+  // round-3 review HIGH-1: unbalanced brackets inside a comment, docstring and string must not shift statement starts
+  { file: 'src/pkg/sub/case_comment_paren.py', line: 2, target: 'src/pkg/sub/decoy.py', isPath: true }, // from . import decoy  # (
+  { file: 'src/pkg/sub/case_comment_paren.py', line: 4, target: 'src/pkg/leaf.py', isPath: true }, // from .. import leaf (NOT sub/leaf.py)
 ] as const;
 
 const GROUND_TRUTH_CALLS = [
@@ -63,6 +66,7 @@ const GROUND_TRUTH_CALLS = [
   { file: 'src/pkg/case_backslash_continuation.py', line: 4, callee: 'src.pkg.leaf.helper' },
   { file: 'src/pkg/sub/case_multiline_dotdot.py', line: 4, callee: 'src.pkg.leaf.helper' },
   { file: 'src/pkg/sub/case_multiline_dotdot.py', line: 5, callee: 'src.pkg.other.other_helper' },
+  { file: 'src/pkg/sub/case_comment_paren.py', line: 8, callee: 'src.pkg.leaf.helper' },
 ] as const;
 
 describe('scipSites on the counter-fixture (real scip-python 0.6.8 index)', () => {

@@ -128,24 +128,47 @@ const RELATIVE_IMPORT = /^\s*from\s+(\.+)([\w][\w.]*)?\s+import\b/;
 // does), and match RELATIVE_IMPORT against THAT line's text, not the occurrence's own line.
 
 /** For every line index, the index of the line that starts its logical (post-continuation) statement -- itself,
- * unless the line is a continuation of an earlier one via an unclosed `(`/`[`/`{` or a trailing `\`. Naive
- * bracket/backslash counting (no string/comment awareness), which is all `from ... import (...)` needs. */
-function statementStarts(lines: string[]): number[] {
-  const depthAtStart: number[] = new Array(lines.length).fill(0);
+ * unless the line continues an earlier one. Follows Python's own line-joining rules (Python Language Reference,
+ * "Lexical analysis" 2.1.5 explicit / 2.1.6 implicit line joining): a line continues the previous statement when
+ * it starts inside an open `(`/`[`/`{`, inside a triple-quoted string, or after a line ending in `\` outside a
+ * string or comment. Brackets inside `#` comments and string literals do not count (review round-3 HIGH-1: a
+ * stray `(` in a comment or docstring used to shift every later statement start and mis-resolve imports). */
+export function statementStarts(lines: string[]): number[] {
+  const continues: boolean[] = new Array(lines.length).fill(false);
   let depth = 0;
+  let triple: string | undefined; // the open triple-quote delimiter, carried across lines
+  let backslash = false;
   for (let i = 0; i < lines.length; i++) {
-    depthAtStart[i] = depth;
-    for (const ch of lines[i]!) {
+    continues[i] = depth > 0 || triple !== undefined || backslash;
+    backslash = false;
+    const line = lines[i]!;
+    let k = 0;
+    while (k < line.length) {
+      if (triple !== undefined) {
+        const close = line.indexOf(triple, k);
+        if (close < 0) { k = line.length; break; }
+        // skip an escaped closing quote: count preceding backslashes
+        let b = close - 1, n = 0;
+        while (b >= k && line[b] === '\\') { n++; b--; }
+        if (n % 2 === 1) { k = close + 1; continue; }
+        k = close + 3; triple = undefined; continue;
+      }
+      const ch = line[k]!;
+      if (ch === '#') break; // comment to end of line
+      if (ch === '"' || ch === "'") {
+        if (line.startsWith(ch.repeat(3), k)) { triple = ch.repeat(3); k += 3; continue; }
+        k++; // single-line string: skip to the matching unescaped quote (or end of line)
+        while (k < line.length && line[k] !== ch) k += line[k] === '\\' ? 2 : 1;
+        k++; continue;
+      }
       if (ch === '(' || ch === '[' || ch === '{') depth++;
       else if ((ch === ')' || ch === ']' || ch === '}') && depth > 0) depth--;
+      else if (ch === '\\' && k === line.replace(/\s+$/, '').length - 1) backslash = true;
+      k++;
     }
   }
   const starts: number[] = new Array(lines.length);
-  for (let i = 0; i < lines.length; i++) {
-    let j = i;
-    while (j > 0 && (depthAtStart[j]! > 0 || /\\\s*$/.test(lines[j - 1]!))) j--;
-    starts[i] = j;
-  }
+  for (let i = 0; i < lines.length; i++) starts[i] = continues[i] && i > 0 ? starts[i - 1]! : i;
   return starts;
 }
 

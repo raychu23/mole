@@ -1,5 +1,5 @@
 {
-  "indexSha256": "689aa83b833fb971b105cd653e317d7d6f85620e0f03a27bf3ee1eed79a1b1a8",
+  "indexSha256": "4c571ce7fc6f393889bed801dd6de46a9fb61eb8505b238e7a30b4618f23aa48",
   "tool": "scip-python 0.6.8",
   "files": {
     "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -19,7 +19,10 @@
     "src/pkg/leaf.py": "f9229309c25ba3f46a1fc1e60db72861751cdef6ddaf39562df78b10a3c31539",
     "src/pkg/other.py": "ca3616760fa614feb793d259068f2715908ff76d626c334b787a7020e88d775e",
     "src/pkg/sub/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/pkg/sub/case_comment_paren.py": "fca71f7c0db661f4e9a19740848555e1a5431989c0183c360c8b3e372ade1919",
     "src/pkg/sub/case_multiline_dotdot.py": "7483711defb12c89dd400327d3043f8ad156282dba70742aeadcc4ed8c4de61a",
+    "src/pkg/sub/decoy.py": "552d72cf85d499bbc5a216186b41839b6dfb3725152a0d0c115184594c811f31",
+    "src/pkg/sub/leaf.py": "caa4f07d3ceeb089310ebe05b2d0b9958f7904080e9f3bab5e4e316bd2046b71",
     "src/pkg2/__init__.py": "a128e022ecc95e343bddbc03253ce3158b04f076854f9de3d9326661bb4193d8"
   }
 }
