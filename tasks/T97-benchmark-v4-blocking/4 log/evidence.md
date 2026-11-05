@@ -97,3 +97,114 @@ result "Mole works" or "Mole doesn't work" either way.
   third arm at an extended budget.
 - Whether a future Docker-available or Linux-CI run should also attempt the real `agent=claude_code`
   PreToolUse path this pilot could not exercise.
+
+---
+
+## Round-1 review FIX (deleg_b40d00a6, task-1, 2026-11-04 ~22:02): applied, re-smoked as v4.1
+
+Verdict was **FIX**, not PASS -- returned before any scored run existed, so this is a pre-run
+re-registration (protocol-v4.1.json), not a deviation seen after data. All 5 required changes below are
+done and verified; the full pilot is still NOT launched (same as v4).
+
+### 1. Scorer: score.mjs now matches dcbench_score.mjs's intent-to-add fix
+`context/product-plan/systems/metrics-proof/productivity/scripts/score.mjs` now runs
+`git add --intent-to-add --all` before diffing and passes the full diff (including new-file content) to
+`scoreTask`, exactly like `evals/inspect/dcbench_eval/dcbench_score.mjs` already did. Proved with a REAL
+decision, not a fake scorer: `evals/inspect/dcbench_eval/tests/test_v4_score_intent_to_add.py` writes a
+brand-new, never-`git add`-ed file importing `CalendarRange` into a disposable worktree of the pinned
+dcbench repo and scores it against TASK-001's real `D-001-date-range-picker` gotcha.
+- Pre-fix (verified by running the ORIGINAL score.mjs against the same fixture):
+  `failCheckMatched: False, diffFiles: []` -- the violation was invisible.
+- Post-fix: `failCheckMatched: True, passed: False`, `src/app/analytics/export-panel.tsx` present in
+  `diffFiles` -- the violation is caught. A second test proves the flip side (a correct new file now
+  earns its points instead of losing them). `2 passed` (`python3 -m pytest
+  evals/inspect/dcbench_eval/tests/test_v4_score_intent_to_add.py -v`).
+- v1 dependency check: nothing re-invokes `score.mjs` against T63's historical data --
+  `evals/inspect/dcbench_eval/reanalyze.py` reads already-scored `raw/runs.jsonl` records read-only and
+  never re-scores a diff, and T63's own `run_dcbench.py` no longer exists in this `scripts/` dir
+  (superseded by `run_dcbench_v4.py`). No caller depends on the old (buggy) un-staged behaviour; it is not
+  kept as a separate code path.
+
+### 2. Mole pinned for the whole run (not the live repo)
+Built `release/mole-code` from current main (`node tools/build.mjs && npm pack`) at commit
+`e4eafe21e0b5f7e83fd91b85124ece2c0dbdac3f` (HEAD confirmed unchanged before and after the build), installed
+the resulting tarball (sha256 `f0bbc96596d5102bfb9ebcf21cf6c0129d4d9164b53f6b9bb2fc20a92f2f4ea1`) into
+`/Users/a1/.hermes/cache/scratch/dcbench-v4/mole-pinned` (`SOURCE.json` records both). `run_dcbench_v4.py`'s
+`MOLE_BIN`/`PLUGIN` constants now point at `mole-pinned/dist/cli.js` / `mole-pinned/scripts` instead of the
+live repo, and refuse to start if that install is missing or incomplete. D102 marker verified twice:
+`grep -c "export function crispViolationsForOverlay" mole-pinned/scripts/lib.mjs` → `1`, and
+`run_dcbench_v4.py` asserts this at import time (`sys.exit` if missing). Every run record in
+`raw/runs-v4.1.jsonl`/`smoke-v4.1.jsonl` carries `mole_pinned.{source_commit,tarball_sha256,tarball}` --
+confirmed present in both smoke run records (see below).
+
+### 3. protocol-v4.1.json written (v4 untouched)
+`evals/inspect/dcbench_eval/experiments/protocol-v4.1.json`: primary outcome on TASK-001 (D-001) and
+TASK-013 (D-005) -- (a) violation-at-end proportion per arm (Fisher's exact + Newcombe CI), (b) Stop-block
+fire rate + fix-after-block rate in M-block (descriptive, Newcombe CI), (c) dcbench points R vs M-block
+(paired permutation test + bootstrap CI); secondary: all 8 tasks, descriptive only. Budget: 2 arms x 2
+crisp tasks x 8 epochs (32) + 2 arms x 6 other tasks x 1 epoch (12) = **44 runs**, interleaved by arm, crisp
+tasks first (`run_dcbench_v4.py`'s new `full_v41_plan()` / `--full-v41` flag implements this exact
+ordering). `sample_size_arithmetic` states the MDE honestly: ~45.9 points on the primary (points) outcome
+at n=8/arm/task (an improvement over v4's ~75.2 from spending the same total budget on fewer tasks, still
+well short of protocol-v3's own powered n=21/arm/task), and states plainly that the violation-proportion
+Fisher's-exact MDE at this n is low except for near-extreme swings -- NOT asserted as a clean number.
+`protocol-v3.json` and `protocol-v4.json` are untouched.
+
+### 4. Freeze: default `freeze.py --check` invocation passes
+`cd evals/inspect/dcbench_eval && python3 freeze.py experiments/protocol-v4.1.json` (no `--frozen` flag) →
+writes `experiments/protocol-v4.1.sha256` at the DEFAULT path `freeze.py --check` expects when called with
+no `--frozen` flag. `python3 freeze.py --check experiments/protocol-v4.1.json` → `OK: ... matches its
+freeze ...`, exit 0, **default invocation, no flag needed** (v4's own `FROZEN-v4.sha256` only passed with an
+explicit `--frozen` override -- this is the exact gap the review named). The runner, scorer and pinned
+Mole tarball are hashed in a companion file,
+`experiments/protocol-v4.1.tooling-sha256.txt` (freeze.py's `ExperimentSpec` schema only covers the JSON
+spec itself, so these are recorded alongside in `sha256sum` format rather than forced into that schema).
+`registry.json` updated with the v4.1 entry.
+
+### 5. Smoke: one M run + one R run on TASK-013 through the updated runner
+`python3 run_dcbench_v4.py --tasks TASK-013 --arms R,M-block --out "4 log/raw/smoke-v4.1.jsonl"`, real
+`hermes -z` calls, claude-sonnet-5, 2026-11-05 ~04:05-04:21 (results below, both from
+`4 log/raw/smoke-v4.1.jsonl`):
+
+```notes
+run                      arm      wall_s   earned/max   mergeReady   cost        api_calls
+e1-TASK-013-R            R        405.5    5/5  100%    true         $1.39       44
+e1-TASK-013-M-block      M-block  251.9    5/5  100%    true         $0.61       21
+```
+- Both runs `status: ok`, `mergeReady: true` -- a clean run on both arms this time (the D-005 gotcha
+  passed; no violation was introduced, so M-block's Stop hook correctly stayed silent, `block: false`).
+- **Scorer sees new files** (requirement 5's "confirm the scorer sees new files"): M-block's
+  `score.diffFiles` includes `.mole/decisions/d-001.md` through `d-015.md` -- these are UNTRACKED files
+  copied into the worktree by `arm_prompt()` for the M arm, previously invisible to plain `git diff` and
+  listed only under `untracked`; with the intent-to-add fix they now show up in `diffFiles` (and
+  `untracked` is correctly empty), proving the fix is live in the actual runner path, not just the unit test.
+- **Hook resolves the pinned Mole** (requirement 5's second half): both run records' `mole_pinned` field
+  matches `mole-pinned/SOURCE.json` exactly (`source_commit: e4eafe21e0b5f7e83fd91b85124ece2c0dbdac3f`,
+  `tarball_sha256: f0bbc96596d5102bfb9ebcf21cf6c0129d4d9164b53f6b9bb2fc20a92f2f4ea1`). Beyond the recorded
+  field, the runner's `stop_check()` literally invokes `node .../mole-pinned/scripts/stop.mjs` (there is no
+  live-repo fallback path in the code), so by construction the hook that ran IS the pinned one. As direct,
+  separate proof the pinned hook's BLOCK path also fires correctly (not just its silent/clean path, which
+  the smoke run exercised): a deterministic mechanism check built a throwaway worktree with the same
+  M-block `.mole/decisions`, wrote a new file importing `CalendarRange` (D-001's trap), and ran
+  `mole-pinned/scripts/stop.mjs` directly (`MOLE_BIN=mole-pinned/dist/cli.js`) -- output (verbatim,
+  `4 log/raw/mechanism-check-pinned-v4.1.json`): `"decision":"block"`, reason citing
+  `rule mole-D-001-1 at .mole/decisions/d-001.md:7`. **The pinned Mole's D102 Stop:block mechanism fires
+  correctly**, confirmed from the tarball install, not the live repo.
+
+### What changed in run_dcbench_v4.py
+- `MOLE_BIN`/`PLUGIN` resolve from `scratch/dcbench-v4/mole-pinned` (new), not `REPO/packages/daemon` /
+  `REPO/plugins/claude-code/scripts` (old); the script exits with a clear error if the pin is missing or
+  predates D102.
+- Every run record now carries `mole_pinned.{source_commit,tarball_sha256,tarball}`.
+- New `CRISP_TASKS`/`OTHER_TASKS`/`full_v41_plan()`/`--full-v41` implement the v4.1 budget and ordering
+  (crisp tasks x8 epochs first, other tasks x1 epoch, interleaved by arm) without removing the old
+  `--epochs`/`--tasks`/`--arms` ad-hoc interface (used for this smoke run and any future targeted rerun).
+
+### NOT RUN (unchanged from v4, still true for v4.1)
+- The full 44-run pilot: NOT LAUNCHED. Exact command in `launch-command.md`.
+- `agent=claude_code` / real-time PreToolUse deny: NOT RUN (Docker down; see v4's own "Disclosed
+  limitation" above, unchanged).
+- `npm run check`: NOT RUN in main (targeted tests only, per the brief); `release/mole-code`'s build itself
+  ran clean (`node tools/build.mjs` exit 0, `npm pack` exit 0) and is evidence the build step works, not a
+  substitute for the TS package's own test suite.
+

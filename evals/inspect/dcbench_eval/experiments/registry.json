@@ -33,7 +33,16 @@
       "status": "pre-registered",
       "spec": "evals/inspect/dcbench_eval/experiments/protocol-v4.json",
       "frozen": "evals/inspect/dcbench_eval/experiments/FROZEN-v4.sha256",
-      "run": "SMOKE ONLY (1 real run per arm, TASK-001, 2026-11-04 -- see tasks/T97-benchmark-v4-blocking/4 log/evidence.md). Full 48-run pilot (R, M-block x 8 tasks x 3 epochs, ~8h) NOT RUN: needs Raymond's go; launch command in tasks/T97-benchmark-v4-blocking/4 log/launch-command.md. Pilot MDE at n=3/arm/task is ~75 points (honestly underpowered for a real effect; see protocol-v4.json's sample_size_arithmetic) -- this is a feasibility/smoke pilot, not a confirmatory design."
+      "run": "SMOKE ONLY (1 real run per arm, TASK-001, 2026-11-04 -- see tasks/T97-benchmark-v4-blocking/4 log/evidence.md). Full 48-run pilot (R, M-block x 8 tasks x 3 epochs, ~8h) NOT RUN. SUPERSEDED by v4.1 (round-1 review deleg_b40d00a6 task-1, 2026-11-04 returned FIX before any scored run existed): kept frozen as a historical record, not run as designed."
+    },
+    {
+      "id": "T63-productivity-v4.1",
+      "idea": "v4's pre-run FIX, applied before run 1 (not a post-hoc deviation): (1) score.mjs now stages `git add --intent-to-add --all` before diffing, matching dcbench_score.mjs, proven against the real D-001 gotcha (tests/test_v4_score_intent_to_add.py); (2) Mole is pinned for the whole run from a built-and-packed release/mole-code tarball installed under scratch/dcbench-v4/mole-pinned (source commit + tarball sha256 recorded in the spec and every run record), not the live main repo (which kept moving tonight via T96/T98); (3) TASK-001 (D-001) and TASK-013 (D-005) -- the only 2 of 8 tasks that can exercise the crisp D102 mechanism -- are now the PRIMARY outcome (violation-at-end rate, Stop-block fire rate + fix-after-block rate, dcbench points); all 8 tasks remain a descriptive-only secondary comparison.",
+      "status": "pre-registered",
+      "spec": "evals/inspect/dcbench_eval/experiments/protocol-v4.1.json",
+      "frozen": "evals/inspect/dcbench_eval/experiments/protocol-v4.1.sha256",
+      "tooling_frozen": "evals/inspect/dcbench_eval/experiments/protocol-v4.1.tooling-sha256.txt (runner + scorer + pinned Mole tarball hashes)",
+      "run": "SMOKE ONLY (1 real run per arm, TASK-013, through the updated runner -- see tasks/T97-benchmark-v4-blocking/4 log/evidence.md). Full 44-run pilot (2 crisp tasks x 8 epochs + 6 other tasks x 1 epoch, 2 arms) NOT RUN: needs Raymond's go; launch command in tasks/T97-benchmark-v4-blocking/4 log/launch-command.md. Primary-outcome MDE at n=8/arm/task on points is ~46 (honestly underpowered for a real effect; see protocol-v4.1.json's sample_size_arithmetic) -- this is a feasibility/smoke pilot, not a confirmatory design."
     }
   ]
 }

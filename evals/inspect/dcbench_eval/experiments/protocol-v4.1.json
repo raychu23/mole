@@ -1,0 +1,76 @@
+{
+  "id": "T63-productivity-v4.1",
+  "supersedes": "T63-productivity-v4 (evals/inspect/dcbench_eval/experiments/protocol-v4.json, kept frozen and NOT edited -- this is a NEW spec file, per that spec's own stop_rules)",
+  "why_v4_1": "Round-1 adversarial review (deleg_b40d00a6, task-1, 2026-11-04) returned FIX, not PASS, on protocol-v4/the v4 harness, before any scored run existed. Nothing here is a deviation from v4 after seeing data -- it is a pre-registration correction: (1) the v4 scorer (context/.../productivity/scripts/score.mjs) still ran plain `git diff` without `git add --intent-to-add --all` first, so it was blind to new-file content exactly like T63's original scorer (error-analysis-72.md finding #1) -- fixed to match evals/inspect/dcbench_eval/dcbench_score.mjs's already-fixed adapter, proven by a real-decision regression test (evals/inspect/dcbench_eval/tests/test_v4_score_intent_to_add.py, D-001/CalendarRange). (2) v4's MOLE_BIN/PLUGIN resolved from the LIVE main repo checkout, which was moving mid-review-night (T96/T98 merges touching packages/daemon and packages/server) -- v4.1 pins Mole for the whole run from a built-and-packed release/mole-code tarball (source commit + tarball sha256 recorded here and in every run record), exactly the discipline protocol-v4.json's own stop_rules already named but v4's own runner had not yet implemented. (3) v4's primary metric (weighted decision-compliance percentage across all 8 tasks) buries the ONLY mechanism this pilot can actually test (D102 Stop:block) inside 6 tasks that structurally cannot trigger it (crisp-rule-audit.md: only D-001/TASK-001 and D-005/TASK-013 have a `rules:` block) -- v4.1 makes TASK-001/TASK-013 the PRIMARY outcome and reports all 8 tasks as a separate, explicitly descriptive secondary comparison (see task_roles below), so a null or positive result on the primary cannot be diluted by 6 tasks where M-block and R are mechanically identical.",
+  "hypothesis": "Giving Claude-Code-via-hermes the team's 15 decisions via Mole's deployed D102 blocking hooks (Stop decision:block on a crisp rule violation the SESSION itself introduces) changes (a) how often a final diff still contains a crisp-rule violation, and (b) weighted dcbench gotcha points, on the two tasks that can actually exercise the crisp mechanism (TASK-001/D-001, TASK-013/D-005), versus the same 15 decisions pasted into CLAUDE.md (R).",
+  "arms": [
+    {
+      "id": "R",
+      "description": "CLAUDE.md = the 15 decision texts from benchmark/seed-data.ts, verbatim (same text as M-block; v1's fairness rule unchanged). scratch/dcbench-v4/arms/R/CLAUDE.md.",
+      "env": {},
+      "context_files": ["scratch/dcbench-v4/arms/R/CLAUDE.md"],
+      "pinned_commit": "9f507ce0a6ef61124aca90cc4e17fb80592a5e4e"
+    },
+    {
+      "id": "M-block",
+      "description": "The same 15 as .mole/decisions records (scratch/dcbench-v4/arms/M/.mole/decisions); only D-001 and D-005 carry a `rules:` block (crisp-rule-audit.md). stop.mjs replayed post-session reading the `decision:'block'`/`reason` contract (T92/D102). On a block, ONE forced resume with the hook's own reason text. KNOWN LIMITATION, disclosed not hidden: PreToolUse real-time deny is NOT exercised by this harness (hermes -z is not Claude Code; needs Docker, down per Wave G rules).",
+      "env": {"MOLE_STOP_BLOCK": "1"},
+      "context_files": ["scratch/dcbench-v4/arms/M/.mole/decisions"],
+      "pinned_commit": "9f507ce0a6ef61124aca90cc4e17fb80592a5e4e"
+    }
+  ],
+  "tasks": ["TASK-001", "TASK-003", "TASK-004", "TASK-006", "TASK-008", "TASK-009", "TASK-012", "TASK-013"],
+  "task_roles": {
+    "primary": {
+      "ids": ["TASK-001", "TASK-013"],
+      "why": "the only 2 of the 8 scored tasks whose gotcha is covered by a Mole crisp `rules:` block (D-001, D-005 -- crisp-rule-audit.md); only these tasks can actually exercise M-block's Stop:block mechanism.",
+      "outcomes": {
+        "a": "violation-at-end rate: fraction of final-diff runs that still contain the task's crisp-rule violation at scoring time (gotcha failCheckMatched==true for D-001-date-range-picker on TASK-001 / D-005's crisp gotcha on TASK-013), per arm, computed through the intent-to-add-fixed score.mjs so new-file violations are not invisible",
+        "b": "Stop-block fire rate in M-block (fraction of M-block runs where stop.block==true) and fix-after-block rate (of the runs that were blocked, the fraction whose post-resume rescoring no longer contains the violation that triggered the block)",
+        "c": "dcbench weighted gotcha points on TASK-001/TASK-013 only, R vs M-block"
+      }
+    },
+    "secondary": {
+      "ids": ["TASK-001", "TASK-003", "TASK-004", "TASK-006", "TASK-008", "TASK-009", "TASK-012", "TASK-013"],
+      "why": "all 8 scored tasks, R vs M-block, DESCRIPTIVE ONLY -- 6 of the 8 have no crisp rule to block on, so any difference there reflects Mole's advisory (non-blocking) decision surfacing, not D102.",
+      "outcomes": ["weighted decision-compliance percentage per task per arm (dcbench scorer.ts, unchanged, scored through the fixed v4.1 adapter)"]
+    }
+  },
+  "mole_pin": {
+    "note": "Requirement 2 of the round-1 review: Mole is pinned for the WHOLE run, built from current main and installed outside the live repo, so mid-run merges to packages/daemon / plugins/claude-code (T96, T98) cannot silently change the M arm's hooks or CLI mid-run.",
+    "built_from": "release/mole-code (node tools/build.mjs && npm pack), main repo",
+    "source_commit": "e4eafe21e0b5f7e83fd91b85124ece2c0dbdac3f",
+    "tarball": "mole-code-0.1.0.tgz",
+    "tarball_sha256": "f0bbc96596d5102bfb9ebcf21cf6c0129d4d9164b53f6b9bb2fc20a92f2f4ea1",
+    "installed_at": "/Users/a1/.hermes/cache/scratch/dcbench-v4/mole-pinned",
+    "resolved_by": "run_dcbench_v4.py's MOLE_BIN / PLUGIN constants (both under mole-pinned/, never the live repo); the M arm's hooks (stop.mjs, user-prompt-submit.mjs, lib.mjs, ...) AND the CLI (dist/cli.js) both come from this one tarball, since release/mole-code's own build copies plugins/claude-code/scripts into the package verbatim",
+    "d102_marker_verified": "mole-pinned/scripts/lib.mjs exports crispViolationsForOverlay (grep-verified at pin time; run_dcbench_v4.py also asserts this at import time and refuses to run otherwise)",
+    "recorded_in_every_run": "each raw/runs-v4.jsonl record carries mole_pinned.{source_commit,tarball_sha256,tarball}"
+  },
+  "primary_metric": "On TASK-001 + TASK-013 only: (a) violation-at-end proportion per arm, (b) Stop-block fire rate and fix-after-block rate in M-block, (c) weighted gotcha points per arm, R vs M-block",
+  "analysis_plan": "PRIMARY (TASK-001+TASK-013 only): (a) violation-at-end proportion, R vs M-block -- Fisher's exact test (scipy.stats.fisher_exact) on the 2x2 (arm x violation-present-at-end) table, PLUS a Newcombe (Wilson score, continuity-corrected) 95% CI on the arm difference (evals/inspect/dcbench_eval/stats.py's newcombe_diff, reused unmodified) -- chosen over a normal-approximation CI because cell counts at this n can be small/zero. (b) Stop-block fire rate: descriptive rate (blocks / M-block runs on TASK-001+TASK-013) with a Newcombe one-sample CI; fix-after-block rate reported the same way, with the caveat that at this n the denominator may be 0-3 runs and the CI will say so honestly -- NOT a between-arm test (R structurally cannot block). (c) dcbench points on TASK-001+TASK-013: paired permutation test (scipy.stats.permutation_test, permutation_type='samples', evals/inspect/dcbench_eval/stats.py's paired_permutation_test) on the per-task mean percentage, R vs M-block; bootstrap 95% CI per arm (scipy.stats.bootstrap). Holm correction (stats.py's holm_correction) across (a) and (c) (2 tests on overlapping data); (b) is a descriptive rate, not corrected for multiplicity. SECONDARY (all 8 tasks): same paired permutation test + bootstrap CI as protocol-v4.json's analysis_plan (unchanged method), reported explicitly as descriptive / exploratory -- no claim of significance travels from the secondary table to the headline result.",
+  "sample_size": {
+    "runs_per_arm_per_task": 8,
+    "power": 0.8,
+    "alpha": 0.05,
+    "mde": 45.9
+  },
+  "sample_size_detail": {
+    "crisp_tasks_runs_per_arm_per_task": 8,
+    "other_tasks_runs_per_arm_per_task": 1,
+    "total_runs": 44,
+    "mde_points_crisp_tasks": "~45.9 points (primary outcome c, TASK-001+TASK-013 only; see sample_size_arithmetic)",
+    "mde_violation_proportion": "see sample_size_arithmetic -- Fisher's exact at n=8/arm/task has limited power for anything but a large (>=~50 percentage point) swing in violation-at-end rate"
+  },
+  "sample_size_arithmetic": "Budget, NOT a powered confirmatory design -- a PILOT, same honesty discipline as protocol-v4.json. Wave G's shared time budget and v1's own measured ~10 min/run (results-mj.md) size this directly: 2 arms x 2 crisp tasks x 8 epochs = 32 runs, + 2 arms x 6 other tasks x 1 epoch = 12 runs = 44 runs total x ~10 min/run = ~7.3 hours, inside the brief's ~8h ceiling. Points MDE (primary outcome c, TASK-001+TASK-013 only): TTestPower().solve_power(nobs=8, alpha=0.05, power=0.8) -> effect_size, then mde = effect_size * sd(R-M), reusing T63's own measured per-task-diff sd=23.05 (protocol-v3/v4's sample_size_arithmetic, computed from T63's real 72 runs -- no task-specific sd exists yet for TASK-001/013 alone at this n, so this is an approximation, flagged as such, not a fresh per-task recompute): at nobs=8 (vs v4's nobs=3) effect_size for 80%/0.05 power drops to roughly ~1.99, giving mde ~= 1.99 * 23.05 ~= 45.9 points -- a real improvement over v4's 75.2 from spending the SAME total run budget on 2 tasks x 8 epochs instead of 8 tasks x 3 epochs, but still well above protocol-v3's own n=21/arm/task MDE=15 benchmark; this pilot is explicitly NOT powered to confirm or rule out a realistic-sized D102 effect on points. Violation-proportion MDE (primary outcome a): with n=8 runs/arm/task, Fisher's exact power at alpha=0.05 for anything short of a near-extreme proportion swing (e.g. 0.9 vs 0.1) is low -- stated honestly as a range, not asserted as a single clean number the way the normal-approximation points MDE above can be; a future run computing exact power at the ACTUAL observed per-arm proportions (once pilot data exists) would narrow this. Stop-block fire rate and fix-after-block rate (primary outcome b) are reported descriptively with CIs, not power-analyzed in advance (there is no prior estimate of the true block rate to power against).",
+  "stop_rules": [
+    "any edit to scorer.ts, tasks.ts, the R CLAUDE.md or the M-block records after run 1: a NEW spec version (v4.2), all arms rerun",
+    "any edit to score.mjs (the scorer adapter) after run 1: a NEW spec version, all arms rerun -- this includes the intent-to-add fix itself, which is why it ships BEFORE run 1, not patched in mid-run",
+    "mixing models mid-experiment",
+    "a merge to plugins/claude-code/scripts/* or packages/daemon mid-run: CANNOT silently change this run -- the M arm's hooks and CLI resolve from the pinned mole-pinned/ tarball (mole_pin above), not the live repo; if mole-pinned/ itself is ever rebuilt mid-run, that is treated as this stop rule firing exactly like a live-repo merge would have",
+    "quoting this pilot's R vs M-block numbers as a significance result beyond their stated MDE (see sample_size_arithmetic): a null or positive primary result here is 'not powered to detect a realistic effect', never 'Mole works' or 'Mole doesn't work'",
+    "treating the secondary (all-8-task) comparison as evidence about D102 specifically -- 6 of its 8 tasks have no crisp rule and cannot exercise the blocking mechanism",
+    "treating the Stop-block replay as proof that PreToolUse deny also works -- it is a SEPARATE, real-time mechanism this harness does not exercise",
+    "editing protocol-v3.json or protocol-v4.json -- both stay frozen and NOT RUN/superseded exactly as their own contracts require; v4.1 is a new spec file, not an edit to either"
+  ]
+}
