@@ -247,13 +247,19 @@ textarea{width:100%;min-height:40px}
   /** `mole rules` violations -> the Problems panel, refreshed alongside the rest of the view. */
   private async updateDiagnostics(): Promise<void> {
     try {
-      const r = (await this.runners.rules()) as { violations?: Array<{ file: string; line: number; rule: string; target: string; decision: { id?: string; why?: string } }> };
+      const r = (await this.runners.rules()) as { violations?: Array<{ file: string; line: number; rule: string; target: string; decision: { id?: string; why?: string; file?: string; line?: number } }> };
       const byFile = new Map<string, vscode.Diagnostic[]>();
       for (const v of r.violations ?? []) {
         const range = new vscode.Range(Math.max(0, v.line - 1), 0, Math.max(0, v.line - 1), 200);
         const msg = `mole rules: ${v.rule} forbids this (decision ${v.decision?.id ?? '?'}${v.decision?.why ? `: ${v.decision.why}` : ''}) — target ${v.target}`;
         const diag = new vscode.Diagnostic(range, msg, vscode.DiagnosticSeverity.Warning);
         diag.source = 'mole';
+        // T105: a click-through from the Problems panel to the decision record that forbids this (the
+        // c) requirement, reusing data `mole rules` already returns -- no new backend logic.
+        if (v.decision?.file && v.decision.line) {
+          const decLine = Math.max(0, v.decision.line - 1);
+          diag.relatedInformation = [new vscode.DiagnosticRelatedInformation(new vscode.Location(vscode.Uri.file(join(this.root, v.decision.file)), new vscode.Range(decLine, 0, decLine, 0)), `decision ${v.decision.id ?? '?'} record`)];
+        }
         const list = byFile.get(v.file) ?? [];
         list.push(diag);
         byFile.set(v.file, list);

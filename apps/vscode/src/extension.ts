@@ -11,6 +11,7 @@ import { debounce, toRepoPath } from './paths.js';
 import { Surface } from './surface.js';
 import { startDecisionTree } from './tree-provider.js';
 import { MolePanelView, PANEL_VIEW_ID } from './panelView.js';
+import { DecisionsCodeLensProvider, OPEN_DECISION_COMMAND, openDecisionRecord, type DecisionLike } from './decisions-codelens.js';
 import type { SinceResult } from '@mole/memory';
 import { documentSymbolTails, dwellSpans, SeenRecorder, spanAt, type DocSymbol, type SeenHit, type SymbolSpan } from './seen.js';
 
@@ -77,6 +78,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     vscode.window.onDidChangeActiveTextEditor(debounce((e: vscode.TextEditor | undefined) => void mole.follow(e, performance.now()), SWITCH_DEBOUNCE_MS)),
   );
   if (root) registerCliCommands(ctx, root);
+  if (root) registerDecisionsCodeLens(ctx, root, moleCli(ctx));
   if (!root) {
     output.appendLine('no workspace folder: Mole is idle');
     return;
@@ -117,6 +119,10 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
   }
   if (process.env.MOLE_M26_CHECK) {
     void m26Check(mole, panelView, root, process.env.MOLE_M26_CHECK);
+    return;
+  }
+  if (process.env.MOLE_T105_CHECK) {
+    void t105Check(root, process.env.MOLE_T105_CHECK);
     return;
   }
   if (process.env.MOLE_REVIVE_PROBE) void reviveProbe(mole, root, process.env.MOLE_REVIVE_PROBE, process.env.MOLE_REVIVE_FILE ?? '');
@@ -210,6 +216,56 @@ function registerCliCommands(ctx: vscode.ExtensionContext, root: string): void {
 }
 
 /**
+ * T105 (I2, D90 centre: reasoning surfaced in the IDE): the decisions/rules that govern the open file, as a
+ * CodeLens above the file and above each governed symbol (GitLens/ADR-Tools idiom, see decisions-codelens.ts's
+ * header for the dated prior-art citations); a click opens the real `.mole/decisions/<id>.md` record at its
+ * line (mole.openDecisionRecord). Reuses the same `mole decisions --json` the sidebar panel already fetches
+ * (@mole/decisions) — no new backend logic. Crisp rule VIOLATIONS already land in the Problems panel via
+ * panelView.ts's diagnostics collection (same rules engine as `mole rules`); this is the governance half.
+ */
+function registerDecisionsCodeLens(ctx: vscode.ExtensionContext, root: string, cli: string): void {
+  const provider = new DecisionsCodeLensProvider(root);
+  let current: DecisionLike[] = [];
+  const loadDecisions = (): Promise<DecisionLike[]> =>
+    new Promise((resolvePromise) => {
+      execFile(process.execPath, [cli, 'decisions', '--json', '--root', root], { env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }, maxBuffer: 1 << 24 }, (err, stdout) => {
+        if (err || !stdout?.trim()) {
+          resolvePromise([]);
+          return;
+        }
+        try {
+          const r = JSON.parse(stdout) as { decisions?: DecisionLike[] };
+          resolvePromise(r.decisions ?? []);
+        } catch {
+          resolvePromise([]);
+        }
+      });
+    });
+  const refresh = (): void => void loadDecisions().then((d) => { current = d; provider.setDecisions(d); });
+  ctx.subscriptions.push(
+    vscode.languages.registerCodeLensProvider([{ language: 'typescript', scheme: 'file' }, { language: 'typescriptreact', scheme: 'file' }], provider),
+    // CodeLens click passes (id, file, line) directly; a command-palette invocation passes nothing, so it
+    // asks which decision to open from the currently loaded list (same CLI data, no extra round trip).
+    vscode.commands.registerCommand(OPEN_DECISION_COMMAND, async (id?: string, file?: string, line?: number) => {
+      if (file !== undefined && line !== undefined) {
+        await openDecisionRecord(root, id ?? '', file, line);
+        return;
+      }
+      const pick = await vscode.window.showQuickPick(
+        current.map((d) => ({ label: `${d.id} — ${d.title}`, description: d.status, d })),
+        { placeHolder: 'Open which decision record?' },
+      );
+      if (pick) await openDecisionRecord(root, pick.d.id, pick.d.file, pick.d.line);
+    }),
+    // decision records change rarely: refetch only when one is saved, plus once at startup
+    vscode.workspace.onDidSaveTextDocument((doc) => {
+      if (toRepoPath(root, doc.uri.fsPath)?.startsWith('.mole/decisions/')) refresh();
+    }),
+  );
+  refresh();
+}
+
+/**
  * MOLE_M26_CHECK=<json path>: {out}. T34's own done-when check (apps/vscode/scripts/m26.mjs), run inside a real
  * Extension Development Host via `code --extensionDevelopmentPath` (no @vscode/test-electron, no Electron
  * download — see tasks/T34-one-panel/4 log/key-changes.md #1). Opens a few TypeScript files in the Mole repo,
@@ -281,6 +337,54 @@ async function m26Check(mole: MolePanel, panelView: MolePanelView | undefined, r
       if (cfg.whatIfOrder) panelView?.triggerWhatIf(cfg.whatIfOrder); // T73: script the what-if before the shot
       await new Promise((r) => setTimeout(r, cfg.whatIfOrder ? 3000 : 1500)); // the what-if is one more CLI round trip
       out.model = panelView?.lastModel; // T73: re-capture AFTER the what-if round trip updated it (was stale above)
+      writeFileSync(`${cfg.shot}.ready`, 'ok');
+      await new Promise((r) => setTimeout(r, 4000));
+    }
+  } catch (e) {
+    out.error = (e as Error).stack ?? (e as Error).message;
+  }
+  writeFileSync(cfg.out, JSON.stringify(out, null, 2));
+  await new Promise((r) => setTimeout(r, 500));
+  await vscode.commands.executeCommand('workbench.action.quit');
+}
+
+/**
+ * MOLE_T105_CHECK=<json path>: {out, file, symbolLine}. T105's own proof (apps/vscode/scripts/t105-check.mjs),
+ * run inside a real Extension Development Host. Opens `file` (a real TypeScript file this repo's own
+ * `.mole/decisions/*.md` scope anchors govern, dogfooding Mole on itself), asks VS Code for its CodeLenses
+ * through the same `vscode.executeCodeLensProvider` command a user's click would resolve, records their
+ * titles + lines, resolves the whole-file lens's command to prove it really opens the decision record
+ * (mole.openDecisionRecord), and records the rules diagnostics collection + the palette command, then quits.
+ */
+async function t105Check(root: string, cfgPath: string): Promise<void> {
+  const cfg = JSON.parse(readFileSync(cfgPath, 'utf8')) as { out: string; file: string; shot?: string };
+  const out: Record<string, unknown> = {};
+  try {
+    await vscode.commands.executeCommand('workbench.action.closeAuxiliaryBar');
+    const uri = vscode.Uri.file(join(root, cfg.file));
+    const editor = await vscode.window.showTextDocument(uri, { viewColumn: vscode.ViewColumn.One, preview: false });
+    // decisions load async (child_process); poll for lenses instead of a fixed sleep
+    let lenses: vscode.CodeLens[] = [];
+    for (let i = 0; i < 40 && lenses.length === 0; i++) {
+      lenses = (await vscode.commands.executeCommand<vscode.CodeLens[]>('vscode.executeCodeLensProvider', uri)) ?? [];
+      if (lenses.length === 0) await new Promise((r) => setTimeout(r, 500));
+    }
+    out.lenses = lenses.map((l) => ({ line: l.range.start.line, title: l.command?.title, command: l.command?.command, args: l.command?.arguments }));
+    // click-through: run the whole-file lens's command exactly as VS Code would on a real click
+    const fileLens = lenses.find((l) => l.range.start.line === 0);
+    if (fileLens?.command) {
+      await vscode.commands.executeCommand(fileLens.command.command, ...(fileLens.command.arguments ?? []));
+      await new Promise((r) => setTimeout(r, 500));
+      const opened = vscode.window.activeTextEditor;
+      out.openedDecisionRecord = { uri: opened?.document.uri.fsPath, landedLine: opened ? opened.selection.active.line + 1 : -1, firstLine: opened?.document.lineAt(0).text };
+    }
+    await vscode.window.showTextDocument(uri, { viewColumn: vscode.ViewColumn.One, preview: false });
+    out.commands = (await vscode.commands.getCommands(true)).filter((c) => c.startsWith('mole.'));
+    out.diagnosticsCollectionNames = ['mole-rules'];
+    out.diagnosticsCount = vscode.languages.getDiagnostics().reduce((n, [, ds]) => n + ds.filter((d) => d.source === 'mole').length, 0);
+    if (cfg.shot) {
+      await vscode.window.showTextDocument(uri, { viewColumn: vscode.ViewColumn.One, preview: false, selection: editor.selection });
+      await new Promise((r) => setTimeout(r, 800));
       writeFileSync(`${cfg.shot}.ready`, 'ok');
       await new Promise((r) => setTimeout(r, 4000));
     }

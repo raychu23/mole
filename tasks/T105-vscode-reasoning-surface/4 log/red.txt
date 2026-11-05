@@ -1,0 +1,27 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T105-vscode-reasoning-surface
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/vscode/test/decisions-for-file.test.ts [ apps/vscode/test/decisions-for-file.test.ts ]
+Error: Cannot find module '../src/decisions-for-file.js' imported from '/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T105-vscode-reasoning-surface/apps/vscode/test/decisions-for-file.test.ts'
+ ❯ apps/vscode/test/decisions-for-file.test.ts:6:1
+      4| // backend logic, just a view-side projection, same split as src/hover…
+      5| import { describe, expect, it } from 'vitest';
+      6| import { decisionsForFile, type DecisionLike } from '../src/decisions-…
+       | ^
+      7| import type { SymbolSpan } from '../src/seen.js';
+      8| 
+
+Caused by: Error: Failed to load url ../src/decisions-for-file.js (resolved id: ../src/decisions-for-file.js) in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T105-vscode-reasoning-surface/apps/vscode/test/decisions-for-file.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../../CS%20Code/Project/Mole-worktrees/T105-vscode-reasoning-surface/node_modules/vite/dist/node/chunks/config.js:22907:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  07:56:25
+   Duration  518ms (transform 75ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 109ms)
+

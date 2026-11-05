@@ -135,6 +135,10 @@ export interface FlagResult extends Loc {
    * file could not be read, or has no decision-bearing content at all (a tenet/intent/incident node, or an
    * empty record). This is in ADDITION to the tree view's summaryOf() 240-char preview, never a replacement. */
   rationale?: string;
+  /** T105: the record's own `scope:` anchors (GraphNode.scope, already computed by loadGraph) — exposed so a
+   * reader of `mole decisions --json` (the VS Code CodeLens, same data the sidebar panel already fetches) can
+   * tell which file/folder/symbol a decision governs, without Mole computing anything new. */
+  scope: Anchor[];
 }
 
 export interface FlagContext {

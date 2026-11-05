@@ -1,0 +1,13 @@
+{
+  "file": "packages/daemon/src/server.ts",
+  "lenses": [],
+  "hasFileLevelCodeLens": false,
+  "hasSymbolLevelCodeLens": false,
+  "clickThroughOpensDecisionRecord": false,
+  "paletteCommandRegistered": true,
+  "diagnosticsCollectionNames": [
+    "mole-rules"
+  ],
+  "diagnosticsCountSource_mole": 0,
+  "screenshot": "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T105-vscode-reasoning-surface/tasks/T105-vscode-reasoning-surface/4 log/codelens.png"
+}

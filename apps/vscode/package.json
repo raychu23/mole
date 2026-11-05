@@ -120,6 +120,11 @@
         "command": "mole.cli.tried",
         "title": "What was already tried here (mole tried)",
         "category": "Mole"
+      },
+      {
+        "command": "mole.openDecisionRecord",
+        "title": "Open decision record",
+        "category": "Mole"
       }
     ],
     "configuration": {

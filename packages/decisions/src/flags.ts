@@ -130,6 +130,6 @@ export function computeFlags(graph: DecisionGraph, ctx: FlagContext = {}): FlagR
 
   return nodes.map((n) => {
     const rs = [...reasons.get(n.id)!].sort((a, b) => rank[b.flag] - rank[a.flag]);
-    return { id: n.id, kind: n.kind, title: n.title, status: n.status, flag: baseFlag(n, rs), file: n.file, line: n.line, reasons: rs };
+    return { id: n.id, kind: n.kind, title: n.title, status: n.status, flag: baseFlag(n, rs), file: n.file, line: n.line, reasons: rs, scope: n.scope };
   });
 }
