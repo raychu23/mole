@@ -1,12 +1,16 @@
-// `mole rules [--json] [--emit] [--ts-config FILE] [--scip FILE] [--root DIR]`: run the rules written in
-// decision records. Exit 0 clean, 1 violations, 2 rule syntax errors (printed with file:line). --emit writes
-// the generated dependency-cruiser config (import rules) and the call rules next to the repo's own config,
-// never over it. --scip (T95) names a SCIP index explicitly; without it, root/index.scip is used if present.
+// `mole rules [--json] [--emit] [--ts-config FILE] [--scip FILE] [--allow-stale-scip] [--root DIR]`: run the
+// rules written in decision records. Exit 0 clean, 1 violations, 2 rule syntax errors, 3 stale `index.scip`
+// (printed with file:line / a clear message). --emit writes the generated dependency-cruiser config (import
+// rules) and the call rules next to the repo's own config, never over it. --scip (T95) names a SCIP index
+// explicitly; without it, root/index.scip is used if present. --allow-stale-scip (T95 follow-up) skips the
+// stale-index check (mtime of every indexed-language source file vs. the index's own mtime, plus files missing
+// from the index) and runs against the index anyway.
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { checkRules } from './check.js';
 import { cruiseOptions, depcruiseRuleSet, entryPrefixes } from './compile.js';
 import { anyOf, loadRules, pathRegex } from './parse.js';
+import { StaleScipIndexError } from './scip.js';
 import { CALL_RULES_FILE, DEPCRUISE_FILE, type RuleSpec, type RulesResult } from './types.js';
 
 /** Write .dependency-cruiser.mole.cjs + .mole-call-rules.json under root; returns the written paths. */
@@ -78,8 +82,20 @@ export async function rulesCli(_pos: string[], flags: Record<string, string | tr
   }
   const tsConfig = typeof flags['ts-config'] === 'string' ? flags['ts-config'] : undefined;
   const scip = typeof flags.scip === 'string' ? flags.scip : undefined;
-  const r = await checkRules(root, { tsConfig, scip });
-  console.log(flags.json ? JSON.stringify(r, null, 2) : formatRules(r));
-  return r.errors.length ? 2 : r.violations.length ? 1 : 0;
+  const allowStaleScip = flags['allow-stale-scip'] === true;
+  try {
+    const r = await checkRules(root, { tsConfig, scip, allowStaleScip });
+    console.log(flags.json ? JSON.stringify(r, null, 2) : formatRules(r));
+    return r.errors.length ? 2 : r.violations.length ? 1 : 0;
+  } catch (error) {
+    // T95 follow-up: a stale index.scip is neither "clean" nor "N violations" -- it means the check could not
+    // actually see today's source tree, so it gets its own exit code (3), distinct from 0/1/2, and is never
+    // silently swallowed into a false "0 violations" pass (review HIGH-1).
+    if (error instanceof StaleScipIndexError) {
+      console.error(`mole rules: ${error.message}`);
+      return 3;
+    }
+    throw error;
+  }
 }
 

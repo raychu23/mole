@@ -63,6 +63,28 @@ Try the whole loop without touching your own repo: `npx mole-code demo`.
   has been tried.
 - A `from:`/`to:` path that matches no file in the repo is reported as a warning (likely a typo), not
   silently ignored (TypeScript path only; the SCIP path only sees files the SCIP index actually covers).
+- SCIP path staleness: before reading an `index.scip`, `mole rules` compares every source file of the
+  index's own language(s) against it (mtime vs. the index file's own mtime, plus any file missing from the
+  index entirely); a stale-looking index makes the whole check **fail with exit code 3** (distinct from
+  0 clean / 1 violations / 2 rule-syntax-errors) and a `index.scip is stale: re-run scip-python index`
+  message, never a silent 0-violation pass. `--allow-stale-scip` runs against the index anyway. scip-python
+  0.6.8 does not populate `Document.text` or any content hash, so mtime is the only signal available; this
+  mirrors what mtime-based build tools do, not what a hash-addressed index (e.g. one that embedded content
+  hashes) could do.
+- SCIP path relative imports: scip-python 0.6.8 encodes a *relative* import's module reference (`from .
+  import x`, `from .pkg import y`) as an unqualified symbol with no package prefix and no record of how many
+  dots were written (verified against a real index — see
+  `packages/scip/test/fixtures/counterfixture/HOW-PRODUCED.md`), unlike an absolute import, which resolves to
+  the module's own fully-qualified symbol. Mole recovers the real target from the import statement's own
+  source text (the dots + any module path) plus the importing file's own path, so `forbid: import` still
+  catches it.
+- SCIP path `TYPE_CHECKING`-only imports: Mole detects `if TYPE_CHECKING:` (or `if typing.TYPE_CHECKING:`)
+  blocks from the source text (SCIP does not distinguish them) and labels an import found only inside one
+  (`typeOnly: true` in `--json` output); when both a `TYPE_CHECKING`-only and a runtime import of the same
+  target exist, the reported line is the runtime one. `forbid: import` still flags a `TYPE_CHECKING`-only
+  import **by default** — unlike the TypeScript path, which drops a type-only import unless the rule sets
+  `types: true` — because an erased import can still describe a dependency the decision forbids; the label
+  is there so a reviewer can tell the two cases apart, not to silently exempt them.
 - `status: superseded|deprecated|rejected` records are syntax-checked but **not enforced** — their rules
   never produce a violation.
 - Rule checking is local and deterministic: 0 model calls, no network.

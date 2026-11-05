@@ -38,6 +38,10 @@ export interface Violation {
   kind: RuleKind;
   target: string; // the imported module specifier or the matched callee text
   decision: RuleDecision;
+  /** SCIP path only (T95 follow-up): the reported site is a `TYPE_CHECKING`-only import (no runtime import of the
+   * same target exists in the file). Still a violation by default (erased imports can still describe an intended
+   * dependency the decision forbids) -- this just labels it so a reviewer can tell the two cases apart. */
+  typeOnly?: boolean;
 }
 
 export interface SkippedRules {
@@ -66,6 +70,8 @@ export interface RulesOptions {
   tsConfig?: string;
   /** SCIP index path (repo-relative or absolute); selects the SCIP path (T95) instead of auto-detecting root/index.scip. */
   scip?: string;
+  /** Skip the stale-index check (T95 follow-up) and run against root/index.scip or --scip even if it looks stale. */
+  allowStaleScip?: boolean;
 }
 
 export const DEPCRUISE_FILE = '.dependency-cruiser.mole.cjs';

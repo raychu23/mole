@@ -1,7 +1,7 @@
 // T95: `mole rules` on a Python repo, via a real `index.scip` (scip-python 0.6.8; see
 // packages/scip/test/fixtures/python/HOW-PRODUCED.md) instead of the TypeScript path. Same RuleSpec
 // front matter, same Violation shape; checkRules() auto-selects the SCIP path because root/index.scip exists.
-import { cpSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, mkdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -20,6 +20,11 @@ function pythonRepo(records: Record<string, string>): string {
   const root = mkdtempSync(join(tmpdir(), 'mole-rules-scip-'));
   cleanups.push(() => rmSync(root, { recursive: true, force: true }));
   cpSync(pyFixture, root, { recursive: true });
+  // These tests are about rule *detection* on the SCIP path, not about the staleness check (T95 follow-up,
+  // tested separately in rules-scip-stale.test.ts) -- cpSync does not preserve mtimes, so without this the
+  // fixture's index.scip could race its own just-copied source files and fail the staleness check at random.
+  const future = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  utimesSync(join(root, 'index.scip'), future, future);
   for (const [f, text] of Object.entries(records)) {
     mkdirSync(dirname(join(root, f)), { recursive: true });
     writeFileSync(join(root, f), text);

@@ -121,7 +121,7 @@ export async function checkRules(root: string, opts: RulesOptions = {}): Promise
   // or named by --scip, takes over entirely; the TypeScript path below (dependency-cruiser + Mole's own TS
   // AST scan) is unchanged for repos with neither.
   const scipPath = findScipIndex(root, opts);
-  if (scipPath) return checkRulesScip(root, scipPath, load);
+  if (scipPath) return checkRulesScip(root, scipPath, load, opts);
 
   // a from: or path to: that matches no source file narrows the rule to nothing and reads as green (review 1 P2-2)
   const filesUnder = new Map<string, Set<string>>();
