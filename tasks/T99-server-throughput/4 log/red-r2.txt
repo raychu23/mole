@@ -1,0 +1,5 @@
+   × defaultQueuePrefixFromUrl (review r2 HIGH: libpq URI forms) > postgresql://a1@/mole_t99?host=/tmp&port=5432 -> mole_t99 5ms
+   × defaultQueuePrefixFromUrl (review r2 HIGH: libpq URI forms) > postgresql://u@host/my%20db -> my db 1ms
+   × defaultQueuePrefixFromUrl (review r2 HIGH: libpq URI forms) > host=/tmp dbname=kvdb user=a1 -> kvdb 0ms
+   × defaultQueuePrefixFromUrl (review r2 HIGH: libpq URI forms) > dbname='quoted db' host=/tmp -> quoted db 0ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯

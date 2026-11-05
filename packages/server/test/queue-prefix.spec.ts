@@ -114,7 +114,10 @@ describe('queue.ts namespacing (T99 server-throughput)', () => {
         // "before restart": the pre-upgrade process enqueues a job and then goes away (crash,
         // redeploy, or a plain restart) WITHOUT ever registering a worker for it.
         const bossBefore = await createQueue(dbUrl!, prefixBeforeUpgrade);
-        await bossBefore.send(queueName(prefixBeforeUpgrade, 'rebuild-index'), { marker: 'queued-before-restart' });
+        // unique marker: the default (unprefixed) queue is shared with other test files on a long-lived
+        // database, so strays may be claimed too; the assertion is that OUR job arrives (review r2 MEDIUM)
+        const marker = `queued-before-restart-${process.pid}-${Date.now()}`;
+        await bossBefore.send(queueName(prefixBeforeUpgrade, 'rebuild-index'), { marker });
         await closeQueue(bossBefore);
 
         // "after restart": a fresh Boss instance, same resolution logic, same unset env.
@@ -126,17 +129,33 @@ describe('queue.ts namespacing (T99 server-throughput)', () => {
           });
 
           const start = Date.now();
-          while (received.length === 0 && Date.now() - start < 5000) {
+          const ours = () => received.some((d) => (d as { marker?: string } | null)?.marker === marker);
+          while (!ours() && Date.now() - start < 10000) {
             await new Promise((r) => setTimeout(r, 100));
           }
 
-          expect(received).toEqual([{ marker: 'queued-before-restart' }]);
+          expect(ours()).toBe(true);
         } finally {
           await bossAfter.offWork(queueName(prefixAfterUpgrade, 'rebuild-index')).catch(() => undefined);
           await closeQueue(bossAfter);
         }
       },
-      15000
+      20000
     );
+  });
+});
+
+describe('defaultQueuePrefixFromUrl (review r2 HIGH: libpq URI forms)', () => {
+  it.each([
+    ['postgresql://a1@/mole_t99?host=/tmp&port=5432', 'mole_t99'],
+    ['postgres://u:p@db.example:5432/prod', 'prod'],
+    ['postgresql://u@host/my%20db', 'my db'],
+    ['postgresql://u@host/', ''],
+    ['postgresql://u@host', ''],
+    ["host=/tmp dbname=kvdb user=a1", 'kvdb'],
+    ["dbname='quoted db' host=/tmp", 'quoted db'],
+    ['not a url', ''],
+  ])('%s -> %s', (url, want) => {
+    expect(defaultQueuePrefixFromUrl(url)).toBe(want);
   });
 });

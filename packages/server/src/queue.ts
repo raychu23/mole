@@ -57,12 +57,17 @@ export function queueName(prefix: string, base: QueueBaseName | string): string 
  * never a silent default, since that was the exact review-finding bug (see the file header
  * comment above). Falls back to '' if the connection string can't be parsed as a URL. */
 export function defaultQueuePrefixFromUrl(connectionString: string): string {
-  try {
-    const u = new URL(connectionString);
-    return u.pathname.replace(/^\//, '') || '';
-  } catch {
-    return '';
+  // libpq connection URIs (postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING-URIS) allow an
+  // empty host with the socket dir in a query param (`postgresql://user@/db?host=/tmp`), which WHATWG URL
+  // rejects; read the database name from the path directly instead (review r2 HIGH: `auto` was a silent no-op
+  // for this repo's own documented local URL). Key/value strings (`dbname=x host=/tmp`) are handled too.
+  const uri = /^postgres(?:ql)?:\/\/[^/?#]*\/([^?#]+)/i.exec(connectionString);
+  if (uri) {
+    try { return decodeURIComponent(uri[1]!); } catch { return uri[1]!; }
   }
+  const kv = /(?:^|\s)dbname\s*=\s*('([^']*)'|[^\s]+)/.exec(connectionString);
+  if (kv) return kv[2] ?? kv[1]!;
+  return '';
 }
 
 /** MOLE_QUEUE_PREFIX unset -> '' (exact pre-T99 literal queue names; safe zero-config default
