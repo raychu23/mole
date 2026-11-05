@@ -40,12 +40,18 @@ describe('T69 review-1 #3: an approved decision is readable via temporal current
     const fixture = buildFixtureRepo(orgA, 1);
     repoDir = fixture.dir;
     head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoDir, encoding: 'utf8' }).trim();
-    const built = await buildApp({
-      DATABASE_URL: dbUrl,
-      WEBHOOK_SECRET: secret,
-      MOLE_AUTH_SECRET: authSecret,
-      ORG_REPO_DIRS: JSON.stringify({ [orgA]: repoDir }),
-    } as NodeJS.ProcessEnv);
+    const built = await buildApp(
+      {
+        DATABASE_URL: dbUrl,
+        WEBHOOK_SECRET: secret,
+        MOLE_AUTH_SECRET: authSecret,
+        ORG_REPO_DIRS: JSON.stringify({ [orgA]: repoDir }),
+      } as NodeJS.ProcessEnv,
+      // T98 server-slo: this suite doesn't exercise the outbox relay loop and tears its own
+      // pool down manually (not via ServerHandle.close()), so disable the loop to avoid a
+      // background tick firing against an already-ended pool after this test finishes.
+      { outboxRelayIntervalMs: 0 }
+    );
     pool = built.pool;
     boss = built.boss;
     fastifyApp = built.app;
@@ -130,7 +136,7 @@ describe('T69 review-1 #3: an approved decision is readable via temporal current
 
   it('/reconcile is closed (401) when the server has no MOLE_AUTH_SECRET', async () => {
     if (!dbUrl) return;
-    const built = await buildApp({ DATABASE_URL: dbUrl, WEBHOOK_SECRET: secret, ORG_REPO_DIRS: '{}' } as NodeJS.ProcessEnv);
+    const built = await buildApp({ DATABASE_URL: dbUrl, WEBHOOK_SECRET: secret, ORG_REPO_DIRS: '{}' } as NodeJS.ProcessEnv, { outboxRelayIntervalMs: 0 });
     try {
       const res = await built.app.inject({ method: 'GET', url: `/reconcile/${orgA}`, headers: { authorization: `Bearer ${await createTestIssuer(authSecret).mintToken(orgA)}` } });
       expect(res.statusCode).toBe(401);

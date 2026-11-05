@@ -73,6 +73,15 @@ create table if not exists outbox (
 alter table outbox enable row level security;
 alter table outbox force row level security;
 create unique index if not exists outbox_org_kind_ref_uniq on outbox (org_id, kind, ref) where ref is not null;
+-- T98 server-slo: retry-with-backoff + dead-letter for the outbox relay (R0 server-slo
+-- prior-art.md GitHub webhook best practices + pg-boss's own retry/deadLetter pattern,
+-- applied here too since relayOutboxOnce is a *separate* failure domain from the pg-boss
+-- queue -- a transient fake/real-GitHub-API failure must not retry in a hot loop forever,
+-- and a permanently-failing row must stop being re-selected every relay tick.
+alter table outbox add column if not exists attempts int not null default 0;
+alter table outbox add column if not exists next_attempt_at timestamptz not null default now();
+alter table outbox add column if not exists last_error text;
+alter table outbox add column if not exists dead_letter boolean not null default false;
 
 create table if not exists questions_log (
   id bigserial primary key,

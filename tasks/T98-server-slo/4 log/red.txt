@@ -1,0 +1,25 @@
+## Summary
+RED evidence for T98-server-slo: against pre-change `packages/server/src/index.ts` (main,
+`git show main:packages/server/src/index.ts`), the new/updated test files fail to even
+compile -- they reference `beginDraining`, the 2-arg `buildApp(env, opts)` signature, and
+`/healthz`/`/readyz`, none of which existed. This is `npx tsc -b packages/server` output
+against that old file with the new tests already written.
+
+```
+packages/server/test/crash-restart.spec.ts(144,9): error TS2554: Expected 0-1 arguments, but got 2.
+packages/server/test/crash-restart.spec.ts(229,9): error TS2554: Expected 0-1 arguments, but got 2.
+packages/server/test/health.spec.ts(25,7): error TS2554: Expected 0-1 arguments, but got 2.
+packages/server/test/health.spec.ts(31,27): error TS2339: Property 'beginDraining' does not exist on type '{ app: FastifyInstance<Server<typeof IncomingMessage, typeof ServerResponse>, IncomingMessage, ServerResponse<IncomingMessage>, FastifyBaseLogger, FastifyTypeProviderDefault> & PromiseLike<...> & { ...; }; pool: Pool; boss: PgBoss; telemetry: Telemetry; temporalPool: Pool; }'.
+packages/server/test/index-temporal-e2e.spec.ts(53,7): error TS2554: Expected 0-1 arguments, but got 2.
+packages/server/test/index-temporal-e2e.spec.ts(139,125): error TS2554: Expected 0-1 arguments, but got 2.
+packages/server/test/index.spec.ts(44,7): error TS2554: Expected 0-1 arguments, but got 2.
+```
+
+Separately, `test/outbox.spec.ts`'s new "retry/backoff + dead-letter + per-row isolation"
+describe block fails to compile against the pre-change `src/outbox.ts` (no
+`relayOutboxOnceDetailed` export, `relayOutboxOnce` takes 2 args not 3) -- same category of
+evidence, not re-pasted here (identical TS2554/TS2305 shape).
+
+Procedure: `cp <old index.ts> src/index.ts && npx tsc -b packages/server` (captured above),
+then restored the real (new) `src/index.ts` and re-ran `npx tsc -b packages/server` clean
+before proceeding to GREEN (see `4 log/green.txt`).

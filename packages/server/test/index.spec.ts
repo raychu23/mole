@@ -33,11 +33,16 @@ describe('server index.ts is wired to real workers (final-build verification)', 
     const fixture = buildFixtureRepo(orgId, 1);
     repoDir = fixture.dir;
     head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoDir, encoding: 'utf8' }).trim();
-    const built = await buildApp({
-      DATABASE_URL: dbUrl,
-      WEBHOOK_SECRET: secret,
-      ORG_REPO_DIRS: JSON.stringify({ [orgId]: repoDir }),
-    } as NodeJS.ProcessEnv);
+    const built = await buildApp(
+      {
+        DATABASE_URL: dbUrl,
+        WEBHOOK_SECRET: secret,
+        ORG_REPO_DIRS: JSON.stringify({ [orgId]: repoDir }),
+      } as NodeJS.ProcessEnv,
+      // T98 server-slo: no outbox relay assertions here, and teardown doesn't go through
+      // ServerHandle.close(), so disable the loop (see index-temporal-e2e.spec.ts for why).
+      { outboxRelayIntervalMs: 0 }
+    );
     pool = built.pool;
     boss = built.boss;
     fastifyApp = built.app;
@@ -67,7 +72,15 @@ describe('server index.ts is wired to real workers (final-build verification)', 
         headers: {
           'content-type': 'application/json',
           'x-hub-signature-256': sig,
-          'x-github-delivery': 'index-wiring-delivery-1',
+          // T98 server-slo finding: this was hardcoded ('index-wiring-delivery-1'), which is
+          // fine the FIRST time this test ever runs against a given Postgres instance but
+          // silently breaks every rerun after that: delivery_id is a GLOBAL unique dedup key
+          // (db.ts `deliveries` table, not scoped by org), so a second run's identical id
+          // gets treated as a duplicate redelivery -- isNew stays false, boss.send() is never
+          // called, and the outbox row this test polls for simply never appears (a 30s
+          // timeout, not an assertion failure that points at the real cause). Unique per run,
+          // same fix index-temporal-e2e.spec.ts's own delivery id already uses.
+          'x-github-delivery': 'index-wiring-delivery-' + orgId,
           'x-github-event': 'push',
         },
         payload,
