@@ -26,6 +26,14 @@
       "spec": "evals/inspect/dcbench_eval/experiments/protocol-v3.json",
       "frozen": "evals/inspect/dcbench_eval/experiments/FROZEN-v3.sha256",
       "run": "NOT RUN: pre-registered only, per T90 contract; a real run at n=21/arm/task (504 scored runs) needs Raymond's go given the cost increase over v2's 72"
+    },
+    {
+      "id": "T63-productivity-v4",
+      "idea": "Tests Mole AS IT SHIPS NOW: D102 deterministic blocking hooks (T92 2df7a8f/0624e94, Stop decision:block replayed around hermes -z) vs R, superseding v3's M arm (a model judge, shown inert in results-mj.md: 0/24 flags vs 19/24 scorer-seen violations). 2 of 15 seeded decisions (D-001, D-005) are honestly expressible as Mole crisp rules: (forbid:import|call only, no require kind) -- see tasks/T97-benchmark-v4-blocking/4 log/crisp-rule-audit.md.",
+      "status": "pre-registered",
+      "spec": "evals/inspect/dcbench_eval/experiments/protocol-v4.json",
+      "frozen": "evals/inspect/dcbench_eval/experiments/FROZEN-v4.sha256",
+      "run": "SMOKE ONLY (1 real run per arm, TASK-001, 2026-11-04 -- see tasks/T97-benchmark-v4-blocking/4 log/evidence.md). Full 48-run pilot (R, M-block x 8 tasks x 3 epochs, ~8h) NOT RUN: needs Raymond's go; launch command in tasks/T97-benchmark-v4-blocking/4 log/launch-command.md. Pilot MDE at n=3/arm/task is ~75 points (honestly underpowered for a real effect; see protocol-v4.json's sample_size_arithmetic) -- this is a feasibility/smoke pilot, not a confirmatory design."
     }
   ]
 }
