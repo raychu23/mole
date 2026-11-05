@@ -21,6 +21,12 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+# T93 round-2 review HIGH fix: the public release tarball (D97: `mole-code` is the CLI + MCP + Claude Code
+# plugin in ONE npm package, dist/ built in) until `mole-code` is published to the npm registry -- see
+# release/mole-code/package.json and tools/build.mjs. A locally built tarball (`npm pack` inside
+# release/mole-code after `node tools/build.mjs`) can be passed instead via `-T mole_package=PATH`.
+DEFAULT_MOLE_PACKAGE_URL = "https://github.com/raychu23/mole-code-map/releases/download/v0.5.0/mole-code-0.1.0.tgz"
+
 
 @dataclass(frozen=True)
 class ArmConfig:
@@ -139,36 +145,102 @@ def render_decisions_for_instructions(decisions_dir: Path) -> str:
     return "\n\n".join(f"### {f.name}\n\n{f.read_text().rstrip()}" for f in files)
 
 
-def _find_mole_plugin_dir() -> Path | None:
-    """Best-effort: locate THIS checkout's own plugins/claude-code (works when mole_ab is run from inside
-    the Mole monorepo itself -- e.g. dev/CI use against this repo's own .mole/decisions). For an arbitrary
-    external user repo there is no local Mole plugin checkout to find and this returns None; callers must
-    then fall back to render_decisions_for_instructions(), which always works for any repo."""
-    here = Path(__file__).resolve()
-    for parent in here.parents:
-        candidate = parent / "plugins" / "claude-code"
-        if (candidate / ".claude-plugin" / "plugin.json").exists() and (candidate / "hooks" / "hooks.json").exists():
-            return candidate
-    return None
+def install_mole_npm_package(worktree: Path, mole_package: str | None = None) -> Path | None:
+    """Installs the real `mole-code` npm package (D97) into `<worktree>/.mole-npm` -- the way a user
+    actually installs Mole, not a bare copy of plugins/claude-code source (T93 round-2 review HIGH fix: a
+    bare source copy has no dist/cli.js, so the plugin's own findMole() always returns undefined and every
+    hook silently no-ops even though install_claude_code_plugin_hooks used to report success -- see that
+    function's preflight for the check that now catches this).
+
+    `mole_package`: a local tarball path (e.g. the locally built `release/mole-code` tarball, produced by
+    `node tools/build.mjs && npm pack` there) or an http(s) URL `npm install` accepts directly; None
+    defaults to DEFAULT_MOLE_PACKAGE_URL (the public GitHub release tarball, until `mole-code` is published
+    to the npm registry).
+
+    Returns the installed package's own directory (`<worktree>/.mole-npm/node_modules/mole-code`, which
+    ships dist/, hooks/, .claude-plugin/, scripts/ -- see release/mole-code/package.json's `files`), or
+    None if npm itself is unavailable, the install fails (network, bad tarball, ...), or the install
+    somehow produced a package with no dist/cli.js (defensive: never claim an install succeeded without the
+    one file findMole() actually needs). The caller (install_claude_code_plugin_hooks) must use the
+    instruction-file fallback on None, honestly reporting plugin_hooks_installed: False rather than
+    pretending the plugin is live."""
+    if shutil.which("npm") is None:
+        return None
+    pkg = mole_package or DEFAULT_MOLE_PACKAGE_URL
+    prefix = worktree / ".mole-npm"
+    prefix.mkdir(parents=True, exist_ok=True)
+    try:
+        r = subprocess.run(
+            ["npm", "install", "--no-save", "--no-audit", "--no-fund", "--prefix", str(prefix), pkg],
+            capture_output=True, text=True, timeout=180,
+        )
+    except (subprocess.TimeoutExpired, OSError):
+        return None
+    if r.returncode != 0:
+        return None
+    installed = prefix / "node_modules" / "mole-code"
+    if not (installed / "dist" / "cli.js").exists():
+        return None  # installed SOMETHING, but not a real built package -- never claim success on that
+    return installed
 
 
-def install_claude_code_plugin_hooks(worktree: Path) -> bool:
-    """Installs Mole's own Claude Code plugin hooks (SessionStart/PreToolUse/Stop/UserPromptSubmit --
-    plugins/claude-code/hooks/hooks.json) into `worktree` WITHOUT a marketplace install: copies the plugin
-    directory to `<worktree>/.mole-plugin` and writes its hooks into the project-level
+def preflight_mole_resolves(plugin_dir: Path, worktree: Path) -> None:
+    """BEFORE the agent runs (T93 round-2 review HIGH fix's core ask): proves the just-installed plugin's
+    OWN findMole() (plugin_dir/scripts/lib.mjs) actually resolves the Mole CLI starting from `worktree` --
+    the exact check the review found missing, which let plugin_hooks_installed: True silently mean "every
+    hook no-ops" (a bare source copy's findMole() returned undefined because there was no dist/cli.js to
+    find). Raises RuntimeError loudly on failure -- a sample must FAIL here, never silently degrade to the
+    'none' arm's behavior while reporting success."""
+    script = (
+        f"import({json.dumps((plugin_dir / 'scripts' / 'lib.mjs').as_posix())})"
+        f".then(({{findMole}}) => {{ const r = findMole({json.dumps(str(worktree))}); "
+        "if (!r) { console.error('MOLE_UNRESOLVED'); process.exit(1); } "
+        "console.log(JSON.stringify(r)); }).catch((e) => { console.error(String(e)); process.exit(1); });"
+    )
+    try:
+        r = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=30)
+    except (subprocess.TimeoutExpired, OSError) as e:
+        raise RuntimeError(f"mole_ab preflight could not even run node to check findMole(): {e}") from e
+    if r.returncode != 0 or "MOLE_UNRESOLVED" in (r.stderr or ""):
+        raise RuntimeError(
+            "mole_ab preflight FAILED: the just-installed Mole plugin at "
+            f"{plugin_dir} cannot resolve the Mole CLI from worktree {worktree} "
+            "(findMole() in scripts/lib.mjs returned undefined) -- every hook would silently no-op while "
+            "plugin_hooks_installed would have claimed success. Failing the sample loudly instead "
+            f"(T93 round-2 review HIGH fix). node stdout={r.stdout!r} stderr={r.stderr!r}"
+        )
+
+
+def install_claude_code_plugin_hooks(worktree: Path, mole_package: str | None = None) -> dict[str, object]:
+    """Installs Mole's own Claude Code plugin hooks (SessionStart/PreToolUse/Stop/UserPromptSubmit) into
+    `worktree` by installing the REAL `mole-code` npm package first (install_mole_npm_package -- D97, the
+    way a user actually installs Mole, dist/ included), WITHOUT a marketplace install: copies the
+    installed package to `<worktree>/.mole-plugin` and writes its hooks into the project-level
     `<worktree>/.claude/settings.json` (the same project-settings hooks mechanism Claude Code's own docs
     document, https://docs.claude.com/en/docs/claude-code/hooks-guide -- a project's `.claude/settings.json`
     may declare a `hooks` block directly, no plugin registration needed), substituting the real copied path
     for `${CLAUDE_PLUGIN_ROOT}` (only set for an actual marketplace-installed plugin, not a bare file copy).
-    Returns True if installed, False if no local plugin checkout was found (see _find_mole_plugin_dir) --
-    the caller must then fall back to writing decision text directly into CLAUDE.md instead."""
-    src = _find_mole_plugin_dir()
-    if src is None:
-        return False
+
+    T93 round-2 review HIGH fix: this used to copy a bare plugins/claude-code SOURCE checkout (no dist/),
+    for which findMole() always returns undefined -- every hook silently no-op'd while this function still
+    reported success. Fixed two ways: (1) the source is now the real installed npm package (dist/ included,
+    see install_mole_npm_package), and (2) before returning success this runs preflight_mole_resolves,
+    which actually calls findMole() and raises loudly if it still can't resolve -- never a silent 'none'.
+
+    Returns `{"installed": bool, "mechanism": "npm_package" | None}`: `installed=False` (npm unavailable or
+    the install failed) means "installing inside the sandbox was impossible" -- the caller falls back to
+    the instruction-file text and reports plugin_hooks_installed: False honestly. `installed=True` is only
+    ever returned AFTER preflight_mole_resolves has proven the hooks will actually fire."""
+    pkg_dir = install_mole_npm_package(worktree, mole_package)
+    if pkg_dir is None:
+        # Installing inside the sandbox is impossible (npm unavailable or the install failed): honest
+        # False, per the review's explicit fallback instruction -- never a dev-checkout guess that might
+        # itself lack dist/ and only surface as a confusing preflight RuntimeError later.
+        return {"installed": False, "mechanism": None}
     dest = worktree / ".mole-plugin"
     if dest.exists():
         shutil.rmtree(dest)
-    shutil.copytree(src, dest)
+    shutil.copytree(pkg_dir, dest)
     hooks_doc = json.loads((dest / "hooks" / "hooks.json").read_text())
     hooks_cfg = json.loads(json.dumps(hooks_doc["hooks"]).replace("${CLAUDE_PLUGIN_ROOT}", str(dest)))
     settings_path = worktree / ".claude" / "settings.json"
@@ -176,21 +248,27 @@ def install_claude_code_plugin_hooks(worktree: Path) -> bool:
     settings = json.loads(settings_path.read_text()) if settings_path.exists() else {}
     settings["hooks"] = hooks_cfg
     settings_path.write_text(json.dumps(settings, indent=2) + "\n")
-    return True
+    preflight_mole_resolves(dest, worktree)  # raises loudly on failure -- see docstring, never silent
+    return {"installed": True, "mechanism": "npm_package"}
 
 
-def install_arm_for_agent(arm: ArmConfig, worktree: Path, agent: str) -> dict[str, object]:
+def install_arm_for_agent(arm: ArmConfig, worktree: Path, agent: str, mole_package: str | None = None) -> dict[str, object]:
     """The external-agent (claude_code/codex) equivalent of apply_arm(): places context the way THAT
     agent actually reads it at startup, per the module-level comment above. Still calls apply_arm() first
     for its file-placement side effects that are agent-agnostic (.mole/decisions/ copy, plugin_pin's
     archive extraction -- kept for Mole's own tooling / a later plugin-hook install to find), but -- unlike
     the review-FAIL version -- never silently discards what matters for THIS agent: a 'rules' arm's text
     and a 'decisions' arm's content both land in the one place claude_code/codex actually load.
+
+    `mole_package`: forwarded to install_claude_code_plugin_hooks/install_mole_npm_package (see there) --
+    `-T mole_package=PATH_OR_URL` on the CLI.
+
     Returns a small dict describing what happened (used by tests and worth logging): instruction_file
     (path written, or None for 'none'/'plugin_pin'), plugin_hooks_installed (True only for a 'decisions'
-    arm under claude_code when install_claude_code_plugin_hooks succeeded)."""
+    arm under claude_code when install_claude_code_plugin_hooks succeeded AND its preflight proved the
+    hooks will actually fire), mechanism ('npm_package' | 'instruction_file' | None)."""
     apply_arm(arm, worktree, "")  # side effects only (.mole/decisions copy, plugin_pin archive); see docstring
-    info: dict[str, object] = {"instruction_file": None, "plugin_hooks_installed": False}
+    info: dict[str, object] = {"instruction_file": None, "plugin_hooks_installed": False, "mechanism": None}
     if arm.kind in ("none", "plugin_pin"):
         return info
     instr_path = agent_instruction_path(worktree, agent)
@@ -199,9 +277,12 @@ def install_arm_for_agent(arm: ArmConfig, worktree: Path, agent: str) -> dict[st
         info["instruction_file"] = str(instr_path)
         return info
     if arm.kind == "decisions":
-        if agent == "claude_code" and install_claude_code_plugin_hooks(worktree):
-            info["plugin_hooks_installed"] = True
-            return info
+        if agent == "claude_code":
+            result = install_claude_code_plugin_hooks(worktree, mole_package)
+            if result["installed"]:
+                info["plugin_hooks_installed"] = True
+                info["mechanism"] = result["mechanism"]
+                return info
         text = render_decisions_for_instructions(arm.path)
         _append_instruction(
             instr_path,
@@ -209,5 +290,6 @@ def install_arm_for_agent(arm: ArmConfig, worktree: Path, agent: str) -> dict[st
             text,
         )
         info["instruction_file"] = str(instr_path)
+        info["mechanism"] = "instruction_file"
         return info
     raise ValueError(f"unknown arm kind {arm.kind!r}")

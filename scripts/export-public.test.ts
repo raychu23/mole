@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
-import { redactJsLikeComments, redactPyComments, stripJsLikeComments, stripPyComments } from './lib/comment-redact.mjs';
+import { redactJsLikeComments, redactProse, redactPyComments, stripJsLikeComments, stripPyComments } from './lib/comment-redact.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -132,5 +132,11 @@ describe('comment-redact.mjs unit behavior: a string literal/docstring that LOOK
     const out = redactPyComments(src, { raymondAllowed: false });
     expect(out).toContain('"""Acceptance: tasks/T90-ab-experiment-system/4 log/results.md must match exactly."""');
     expect(out).not.toContain('# tasks/T90-ab-experiment-system/4 log/results.md');
+  });
+
+  it('redactProse no longer rewrites AGENTS.md (T93 round-2 review MEDIUM fix): it is a public cross-agent convention, never a reference to this private repo\'s own copy -- the per-file allowlist in export-public.mjs plus the forbidden-string scan are the real check now, not an unconditional rewrite', () => {
+    const out = redactProse('one source of truth, AGENTS.md #5', { raymondAllowed: false });
+    expect(out).toBe('one source of truth, AGENTS.md #5');
+    expect(out).not.toContain("the project's shared instructions file");
   });
 });

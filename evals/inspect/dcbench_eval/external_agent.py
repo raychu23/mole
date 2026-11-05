@@ -61,7 +61,7 @@ def build_external_agent(agent: str, cwd: str, model_config: str | None = None) 
 
 
 @solver
-def external_agent_worktree(repo: str, agent: str = "claude_code", model_config: str | None = None, worktrees_root: str | None = None) -> Solver:
+def external_agent_worktree(repo: str, agent: str = "claude_code", model_config: str | None = None, worktrees_root: str | None = None, mole_package: str | None = None) -> Solver:
     """Same per-sample isolation contract as `hermes_worktree_agent` (one throwaway git worktree per
     sample, same `state.metadata["worktree"/"repo"/"diff"]` keys the scorers already read), but the agent
     doing the editing is Claude Code or Codex (via inspect-swe), run through Inspect's own agent/solver
@@ -72,7 +72,12 @@ def external_agent_worktree(repo: str, agent: str = "claude_code", model_config:
     `worktrees_root`: forwarded to `make_worktree` -- set by task.py to `<repo>/.mole_ab_worktrees` when
     `sandbox="docker"` (the T93 review FAIL fix #3 default for this agent), so the worktree lands inside
     the one directory compose.yaml bind-mounts into the sandbox (see that file's comment). Left `None` for
-    `sandbox="local"` (system temp dir, no mount needed -- the local sandbox IS the host filesystem)."""
+    `sandbox="local"` (system temp dir, no mount needed -- the local sandbox IS the host filesystem).
+
+    `mole_package`: forwarded to install_arm_for_agent/install_claude_code_plugin_hooks (T93 round-2 review
+    HIGH fix) -- `-T mole_package=PATH_OR_URL` names a locally built `release/mole-code` tarball or an
+    http(s) URL for the real `mole-code` npm package a 'decisions' arm under claude_code installs; None
+    defaults to the public release tarball (see arms.DEFAULT_MOLE_PACKAGE_URL)."""
     if agent not in SUPPORTED_AGENTS:
         raise ValueError(f"unknown agent {agent!r}; known: {sorted(SUPPORTED_AGENTS)}")
     repo_path = Path(repo)
@@ -94,7 +99,11 @@ def external_agent_worktree(repo: str, agent: str = "claude_code", model_config:
             # return) and left a "decisions" arm's files under .mole/decisions/, where neither CLI looks on
             # its own. install_arm_for_agent() (arms.py; see its module-level comment for the citations)
             # places each arm's context the way THIS agent actually reads it at startup instead.
-            arm_info = install_arm_for_agent(arm, wt, agent)
+            # T93 round-2 review HIGH fix: this now also actually installs the real mole-code npm package
+            # for a 'decisions' arm under claude_code (not a bare source copy) and preflights that the
+            # plugin's own findMole() resolves BEFORE the agent runs -- raises loudly instead of silently
+            # degrading to the 'none' arm's behavior while still reporting plugin_hooks_installed: True.
+            arm_info = install_arm_for_agent(arm, wt, agent, mole_package=mole_package)
             state.metadata["arm_info"] = arm_info
             agent_obj = build_external_agent(agent, cwd=str(wt), model_config=model_config)
             state = await as_solver(agent_obj)(state, generate)

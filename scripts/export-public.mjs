@@ -100,6 +100,16 @@ const allowed = {
   // exclude globs are a generic "don't discover tests under a scratch/planning directory some contributors
   // may have locally" convention, not a disclosure of this repo's own private context/ contents.
   'vitest.config.ts': [/(^|[^a-zA-Z])context\//],
+  // T93 round-2 review MEDIUM fix: comment-redact.mjs no longer rewrites AGENTS.md anywhere (see that
+  // file's own comment) -- these files all cite it as the generic Codex/Claude Code/Cursor cross-agent
+  // convention ("one source of truth" reuse pointers, a config value, a doc comment), the exact "legitimate
+  // use" shape the other AGENTS.md exceptions above already cover, never a reference to this private repo's
+  // own copy.
+  'gemini-extension.json': [/AGENTS\.md/],
+  'packages/coupling/src/index.ts': [/AGENTS\.md/],
+  'packages/decisions/src/priorities.ts': [/AGENTS\.md/],
+  'packages/hotspots/src/index.ts': [/AGENTS\.md/],
+  'packages/hotspots/src/commits.ts': [/AGENTS\.md/],
 };
 
 // --- comment/prose-scoped redaction (T93 review FAIL fix #1) --------------------------------------------

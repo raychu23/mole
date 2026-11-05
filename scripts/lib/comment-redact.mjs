@@ -15,7 +15,15 @@ export function baseRedact(text) {
     .replace(/\bT\d{1,2}-[A-Za-z0-9][A-Za-z0-9-]*\b/g, '(internal task reference removed)')
     .replace(/(^|[^a-zA-Z])context\/[^\s)"'`]*/g, '$1(internal reference removed)')
     .replace(/\btasks\/[^\s)"'`]*/g, '(internal reference removed)')
-    .replace(/\bAGENTS\.md\b/g, "the project's shared instructions file")
+    // T93 round-2 review MEDIUM fix: AGENTS.md is a real, documented, cross-agent public convention
+    // (Codex/Claude Code/Cursor all read it) -- rewriting it unconditionally here fought the allowlist in
+    // export-public.mjs, which already has per-file exceptions for exactly the legitimate uses (arms.py,
+    // README.md, docs/experiments.md, ...). A comment-level string replace has no way to see which file
+    // it's running in, so it rewrote AGENTS.md even in files the allowlist says are fine, producing
+    // "the project's shared instructions file" nonsense in running code comments/docstrings. Fixed by not
+    // rewriting it at all: the private-string scan at the bottom of export-public.mjs still catches a
+    // genuine accidental reference to THIS repo's own AGENTS.md in a file with no allowlist entry (loud
+    // failure, same as any other forbidden string), which is the only thing redaction was ever a proxy for.
     .replace(/\bledger\b/gi, 'tracking log')
     .replace(/\.hermes(?!\w)/g, '.agent-cache');
 }

@@ -81,6 +81,7 @@ def mole_ab(
     agent: str = "claude_code",
     agent_model_config: str | None = None,
     sandbox: str = "docker",
+    mole_package: str | None = None,
 ) -> Task:
     """agent: "claude_code" (DEFAULT -- real Claude Code via inspect-swe's maintained external-agent
     wrapper, no hermes subscription needed) | "codex" (same idea, OpenAI's Codex CLI) | "hermes" (opt-in
@@ -98,6 +99,14 @@ def mole_ab(
     Debian + git + node22 image) runs a real Linux container instead and works on any host Docker runs on.
     "local" is still available (faster, no Docker) for a Linux host/CI runner where the limitation above
     does not apply.
+
+    mole_package: T93 round-2 review HIGH fix -- only consulted for a 'decisions' arm under agent=
+    claude_code. A locally built `release/mole-code` tarball path (`node tools/build.mjs && npm pack`
+    there) or an http(s) URL for the real `mole-code` npm package (D97: CLI + MCP + Claude Code plugin,
+    dist/ included) that gets installed INSIDE the sample's worktree before the agent runs, so the plugin's
+    SessionStart/PreToolUse/Stop hooks actually resolve the Mole CLI (previously a bare source copy with no
+    dist/ made every hook silently no-op while still reporting success). None defaults to the public GitHub
+    release tarball (arms.DEFAULT_MOLE_PACKAGE_URL) until `mole-code` is published to the npm registry.
     """
     rows = load_dataset(dataset)
     arm_list = arms if isinstance(arms, list) else [a.strip() for a in arms.split(",")]
@@ -105,12 +114,11 @@ def mole_ab(
     samples = build_samples(rows, arm_specs, commit=commit)
     # T90 round-2 review fix: sweep stale `mole_ab-*` worktrees left behind by a previous run that crashed
     # before any per-sample cleanup could run (see worktree_agent.py's module docstring). Once per Task
-    # build, before any sample starts; a worktree younger than this is presumably still a live sample of a
-    # concurrently-running eval against the same repo, so it is left alone (max_age_s=0 removes anything
-    # already orphaned -- registered but stale -- not something still in flight). A generous 1h floor:
-    # mole_ab samples are a single `hermes -z` run bounded by AGENT_TIMEOUT_S (20min) plus scoring, so
-    # anything still registered after an hour is from a run that is no longer making progress, not a
-    # concurrently-running eval against the same repo.
+    # build, before any sample starts. T93 round-2 review MEDIUM fix: "stale" now means "no live-run lock
+    # (pid) owns it" (prune_stale_worktrees checks this first); max_age_s is only the fallback floor for a
+    # worktree with no lock file at all (one made before that fix, or whose lock write failed) -- kept at an
+    # hour for that legacy case, same reasoning as before (mole_ab samples are bounded by AGENT_TIMEOUT_S
+    # plus scoring, so anything still unlocked after an hour is not a concurrently-running eval).
     prune_stale_worktrees(Path(repo), max_age_s=3600)
     if scorer == "mole_check":
         chosen_scorer = mole_check_scorer(mole_bin=mole_bin, root=repo)
@@ -131,10 +139,10 @@ def mole_ab(
             repo_abs = str(Path(repo).resolve())
             os.environ["MOLE_AB_REPO_DIR"] = repo_abs
             worktrees_root = str(Path(repo_abs) / ".mole_ab_worktrees")
-            chosen_solver = external_agent_worktree(repo=repo, agent=agent, model_config=agent_model_config, worktrees_root=worktrees_root)
+            chosen_solver = external_agent_worktree(repo=repo, agent=agent, model_config=agent_model_config, worktrees_root=worktrees_root, mole_package=mole_package)
             chosen_sandbox = ("docker", str(DOCKER_COMPOSE_PATH))
         elif sandbox == "local":
-            chosen_solver = external_agent_worktree(repo=repo, agent=agent, model_config=agent_model_config)
+            chosen_solver = external_agent_worktree(repo=repo, agent=agent, model_config=agent_model_config, mole_package=mole_package)
             chosen_sandbox = "local"  # exec directly on the host against the user's own claude/codex binary
         else:
             raise ValueError(f"unknown sandbox {sandbox!r}; known: docker, local")
