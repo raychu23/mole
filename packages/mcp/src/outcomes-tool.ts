@@ -16,7 +16,7 @@ export function registerOutcomesTool(server: McpServer, opts: Opts): void {
     {
       title: 'Mole outcomes',
       description:
-        'The outcome ledger (D66): every decision record with an opt-in `prediction:` block (expected outcome, measurable signal, check_at date), its ' +
+        'The outcome tracking log (D66): every decision record with an opt-in `prediction:` block (expected outcome, measurable signal, check_at date), its ' +
         'recorded `outcome:` (observed value, date, who -- the human\'s own verdict, never inferred), and any `rollout:` (a staged rollout\'s named ' +
         'treated/holdout scopes -- recording only, no assignment logic). `due=true` keeps only checks with no outcome yet and a passed (or today\'s) ' +
         'check_at. An outcome the human recorded as `result: contradicted` is flagged with a draft SUGGESTED incident (same shape the T58 incident ' +

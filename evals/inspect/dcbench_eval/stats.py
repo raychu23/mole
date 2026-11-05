@@ -94,3 +94,29 @@ def sample_size_for_mde(sd: float, mde: float, alpha: float = 0.05, power: float
     n = TTestPower().solve_power(effect_size=effect_size, alpha=alpha, power=power, alternative="two-sided")
     import math
     return math.ceil(n)
+
+
+Z95 = 1.959963984540054  # two-sided 95% normal quantile
+
+
+def wilson(k: int, n: int, z: float = Z95) -> tuple[float, float]:
+    """Wilson score interval for a binomial proportion k/n (T93: moved here from mole_eval.scoring so
+    dcbench_eval has no cross-package import -- this file ships standalone in the public export)."""
+    if n <= 0:
+        raise ValueError("wilson interval needs n > 0")
+    p = k / n
+    den = 1 + z * z / n
+    mid = (p + z * z / (2 * n)) / den
+    half = ((p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / den
+    return (max(0.0, mid - half), min(1.0, mid + half))
+
+
+def newcombe_diff(k1: int, n1: int, k2: int, n2: int, z: float = Z95) -> tuple[float, float, float]:
+    """p1 - p2 with Newcombe's hybrid score interval (method 10, Newcombe 1998)."""
+    p1, p2 = k1 / n1, k2 / n2
+    l1, u1 = wilson(k1, n1, z)
+    l2, u2 = wilson(k2, n2, z)
+    d = p1 - p2
+    lo = d - ((p1 - l1) ** 2 + (u2 - p2) ** 2) ** 0.5
+    hi = d + ((u1 - p1) ** 2 + (p2 - l2) ** 2) ** 0.5
+    return (d, lo, hi)

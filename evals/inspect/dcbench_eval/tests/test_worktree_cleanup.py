@@ -115,10 +115,49 @@ def test_cleanup_sample_is_a_noop_without_worktree_metadata():
     anyio.run(wa.cleanup_sample, state)  # must not raise
 
 
-def test_prune_stale_worktrees_removes_old_leftovers_but_keeps_recent_ones(tiny_repo):
+def test_prune_stale_worktrees_removes_dead_pid_leftovers_immediately_regardless_of_age(tiny_repo):
+    """T93 round-2 review MEDIUM fix: a worktree whose lock file's pid is no longer running is stale the
+    moment that's detected -- not after waiting out max_age_s (a crashed run's leftovers used to sit for up
+    to an hour before anything touched them)."""
+    dead_wt = wa.make_worktree(tiny_repo)
+    import json as _json
+
+    # simulate a crashed previous run: pid that is (overwhelmingly likely) not running, freshly-mtimed dir
+    wa._lock_path(dead_wt).write_text(_json.dumps({"pid": 999_999, "created": time.time()}))
+
+    removed = wa.prune_stale_worktrees(tiny_repo, max_age_s=3600)  # generous age floor the old code needed
+
+    assert str(dead_wt.resolve()) in [str(Path(p).resolve()) for p in removed]
+    assert not dead_wt.exists()
+    assert not wa._lock_path(dead_wt).exists()
+
+
+def test_prune_stale_worktrees_keeps_worktree_with_live_pid_even_when_old(tiny_repo):
+    """The flip side: a worktree whose lock names a PID that IS still running (this test process itself) is
+    never removed, no matter how old its mtime looks -- the fix for a legitimately long-running concurrent
+    eval that the old 'older than 1h' floor would have swept out from under itself."""
+    live_wt = wa.make_worktree(tiny_repo)  # _write_worktree_lock records THIS process's own pid
+    old_mtime = time.time() - 10_000
+    import os
+
+    os.utime(live_wt, (old_mtime, old_mtime))
+
+    removed = wa.prune_stale_worktrees(tiny_repo, max_age_s=0)  # even a zero floor must not touch it
+
+    assert str(live_wt.resolve()) not in [str(Path(p).resolve()) for p in removed]
+    assert live_wt.exists()
+
+    wa.remove_worktree(tiny_repo, live_wt)
+
+
+def test_prune_stale_worktrees_falls_back_to_age_for_legacy_worktrees_with_no_lock_file(tiny_repo):
+    """A worktree made before this fix shipped (or whose lock write failed) has no lock file at all --
+    `prune_stale_worktrees` still falls back to the original age-only floor for exactly that case, so
+    upgrading never leaves pre-existing leftovers permanently un-sweepable."""
     old_wt = wa.make_worktree(tiny_repo)
+    wa._lock_path(old_wt).unlink()  # simulate "no lock" (pre-fix worktree)
     new_wt = wa.make_worktree(tiny_repo)
-    # backdate the "old" one past the max_age_s threshold without touching the recent one
+    wa._lock_path(new_wt).unlink()
     old_mtime = time.time() - 10_000
     import os
 
@@ -126,11 +165,9 @@ def test_prune_stale_worktrees_removes_old_leftovers_but_keeps_recent_ones(tiny_
 
     removed = wa.prune_stale_worktrees(tiny_repo, max_age_s=3600)
 
-    # git worktree list reports the macOS-resolved path (/private/var/...) even though tempfile.mkdtemp()
-    # handed back the /var/... symlink alias -- compare resolved paths, not raw strings.
     assert str(old_wt.resolve()) in [str(Path(p).resolve()) for p in removed]
     assert not old_wt.exists()
-    assert new_wt.exists()  # not swept -- still "in flight"
+    assert new_wt.exists()
 
     wa.remove_worktree(tiny_repo, new_wt)
 
@@ -145,3 +182,47 @@ def test_prune_stale_worktrees_drops_registrations_for_already_deleted_dirs(tiny
     wa.prune_stale_worktrees(tiny_repo, max_age_s=0)
 
     assert worktree_count(tiny_repo) == 0
+
+
+def test_ensure_worktrees_excluded_writes_git_info_exclude_never_gitignore(tiny_repo):
+    """T93 round-2 review MEDIUM fix: `.mole_ab_worktrees/` must be ignored via `.git/info/exclude` (local,
+    untracked) -- never by editing the user's own tracked `.gitignore`."""
+    (tiny_repo / ".gitignore").write_text("node_modules/\n")  # the user's own file, must be left alone
+
+    wa.ensure_worktrees_excluded(tiny_repo)
+
+    exclude_text = (tiny_repo / ".git" / "info" / "exclude").read_text()
+    assert "/.mole_ab_worktrees/" in exclude_text
+    assert (tiny_repo / ".gitignore").read_text() == "node_modules/\n"
+
+
+def test_ensure_worktrees_excluded_is_idempotent(tiny_repo):
+    wa.ensure_worktrees_excluded(tiny_repo)
+    wa.ensure_worktrees_excluded(tiny_repo)
+    exclude_text = (tiny_repo / ".git" / "info" / "exclude").read_text()
+    assert exclude_text.count("/.mole_ab_worktrees/") == 1
+
+
+def test_make_worktree_registers_git_exclude_when_worktrees_root_is_inside_repo(tiny_repo):
+    """The actual call site (task.py's docker path): worktrees_root = <repo>/.mole_ab_worktrees."""
+    worktrees_root = tiny_repo / ".mole_ab_worktrees"
+    wt = wa.make_worktree(tiny_repo, worktrees_root=worktrees_root)
+
+    exclude_text = (tiny_repo / ".git" / "info" / "exclude").read_text()
+    assert "/.mole_ab_worktrees/" in exclude_text
+
+    wa.remove_worktree(tiny_repo, wt)
+
+
+def test_ensure_worktrees_excluded_uses_the_common_git_dir_for_a_linked_worktree(tiny_repo, tmp_path):
+    """T93 round-3 review HIGH: for a repo that is itself a linked git worktree, `--git-dir` is the
+    per-worktree admin dir, whose info/exclude git never reads. The entry must land where git reads it."""
+    import subprocess
+    linked = tmp_path / "linked"
+    subprocess.run(["git", "-C", str(tiny_repo), "worktree", "add", "-q", str(linked)], check=True)
+    wa.ensure_worktrees_excluded(linked)
+    (linked / ".mole_ab_worktrees").mkdir()
+    (linked / ".mole_ab_worktrees" / "foo.txt").write_text("x")
+    st = subprocess.run(["git", "-C", str(linked), "status", "--porcelain", "--untracked-files=all"],
+                        capture_output=True, text=True, check=True).stdout
+    assert ".mole_ab_worktrees" not in st

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """The ONE command every T90 experiment starts with: hash + freeze a spec before run 1 (OSF/AsPredicted
-practice, see tasks/T90-ab-experiment-system/4 log/prior-art.md). Refuses silently-edited specs after the
+practice; see this project's own internal prior-art notes). Refuses silently-edited specs after the
 fact (assert_frozen_unedited) -- CI should call --check on every push so a quiet edit to a frozen spec fails
 the build instead of invalidating a result nobody notices.
 

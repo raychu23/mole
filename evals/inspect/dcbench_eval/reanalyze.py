@@ -5,13 +5,14 @@ for T17 (mole_eval.scoring), applied here to the dcbench merge-ready rate. Never
 Usage:
   evals/inspect/dcbench_eval/reanalyze.py [--runs PATH] [--json]
 
-Acceptance (T90 contract): this must reproduce context/product-plan/systems/metrics-proof/productivity/
-results-72.md's numbers exactly (see tests/test_reanalyze.py) and add intervals that file did not have.
+Acceptance (T90 contract): this must reproduce the private productivity benchmark's results file's
+numbers exactly (see tests/test_reanalyze.py) and add intervals that file did not have.
 """
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -19,14 +20,14 @@ from typing import Any
 EVAL_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(EVAL_DIR))
 
-from dcbench_eval.stats import bootstrap_ci, clustered_se, holm_correction, paired_permutation_test  # noqa: E402
-from mole_eval.scoring import newcombe_diff  # noqa: E402
+from dcbench_eval.stats import bootstrap_ci, clustered_se, holm_correction, newcombe_diff, paired_permutation_test  # noqa: E402
 
-# T63's own raw data lives in the MAIN repo working tree (context/ is gitignored, so it is not checked out in
-# this worktree; see tasks/T90-ab-experiment-system/4 log/prior-art.md). Read-only: this module never writes here.
-DEFAULT_RUNS_PATH = Path(
-    "/Users/a1/Desktop/CS Code/Project/Mole/context/product-plan/systems/metrics-proof/productivity/raw/runs.jsonl"
-)
+# No machine-specific path baked in here (this module ships publicly): the historical T63 raw data lives
+# in a private task-history location outside this worktree, so this module carries NO default path to it
+# (T93 review FAIL fix #1: the export tool used to string-rewrite a hardcoded default away, which mangled
+# the literal value every caller saw; the correct fix is not shipping a private default at all). --runs is
+# required unless --inspect-log is given; set MOLE_AB_RUNS_PATH to avoid retyping --runs every run.
+DEFAULT_RUNS_PATH = Path(os.environ["MOLE_AB_RUNS_PATH"]) if os.environ.get("MOLE_AB_RUNS_PATH") else None
 TASKS = ["TASK-001", "TASK-003", "TASK-004", "TASK-006", "TASK-008", "TASK-009", "TASK-012", "TASK-013"]
 ARMS = ["A", "R", "M"]
 PAIRS = [("R", "M"), ("A", "M"), ("A", "R")]
@@ -223,10 +224,13 @@ def analyze_generic(records: list[dict[str, Any]]) -> dict[str, Any]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--runs", default=str(DEFAULT_RUNS_PATH))
+    ap.add_argument("--runs", default=str(DEFAULT_RUNS_PATH) if DEFAULT_RUNS_PATH else None,
+                     help="path to a runs.jsonl (shaped like T63's); required unless $MOLE_AB_RUNS_PATH is set or --inspect-log is given -- this module ships publicly with no baked-in path to any private data")
     ap.add_argument("--inspect-log", default=None, help="an Inspect .eval log (mole_ab or mole_regression) instead of --runs; uses analyze_generic, not T63's hardcoded A/R/M shape")
     ap.add_argument("--json", action="store_true", help="print the full result as JSON (default: a short table)")
     a = ap.parse_args()
+    if not a.inspect_log and not a.runs:
+        ap.error("--runs PATH (or $MOLE_AB_RUNS_PATH) is required when --inspect-log is not given")
     if a.inspect_log:
         records = load_inspect_log(a.inspect_log)
         result = analyze_generic(records)

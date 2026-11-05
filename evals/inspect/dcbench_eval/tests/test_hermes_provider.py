@@ -1,6 +1,6 @@
 """Red-first (T90 follow-up): the `hermes` Inspect model provider must register under @modelapi and call
 the documented command. No real model call here (subprocess.run is monkeypatched); a real end-to-end run
-is proven separately in tasks/T90-ab-experiment-system/4 log/."""
+is proven separately in this project's own internal task history."""
 from __future__ import annotations
 
 import subprocess

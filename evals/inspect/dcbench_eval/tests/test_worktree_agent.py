@@ -1,6 +1,6 @@
 """Red-first (T90 follow-up): the worktree solver must actually create/tear down a real git worktree
-and run hermes as a subprocess (mocked here; a real hermes call is proven separately in
-tasks/T90-ab-experiment-system/4 log/, not in this unit test suite -- no network/paid calls in pytest)."""
+and run hermes as a subprocess (mocked here; a real hermes call is proven separately in this project's
+own internal task history, not in this unit test suite -- no network/paid calls in pytest)."""
 from __future__ import annotations
 
 import subprocess

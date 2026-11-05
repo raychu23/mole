@@ -5,3 +5,6 @@ dist-tsc/
 .DS_Store
 .stage/
 *.vsix
+# mole_ab's Docker-sandboxed agent=claude_code/codex worktrees (T93): created under <repo>/.mole_ab_worktrees
+# so compose.yaml can bind-mount them; always throwaway, cleaned up by cleanup_sample/prune_stale_worktrees.
+.mole_ab_worktrees/

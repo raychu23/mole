@@ -1,0 +1,22 @@
+# Inspect Docker sandbox for mole_ab's agent=claude_code/codex path: `Task(sandbox=("docker", THIS FILE))`.
+# One "default" service (Inspect's own convention when a Task names no sandbox), kept alive with a no-op
+# entrypoint so Inspect can `docker compose exec` into it once per sample.
+#
+# The worktree bind mount: worktree_agent.make_worktree() creates each sample's throwaway git worktree with
+# a HOST git process (not inside this container), and task.py (when sandbox="docker") puts those worktrees
+# under `<repo>/.mole_ab_worktrees/` instead of the system temp dir, and exports MOLE_AB_REPO_DIR=<repo>
+# before Inspect builds this sandbox -- so the ONE bind mount below (repo root in, repo root out, same
+# absolute path on both sides) makes every worktree AND the main repo's own .git object store (which a
+# linked worktree's .git file still points back into) visible inside the container at the exact path the
+# external agent is cwd'd into (external_agent.py passes cwd=<worktree> to inspect_swe.claude_code()/
+# codex_cli(), which exec the CLI inside this sandbox at that path). Docker Compose's ${VAR} interpolation
+# reads MOLE_AB_REPO_DIR from the environment `inspect eval` is run in (see docs/experiments.md).
+services:
+  default:
+    build: .
+    init: true
+    command: ["sleep", "infinity"]
+    working_dir: /work
+    volumes:
+      - ${MOLE_AB_REPO_DIR}:${MOLE_AB_REPO_DIR}
+    network_mode: bridge
