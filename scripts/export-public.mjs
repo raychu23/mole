@@ -35,6 +35,9 @@ const exclude = [/(^|\/)node_modules(\/|$)/, /(^|\/)dist(\/|$)/, /(^|\/)dist-tsc
   // files the published mole-code package or this repo's README/docs need -- same reasoning the plugin's own
   // bench/test exclusion below already used (T86). Neither is in release/mole-code's own `files` allowlist.
   /(^|\/)bench(\/|$)/, /(^|\/)test(\/|$)/,
+  // T97: this test drives the private benchmark copy (scratch dcbench-v4 + the gitignored context/ scorer); it has no
+  // meaning outside the author's machine, so it never ships (the export scan caught its absolute paths).
+  /(^|\/)evals\/inspect\/dcbench_eval\/tests\/test_v4_score_intent_to_add\.py$/,
   // T87: these two packages are built around the author's own private build process, not an end-user-facing
   // Mole feature -- agentstate reads the author's own ~/.hermes/state.db, ~/.claude and ~/.codex session
   // directories to attribute the author's own agent runs; coverage's commit attribution depends on the
