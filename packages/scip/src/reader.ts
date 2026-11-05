@@ -136,18 +136,37 @@ const RELATIVE_IMPORT = /^\s*from\s+(\.+)([\w][\w.]*)?\s+import\b/;
 export function statementStarts(lines: string[]): number[] {
   const continues: boolean[] = new Array(lines.length).fill(false);
   let depth = 0;
-  let triple: string | undefined; // the open triple-quote delimiter, carried across lines
+  let triple: string | undefined; // an open triple-quote delimiter, carried across lines
+  let single: string | undefined; // an open '/" string continued by a backslash-newline (round-4 review HIGH-1)
   let backslash = false;
+  // Scans a single-quoted string body from k; returns the index after the closing quote, or -1 when the line
+  // ends in an escaping backslash (the string continues on the next physical line, Lang Ref 2.4.1).
+  const scanSingle = (line: string, end: number, k: number, q: string): number => {
+    while (k < end) {
+      if (line[k] === '\\') { if (k === end - 1) return -1; k += 2; continue; }
+      if (line[k] === q) return k + 1;
+      k++;
+    }
+    return end; // unterminated without a backslash: a SyntaxError in Python; do not carry it
+  };
   for (let i = 0; i < lines.length; i++) {
-    continues[i] = depth > 0 || triple !== undefined || backslash;
+    continues[i] = depth > 0 || triple !== undefined || single !== undefined || backslash;
     backslash = false;
-    const line = lines[i]!;
+    const raw = lines[i]!;
+    const line = raw.endsWith('\r') ? raw.slice(0, -1) : raw; // CRLF
+    const end = line.length;
     let k = 0;
-    while (k < line.length) {
+    if (single !== undefined) {
+      const q = single;
+      single = undefined;
+      const r = scanSingle(line, end, 0, q);
+      if (r < 0) { single = q; continue; }
+      k = r;
+    }
+    while (k < end) {
       if (triple !== undefined) {
         const close = line.indexOf(triple, k);
-        if (close < 0) { k = line.length; break; }
-        // skip an escaped closing quote: count preceding backslashes
+        if (close < 0) { k = end; break; }
         let b = close - 1, n = 0;
         while (b >= k && line[b] === '\\') { n++; b--; }
         if (n % 2 === 1) { k = close + 1; continue; }
@@ -157,9 +176,9 @@ export function statementStarts(lines: string[]): number[] {
       if (ch === '#') break; // comment to end of line
       if (ch === '"' || ch === "'") {
         if (line.startsWith(ch.repeat(3), k)) { triple = ch.repeat(3); k += 3; continue; }
-        k++; // single-line string: skip to the matching unescaped quote (or end of line)
-        while (k < line.length && line[k] !== ch) k += line[k] === '\\' ? 2 : 1;
-        k++; continue;
+        const r = scanSingle(line, end, k + 1, ch);
+        if (r < 0) { single = ch; k = end; break; }
+        k = r; continue;
       }
       if (ch === '(' || ch === '[' || ch === '{') depth++;
       else if ((ch === ')' || ch === ']' || ch === '}') && depth > 0) depth--;

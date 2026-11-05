@@ -22,4 +22,11 @@ describe('statementStarts (Python line joining)', () => {
   it('nested brackets in a later default argument do not leak', () => {
     expect(statementStarts(['def f(x=(1, 2),', '      y=[3]):', '    pass', 'from . import d'])).toEqual([0, 0, 2, 3]);
   });
+  it('a backslash-newline inside a single-quoted string keeps the next line inside the string (round-4 HIGH-1)', () => {
+    expect(statementStarts(['from . import a', '', "s = 'x\\", "(y'", 'from . import b'])).toEqual([0, 1, 2, 2, 4]);
+    expect(statementStarts(['s = "x\\', '[y"', 'from . import c'])).toEqual([0, 0, 2]);
+  });
+  it('handles CRLF line endings', () => {
+    expect(statementStarts(['from . import (\r', '    a,\r', ')\r', 'x = 1\r'])).toEqual([0, 0, 0, 3]);
+  });
 });
