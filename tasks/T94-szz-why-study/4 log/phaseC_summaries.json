@@ -1,0 +1,27 @@
+{
+  "rows": 1857,
+  "has_why": 190,
+  "bug_inducing": 80,
+  "why_and_inducing": 21,
+  "validated_fixes": 28,
+  "szz_failed": 0,
+  "caught_distinct": 205
+}{
+  "rows": 398,
+  "has_why": 253,
+  "bug_inducing": 0,
+  "why_and_inducing": 0,
+  "validated_fixes": 0,
+  "szz_failed": 0,
+  "caught_distinct": 0
+}{
+  "rows": 1414,
+  "has_why": 224,
+  "bug_inducing": 12,
+  "why_and_inducing": 5,
+  "validated_fixes": 79,
+  "szz_timeouts_or_errors": 26,
+  "caught_distinct": 96,
+  "caught_in_window": 12,
+  "caught_out_of_window": 84
+}
