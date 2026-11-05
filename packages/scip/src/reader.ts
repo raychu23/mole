@@ -342,7 +342,7 @@ export function scipSites(index: Index, root: string): ScipSites {
         if (occ.symbolRoles & 1 /* Definition */) continue;
         const sym = occ.symbol;
         if (!sym || sym.startsWith('local ') || !MODULE_SUFFIX.test(sym) || definedIn.has(sym) || relativeResolved.has(sym)) continue;
-        const occLine = occ.range[0] ?? 0;
+        const occLine = occurrenceRange(occ)[0] ?? 0; // typed ranges leave occ.range empty (T106 review)
         const startLine = starts[occLine] ?? occLine;
         const resolved = resolveRelativeImport(file, lines[startLine] ?? '', descriptorNames(sym), fileSet);
         if (resolved) relativeResolved.set(sym, resolved);
