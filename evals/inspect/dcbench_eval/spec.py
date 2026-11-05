@@ -47,8 +47,13 @@ class ExperimentSpec:
             raise ValueError("ExperimentSpec: id is required")
         if not self.hypothesis:
             raise ValueError("ExperimentSpec: hypothesis is required")
-        if len(self.arms) < 2:
-            raise ValueError("ExperimentSpec: arms must have at least 2 entries")
+        if len(self.arms) < 1:
+            raise ValueError("ExperimentSpec: arms must have at least 1 entry")
+        # T107/v4.2: loosened from >=2 (2026-11-05). A single-arm base-rate/descriptive pre-registration
+        # (e.g. protocol-v4.2.json: dcbench Config A only, no comparison arm) is a legitimate design this
+        # schema should accept -- OSF/AsPredicted pre-registration does not require >=2 conditions, and T90's
+        # own stats.py ships one-sample tools (wilson, bootstrap_ci) for exactly this case. A/B comparisons
+        # still naturally have >=2 arms; nothing about existing 2+-arm specs changes.
         if not self.tasks:
             raise ValueError("ExperimentSpec: tasks must be non-empty")
         if not self.primary_metric:
