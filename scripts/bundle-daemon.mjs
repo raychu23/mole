@@ -13,7 +13,7 @@
 // see tasks/T85-mole-cli-bundle/2 insights.md and tasks/T86-claude-code-plugin-dist/2 insights.md for why).
 import { build } from 'esbuild';
 import { createRequire } from 'node:module';
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -64,6 +64,36 @@ export function vendorPackageTree(name, outDir, visited = new Set()) {
     /* no package.json or unparsable -- nothing to recurse into */
   }
   for (const dep of Object.keys(deps)) vendorPackageTree(dep, outDir, visited);
+}
+
+/**
+ * Vendors ONLY what the `typescript` npm package needs for @mole's own runtime uses of it (T101): the
+ * compiler API (`lib/typescript.js`, `require('typescript')`'s main entry) and its default-lib `.d.ts`
+ * files (needed by `ts.createProgram`'s type checker -- see packages/indexer/src/ts-engine.ts and the
+ * other `import ts from 'typescript'` call sites: they build a real `ts.Program` + `getTypeChecker()`,
+ * not just a parser, so the lib files ARE load-bearing, not dead weight -- keep every `lib.*.d.ts` since
+ * an indexed repo's own tsconfig can request any lib combination (dom, webworker, esnext...) and there is
+ * no fixed target to narrow it to). `vendorPackageTree('typescript', ...)` (generic filter above) instead
+ * copied the WHOLE installed package: the standalone `tsc`/`tsserver`/`typingsInstaller` CLI entry points
+ * (`_tsc.js` alone is 5.9 MB -- @mole never runs `tsc`/`tsserver` as a subprocess, only `require('typescript')`
+ * as a library), ~13 translated-diagnostics locale directories (4.3 MB, @mole never localizes compiler
+ * errors), `bin/`, `tsserverlibrary.*` (language-service protocol, unused) and `typesMap.json` (typings
+ * auto-acquisition, unused) -- none of that is reachable from a `require('typescript')` call. Measured
+ * once (2026-11-04, typescript 5.9.x): trims node_modules/typescript from ~24 MB to ~8-9 MB.
+ * @param {string} outDir
+ */
+export function vendorTypescriptRuntime(outDir) {
+  const src = resolvePackageDir('typescript');
+  const dest = join(outDir, 'node_modules', 'typescript');
+  rmSync(dest, { recursive: true, force: true });
+  mkdirSync(join(dest, 'lib'), { recursive: true });
+  copyFileSync(join(src, 'package.json'), join(dest, 'package.json'));
+  for (const f of ['LICENSE.txt', 'LICENSE', 'LICENSE.md']) if (existsSync(join(src, f))) copyFileSync(join(src, f), join(dest, f));
+  for (const f of readdirSync(join(src, 'lib'))) {
+    // typescript.js (the compiler API) + every lib.*.d.ts (default libs, see header); everything else in
+    // lib/ is tsc/tsserver/typingsInstaller's own entry points or locale/typings-acquisition data, unused.
+    if (f === 'typescript.js' || /^lib\..*\.d\.ts$/.test(f)) copyFileSync(join(src, 'lib', f), join(dest, 'lib', f));
+  }
 }
 
 /**
