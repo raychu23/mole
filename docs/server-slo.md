@@ -314,14 +314,10 @@ notes pointed at `tasks/T33-team-server/*` -- the team server's original build t
    `getPrCheckPoolQueueDepth()`). Verified: `packages/server/test/metrics.spec.ts` (4/4) --
    scrape returns parseable Prometheus text-exposition format, `http_server_request_duration`'s
    count for a route increases after real requests to it, `mole_job_count_total` increases after
-   a real job completion, outbox gauges are present. One known limitation, not fixed: the
-   histogram's default bucket boundaries (`[0,5,10,25,50,75,100,...]`) are tuned for
-   millisecond-scale durations, not the second-scale unit this metric uses (`unit: 's'`) --
-   this version of `@opentelemetry/sdk-metrics` (3.0.0) has no `View`/explicit-bucket API to
-   override that (checked: `node_modules/@opentelemetry/sdk-metrics`'s own exports), so
-   sub-second request durations mostly collapse into one bucket. The `_sum`/`_count` series (used
-   by the tests above, and by rate()/avg() queries) are unaffected; only `histogram_quantile()`
-   on this specific metric would need a custom-bucket upgrade later.
+   a real job completion, outbox gauges are present. Histogram buckets are second-scale (set with sdk-metrics Views): HTTP uses the
+   boundaries the OTel HTTP semantic conventions recommend (0.005 s .. 10 s), jobs 0.05 s .. 300 s, so
+   `histogram_quantile()` gives usable p95/p99 (test: `test/metrics-buckets.spec.ts`). An earlier
+   draft of this doc said the SDK had no View API; that was wrong (review deleg_3ddcdb35).
 5. **Cross-test-file pg-boss contention in this package's own test suite**, unrelated to
    product code: `test/index.spec.ts` and `test/index-temporal-e2e.spec.ts`, run concurrently
    (vitest's default), can steal each other's jobs off the shared global queue and flake.

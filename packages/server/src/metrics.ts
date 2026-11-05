@@ -28,7 +28,7 @@
 // Fastify instead gets ONE extra route (`GET /metrics`) that calls the exporter's own
 // `getMetricsRequestHandler(req, res)` directly against the raw Node req/res Fastify already
 // has (`reply.hijack()` tells Fastify not to also try to send a response).
-import { MeterProvider } from '@opentelemetry/sdk-metrics';
+import { AggregationType, MeterProvider } from '@opentelemetry/sdk-metrics';
 import { PrometheusExporter } from '@opentelemetry/exporter-prometheus';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
@@ -71,9 +71,19 @@ async function safeCount(pool: Pool, sql: string): Promise<number | undefined> {
 
 export function initMetrics(pool: Pool, service = 'mole-server'): Metrics {
   const exporter = new PrometheusExporter({ preventServerStart: true });
+  // Second-scale buckets (T103 review FAIL: the SDK default boundaries are ms-scale, 0..10000, so every sub-second
+  // request fell in the first bucket). HTTP: the boundaries the OTel HTTP semantic conventions recommend for
+  // http.server.request.duration (opentelemetry.io/docs/specs/semconv/http/http-metrics, fetched 2026-11-05);
+  // jobs run seconds to minutes, so the same scale extended. Set via sdk-metrics 3.x Views (MeterProviderOptions.views).
+  const HTTP_BUCKETS_S = [0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10];
+  const JOB_BUCKETS_S = [0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60, 120, 300];
   const provider = new MeterProvider({
     resource: resourceFromAttributes({ [ATTR_SERVICE_NAME]: service }),
     readers: [exporter],
+    views: [
+      { instrumentName: METRIC_HTTP_SERVER_REQUEST_DURATION, aggregation: { type: AggregationType.EXPLICIT_BUCKET_HISTOGRAM, options: { boundaries: HTTP_BUCKETS_S } } },
+      { instrumentName: 'mole.job.duration', aggregation: { type: AggregationType.EXPLICIT_BUCKET_HISTOGRAM, options: { boundaries: JOB_BUCKETS_S } } },
+    ],
   });
   const meter = provider.getMeter('mole-server');
 
