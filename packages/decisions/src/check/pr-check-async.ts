@@ -110,6 +110,12 @@ class PrCheckPool {
     this.pending.clear();
     this.queue = [];
   }
+
+  /** T103: current count of jobs waiting for a free worker (not yet dispatched to one). A
+   *  server exposing this as a gauge sees backpressure building before p99 latency does. */
+  queueDepth(): number {
+    return this.queue.length;
+  }
 }
 
 let pool: PrCheckPool | undefined;
@@ -126,8 +132,19 @@ export function prCheckAsync(opts: PrCheckOptions): Promise<PrCheckResult> {
   return getPool().run(opts);
 }
 
-/** Test-only hook: drop the shared pool's workers between test files. Never called by production code. */
-export async function __resetPrCheckAsyncPool(): Promise<void> {
+/** T103: terminate the shared worker pool. Called by the server's graceful shutdown (so SIGTERM
+ *  never leaves unref'd worker threads behind) AND by tests that need a clean pool between files --
+ *  same operation either way, so there is exactly one implementation to keep correct. */
+export async function shutdownPrCheckAsyncPool(): Promise<void> {
   if (pool) await pool.terminateAll();
   pool = undefined;
+}
+
+/** @deprecated use shutdownPrCheckAsyncPool; kept so existing tests importing this name still work. */
+export const __resetPrCheckAsyncPool = shutdownPrCheckAsyncPool;
+
+/** T103: current prCheckAsync pool queue depth (jobs waiting for a free worker), for a
+ *  `/metrics` gauge. 0 when the pool has never been created (no prCheckAsync call yet). */
+export function getPrCheckPoolQueueDepth(): number {
+  return pool ? pool.queueDepth() : 0;
 }

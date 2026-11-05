@@ -43,6 +43,8 @@ import { createTestIssuer } from './oauth.js';
 import { relayOutboxOnceDetailed, type FakeGithubClient } from './outbox.js';
 import { createCheckRunSink } from './checkRunSink.js';
 import { mapLimit } from './concurrency.js';
+import { initMetrics, type Metrics } from './metrics.js';
+import { shutdownPrCheckAsyncPool } from '@mole/decisions';
 
 export interface CloseOptions {
   /** Drain in-flight work (let pg-boss finish currently-executing jobs) instead of a hard
@@ -61,6 +63,7 @@ export interface ServerHandle {
   boss: Boss;
   temporalPool: TemporalPgPool;
   telemetry: Telemetry;
+  metrics: Metrics;
 }
 
 export interface BuildAppOptions {
@@ -105,6 +108,10 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env, opts: Build
   const telemetry = initTelemetry('mole-team-server');
   const pool = createPool(dbUrl);
   await runMigrations(pool);
+  // T103: Prometheus /metrics (docs/server-slo.md "Found, not fixed" #4). Needs `pool` for the
+  // outbox pending/dead-letter gauges, so constructed right after it -- see metrics.ts header
+  // comment for the OTel-metrics-vs-prom-client choice.
+  const metrics = initMetrics(pool, 'mole-team-server');
   const temporalPool = new TemporalPgPool({ connectionString: temporalDbUrl, max: 10 });
   await applyTemporalSchema(temporalPool);
   const boss = await createQueue(dbUrl, queuePrefix);
@@ -132,8 +139,15 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env, opts: Build
     await mapLimit(jobs, rebuildConcurrency, async (job) => {
       const { orgId, ref } = job.data as { orgId: string; ref: string };
       const repoDir = orgRepoDirs[orgId];
-      if (!repoDir) throw new Error(`no repo dir configured for org ${orgId}`);
-      await rebuildIndexFromGit(pool, orgId, repoDir, ref, telemetry, { temporalPool });
+      const t0 = process.hrtime.bigint();
+      try {
+        if (!repoDir) throw new Error(`no repo dir configured for org ${orgId}`);
+        await rebuildIndexFromGit(pool, orgId, repoDir, ref, telemetry, { temporalPool });
+        metrics.recordJob('rebuild-index', 'success', Number(process.hrtime.bigint() - t0) / 1e9);
+      } catch (e) {
+        metrics.recordJob('rebuild-index', 'failure', Number(process.hrtime.bigint() - t0) / 1e9);
+        throw e;
+      }
       // T69 review-1 #4: run the divergence check after every rebuild (the reconciliation
       // job the task's own STOP rule calls for) and log it. Never throws / never blocks the
       // index: a logging failure here must not turn a successful rebuild into a failed job.
@@ -154,8 +168,15 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env, opts: Build
     await mapLimit(jobs, checkRunConcurrency, async (job) => {
       const { orgId, ref, before } = job.data as { orgId: string; ref: string; before?: string };
       const repoDir = orgRepoDirs[orgId];
-      if (!repoDir) throw new Error(`no repo dir configured for org ${orgId}`);
-      await computeCheckRun(pool, orgId, repoDir, ref, before, telemetry);
+      const t0 = process.hrtime.bigint();
+      try {
+        if (!repoDir) throw new Error(`no repo dir configured for org ${orgId}`);
+        await computeCheckRun(pool, orgId, repoDir, ref, before, telemetry);
+        metrics.recordJob('compute-check-run', 'success', Number(process.hrtime.bigint() - t0) / 1e9);
+      } catch (e) {
+        metrics.recordJob('compute-check-run', 'failure', Number(process.hrtime.bigint() - t0) / 1e9);
+        throw e;
+      }
     });
   });
 
@@ -205,6 +226,30 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env, opts: Build
   // T69 review-1 #5 (unchanged contract): /health reports temporal reachability, now also
   // reporting 503 while draining (same readiness semantics /readyz exposes under a new path).
   app.get('/health', async (_req, reply) => readiness(reply));
+
+  // T103: Prometheus scrape endpoint. The exporter was built with preventServerStart (its own
+  // dedicated HTTP server/port is never started -- see metrics.ts header comment), so this route
+  // calls its request handler directly against Fastify's own raw req/res; reply.hijack() tells
+  // Fastify the handler has taken over the response itself (the exporter writes + ends it).
+  app.get('/metrics', (req, reply) => {
+    reply.hijack();
+    metrics.requestHandler(req.raw, reply.raw);
+  });
+
+  // T103: HTTP server request duration, by route + status (OTel HTTP semantic conventions'
+  // own http.server.request.duration metric -- the one docs/server-slo.md's prior-art already
+  // cited and did not build). onResponse fires after the response is fully sent, with Fastify's
+  // own elapsedTime (ms) already measured; route comes from the MATCHED route pattern
+  // (request.routeOptions.url, e.g. '/reconcile/:orgId'), never the raw path, so this never
+  // creates one time series per org id / per ref.
+  app.addHook('onResponse', async (req, reply) => {
+    const route = req.routeOptions?.url ?? 'unknown';
+    metrics.recordHttpDuration(reply.elapsedTime / 1000, {
+      method: req.method,
+      route,
+      status: reply.statusCode,
+    });
+  });
 
   // T69 review-1 #4: read-only divergence check, exposed so an operator (or a future CLI) can
   // inspect reconciliation state without a direct DB connection. Never writes.
@@ -261,6 +306,7 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env, opts: Build
     pool,
     boss,
     telemetry,
+    metrics,
     temporalPool,
     /** Marks /healthz /readyz /health as draining and stops the outbox relay loop; called by
      * close()/shutdown() before anything else is torn down. */
@@ -272,7 +318,7 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env, opts: Build
 }
 
 export async function startServer(env: NodeJS.ProcessEnv = process.env, opts: BuildAppOptions = {}): Promise<ServerHandle> {
-  const { app, pool, boss, telemetry, temporalPool, beginDraining } = await buildApp(env, opts);
+  const { app, pool, boss, telemetry, metrics, temporalPool, beginDraining } = await buildApp(env, opts);
   const port = Number(env.PORT ?? 3000);
   await app.listen({ port, host: '0.0.0.0' });
   return {
@@ -281,6 +327,7 @@ export async function startServer(env: NodeJS.ProcessEnv = process.env, opts: Bu
     boss,
     temporalPool,
     telemetry,
+    metrics,
     async close(closeOpts: CloseOptions = {}) {
       beginDraining();
       // app.close() stops accepting new connections and waits for in-flight requests/hooks
@@ -294,9 +341,17 @@ export async function startServer(env: NodeJS.ProcessEnv = process.env, opts: Bu
       // crash/restart test distinguishes from a hard kill -9 (pg-boss durability recovers
       // from that too, just via a fresh worker re-claiming the job, not via this path).
       await boss.stop({ graceful: closeOpts.graceful ?? false, timeout: closeOpts.timeoutMs ?? DEFAULT_GRACEFUL_TIMEOUT_MS });
+      // T103: the compute-check-run job path now runs through prCheckAsync's worker_thread
+      // pool (checkrun.ts) -- its workers are unref'd (never keep the process alive on their
+      // own) but SIGTERM must still shut them down explicitly: an in-flight prCheckAsync()
+      // call mid-worker-thread-execution is exactly the kind of work boss.stop({graceful})
+      // above already waited for at the pg-boss job level, so by this point no new work is
+      // queued to the pool; this just reclaims the thread resources before the process exits.
+      await shutdownPrCheckAsyncPool();
       await pool.end();
       await temporalPool.end();
       await telemetry.shutdown().catch(() => undefined);
+      await metrics.shutdown().catch(() => undefined);
     },
   };
 }

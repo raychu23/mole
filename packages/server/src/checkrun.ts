@@ -4,7 +4,7 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import type { CheckAnnotation } from '@mole/decisions';
-import { prCheck } from '@mole/decisions';
+import { prCheckAsync } from '@mole/decisions';
 import type { Pool } from './db.js';
 import { getGoverningDecisions } from './graph.js';
 import { writeOutboxInTx } from './outbox.js';
@@ -121,7 +121,13 @@ export async function computeCheckRun(
     let title = `${governed} file(s) governed by a decision, ${ungoverned} not`;
     let annotations: CheckAnnotation[] = [];
     try {
-      const pr = await prCheck({ root: repoDir, base: await resolveBase(repoDir, ref, before), head: ref, history: false });
+      // T103: prCheckAsync, not prCheck -- runs in a worker_threads pool (packages/decisions/
+      // src/check/pr-check-async.ts) so prCheck's own ~20 synchronous git calls (including an
+      // unconditional `git worktree add`/`remove` per call) never block THIS process's event
+      // loop, the dominant remaining cost T99 found and left out of scope (docs/server-slo.md
+      // "Found, not fixed" #1b). Identical result to prCheck() on the same inputs -- same
+      // implementation, proven in packages/decisions/test/pr-check-async.test.ts.
+      const pr = await prCheckAsync({ root: repoDir, base: await resolveBase(repoDir, ref, before), head: ref, history: false });
       title = pr.checkRun.output.title;
       annotations = pr.checkRun.output.annotations;
     } catch (e) {
