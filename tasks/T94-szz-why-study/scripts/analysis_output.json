@@ -1,0 +1,50 @@
+{
+  "n_total_commits": 3372,
+  "n_has_why": 594,
+  "n_bug_inducing": 89,
+  "n_why_and_inducing": 23,
+  "by_repo": {
+    "LedgerSMB": {
+      "n": 1299,
+      "n_why": 201,
+      "n_bug_inducing": 12,
+      "n_why_and_inducing": 5
+    },
+    "cli": {
+      "n": 380,
+      "n_why": 237,
+      "n_bug_inducing": 0,
+      "n_why_and_inducing": 0
+    },
+    "tapir": {
+      "n": 1693,
+      "n_why": 156,
+      "n_bug_inducing": 77,
+      "n_why_and_inducing": 18
+    }
+  },
+  "insufficient_events_per_protocol": true,
+  "raw_rate_bug_inducing_given_has_why": 0.0387,
+  "raw_rate_bug_inducing_given_no_why": 0.0238,
+  "model": {
+    "formula": "bug_inducing ~ has_why + log1p(churn) + log1p(files_changed) + log1p(author_prior_commits)",
+    "odds_ratio_has_why": 0.906,
+    "ci95_cluster_robust_by_repo": [
+      0.3242,
+      2.5325
+    ],
+    "ci95_bootstrap_2000x": [
+      0.4745,
+      1.5356
+    ],
+    "n_bootstrap_successful": 2000,
+    "n_clusters": 3,
+    "repo_fe_alternative_or": 1.4819
+  },
+  "null_result": true,
+  "null_reasons": {
+    "insufficient_events": true,
+    "ci_includes_1": true,
+    "negligible_effect_size": true
+  }
+}
