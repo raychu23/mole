@@ -159,11 +159,16 @@ remaining required fields.
 - TypeScript/TSX and plain JS/CJS/MJS source files, via the TypeScript compiler API, **or** any language a
   SCIP indexer covers, via a pre-built `index.scip` — run the indexer yourself and point `mole rules` at
   its output (`--scip path/to/index.scip`, or just put `index.scip` at the repo root). Verified against
-  Python (`scip-python`; `packages/scip/test/fixtures/python`): `forbid: import` and `forbid: call` both
-  work there, line-cited, against the same `rules:` records. Not yet wired for Go: `scip-go` installs and
-  runs, but the version tested (0.2.9) does not populate `Occurrence.range` in a minimal fixture, so Mole
-  cannot cite a line for it — see `tasks/T95-scip-multilang/4 log/prior-art.md` #6. No other SCIP language
-  has been tried.
+  Python (`scip-python`; `packages/scip/test/fixtures/python`) and Go (`scip-go`;
+  `packages/scip/test/fixtures/go`): `forbid: import` and `forbid: call` both work there, line-cited,
+  against the same `rules:` records. T95 reported Go as "not wired" because `scip-go` 0.2.9's occurrences
+  decoded with empty ranges — T106 found that was a stale-bindings bug in Mole's own SCIP decoder
+  (`@c4312/scip`, generated from `sourcegraph/scip`'s old `scip.proto`), not a `scip-go` bug: the project
+  moved to `scip-code/scip` and retyped `Occurrence.range` into a typed `oneof` (`single_line_range`/
+  `multi_line_range`) that `@c4312/scip` doesn't know about. Switching to `@scip-code/scip` (the
+  maintained org's own npm package, version-paired with the Go bindings `scip-go` itself depends on) fixed
+  it for both languages — see `packages/scip/test/fixtures/go/HOW-PRODUCED.md` for the full trace. No
+  other SCIP language has been tried.
 - A `from:`/`to:` path that matches no file in the repo is reported as a warning (likely a typo), not
   silently ignored (TypeScript path only; the SCIP path only sees files the SCIP index actually covers).
 - SCIP path staleness: before reading an `index.scip`, `mole rules` checks it against a content-hash manifest
