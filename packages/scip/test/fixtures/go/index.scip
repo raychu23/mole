@@ -1,0 +1,43 @@
+
+ÜD
+scip-go0.2.9index--output=index.scip--module-version=0.1.0<file:///Users/a1/.hermes/cache/scratch/scip-go-fixture-final ú
+case_alias.go<2scip-go gomod counterfixture 0.1.0 counterfixture/BI=scip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/B	I=scip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/B"R>scip-go gomod counterfixture 0.1.0 counterfixture/caseAlias().BZ I=scip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/B
+RFscip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/Helper().Bl
+>scip-go gomod counterfixture 0.1.0 counterfixture/caseAlias().(2	caseAlias:"go*func caseAlias() stringP
+2scip-go gomod counterfixture 0.1.0 counterfixture/(#2main:"go*package main"go0‡
+case_blank.go<2scip-go gomod counterfixture 0.1.0 counterfixture/BI=scip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/B
+!R>scip-go gomod counterfixture 0.1.0 counterfixture/caseBlank().BZ l
+>scip-go gomod counterfixture 0.1.0 counterfixture/caseBlank().(2	caseBlank:"go*func caseBlank() string"go0™
+case_dot.go<2scip-go gomod counterfixture 0.1.0 counterfixture/BI=scip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/B
+!P<scip-go gomod counterfixture 0.1.0 counterfixture/caseDot().BZ RFscip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/Helper().Bf
+<scip-go gomod counterfixture 0.1.0 counterfixture/caseDot().(2caseDot:"go*func caseDot() string"go0•
+case_internal.go<2scip-go gomod counterfixture 0.1.0 counterfixture/BNBscip-go gomod counterfixture 0.1.0 `counterfixture/internal/ipkg`/B$UAscip-go gomod counterfixture 0.1.0 counterfixture/caseInternal().BZ NBscip-go gomod counterfixture 0.1.0 `counterfixture/internal/ipkg`/B_Sscip-go gomod counterfixture 0.1.0 `counterfixture/internal/ipkg`/InternalHelper().Bu
+Ascip-go gomod counterfixture 0.1.0 counterfixture/caseInternal().(2caseInternal: "go*func caseInternal() string"go0®
+case_method.go<2scip-go gomod counterfixture 0.1.0 counterfixture/BI=scip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/BS?scip-go gomod counterfixture 0.1.0 counterfixture/caseMethod().BZ local 0BI=scip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/B
+OCscip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/Thing#Blocal 0B	XLscip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/Thing#Method().B
+o
+?scip-go gomod counterfixture 0.1.0 counterfixture/caseMethod().(2
+caseMethod:"go*func caseMethod() string!
+local 0(=2t:"go*var t Thing"go0¶
+case_noimport.go<2scip-go gomod counterfixture 0.1.0 counterfixture/BN<scip-go gomod counterfixture 0.1.0 counterfixture/localFn().BR(UAscip-go gomod counterfixture 0.1.0 counterfixture/caseNoImport().BZ H<scip-go gomod counterfixture 0.1.0 counterfixture/localFn().Bf
+<scip-go gomod counterfixture 0.1.0 counterfixture/localFn().(2localFn:"go*func localFn() stringu
+Ascip-go gomod counterfixture 0.1.0 counterfixture/caseNoImport().(2caseNoImport: "go*func caseNoImport() string"go0ˇ
+case_plain.go<2scip-go gomod counterfixture 0.1.0 counterfixture/BI=scip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/BR>scip-go gomod counterfixture 0.1.0 counterfixture/casePlain().BZ I=scip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/BRFscip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/Helper().Bl
+>scip-go gomod counterfixture 0.1.0 counterfixture/casePlain().(2	casePlain:"go*func casePlain() string"go0Æ
+case_vendored.go<2scip-go gomod counterfixture 0.1.0 counterfixture/BTHscip-go gomod github.com/example/greet 0.1.0 `github.com/example/greet`/B UAscip-go gomod counterfixture 0.1.0 counterfixture/caseVendored().BZ THscip-go gomod github.com/example/greet 0.1.0 `github.com/example/greet`/B\Pscip-go gomod github.com/example/greet 0.1.0 `github.com/example/greet`/Greet().Bu
+Ascip-go gomod counterfixture 0.1.0 counterfixture/caseVendored().(2caseVendored: "go*func caseVendored() string"go0‹
+main.go<2scip-go gomod counterfixture 0.1.0 counterfixture/BM9scip-go gomod counterfixture 0.1.0 counterfixture/main().B	Z J>scip-go gomod counterfixture 0.1.0 counterfixture/casePlain().BJ>scip-go gomod counterfixture 0.1.0 counterfixture/caseAlias().BH<scip-go gomod counterfixture 0.1.0 counterfixture/caseDot().BJ>scip-go gomod counterfixture 0.1.0 counterfixture/caseBlank().BK?scip-go gomod counterfixture 0.1.0 counterfixture/caseMethod().BMAscip-go gomod counterfixture 0.1.0 counterfixture/caseNoImport().BMAscip-go gomod counterfixture 0.1.0 counterfixture/caseInternal().B	MAscip-go gomod counterfixture 0.1.0 counterfixture/caseVendored().B
+V
+9scip-go gomod counterfixture 0.1.0 counterfixture/main().(2main:"go*func main()"go0ç
+internal/ipkg/ipkg.goNBscip-go gomod counterfixture 0.1.0 `counterfixture/internal/ipkg`/BeSscip-go gomod counterfixture 0.1.0 `counterfixture/internal/ipkg`/InternalHelper().BR2º
+Sscip-go gomod counterfixture 0.1.0 `counterfixture/internal/ipkg`/InternalHelper()./InternalHelper is called from case_internal.go.(2InternalHelper:""go*func InternalHelper() string˜
+Bscip-go gomod counterfixture 0.1.0 `counterfixture/internal/ipkg`/îPackage ipkg lives under internal/, so case_internal.go proves scip-go resolves an internal/
+package import the same way it resolves a regular one.
+(#2ipkg:"go*package ipkg"go0”
+pkg/leaf/leaf.goI=scip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/BXFscip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/Helper().BR&WCscip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/Thing#B
+Z OCscip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/Thing#B	^Lscip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/Thing#Method().B	R	0§
+Cscip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/Thing#9Thing has a method (Method) used by the method-call case.(12Thing:"go*type Thing struct{}µ
+Fscip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/Helper().EHelper is the plain exported function other packages import and call.(2Helper:"go*func Helper() string|
+Lscip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/Thing#Method().(2Method:""go*func (Thing).Method() string¨
+=scip-go gomod counterfixture 0.1.0 `counterfixture/pkg/leaf`/OPackage leaf is imported by every "plain/aliased/dot/blank import" case below.
+(#2leaf:"go*package leaf"go0

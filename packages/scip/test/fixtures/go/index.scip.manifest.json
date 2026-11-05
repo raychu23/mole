@@ -1,0 +1,19 @@
+{
+  "indexSha256": "a3efc9bec3dda7a0527f5ee8247f2cf385b08c3031a225e808dbf13c2613e19f",
+  "tool": "scip-go 0.2.9",
+  "files": {
+    "case_alias.go": "c7a48b0bec6134e987fb87f821636e6ea98b98e55b1299aaedc09d82c125e218",
+    "case_blank.go": "44379c469418dd6b67ca2e814cbe3ca1db76e149a1a32ac0989ff2e5aa65e112",
+    "case_dot.go": "5ea465374ffda8b8acce4abe8da964c7d2cd06c6fca98f76d3b30d7c8f0f6425",
+    "case_internal.go": "3746505748b960e33f82873e1c8ab9273e33574e62d521166446d93a7fa3d372",
+    "case_method.go": "d086e826881e55ea13d420dcfacdfa714f4b9613dec5c06163db73757f7e3530",
+    "case_noimport.go": "2233288781a759c274d679e522906dcdf57ccaff98f19ae8780b809d8f16b7b4",
+    "case_plain.go": "8b35d4585c5644b5f2f9f4b65790a0ac3d960140a0bb64e286b3128c5f29e449",
+    "case_vendored.go": "a115bd976524e7816ca0444a694b85ca7b470298e5634a9fcb7959cb681f1b8d",
+    "internal/ipkg/ipkg.go": "99343f154f685fe987ec995390a25a4ee17385745ae26d9ac4b08d2569a62871",
+    "local/greet/greet.go": "2f334bda0abe3a85e0def8c3dfaf52d89d00e62d3f7d538b566fb390694ac580",
+    "main.go": "5555607723ad6aba03988f1abd74b158f6cf8fd494995ccda41c3ad5b0f6d1b8",
+    "pkg/leaf/leaf.go": "b6ff279e3e98884a48b4ae6c736275b159c5be373ac24507fd67cfaa4e05b17c",
+    "vendor/github.com/example/greet/greet.go": "2f334bda0abe3a85e0def8c3dfaf52d89d00e62d3f7d538b566fb390694ac580"
+  }
+}
