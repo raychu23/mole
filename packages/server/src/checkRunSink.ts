@@ -2,7 +2,7 @@
 // rows on every check-run job but NOTHING in the running server ever called
 // relayOutboxOnce() -- only bench/m25.ts and tests did, manually, in-process. A real
 // `node dist/src/index.js` deployment queued check-run notifications forever and never
-// posted a single one anywhere. Non-goal (tasks/T33-team-server/0 start.md): no real GitHub
+// posted a single one anywhere. Non-goal (docs/server-slo.md, Non-goals): no real GitHub
 // App registration, so this never talks to api.github.com directly. Instead:
 //  - MOLE_CHECKRUN_WEBHOOK_URL (optional): POST each check-run payload as JSON to this URL
 //    (compatible with src/fakeGithub.ts's own `${url}/check-runs` contract, so it can point
@@ -34,7 +34,7 @@ export function createUnconfiguredSink(): FakeGithubClient {
       throw new Error(
         'no check-run delivery sink configured: set MOLE_CHECKRUN_WEBHOOK_URL (dev/staging recorder) ' +
           'or pass opts.githubSink to buildApp (a real deploy would inject an Octokit-based sink here; ' +
-          'Mole itself never registers a GitHub App -- see tasks/T33-team-server/0 start.md non-goals)'
+          'Mole itself never registers a GitHub App -- see docs/server-slo.md, Non-goals)'
       );
     },
   };
