@@ -42,6 +42,9 @@ export default defineConfig({
     },
     exclude: [
       '**/node_modules/**',
+      // T102's prCheck cache keeps full checkouts under .git/mole/prcheck-cache; vitest's own default exclude
+      // has **/.git/** but this list replaces the default, so it must be restated (full check ran 4,526 tests).
+      '**/.git/**',
       '**/dist/**',
       '**/bench/corpora/**',
       '**/bench/**/corpora/**',

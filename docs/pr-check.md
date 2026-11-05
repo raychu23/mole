@@ -32,6 +32,8 @@ Consequences of living inside `.git`:
 
 ## Deleting it
 
+Tools that walk the repo with their own exclude list replacing the default (vitest `test.exclude`, custom file
+walkers) must keep `**/.git/**` in it, or they will see the cached checkouts (Mole's own vitest config had to).
 Each slot also keeps one ref, `refs/mole/prcheck/<slot>`, pointing at the commit it has checked out, so `git gc`
 never prunes a commit only the cache uses (an unregistered checkout's HEAD is not a gc root). Delete those with
 `git for-each-ref --format='%(refname)' refs/mole/prcheck/ | xargs -n1 git update-ref -d`.
