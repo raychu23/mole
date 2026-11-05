@@ -33,23 +33,25 @@
 // resolve correctly without any change to those files.
 import { build } from 'esbuild';
 import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { bundleDaemon, resolvePackageDir, vendorPackageTree } from '../../../scripts/bundle-daemon.mjs';
+import { bundleDaemon, resolvePackageDir, vendorPackageTree, vendorTypescriptRuntime } from '../../../scripts/bundle-daemon.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url)); // release/mole-code/tools
 const pkgRoot = resolve(here, '..'); // release/mole-code
 const repoRoot = resolve(pkgRoot, '../..');
 const pluginSrc = join(repoRoot, 'plugins/claude-code');
-const require = createRequire(import.meta.url);
 const outDir = join(pkgRoot, 'dist');
 
 rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, 'package.json'), JSON.stringify({ type: 'commonjs' }, null, 2) + '\n');
 
-// 1. bundle the CLI, its worker thread, and the MCP server (shared esbuild step, see scripts/bundle-daemon.mjs)
+// 1. bundle the CLI, its worker thread, and the MCP server (shared esbuild step, see scripts/bundle-daemon.mjs).
+// T101: `typescript` is now external (like dependency-cruiser/better-sqlite3), not bundled -- esbuild was
+// inlining the whole 8.7 MB compiler into EACH of these 3 outputs (cli.js, worker.cjs, mcp.cjs: ~26 MB of
+// duplicate code across the tarball) because it wasn't in this list. One vendored copy (step 2 below) now
+// serves all three via the normal `require('typescript')` CommonJS resolution from dist/node_modules/.
 await bundleDaemon({
   repoRoot,
   outDir,
@@ -57,27 +59,28 @@ await bundleDaemon({
   workerOutfile: 'worker.cjs',
   mcpEntry: join(repoRoot, 'scripts/mcp-entry.ts'),
   mcpOutfile: 'mcp.cjs',
+  externals: ['dependency-cruiser', 'better-sqlite3', 'typescript'],
 });
 
-// TypeScript finds its default lib files (lib.es2022.d.ts ...) next to the file it runs from, which is now
-// dist/ (packages/indexer, @mole/memory, @mole/flows etc. load the real `typescript` compiler at runtime).
-const tsLib = dirname(require.resolve('typescript/lib/typescript.js'));
-for (const f of readdirSync(tsLib)) if (/^lib\..*\.d\.ts$/.test(f)) copyFileSync(join(tsLib, f), join(outDir, f));
-
 // 2. vendor dependency-cruiser (pure JS, with its own full dependency closure -- see vendorPackageTree's
-// header), typescript, and better-sqlite3 (native, just the native binary + lib/) into dist/node_modules/,
-// from this repo's own install -- see this file's header for why, instead of listing either as a
-// `dependency`. `typescript` additionally fixes a real bug T86's review found (see
+// header), typescript (trimmed to just what @mole's runtime uses it for -- see vendorTypescriptRuntime's
+// header), and better-sqlite3 (native, just the native binary + lib/) into dist/node_modules/, from this
+// repo's own install -- see this file's header for why, instead of listing either as a `dependency`.
+// `typescript` additionally fixes a real bug T86's review found (see
 // tasks/T86-claude-code-plugin-dist/2 insights.md): dependency-cruiser's own TypeScript-AST pass
 // (`tsPreCompilationDeps`, needed for `mole rules` to match a rule against a .ts import at all) does its own
 // `await tryImport('typescript')` and silently treats EVERY import as rule-compliant when that import fails
 // -- which it does unless a real `typescript` package is resolvable from dist/'s own node_modules or an
 // ancestor of it. Inside this monorepo that ancestor walk finds the repo root's `typescript` and the bug
-// never shows; standalone (this package installed anywhere else) it always does.
+// never shows; standalone (this package installed anywhere else) it always does. Now that `typescript` is
+// external to the esbuild bundle (not inlined, see step 1), this vendored copy's lib/ also serves as the
+// one place `ts.createProgram`'s type checker finds its default-lib `.d.ts` files at runtime (Node resolves
+// them next to the vendored lib/typescript.js, the same as any other `require('typescript')` caller would) --
+// no separate top-level `dist/lib.*.d.ts` copy is needed any more.
 const vendored = new Set();
 vendorPackageTree('dependency-cruiser', outDir, vendored);
-vendorPackageTree('typescript', outDir, vendored);
-console.log(`vendored dependency-cruiser + typescript + ${vendored.size - 2} further dependencies`);
+vendorTypescriptRuntime(outDir);
+console.log(`vendored dependency-cruiser + typescript (trimmed) + ${vendored.size - 1} further dependencies`);
 {
   const name = 'better-sqlite3';
   const src = resolvePackageDir(name);
