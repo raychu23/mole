@@ -126,6 +126,8 @@ export async function demoCli(): Promise<number> {
     say('\nThat is the whole loop: write a decision once in plain language, keep it in a file next to the code,');
     say('and every check from here on is free (no tokens, no model) until the code actually moves away from it.');
     say(`\nThe sample repo is left on disk so you can poke at it yourself (delete it whenever):\n  cd ${dir} && npx -y mole-code rules`);
+    say('\nReady to try this on your own repo? `mole init` scaffolds the same .mole/decisions/ shape (one example');
+    say('decision + rule) in the repo you run it from -- never overwrites anything that is already there.');
     return after.violations.length > 0 ? 0 : 1;
   } catch (e) {
     rmSync(dir, { recursive: true, force: true });

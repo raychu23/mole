@@ -2,7 +2,21 @@
 
 ## How to use
 
-Write a decision once, in plain language:
+New repo? `mole init` scaffolds `.mole/decisions/` with one example decision (plain front matter + a
+`rules:` block) so there is something to look at and run `mole rules` against immediately — never overwrites
+a file that is already there, so it is always safe to re-run. `--dry-run` shows the plan without writing
+anything; `--json` for scripting; `--agents-snippet` additionally adds a one-sentence precedence note to
+AGENTS.md/CLAUDE.md (see "AGENTS.md / CLAUDE.md precedence" in the project README) — off by default outside
+an interactive terminal, so a scripted `mole init --yes` never edits another file unasked:
+
+```sh
+npx -y -p mole-code mole init                 # scaffold + prompt (interactive TTY) about the AGENTS.md note
+npx -y -p mole-code mole init --yes            # scaffold only, no prompt, no AGENTS.md/CLAUDE.md edit
+npx -y -p mole-code mole init --agents-snippet # scaffold + add the precedence sentence, no prompt
+npx -y -p mole-code mole init --dry-run --json # show the plan, write nothing
+```
+
+Write a decision by hand, in plain language:
 
 ```sh
 mole decision new --id D001 --title "Payments never imports the legacy billing client directly" \
@@ -46,8 +60,11 @@ Try the whole loop without touching your own repo: `npx mole-code demo`.
   when a `index.scip` file exists at the repo root (or `--scip FILE` names one), a
   [SCIP index](https://github.com/sourcegraph/scip) produced by a separate indexer (e.g.
   `scip-python`) instead — see Limits; an optional `--adr-dir` for plain ADR-folder records.
-- **Writes:** `.mole/decisions/*.md` (only via `mole decision new/supersede/link`); `.dependency-cruiser.mole.cjs`
-  and `.mole-call-rules.json` only when you pass `--emit` (TypeScript path only). `mole rules` (no `--emit`) writes nothing.
+- **Writes:** `.mole/decisions/*.md` (only via `mole init`, which writes one example record, or
+  `mole decision new/supersede/link`); `.dependency-cruiser.mole.cjs` and `.mole-call-rules.json` only when
+  you pass `--emit` (TypeScript path only). `mole rules` (no `--emit`) writes nothing. `mole init
+  --agents-snippet` additionally appends one marked sentence to AGENTS.md and/or CLAUDE.md (creating
+  AGENTS.md if neither exists).
 
 ## Limits
 

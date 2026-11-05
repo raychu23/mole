@@ -1,0 +1,158 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T96-mole-init
+
+ ❯ packages/daemon/test/init.test.ts (20 tests | 3 failed) 258ms
+   ✓ T96: mole init -- fresh repo > writes exactly one example decision record, with id/title/status/rules front matter 5ms
+   ✓ T96: mole init -- fresh repo > with no --agents-snippet / --yes / TTY, never touches AGENTS.md or CLAUDE.md (non-interactive default: off) 2ms
+   ✓ T96: mole init -- fresh repo > --yes alone still leaves AGENTS.md/CLAUDE.md untouched (accepts the prompt default, which is No) 1ms
+   ✓ T96: mole init -- fresh repo > --agents-snippet with neither file present creates AGENTS.md (not CLAUDE.md) with the precedence sentence, wrapped in markers 2ms
+   ✓ T96: mole init -- fresh repo > --no-agents-snippet forces it off even if other flags would turn it on 1ms
+   ✓ T96: mole init -- existing AGENTS.md > appends the precedence sentence to an existing AGENTS.md, once, without touching its prior content 2ms
+   ✓ T96: mole init -- existing AGENTS.md > does not duplicate the sentence if AGENTS.md already has it 2ms
+   × T96: mole init -- existing AGENTS.md > review FAIL #1: does not duplicate the sentence if it is already present WITHOUT the HTML markers 7ms
+     → expected '# rules\n\nWhen a `.mole/decisions/*.…' to be '# rules\n\nWhen a `.mole/decisions/*.…' // Object.is equality
+   × T96: mole init -- existing AGENTS.md > review FAIL #1: detects the sentence across whitespace/line-ending differences (re-wrapped, CRLF) 3ms
+     → expected '# rules\r\n\r\nWhen\r\na\r\n`.mole/de…' to be '# rules\r\n\r\nWhen\r\na\r\n`.mole/de…' // Object.is equality
+   ✓ T96: mole init -- existing CLAUDE.md (no AGENTS.md) > appends the sentence to CLAUDE.md and does not create AGENTS.md 2ms
+   ✓ T96: mole init -- existing CLAUDE.md (no AGENTS.md) > with both AGENTS.md and CLAUDE.md present, appends to both, once each 2ms
+   × T96: mole init -- existing CLAUDE.md (no AGENTS.md) > review FAIL #3: a CRLF AGENTS.md gets a CRLF-appended block, not a mixed-LF block 3ms
+     → expected '# My project rules\r\n\r\nAlways run …' not to match /[^\r]\n/
+   ✓ T96: mole init -- rerun is idempotent > never overwrites the example decision record on a second run, even if it was hand-edited 2ms
+   ✓ T96: mole init -- rerun is idempotent > a second run with --agents-snippet does not duplicate the sentence or re-create AGENTS.md 2ms
+   ✓ T96: mole init -- --dry-run writes nothing > reports the plan but creates no files at all, on a totally empty repo 0ms
+   ✓ T96: mole init -- --dry-run writes nothing > --dry-run on a repo that already has the decision + snippet reports skips, still writes nothing 2ms
+   ✓ T96: mole init -- --json output > planInit + runInit stay in agreement on the plan for a given flag set 1ms
+   ✓ T96: mole init -- end to end through the real CLI (dist/cli.js) > `mole init --json` on a fresh repo creates the example decision and prints valid JSON 58ms
+   ✓ T96: mole init -- end to end through the real CLI (dist/cli.js) > `mole --help` / no-args usage mentions init 76ms
+   ✓ T96: mole init -- end to end through the real CLI (dist/cli.js) > a second `mole init --json` run (rerun) is idempotent end to end 84ms
+ ❯ packages/daemon/test/init-pty.test.ts (3 tests | 2 failed) 615ms
+   × T96 review FAIL #2: mole init (real pty) -- Ctrl-D/EOF at the y/N prompt > EOF (Ctrl-D) is treated as the default No: exits 0 and still writes the decision scaffold 216ms
+     → expected false to be true // Object.is equality
+   ✓ T96 review FAIL #2: mole init (real pty) -- Ctrl-D/EOF at the y/N prompt > typed "n" behaves the same as EOF (both are the printed default) 198ms
+   × T96 review FAIL #2: mole init (real pty) -- Ctrl-D/EOF at the y/N prompt > control: "y" under the same pty harness still writes AGENTS.md (proves the harness drives the real prompt) 200ms
+     → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/daemon/test/init-pty.test.ts > T96 review FAIL #2: mole init (real pty) -- Ctrl-D/EOF at the y/N prompt > EOF (Ctrl-D) is treated as the default No: exits 0 and still writes the decision scaffold
+AssertionError: expected false to be true // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+ ❯ packages/daemon/test/init-pty.test.ts:86:80
+     84|     expect(out).toContain('(y/N)');
+     85|     expect(exitStatus).toBe(0);
+     86|     expect(existsSync(join(root, '.mole/decisions/D001-example-decisio…
+       |                                                                                ^
+     87|     expect(existsSync(join(root, 'AGENTS.md'))).toBe(false); // EOF = …
+     88|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  packages/daemon/test/init-pty.test.ts > T96 review FAIL #2: mole init (real pty) -- Ctrl-D/EOF at the y/N prompt > control: "y" under the same pty harness still writes AGENTS.md (proves the harness drives the real prompt)
+AssertionError: expected false to be true // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+ ❯ packages/daemon/test/init-pty.test.ts:105:49
+    103|     const r = spawnSync(python2, ['-c', driver, root, cliDist, 'n', 'i…
+    104|     expect(`${r.stdout}`).toContain('(y/N)');
+    105|     expect(existsSync(join(root, 'AGENTS.md'))).toBe(true);
+       |                                                 ^
+    106|   });
+    107| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  packages/daemon/test/init.test.ts > T96: mole init -- existing AGENTS.md > review FAIL #1: does not duplicate the sentence if it is already present WITHOUT the HTML markers
+AssertionError: expected '# rules\n\nWhen a `.mole/decisions/*.…' to be '# rules\n\nWhen a `.mole/decisions/*.…' // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # rules[22m
+
+[2m  When a `.mole/decisions/*.md` rule and this file's guidance disagree, the Mole decision wins; treat a Mole Stop-hook violation (`decision: "block"`) the same as a failing test -- fix the code before finishing.[22m
+
+[31m+ <!-- mole:agents-precedence:start -->[39m
+[31m+ When a `.mole/decisions/*.md` rule and this file's guidance disagree, the Mole decision wins; treat a Mole Stop-hook violation (`decision: "block"`) the same as a failing test -- fix the code before finishing.[39m
+[31m+ <!-- mole:agents-precedence:end -->[39m
+[31m+[39m
+
+ ❯ packages/daemon/test/init.test.ts:101:19
+     99|     const result = await runInit(root, { 'agents-snippet': true });
+    100|     const after = readFileSync(join(root, 'AGENTS.md'), 'utf8');
+    101|     expect(after).toBe(before); // no second copy appended
+       |                   ^
+    102|     const item = result.items.find((i) => i.path === 'AGENTS.md');
+    103|     expect(item?.action).toBe('skip-has-snippet');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  packages/daemon/test/init.test.ts > T96: mole init -- existing AGENTS.md > review FAIL #1: detects the sentence across whitespace/line-ending differences (re-wrapped, CRLF)
+AssertionError: expected '# rules\r\n\r\nWhen\r\na\r\n`.mole/de…' to be '# rules\r\n\r\nWhen\r\na\r\n`.mole/de…' // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -31,5 +31,9 @@[39m
+[2m  the[22m
+[2m  code[22m
+[2m  before[22m
+[2m  finishing.[22m
+
+[31m+ <!-- mole:agents-precedence:start -->[39m
+[31m+ When a `.mole/decisions/*.md` rule and this file's guidance disagree, the Mole decision wins; treat a Mole Stop-hook violation (`decision: "block"`) the same as a failing test -- fix the code before finishing.[39m
+[31m+ <!-- mole:agents-precedence:end -->[39m
+[31m+[39m
+
+ ❯ packages/daemon/test/init.test.ts:114:19
+    112|     const result = await runInit(root, { 'agents-snippet': true });
+    113|     const after = readFileSync(join(root, 'AGENTS.md'), 'utf8');
+    114|     expect(after).toBe(before);
+       |                   ^
+    115|     expect(result.items.find((i) => i.path === 'AGENTS.md')?.action).t…
+    116|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  packages/daemon/test/init.test.ts > T96: mole init -- existing CLAUDE.md (no AGENTS.md) > review FAIL #3: a CRLF AGENTS.md gets a CRLF-appended block, not a mixed-LF block
+AssertionError: expected '# My project rules\r\n\r\nAlways run …' not to match /[^\r]\n/
+
+[32m- Expected:[39m 
+/[^\r]\n/
+
+[31m+ Received:[39m 
+"# My project rules
+
+Always run the tests.
+
+<!-- mole:agents-precedence:start -->
+When a `.mole/decisions/*.md` rule and this file's guidance disagree, the Mole decision wins; treat a Mole Stop-hook violation (`decision: \"block\"`) the same as a failing test -- fix the code before finishing.
+<!-- mole:agents-precedence:end -->
+"
+
+ ❯ packages/daemon/test/init.test.ts:147:22
+    145|     expect(text).toContain('# My project rules');
+    146|     expect(text).toContain(PRECEDENCE_SENTENCE);
+    147|     expect(text).not.toMatch(/[^\r]\n/); // every \n in the file is pa…
+       |                      ^
+    148|     expect(text.includes('\r\n')).toBe(true);
+    149|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  5 failed | 18 passed (23)
+   Start at  22:13:03
+   Duration  885ms (transform 82ms, setup 0ms, collect 168ms, tests 873ms, environment 0ms, prepare 78ms)
+

@@ -140,6 +140,7 @@ async function main(): Promise<number> {
   if (cmd === 'coupling') return (await import('@mole/coupling/dist/src/cli.js')).couplingCli(pos, flags, root); // T77/D69: logical coupling (co-change) x CODEOWNERS teams, cross-team pairs first
   if (['interrogate', 'check-records'].includes(cmd)) return (await import('@mole/intake')).intakeCli(pos, flags, root); // T23: agents interrogate, people write
   if (cmd === 'demo') return (await import('./demo.js')).demoCli(); // T87: 30-second sample-repo walkthrough, no daemon, no network, no model calls
+  if (cmd === 'init') return (await import('./init.js')).initCli(pos, flags, root); // T96: first-run scaffold (.mole/decisions example + optional AGENTS.md/CLAUDE.md precedence sentence), no daemon needed
   const stateDir = str(flags['state-dir']);
   const common = { root, stateDir, ...defaultSources(root, str(flags.tsconfig), str(flags['src-dir'])) };
 
@@ -249,13 +250,13 @@ async function main(): Promise<number> {
   }
   console.error(
     'usage: mole <command> [target] [--root DIR] [--json]\n' +
-      '  core:        daemon | map | impact | check | status | reindex | stop | demo\n' +
+      '  core:        daemon | map | impact | check | status | reindex | stop | demo | init\n' +
       '  notes:       note add | memory | since | seen\n' +
       '  decisions:   decision | decisions | rules | incident | priorities | recall | export | assurance | outcomes | proposals | compile | arguments | cascade-check | pr-check | scip stamp\n' +
       '  agent state: runs | run | tried | agents | agent-intent | collisions | claims | steer\n' +
       '  analysis:    coverage | hotspots | coupling | flows | interrogate | check-records\n' +
       '  flags:       [--state-dir DIR] [--tsconfig F] [--src-dir D] [--idle-minutes N]\n' +
-      '  new here? -> mole demo',
+      '  new here? -> mole init (scaffold .mole/decisions) then mole demo',
   );
   return cmd === 'help' ? 0 : 2;
 }
