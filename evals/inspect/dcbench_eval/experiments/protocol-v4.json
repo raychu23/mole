@@ -1,0 +1,38 @@
+{
+  "id": "T63-productivity-v4",
+  "hypothesis": "Giving Claude-Code-via-hermes the team's 15 decisions via Mole's deployed D102 blocking hooks (Stop decision:block on a crisp rule violation the SESSION itself introduces, replayed around hermes -z the same way v1/MJ replayed the advisory Stop hook -- T92 2df7a8f/0624e94, not the inert model-judge arm protocol-v3 was written for) raises weighted decision-compliance points on dcbench versus the same 15 decisions pasted into CLAUDE.md (R).",
+  "arms": [
+    {
+      "id": "R",
+      "description": "CLAUDE.md = the 15 decision texts from benchmark/seed-data.ts, verbatim (same text as M-block; v1's fairness rule unchanged). scratch/dcbench-v4/arms/R/CLAUDE.md.",
+      "env": {},
+      "context_files": ["scratch/dcbench-v4/arms/R/CLAUDE.md"],
+      "pinned_commit": "9f507ce0a6ef61124aca90cc4e17fb80592a5e4e"
+    },
+    {
+      "id": "M-block",
+      "description": "The same 15 as .mole/decisions records (scratch/dcbench-v4/arms/M/.mole/decisions), PLUS D102: only D-001 and D-005 carry a `rules:` block (crisp-rule-audit.md: the other 13 of the 15 are not expressible as Mole's forbid:import|call -- no 'require' rule kind exists, and the rest are either require-a-call decisions, generic keyword/convention checks, property-access reads, file-existence or frozen-file checks). stop.mjs replayed post-session (same mechanism v1/v2/MJ used for the Stop hook, since hermes -z is not Claude Code and cannot receive a real-time PreToolUse hook from this harness) but reading its NEW `decision:'block'`/`reason` contract (T92/D102), not the old advisory `violat` text match v1/v2 looked for. On a block, ONE forced resume with the hook's own reason text (same one-resume pattern v1/MJ used). KNOWN LIMITATION, disclosed not hidden: PreToolUse real-time deny is NOT exercised by this harness -- it needs the agent to literally be Claude Code with Mole's plugin hooks installed (evals/inspect/dcbench_eval's own agent=claude_code path), which needs Docker (down, per Wave G shared rules) for a Linux sandbox on this macOS host. A true PreToolUse test needs a future run on a host with Docker or a Linux CI runner (open item, see 0 start.md next).",
+      "env": {"MOLE_STOP_BLOCK": "1"},
+      "context_files": ["scratch/dcbench-v4/arms/M/.mole/decisions"],
+      "pinned_commit": "9f507ce0a6ef61124aca90cc4e17fb80592a5e4e"
+    }
+  ],
+  "tasks": ["TASK-001", "TASK-003", "TASK-004", "TASK-006", "TASK-008", "TASK-009", "TASK-012", "TASK-013"],
+  "primary_metric": "weighted decision-compliance percentage (dcbench scorer.ts, UNCHANGED, scored through the v3 adapter fix -- git add --intent-to-add before diffing, full diffs saved -- same scorer.mjs pattern as protocol-v3, reused unmodified here)",
+  "analysis_plan": "paired permutation test (scipy.stats.permutation_test, permutation_type=samples) on the 8 per-task mean percentages for R vs M-block (the only pre-registered comparison at this pilot size -- A is explicitly OUT of this pilot's budget, see sample_size_arithmetic); bootstrap 95% CI (scipy.stats.bootstrap) on each arm's mean task percentage; clustered SE by task (Anthropic arXiv 2411.00640 Eq. 4). No Holm correction needed (single comparison). Report R vs M-block, losses first, as v1/v2/v3 did. This is explicitly a PILOT (see sample_size_arithmetic): report the measured effect and its CI, but do not call a null result 'no effect' -- state the MDE this n can actually detect, honestly, beside it.",
+  "sample_size": {
+    "runs_per_arm_per_task": 3,
+    "power": 0.8,
+    "alpha": 0.05,
+    "mde": 75.2
+  },
+  "sample_size_arithmetic": "NOT a powered confirmatory design -- a PILOT, sized by a fixed time budget, not by the stated MDE. Wave G's shared rule and this task's brief fix the budget directly: v1's M+J arm measured ~10 min/run (results-mj.md); at 2 arms (R, M-block) x 8 tasks x 3 epochs = 48 runs x ~10 min = ~8 hours, the same arithmetic the brief states verbatim. A is deliberately EXCLUDED from this pilot (adding it would be 3 arms x 8 x 3 = 72 runs, ~12h, over budget) -- it may be added later as a secondary arm if Raymond extends the budget; this spec's primary (and only pre-registered) comparison is R vs M-block. Honest power check, COMPUTED not asserted (evals/inspect/dcbench_eval/stats.sample_size_for_mde used in reverse -- TTestPower().solve_power(nobs=3, alpha=0.05, power=0.8) -> effect_size, then mde = effect_size * sd, same measured per-task-diff sd's protocol-v3 computed from T63's real 72 runs: sd(R-M)=23.05): at runs_per_arm_per_task=3 (same epoch count as v1, NOT v3's n=21), the minimum detectable effect on the primary R vs M-block comparison at 80% power / alpha=0.05 is approximately 75 POINTS (computed 2026-11-04, tasks/T97-benchmark-v4-blocking/4 log/prior-art.md has the exact calc) -- i.e. this 48-run pilot can only reliably detect a swing roughly 5x larger than v1's own largest pairwise effect (A-M, +7.8) and ~31x larger than v1's measured R-M difference (+2.4). This pilot is explicitly NOT powered to confirm or rule out a real D102 effect; it exists to (a) prove the blocking mechanism actually fires in a real run (the smoke, already done, see evidence.md) and (b) produce an early, honestly-captioned signal + CI, not a significance claim either way. Reaching v3's own MDE=15 on this SAME R-M comparison still needs n=21 runs/arm/task (504 scored runs total for 2 arms), exactly as protocol-v3 already computed; this pilot does not change that number, it only tests the NEW blocking mechanism at a budget Raymond can approve without first committing to the full 21x run.",
+  "stop_rules": [
+    "any edit to scorer.ts, tasks.ts, the R CLAUDE.md or the M-block records after run 1: a NEW spec version (v5), all arms rerun",
+    "mixing models mid-experiment",
+    "quoting this pilot's R vs M-block numbers as a significance result: at mde=75.2 (see sample_size_arithmetic), a null or a positive result here is 'not powered to detect a realistic effect', never 'Mole works' or 'Mole doesn't work'",
+    "a merge to plugins/claude-code/scripts/* or packages/daemon mid-run without re-pinning the per-arm code copy (v1's original deviation, must not recur here either -- this pilot's hooks are replayed from the pinned main-repo checkout at the commit recorded in each run's record, same discipline as run_dcbench.py)",
+    "treating the Stop-block replay as proof that PreToolUse deny also works -- it is a SEPARATE, real-time mechanism this harness does not exercise (see the M-block arm's own description); claim only what was run",
+    "editing protocol-v3.json -- it stays frozen and NOT RUN, exactly as T90's contract requires; v4 is a new spec file, not an edit"
+  ]
+}

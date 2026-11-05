@@ -1,0 +1,7 @@
+# T63-productivity-v4.1 tooling freeze -- companion to experiments/protocol-v4.1.sha256
+# freeze.py's own ExperimentSpec schema only hashes the JSON spec; the runner/scorer/pinned-tarball
+# hashes below are recorded here (sha256sum-format) so a drift in any of them is detectable the same way.
+# Frozen: 2026-11-05T04:16:34Z
+a8be16f47cc43d618c4c9c9e349a2e4a5ae606182bc73f20ebfd680284170e20  context/product-plan/systems/metrics-proof/productivity/scripts/run_dcbench_v4.py
+8049a53a3835df8fb02a22d892d1f9b07de6a7cdf85abc5755be92b25adfc346  context/product-plan/systems/metrics-proof/productivity/scripts/score.mjs
+f0bbc96596d5102bfb9ebcf21cf6c0129d4d9164b53f6b9bb2fc20a92f2f4ea1  mole-pinned/dist/cli.js+scripts (release/mole-code-0.1.0.tgz, source_commit=e4eafe21e0b5f7e83fd91b85124ece2c0dbdac3f)

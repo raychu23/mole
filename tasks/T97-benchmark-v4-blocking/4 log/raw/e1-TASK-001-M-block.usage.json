@@ -1,0 +1,21 @@
+{
+  "estimated_cost_usd": 0.36540059999999996,
+  "cost_status": "estimated",
+  "cost_source": "official_docs_snapshot",
+  "input_tokens": 798618,
+  "output_tokens": 10075,
+  "cache_read_tokens": 752988,
+  "cache_write_tokens": 45586,
+  "reasoning_tokens": 0,
+  "total_tokens": 808693,
+  "api_calls": 22,
+  "model": "claude-sonnet-5",
+  "provider": "anthropic",
+  "session_id": "local-7f62948ab342094cf806b8dfed85094a4e2eff72fd4b6bc860bd2a1b342f161a",
+  "completed": true,
+  "partial": false,
+  "interrupted": false,
+  "turn_exit_reason": "text_response(finish_reason=stop)",
+  "failed": false,
+  "service_tier": null
+}
