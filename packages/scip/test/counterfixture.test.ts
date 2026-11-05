@@ -3,6 +3,9 @@
 // plain import, aliased import, relative import (both `from . import x` and `from .x import y` forms),
 // duplicate import, `TYPE_CHECKING`-only import (alone, and alongside a runtime import of the same target),
 // re-export via `__init__.py`, a class method call, and a call with no import (same-file definition).
+// Review round-2 HIGH-2 adds: a multi-line parenthesized relative import (`from . import (\n    leaf,\n)`),
+// a two-name parenthesized two-dot relative import (`from .. import (leaf,\n other)`), and a backslash-
+// continued relative import (`from . import \\\n    leaf`).
 //
 // Ground truth table: for each file, the import this reader must find (file, target, isPath, typeOnly) and
 // the calls it must find (file, line, callee). Anything not listed here must NOT appear in the reader's output
@@ -36,6 +39,13 @@ const GROUND_TRUTH_IMPORTS = [
   { file: 'src/pkg/case_relative_whole.py', line: 1, target: 'src/pkg/leaf.py', isPath: true },
   { file: 'src/pkg2/__init__.py', line: 1, target: 'src/pkg/leaf.py', isPath: true }, // the re-export itself
   // case_noimport.py: no import at all (local_fn is defined and called in the same file)
+  // Review round-2 HIGH-2: multi-line parenthesized / backslash-continued relative imports. scip-python puts
+  // each name's own occurrence on ITS OWN line (the continuation line), not the `from ... import (` line.
+  { file: 'src/pkg/case_multiline_parens.py', line: 2, target: 'src/pkg/leaf.py', isPath: true }, // from . import (\n    leaf,\n)
+  { file: 'src/pkg/case_backslash_continuation.py', line: 2, target: 'src/pkg/leaf.py', isPath: true }, // from . import \\\n    leaf
+  // from .. import (leaf,\n other) -- two names in one parenthesized two-dot relative import, each on its own line
+  { file: 'src/pkg/sub/case_multiline_dotdot.py', line: 1, target: 'src/pkg/leaf.py', isPath: true },
+  { file: 'src/pkg/sub/case_multiline_dotdot.py', line: 2, target: 'src/pkg/other.py', isPath: true },
 ] as const;
 
 const GROUND_TRUTH_CALLS = [
@@ -49,6 +59,10 @@ const GROUND_TRUTH_CALLS = [
   { file: 'src/case_type_checking.py', line: 9, callee: 'src.pkg.leaf.helper' },
   { file: 'src/pkg/case_relative_name.py', line: 3, callee: 'src.pkg.leaf.helper' },
   { file: 'src/pkg/case_relative_whole.py', line: 3, callee: 'src.pkg.leaf.helper' },
+  { file: 'src/pkg/case_multiline_parens.py', line: 5, callee: 'src.pkg.leaf.helper' },
+  { file: 'src/pkg/case_backslash_continuation.py', line: 4, callee: 'src.pkg.leaf.helper' },
+  { file: 'src/pkg/sub/case_multiline_dotdot.py', line: 4, callee: 'src.pkg.leaf.helper' },
+  { file: 'src/pkg/sub/case_multiline_dotdot.py', line: 5, callee: 'src.pkg.other.other_helper' },
 ] as const;
 
 describe('scipSites on the counter-fixture (real scip-python 0.6.8 index)', () => {
@@ -114,5 +128,28 @@ describe('scipSites on the counter-fixture (real scip-python 0.6.8 index)', () =
     const { imports, calls } = scipSites(idx, fixture);
     expect(imports.some((s) => s.file === 'src/case_noimport.py')).toBe(false);
     expect(calls.find((c) => c.file === 'src/case_noimport.py')).toMatchObject({ line: 4, callee: 'src.case_noimport.local_fn' });
+  });
+
+  it('resolves a multi-line parenthesized relative import (review round-2 HIGH-2)', () => {
+    const idx = readScipIndex(join(fixture, 'index.scip'));
+    const { imports } = scipSites(idx, fixture);
+    const hit = imports.find((s) => s.file === 'src/pkg/case_multiline_parens.py');
+    expect(hit).toMatchObject({ target: 'src/pkg/leaf.py', isPath: true });
+  });
+
+  it('resolves a backslash-continued relative import (review round-2 HIGH-2)', () => {
+    const idx = readScipIndex(join(fixture, 'index.scip'));
+    const { imports } = scipSites(idx, fixture);
+    const hit = imports.find((s) => s.file === 'src/pkg/case_backslash_continuation.py');
+    expect(hit).toMatchObject({ target: 'src/pkg/leaf.py', isPath: true });
+  });
+
+  it('resolves both names of a two-dot, two-name parenthesized relative import, each on its own line (review round-2 HIGH-2)', () => {
+    const idx = readScipIndex(join(fixture, 'index.scip'));
+    const { imports } = scipSites(idx, fixture);
+    const hits = imports.filter((s) => s.file === 'src/pkg/sub/case_multiline_dotdot.py');
+    expect(hits).toHaveLength(2);
+    expect(hits).toContainEqual(expect.objectContaining({ target: 'src/pkg/leaf.py', isPath: true }));
+    expect(hits).toContainEqual(expect.objectContaining({ target: 'src/pkg/other.py', isPath: true }));
   });
 });

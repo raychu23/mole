@@ -1,13 +1,15 @@
-// T95 review follow-up HIGH-1: a stale `index.scip` must never silently pass `mole rules` with 0 violations.
-// Uses the counter-fixture (real scip-python 0.6.8 index, see fixtures/counterfixture/HOW-PRODUCED.md) with a
-// rule that forbids importing src/pkg/leaf.py; mtimes are set explicitly (not left to cpSync) so "fresh" vs
-// "stale" is deterministic regardless of filesystem timing.
-import { cpSync, mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
+// T95 review round-2 HIGH-1: `scipStaleness()` used to compare mtimes, which false-positives on every fresh
+// `git clone`/CI checkout (checkout writes every file's mtime to "now" regardless of its committed content) --
+// a committed `index.scip` always read as stale on a clean clone even with byte-identical content. This now
+// compares content hashes against a manifest written by `mole scip stamp`, so a real `git clone` of a repo
+// with a committed index + manifest is fresh, and only an actual content change is stale.
+import { execFileSync } from 'node:child_process';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
-import { readScipIndex } from '@mole/scip';
+import { readScipIndex, stampScip } from '@mole/scip';
 import { checkRules, rulesCli, scipStaleness, StaleScipIndexError } from '../src/index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -31,92 +33,156 @@ const RULE = [
   '',
 ].join('\n');
 
-/** A fresh copy of the counter-fixture with index.scip's mtime pinned relative to the source tree's, so the
- * staleness check is deterministic instead of racing cpSync's copy order. */
-function repo(indexAge: 'fresh' | 'stale', opts: { touchNewFile?: boolean } = {}): string {
-  const root = mkdtempSync(join(tmpdir(), 'mole-rules-scip-stale-'));
+function git(cwd: string, ...args: string[]): string {
+  return execFileSync('git', args, { cwd, encoding: 'utf8' });
+}
+
+/** A fresh git repo seeded from the committed counter-fixture (its own committed index.scip + manifest), with a
+ * decision rule added, committed as the repo's initial commit. */
+function sourceRepo(): string {
+  const root = mkdtempSync(join(tmpdir(), 'mole-scip-stale-src-'));
   cleanups.push(() => rmSync(root, { recursive: true, force: true }));
   cpSync(fixture, root, { recursive: true });
   mkdirSync(join(root, '.mole/decisions'), { recursive: true });
   writeFileSync(join(root, '.mole/decisions/0001-no-leaf.md'), RULE);
-  const indexPath = join(root, 'index.scip');
-  if (indexAge === 'fresh') {
-    // index newer than every source file: touch it into the future
-    const future = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    utimesSync(indexPath, future, future);
-  } else {
-    // index older than the source tree: push it into the past instead of touching sources, which keeps the
-    // index's own "do the indexed files/targets still exist" semantics intact for the non-staleness assertions
-    const past = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    utimesSync(indexPath, past, past);
-  }
-  if (opts.touchNewFile) writeFileSync(join(root, 'src/case_new_violation.py'), 'from src.pkg.leaf import helper\n\nx = helper()\n');
+  git(root, 'init', '-q');
+  git(root, 'config', 'user.email', 't@t');
+  git(root, 'config', 'user.name', 't');
+  git(root, 'add', '-A');
+  git(root, 'commit', '-q', '-m', 'init');
   return root;
 }
 
-describe('SCIP staleness detection (T95 review HIGH-1)', () => {
-  it('scipStaleness: a fresh index (newer than every source file) is not stale', () => {
-    const root = repo('fresh');
-    const idx = readScipIndex(join(root, 'index.scip'));
-    expect(scipStaleness(root, join(root, 'index.scip'), idx)).toEqual({ stale: false, reasons: [] });
+/** A real `git clone` of `src` -- the actual scenario the review's HIGH-1 is about: checkout writes every
+ * file's mtime to "now", so only a content-hash comparison (not mtime) can tell this apart from "stale". */
+function cloneRepo(src: string): string {
+  const dst = mkdtempSync(join(tmpdir(), 'mole-scip-stale-clone-'));
+  cleanups.push(() => rmSync(dst, { recursive: true, force: true }));
+  execFileSync('git', ['clone', '-q', src, dst]);
+  return dst;
+}
+
+const indexOf = (root: string) => readScipIndex(join(root, 'index.scip'));
+
+describe('SCIP staleness detection (T95 review round-2 HIGH-1: content hashes, not mtimes)', () => {
+  it('a fresh `git clone` of a repo with a committed index.scip + manifest is not stale', () => {
+    const cloned = cloneRepo(sourceRepo());
+    expect(scipStaleness(cloned, join(cloned, 'index.scip'), indexOf(cloned))).toEqual({ stale: false, reasons: [] });
   });
 
-  it('scipStaleness: an index older than a modified source file is stale', () => {
-    const root = repo('stale');
-    const idx = readScipIndex(join(root, 'index.scip'));
-    const r = scipStaleness(root, join(root, 'index.scip'), idx);
+  it('editing a source file\'s content makes the index stale', () => {
+    const cloned = cloneRepo(sourceRepo());
+    const p = join(cloned, 'src/case_plain.py');
+    writeFileSync(p, `${readFileSync(p, 'utf8')}\n# edited\n`);
+    const r = scipStaleness(cloned, join(cloned, 'index.scip'), indexOf(cloned));
     expect(r.stale).toBe(true);
-    expect(r.reasons.some((x: string) => x.includes('modified after index.scip'))).toBe(true);
+    expect(r.reasons.some((x) => x.includes('case_plain.py') && x.includes('content changed'))).toBe(true);
   });
 
-  it('scipStaleness: a file added after indexing (not in the index at all) is stale', () => {
-    const root = repo('fresh', { touchNewFile: true });
-    const idx = readScipIndex(join(root, 'index.scip'));
-    const r = scipStaleness(root, join(root, 'index.scip'), idx);
+  it('touching a file (mtime only, content unchanged) stays fresh -- mtime is not used at all', () => {
+    const cloned = cloneRepo(sourceRepo());
+    const future = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    utimesSync(join(cloned, 'src/case_plain.py'), future, future);
+    utimesSync(join(cloned, 'index.scip'), new Date(Date.now() - 24 * 60 * 60 * 1000), new Date(Date.now() - 24 * 60 * 60 * 1000));
+    expect(scipStaleness(cloned, join(cloned, 'index.scip'), indexOf(cloned))).toEqual({ stale: false, reasons: [] });
+  });
+
+  it('a new source file added since stamping makes the index stale', () => {
+    const cloned = cloneRepo(sourceRepo());
+    writeFileSync(join(cloned, 'src/case_new.py'), 'from src.pkg.leaf import helper\n\nx = helper()\n');
+    const r = scipStaleness(cloned, join(cloned, 'index.scip'), indexOf(cloned));
     expect(r.stale).toBe(true);
-    expect(r.reasons.some((x: string) => x.includes('case_new_violation.py') && x.includes('not in index.scip'))).toBe(true);
+    expect(r.reasons.some((x) => x.includes('case_new.py') && x.includes('not in the manifest'))).toBe(true);
   });
 
-  it('checkRules throws StaleScipIndexError (not a silent 0-violation pass) when the index is stale', async () => {
-    const root = repo('stale');
-    await expect(checkRules(root)).rejects.toThrow(StaleScipIndexError);
+  it('removing a source file the manifest covers makes the index stale', () => {
+    const cloned = cloneRepo(sourceRepo());
+    rmSync(join(cloned, 'src/pkg/other.py'));
+    const r = scipStaleness(cloned, join(cloned, 'index.scip'), indexOf(cloned));
+    expect(r.stale).toBe(true);
+    expect(r.reasons.some((x) => x.includes('other.py') && x.includes('missing on disk'))).toBe(true);
   });
 
-  it('rulesCli exits 3 (distinct from 0 clean / 1 violations / 2 rule errors) on a stale index, with a clear message', async () => {
-    const root = repo('stale');
+  it('no manifest at all is "stale-unknown": fails loud and names `mole scip stamp`', () => {
+    const cloned = cloneRepo(sourceRepo());
+    rmSync(join(cloned, 'index.scip.manifest.json'));
+    const r = scipStaleness(cloned, join(cloned, 'index.scip'), indexOf(cloned));
+    expect(r.stale).toBe(true);
+    expect(r.reasons.join('\n')).toMatch(/no manifest/);
+    expect(r.reasons.join('\n')).toMatch(/mole scip stamp/);
+  });
+
+  it('a manifest whose indexSha256 does not match the current index.scip (re-indexed, not re-stamped) is "stale-unknown"', () => {
+    const cloned = cloneRepo(sourceRepo());
+    const mPath = join(cloned, 'index.scip.manifest.json');
+    const m = JSON.parse(readFileSync(mPath, 'utf8')) as { indexSha256: string };
+    m.indexSha256 = 'f'.repeat(64);
+    writeFileSync(mPath, JSON.stringify(m));
+    const r = scipStaleness(cloned, join(cloned, 'index.scip'), indexOf(cloned));
+    expect(r.stale).toBe(true);
+    expect(r.reasons.join('\n')).toMatch(/does not match/);
+    expect(r.reasons.join('\n')).toMatch(/mole scip stamp/);
+  });
+
+  it('checkRules throws StaleScipIndexError (not a silent 0-violation pass) when there is no manifest', () => {
+    const cloned = cloneRepo(sourceRepo());
+    rmSync(join(cloned, 'index.scip.manifest.json'));
+    return expect(checkRules(cloned)).rejects.toThrow(StaleScipIndexError);
+  });
+
+  it('rulesCli exits 3 (distinct from 0 clean / 1 violations / 2 rule errors) with a clear message', async () => {
+    const cloned = cloneRepo(sourceRepo());
+    rmSync(join(cloned, 'index.scip.manifest.json'));
     const errs: string[] = [];
     const origErr = console.error;
     const origLog = console.log;
     console.error = (...a: unknown[]) => void errs.push(a.join(' '));
     console.log = () => {};
     try {
-      const code = await rulesCli([], {}, root);
-      expect(code).toBe(3);
+      expect(await rulesCli([], {}, cloned)).toBe(3);
     } finally {
       console.error = origErr;
       console.log = origLog;
     }
     expect(errs.join('\n')).toMatch(/index\.scip is stale/);
-    expect(errs.join('\n')).toMatch(/re-run scip-python index/);
+    expect(errs.join('\n')).toMatch(/mole scip stamp/);
   });
 
-  it('--allow-stale-scip runs the check anyway and still catches the real violation', async () => {
-    const root = repo('stale');
-    const r = await checkRules(root, { allowStaleScip: true });
+  it('--allow-stale-scip overrides and still catches the real violation, with no manifest at all', async () => {
+    const cloned = cloneRepo(sourceRepo());
+    rmSync(join(cloned, 'index.scip.manifest.json'));
+    const r = await checkRules(cloned, { allowStaleScip: true });
     expect(r.violations.find((v) => v.file === 'src/case_plain.py' && v.target === 'src/pkg/leaf.py')).toBeTruthy();
   });
 
   it('a stale index that would otherwise hide a NEW violation fails loudly instead of reporting 0 violations', async () => {
-    // the review's exact scenario: a file introducing a forbidden import lands in the repo after the index was
-    // built. --allow-stale-scip cannot retroactively see a file the index never indexed (there is no site data
-    // for it at all) -- that is the whole point of the check: without it, this would read as "0 violations, all
-    // clean" instead of "the index cannot be trusted for this repo state right now".
-    const root = repo('fresh', { touchNewFile: true });
-    writeFileSync(
-      join(root, '.mole/decisions/0001-no-leaf.md'),
-      RULE.replace('src/case_plain.py', 'src/case_new_violation.py'),
-    );
-    await expect(checkRules(root)).rejects.toThrow(/index\.scip is stale/);
-    await expect(checkRules(root)).rejects.toThrow(/case_new_violation\.py/);
+    const cloned = cloneRepo(sourceRepo());
+    writeFileSync(join(cloned, 'src/case_new_violation.py'), 'from src.pkg.leaf import helper\n\nx = helper()\n');
+    writeFileSync(join(cloned, '.mole/decisions/0001-no-leaf.md'), RULE.replace('src/case_plain.py', 'src/case_new_violation.py'));
+    await expect(checkRules(cloned)).rejects.toThrow(/index\.scip is stale/);
+    await expect(checkRules(cloned)).rejects.toThrow(/case_new_violation\.py/);
+  });
+
+  it('`mole scip stamp` (stampScip) makes a just-indexed-but-never-stamped repo fresh', () => {
+    const cloned = cloneRepo(sourceRepo());
+    rmSync(join(cloned, 'index.scip.manifest.json'));
+    expect(scipStaleness(cloned, join(cloned, 'index.scip'), indexOf(cloned)).stale).toBe(true);
+    stampScip(cloned, join(cloned, 'index.scip'));
+    expect(scipStaleness(cloned, join(cloned, 'index.scip'), indexOf(cloned))).toEqual({ stale: false, reasons: [] });
+  });
+
+  it('5,000 ignored files in .venv do not slow down the staleness check (git respects .gitignore)', () => {
+    const src = sourceRepo();
+    writeFileSync(join(src, '.gitignore'), '.venv/\n');
+    git(src, 'add', '-A');
+    git(src, 'commit', '-q', '-m', 'gitignore');
+    const cloned = cloneRepo(src);
+    mkdirSync(join(cloned, '.venv/pkg'), { recursive: true });
+    for (let i = 0; i < 5000; i++) writeFileSync(join(cloned, `.venv/pkg/mod${i}.py`), 'x = 1\n');
+    const t0 = Date.now();
+    const r = scipStaleness(cloned, join(cloned, 'index.scip'), indexOf(cloned));
+    const ms = Date.now() - t0;
+    expect(r).toEqual({ stale: false, reasons: [] });
+    expect(ms).toBeLessThan(3000);
   });
 });

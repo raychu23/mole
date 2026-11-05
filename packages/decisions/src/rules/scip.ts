@@ -2,9 +2,9 @@
 // (check.ts), but file+symbol sites come from a SCIP index (@mole/scip) instead of dependency-cruiser
 // + Mole's own TS AST scan -- so forbid:import and forbid:call work on any language a SCIP indexer
 // covers (scip-python, scip-go, scip-java, ...), not just TypeScript.
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { readScipIndex, scipSites, type Index } from '@mole/scip';
+import { extsOfFiles, listSourceFiles, manifestPath, readScipIndex, scipSites, sha256File, type Index, type ScipManifest } from '@mole/scip';
 import { computeFlags } from '../flags.js';
 import { loadGraph } from '../graph.js';
 import type { Flag } from '../types.js';
@@ -34,62 +34,58 @@ export class StaleScipIndexError extends Error {
   }
 }
 
-/** Directories never walked when looking for source files the index should cover: VCS/build/Mole internals plus
- * the common Python virtualenv/bytecode-cache noise (SCIP indexers don't index a project's own venv either). */
-const STALE_WALK_EXCLUDE = /(^|\/)(node_modules|dist|\.git|\.mole|\.venv|venv|__pycache__)\//;
-
-function walkByExt(root: string, dir: string, exts: Set<string>, out: Set<string>): void {
-  let names: string[];
-  let isDir: (name: string) => boolean;
-  try {
-    const abs = join(root, dir);
-    names = readdirSync(abs);
-    isDir = (name: string) => statSync(join(abs, name)).isDirectory();
-  } catch {
-    return;
-  }
-  for (const name of names) {
-    const rel = dir === '.' ? name : `${dir}/${name}`;
-    if (isDir(name)) {
-      if (!STALE_WALK_EXCLUDE.test(`${rel}/`)) walkByExt(root, rel, exts, out);
-    } else {
-      const m = /\.[^./]+$/.exec(name);
-      if (m && exts.has(m[0]) && !STALE_WALK_EXCLUDE.test(rel)) out.add(rel);
-    }
-  }
-}
-
-/** Does `index.scip` at `scipPath` still describe the repo at `root`? Mirrors what SCIP-consuming tools check
- * (e.g. Sourcegraph compares the indexed commit; scip.proto's Metadata carries project_root + tool_info and each
- * Document carries relative_path and may carry text/hash) -- but scip-python 0.6.8 does not populate Document.text
- * or any content hash (verified: packages/scip/test/fixtures/counterfixture/HOW-PRODUCED.md), so the only signal
- * actually available here is mtime: every source file of the index's own language(s), on disk right now, compared
- * against the index file's own mtime. A file the index never saw (added since indexing) or newer than the index
- * (edited since indexing) means the index can no longer be trusted to have seen today's imports/calls. */
+/** Does `index.scip` at `scipPath` still describe the repo at `root`? Review round-2 HIGH-1: this used to compare
+ * mtimes (every indexed-language source file vs. the index file's own mtime), which false-positives on every
+ * fresh `git clone`/CI checkout -- checkout writes every file's mtime to "now" regardless of its committed
+ * content, so a committed index.scip (always mtime-older than files `git checkout` just wrote) read as stale on
+ * every single clone even with byte-identical content. Content hashes don't have that problem: `mole scip stamp`
+ * (packages/scip/src/manifest.ts) writes a manifest of each source file's sha256 right after indexing; this
+ * compares the CURRENT file hashes against that manifest instead of any mtime. No manifest, or a manifest whose
+ * own `indexSha256` doesn't match this `index.scip` (re-indexed without re-stamping) -- "stale-unknown": the
+ * check cannot prove freshness at all, so it fails the same way a real staleness finding does (never a silent
+ * 0-violation pass), telling the caller to run `mole scip stamp`. */
 export function scipStaleness(root: string, scipPath: string, index: Index): { stale: boolean; reasons: string[] } {
-  const indexMtime = statSync(scipPath).mtimeMs;
   const indexedFiles = new Set(index.documents.map((d) => d.relativePath));
-  const exts = new Set<string>();
-  for (const f of indexedFiles) {
-    const m = /\.[^./]+$/.exec(f);
-    if (m) exts.add(m[0]);
-  }
+  const exts = extsOfFiles(indexedFiles);
   if (exts.size === 0) return { stale: false, reasons: [] };
-  const onDisk = new Set<string>();
-  walkByExt(root, '.', exts, onDisk);
+
+  const mPath = manifestPath(scipPath);
+  if (!existsSync(mPath)) {
+    return { stale: true, reasons: [`no manifest at ${mPath}: run \`mole scip stamp\` after indexing (stale-unknown -- freshness cannot be checked without one)`] };
+  }
+  let manifest: ScipManifest;
+  try {
+    manifest = JSON.parse(readFileSync(mPath, 'utf8')) as ScipManifest;
+  } catch {
+    return { stale: true, reasons: [`${mPath} is not valid JSON: run \`mole scip stamp\` again (stale-unknown)`] };
+  }
+  if (manifest.indexSha256 !== sha256File(scipPath)) {
+    return { stale: true, reasons: [`${mPath} does not match ${scipPath} (index re-generated since it was stamped): run \`mole scip stamp\` again (stale-unknown)`] };
+  }
+
+  const onDisk = listSourceFiles(root, exts);
+  const onDiskSet = new Set(onDisk);
   const reasons: string[] = [];
   for (const f of onDisk) {
-    if (!indexedFiles.has(f)) {
-      reasons.push(`${f}: not in index.scip (file added since indexing)`);
-      continue;
-    }
-    let mtime: number;
+    const want = manifest.files[f];
+    let got: string | undefined;
     try {
-      mtime = statSync(join(root, f)).mtimeMs;
+      got = sha256File(join(root, f));
     } catch {
+      got = undefined; // `git ls-files --cached` can list a file still staged but deleted from the working tree
+    }
+    if (got === undefined) {
+      if (want !== undefined) reasons.push(`${f}: missing on disk (removed since \`mole scip stamp\`)`);
       continue;
     }
-    if (mtime > indexMtime) reasons.push(`${f}: modified after index.scip`);
+    if (want === undefined) {
+      reasons.push(`${f}: not in the manifest (file added since \`mole scip stamp\`)`);
+      continue;
+    }
+    if (got !== want) reasons.push(`${f}: content changed since \`mole scip stamp\``);
+  }
+  for (const f of Object.keys(manifest.files)) {
+    if (!onDiskSet.has(f)) reasons.push(`${f}: missing on disk (removed since \`mole scip stamp\`)`);
   }
   return { stale: reasons.length > 0, reasons: reasons.sort() };
 }
@@ -112,8 +108,8 @@ export async function checkRulesScip(root: string, scipPath: string, load: Rules
       const shown = reasons.slice(0, 20).map((r) => `  ${r}`).join('\n');
       const more = reasons.length > 20 ? `\n  ...and ${reasons.length - 20} more` : '';
       throw new StaleScipIndexError(
-        `index.scip is stale: re-run scip-python index (or the matching SCIP indexer) -- ` +
-          `${reasons.length} file(s) missing from the index or modified after it:\n${shown}${more}\n` +
+        `index.scip is stale: ${reasons.length} file(s) differ from its \`mole scip stamp\` manifest, or no manifest exists -- ` +
+          `run \`mole scip stamp\` (after re-running the SCIP indexer if sources changed):\n${shown}${more}\n` +
           `(pass --allow-stale-scip to check against this index anyway)`,
         reasons,
       );

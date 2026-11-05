@@ -3,8 +3,8 @@
 // (printed with file:line / a clear message). --emit writes the generated dependency-cruiser config (import
 // rules) and the call rules next to the repo's own config, never over it. --scip (T95) names a SCIP index
 // explicitly; without it, root/index.scip is used if present. --allow-stale-scip (T95 follow-up) skips the
-// stale-index check (mtime of every indexed-language source file vs. the index's own mtime, plus files missing
-// from the index) and runs against the index anyway.
+// stale-index check (content-hash manifest written by `mole scip stamp`, review round-2 HIGH-1 -- see
+// packages/scip/src/manifest.ts; NOT mtime-based) and runs against the index anyway.
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { checkRules } from './check.js';

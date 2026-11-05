@@ -4,7 +4,10 @@ Real indexer, not hand-written: `@sourcegraph/scip-python` 0.6.8 (npm), run agai
 fixture. Covers every case the T95 review asked for: plain import, aliased import, relative import (both
 `from . import leaf` and `from .leaf import helper` forms), duplicate import, `TYPE_CHECKING`-only import
 alongside a runtime one, re-export via `__init__.py`, a class method call, and a call with no import (a
-local, same-file function).
+local, same-file function). Round-2 review HIGH-2 added: a multi-line parenthesized relative import
+(`src/pkg/case_multiline_parens.py`), a backslash-continued one (`src/pkg/case_backslash_continuation.py`),
+and a two-name parenthesized two-dot relative import (`src/pkg/sub/case_multiline_dotdot.py`, importing
+`leaf` and the new `src/pkg/other.py`).
 
 ```sh
 mkdir -p /tmp/scip-probe && cd /tmp/scip-probe
@@ -40,3 +43,12 @@ byte-for-byte modulo the embedded commit hash (same caveat as `fixtures/python/H
 - **A duplicate import of the same target keeps the first occurrence's line** (unchanged from before this
   fixture; `src/case_dup_import.py` imports `helper` once plain and once aliased `as helper2` -- both resolve
   to the same `` `src.pkg.leaf`/__init__: `` module symbol, one `ImportSite` is kept, at the first line).
+- **A multi-line parenthesized or backslash-continued relative import puts each name's occurrence on its OWN
+  line, not the `from ... import (` line.** `from . import (\n    leaf,\n)` (`case_multiline_parens.py`):
+  the `leaf` occurrence is on line 2 (`    leaf,`), which alone does not match the reader's `from ... import`
+  line pattern. Same for `from . import \\\n    leaf` (`case_backslash_continuation.py`, occurrence on line 2)
+  and for a two-dot, two-name `from .. import (leaf,\n other)` (`case_multiline_dotdot.py`: `leaf`'s occurrence
+  is on line 1, the statement's own first line, but `other`'s is on line 2). The reader resolves each
+  occurrence's *statement start* line first (scanning back through still-open `(`/`[`/`{` or a trailing `\`,
+  the way Python itself joins continuation lines) and matches the relative-import pattern against that line
+  instead of the occurrence's own line -- see `statementStarts` in reader.ts.

@@ -63,21 +63,36 @@ Try the whole loop without touching your own repo: `npx mole-code demo`.
   has been tried.
 - A `from:`/`to:` path that matches no file in the repo is reported as a warning (likely a typo), not
   silently ignored (TypeScript path only; the SCIP path only sees files the SCIP index actually covers).
-- SCIP path staleness: before reading an `index.scip`, `mole rules` compares every source file of the
-  index's own language(s) against it (mtime vs. the index file's own mtime, plus any file missing from the
-  index entirely); a stale-looking index makes the whole check **fail with exit code 3** (distinct from
-  0 clean / 1 violations / 2 rule-syntax-errors) and a `index.scip is stale: re-run scip-python index`
-  message, never a silent 0-violation pass. `--allow-stale-scip` runs against the index anyway. scip-python
-  0.6.8 does not populate `Document.text` or any content hash, so mtime is the only signal available; this
-  mirrors what mtime-based build tools do, not what a hash-addressed index (e.g. one that embedded content
-  hashes) could do.
+- SCIP path staleness: before reading an `index.scip`, `mole rules` checks it against a content-hash manifest
+  (`index.scip.manifest.json`, next to the index) written by `mole scip stamp` -- run that right after the SCIP
+  indexer, before committing `index.scip`:
+  ```sh
+  scip-python index --project-name myproj --project-version 0.1.0 . --output index.scip
+  mole scip stamp                         # writes index.scip.manifest.json next to it
+  mole scip stamp --index path/to/other.scip   # names a different index (default: root/index.scip)
+  ```
+  `mole rules` then compares every CURRENT source file of the index's own language(s) (by extension; walked with
+  `git ls-files --cached --others --exclude-standard` when the repo is a git repo, so `.gitignore` is respected
+  and a huge ignored directory like `.venv/` costs nothing — otherwise a plain walk skipping `node_modules`,
+  `dist`, `build`, `.git`, `.mole`, `.venv`, `venv`, `site-packages`, `__pycache__`) against that manifest's
+  per-file sha256 hashes: identical content is **fresh regardless of file mtimes** (a `git clone`/CI checkout
+  always writes a fresh mtime on every file, including a committed `index.scip`, so an mtime comparison used to
+  false-positive on every single clone — content hashes do not have that problem); a changed, added or removed
+  source file of the indexed language makes it **stale**. Either way (a real staleness finding, or no
+  `index.scip.manifest.json` at all, or one whose own `indexSha256` doesn't match the current `index.scip` --
+  i.e. re-indexed without re-stamping, "stale-unknown") the whole check **fails with exit code 3** (distinct
+  from 0 clean / 1 violations / 2 rule-syntax-errors) and a clear message naming `mole scip stamp`, never a
+  silent 0-violation pass. `--allow-stale-scip` runs against the index anyway.
 - SCIP path relative imports: scip-python 0.6.8 encodes a *relative* import's module reference (`from .
   import x`, `from .pkg import y`) as an unqualified symbol with no package prefix and no record of how many
   dots were written (verified against a real index — see
   `packages/scip/test/fixtures/counterfixture/HOW-PRODUCED.md`), unlike an absolute import, which resolves to
   the module's own fully-qualified symbol. Mole recovers the real target from the import statement's own
   source text (the dots + any module path) plus the importing file's own path, so `forbid: import` still
-  catches it.
+  catches it — including a multi-line parenthesized import (`from . import (\n    leaf,\n)`) or a
+  backslash-continued one (`from . import \\\n    leaf`), where the imported name's own source line is not the
+  `from ... import` line: Mole scans back to the statement's real start (through still-open parens or a
+  trailing `\`, the way Python itself joins continuation lines) before matching (review round-2 HIGH-2).
 - SCIP path `TYPE_CHECKING`-only imports: Mole detects `if TYPE_CHECKING:` (or `if typing.TYPE_CHECKING:`)
   blocks from the source text (SCIP does not distinguish them) and labels an import found only inside one
   (`typeOnly: true` in `--json` output); when both a `TYPE_CHECKING`-only and a runtime import of the same
