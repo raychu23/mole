@@ -251,7 +251,7 @@ async function main(): Promise<number> {
     'usage: mole <command> [target] [--root DIR] [--json]\n' +
       '  core:        daemon | map | impact | check | status | reindex | stop | demo\n' +
       '  notes:       note add | memory | since | seen\n' +
-      '  decisions:   decision | decisions | rules | incident | priorities | recall | export | assurance | outcomes | proposals | compile | arguments | cascade-check | pr-check\n' +
+      '  decisions:   decision | decisions | rules | incident | priorities | recall | export | assurance | outcomes | proposals | compile | arguments | cascade-check | pr-check | scip stamp\n' +
       '  agent state: runs | run | tried | agents | agent-intent | collisions | claims | steer\n' +
       '  analysis:    coverage | hotspots | coupling | flows | interrogate | check-records\n' +
       '  flags:       [--state-dir DIR] [--tsconfig F] [--src-dir D] [--idle-minutes N]\n' +
