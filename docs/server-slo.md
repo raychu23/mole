@@ -98,6 +98,12 @@ notes pointed at `tasks/T33-team-server/*` -- the team server's original build t
   `load-raw.json`.
 
 ## Found, not fixed (out of scope for this task, logged for a follow-up)
+
+- **Fixed after review (11-04):** `headersTimeout` stayed at Node's 60 s because Fastify sets `requestTimeout` after
+  constructing the server; now set explicitly to 9 s (`packages/server/src/index.ts`, test in `test/health.spec.ts`).
+- **Test isolation:** `relayOutboxOnceDetailed` selects outbox rows across all orgs, and `index.spec.ts` /
+  `index-temporal-e2e.spec.ts` leave rows behind, so rerunning the server suite against the same long-lived
+  database fails `outbox.spec.ts` ("relayed exactly once": 3 vs 1). Pre-existing on main; fresh database passes.
 1. **Synchronous git subprocess calls block the event loop.** `rebuild.ts`/`checkrun.ts` call
    `execFileSync('git', ...)` directly, several times per job. Measured: 15 webhook deliveries
    (30 job units) drain at under 1 job/sec (`4 log/load.md` §3) -- a real throughput ceiling,

@@ -66,4 +66,10 @@ describe('healthz/readyz/health (T98 server-slo liveness vs readiness split)', (
     const live = await app.inject({ method: 'GET', url: '/healthz' });
     expect(live.statusCode).toBe(200);
   });
+  it('bounds header reading under GitHub\'s 10 s webhook budget (T98 review MEDIUM: slowloris)', () => {
+    if (!dbUrl) return;
+    expect(app.server.headersTimeout).toBeLessThanOrEqual(9_500);
+    expect(app.server.headersTimeout).toBeLessThanOrEqual(app.server.requestTimeout);
+    expect(app.server.requestTimeout).toBeLessThan(10_000);
+  });
 });

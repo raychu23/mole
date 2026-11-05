@@ -149,6 +149,13 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env, opts: Build
     requestTimeout: Number(env.MOLE_REQUEST_TIMEOUT_MS ?? 9_500),
     connectionTimeout: Number(env.MOLE_CONNECTION_TIMEOUT_MS ?? 10_000),
   });
+  // T98 review MEDIUM: Fastify assigns requestTimeout after the http.Server is constructed, so Node never
+  // clamps headersTimeout (60 s default) to it, and Fastify has no headersTimeout option: a client trickling
+  // headers (slowloris) could hold a socket 6x past GitHub's 10 s. Node requires headersTimeout <= requestTimeout.
+  app.server.headersTimeout = Math.min(
+    Number(env.MOLE_HEADERS_TIMEOUT_MS ?? 9_000),
+    Number(env.MOLE_REQUEST_TIMEOUT_MS ?? 9_500),
+  );
 
   let shuttingDown = false;
 
