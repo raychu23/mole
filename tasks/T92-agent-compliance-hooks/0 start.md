@@ -1,22 +1,22 @@
 ---
-state: verified
+state: integrated
 owner: hermes-build
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t92-agent-compliance-hooks
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T92-agent-compliance-hooks
 base:
 reviewer: hermes-subagent deleg_b344d5fa FAIL, deleg_b362985e FAIL (fresh, claude-sonnet-5) + orchestrator fix
-updated: 2026-11-04 18:15
-status: ledger verified
-next: merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+updated: 2026-11-04 18:18
+status: ledger integrated
+next: record outcome → ledger move <task> done --outcome … --resources … --prevents …
 claimed: 2026-11-04 15:40
 ---
 ```notes
 T92-agent-compliance-hooks      ledger task (rules.md §3 code features)      project tasks
     goal                    Make Mole's Claude Code hooks enforce accepted decisions using the hooks contract Anthropic documents: Stop blocks (decision block + reason, bounded retries) on crisp-rule violations by default, PreToolUse denies an edit that introduces one; by-meaning matches stay advisory; plus CLI --help matches the commands, AGENTS.md precedence sentence, README CI snippet
     done-when               prior-art (Anthropic hooks docs fetched + dated, how cc hooks projects do blocking) · tests first: a seeded violation makes stop.mjs emit a block decision and pre-tool-use.mjs deny; no loop past the retry cap; opt-out env works · --help lists every dispatched subcommand (test derives from the dispatcher) · npx vitest on plugins/claude-code + daemon green
-    status                  2026-11-04 verified      reviewer hermes-subagent deleg_b344d5fa FAIL, deleg_b362985e FAIL (fresh, claude-sonnet-5) + orchestrator fix · findings
-    next                    merge → ledger move <task> integrated --merge … (ledger reruns checks in the repo)
+    status                  2026-11-04 integrated      merge 2df7a8f (main check: 1396 passed, main-check-waveE.txt) · combined checks exit 0
+    next                    record outcome → ledger move <task> done --outcome … --resources … --prevents …
     pinned
     mode                    one worker
     boundary                plugins/claude-code, release/mole-code hook copies, packages/daemon/src/cli.ts help text, scripts/public-README.md, docs/

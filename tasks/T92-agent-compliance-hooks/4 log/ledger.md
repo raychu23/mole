@@ -7,4 +7,6 @@ ledger (newest last, nothing deleted)
     2026-11-04 18:12      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T92-agent-compliance-hooks → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
     2026-11-04 18:15      submitted → verified      reviewer hermes-subagent deleg_b344d5fa FAIL, deleg_b362985e FAIL (fresh, claude-sonnet-5) + orchestrator fix · findings: R1 PreToolUse wrote real file + Stop blocked pre-existing -> 870e803, R2 SessionStart 8.2s@500 -> 
     2026-11-04 18:15      checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T92-agent-compliance-hooks → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
+    2026-11-04 18:18      verified → integrated      merge 2df7a8f (main check: 1396 passed, main-check-waveE.txt) · combined checks exit 0
+    2026-11-04 18:18      combined checks ran: npm run check in /Users/a1/Desktop/CS Code/Project/Mole → exit 0 (mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (lin)
 ```
