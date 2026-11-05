@@ -192,9 +192,15 @@ notes pointed at `tasks/T33-team-server/*` -- the team server's original build t
 
 - **Fixed after review (11-04):** `headersTimeout` stayed at Node's 60 s because Fastify sets `requestTimeout` after
   constructing the server; now set explicitly to 9 s (`packages/server/src/index.ts`, test in `test/health.spec.ts`).
-- **Test isolation:** `relayOutboxOnceDetailed` selects outbox rows across all orgs, and `index.spec.ts` /
-  `index-temporal-e2e.spec.ts` leave rows behind, so rerunning the server suite against the same long-lived
-  database fails `outbox.spec.ts` ("relayed exactly once": 3 vs 1). Pre-existing on main; fresh database passes.
+- **Test isolation: FIXED BY T104 (2026-11-05) for outbox.spec.ts specifically** (the one
+  documented failure mode: `relayOutboxOnceDetailed` selects outbox rows across all orgs, and
+  `index.spec.ts` / `index-temporal-e2e.spec.ts` left rows behind, so rerunning the server
+  suite against the same long-lived database failed `outbox.spec.ts` ("relayed exactly once":
+  3 vs 1)). `outbox.spec.ts` now runs in its own Postgres schema (`db.ts`'s
+  `createIsolatedTestPool`); see `docs/db-migrations.md` "Test isolation fix" for the
+  reproduction + proof (3 runs in a row, same DB, all green). The broader
+  `test/index.spec.ts`/`index-temporal-e2e.spec.ts` pg-boss cross-file contention noted in
+  item 5 below is unrelated and NOT fixed by this.
 1. **PARTIALLY FIXED BY T99 (2026-11-05).** `rebuild.ts`/`checkrun.ts` called `execFileSync('git',
    ...)` directly, several times per job, blocking the event loop (`4 log/load.md` §3). T99
    converted both to `promisify(execFile)` with bounded concurrency (`concurrency.ts`'s
@@ -293,10 +299,10 @@ notes pointed at `tasks/T33-team-server/*` -- the team server's original build t
    instance under the unprefixed name, that instance closed, then a SECOND `Boss` instance
    created with the same unset-env resolution still claims it -- the actual in-place-upgrade
    scenario, not just the pure default value).
-3. **Migrations are idempotent `CREATE TABLE IF NOT EXISTS`, not a versioned tool.** Fine for
-   this stage; would need `node-pg-migrate` (already a prior-art candidate per
-   `tasks/HANDOFF.md`) or similar before a second deploy needs an actual schema migration
-   (renaming/dropping a column, backfilling data).
+3. **FIXED BY T104 (2026-11-05).** Migrations were idempotent `CREATE TABLE IF NOT EXISTS`,
+   not a versioned tool. Now adopts `node-pg-migrate` (prior-art comparison against
+   graphile-migrate / Kysely's migrator / umzug, baseline migration, `mole-server migrate`
+   CLI, no-op-on-existing-db + concurrent-start proofs): see `docs/db-migrations.md`.
 4. **No Prometheus `/metrics`. FIXED BY T103 (2026-11-05).** OTel tracing (`telemetry.ts`)
    already existed; T103 adds OTel metrics (`packages/server/src/metrics.ts`) +
    `@opentelemetry/exporter-prometheus` (chosen over `prom-client`: its 0.300.0 dependency

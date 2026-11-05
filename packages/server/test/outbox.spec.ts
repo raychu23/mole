@@ -1,29 +1,39 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createPool, runMigrations, closePool, type Pool } from '../src/db.js';
+import { createIsolatedTestPool, dropIsolatedTestSchema, closePool, type Pool } from '../src/db.js';
 import { writeOutboxInTx, relayOutboxOnce, relayOutboxOnceDetailed, type FakeGithubClient } from '../src/outbox.js';
 import { startFakeGithubApi } from '../src/fakeGithub.js';
+
+// T104 db-migrations: outbox.spec used to share the long-lived test Postgres database's single
+// `public` schema with every other spec file (webhook.spec, index.spec, crash-restart.spec,
+// ...). relayOutboxOnce/relayOutboxOnceDetailed have no org filter (by design -- a real deploy
+// relays every org's pending outbox rows) and select across the whole `outbox` table, so any
+// undelivered row another test file left behind got relayed here too, and this describe's "a
+// written notification is eventually relayed exactly once" assertion flaked 2-or-3-vs-1 on a
+// rerun (reproduced on byte-for-byte unmodified pre-T104 main: run packages/server/test/
+// outbox.spec.ts twice against one DB, second run fails -- see docs/db-migrations.md). Fix:
+// each describe block below gets its OWN Postgres schema (created fresh, migrated into, and
+// dropped in afterAll), via db.ts's createIsolatedTestPool -- a connection-string `options=-c
+// search_path=...` parameter, so every physical connection the Pool opens defaults there,
+// with zero changes to relayOutboxOnce/relayOutboxOnceDetailed's query logic. No other spec
+// file ever writes into this schema, so this describe sees ONLY its own rows, every run.
+const SCHEMA_A = `t104_outbox_a_${process.pid}_${Date.now()}`;
 
 describe('transactional outbox (M25 "0 lost notifications")', () => {
   let pool: Pool;
   let fakeGithub: Awaited<ReturnType<typeof startFakeGithubApi>>;
+  const dbUrl = process.env.M25_DATABASE_URL;
 
   beforeAll(async () => {
-    const dbUrl = process.env.M25_DATABASE_URL;
     if (!dbUrl) return;
-    pool = createPool(dbUrl);
-    await runMigrations(pool);
+    pool = await createIsolatedTestPool(dbUrl, SCHEMA_A);
     await pool.query("insert into orgs(id, name) values ('org-outbox','O') on conflict (id) do nothing");
     fakeGithub = await startFakeGithubApi();
   });
 
   afterAll(async () => {
-    // Clean up this test's own row: the suite reuses a long-lived shared Postgres instance
-    // across runs/tasks (never a fresh-per-run DB in this environment), and the unique
-    // (org_id, kind, ref) index means a leftover delivered row from a prior run makes the
-    // next run's insert a no-op, silently masking "relayed" as 0 instead of 1.
-    if (pool) await pool.query("delete from outbox where org_id = 'org-outbox'").catch(() => undefined);
     if (fakeGithub) await fakeGithub.close();
     if (pool) await closePool(pool);
+    if (dbUrl) await dropIsolatedTestSchema(dbUrl, SCHEMA_A);
   });
 
   it.runIf(!!process.env.M25_DATABASE_URL)('a written notification is eventually relayed exactly once', async () => {
@@ -52,18 +62,18 @@ describe('transactional outbox (M25 "0 lost notifications")', () => {
 // so a permanently-failing row was re-claimed and re-sent on every tick forever.
 describe('outbox retry/backoff + dead-letter + per-row isolation (T98 server-slo)', () => {
   let pool: Pool;
+  const dbUrl = process.env.M25_DATABASE_URL;
+  const SCHEMA_B = `t104_outbox_b_${process.pid}_${Date.now()}`;
 
   beforeAll(async () => {
-    const dbUrl = process.env.M25_DATABASE_URL;
     if (!dbUrl) return;
-    pool = createPool(dbUrl);
-    await runMigrations(pool);
+    pool = await createIsolatedTestPool(dbUrl, SCHEMA_B);
     await pool.query("insert into orgs(id, name) values ('org-outbox-retry','OR') on conflict (id) do nothing");
   });
 
   afterAll(async () => {
-    if (pool) await pool.query("delete from outbox where org_id = 'org-outbox-retry'").catch(() => undefined);
     if (pool) await closePool(pool);
+    if (dbUrl) await dropIsolatedTestSchema(dbUrl, SCHEMA_B);
   });
 
   it.runIf(!!process.env.M25_DATABASE_URL)(

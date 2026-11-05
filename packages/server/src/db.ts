@@ -1,6 +1,17 @@
 // Postgres pool + schema migrations + RLS (R0 prior-art.md §6: non-owner FORCE ROW LEVEL
 // SECURITY role, org_id on every tenant table, SET LOCAL app.current_org_id per request).
-import pg from 'pg';
+//
+// T104 db-migrations: migrations are now run through node-pg-migrate (see migrations/ and
+// docs/db-migrations.md for why it was picked over graphile-migrate/Kysely/umzug, and the
+// rollback policy). runMigrations() keeps its original `(pool) => Promise<void>` signature —
+// every existing caller (index.ts, bench/m25.ts, every *.spec.ts under test/) is unaffected —
+// and still takes the same session advisory lock (727001) around the whole operation, now
+// wrapping node-pg-migrate's own run instead of raw `client.query(SCHEMA_SQL)`.
+import pg, { type ClientBase } from 'pg';
+import { runner } from 'node-pg-migrate';
+import { existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export type Pool = pg.Pool;
 
@@ -12,132 +23,118 @@ export async function closePool(pool: Pool): Promise<void> {
   await pool.end();
 }
 
-const SCHEMA_SQL = `
-create table if not exists orgs (
-  id text primary key,
-  name text not null
-);
+// Resolve packages/server/migrations regardless of whether this module is running as
+// compiled dist/src/db.js (migrations/ is two levels up) or directly as src/db.ts under
+// vitest's ESM TS loader (migrations/ is one level up) — see docs/db-migrations.md.
+const here = dirname(fileURLToPath(import.meta.url));
+const MIGRATIONS_DIR_CANDIDATES = [join(here, '..', 'migrations'), join(here, '..', '..', 'migrations')];
+export const MIGRATIONS_DIR = MIGRATIONS_DIR_CANDIDATES.find((p) => existsSync(p)) ?? MIGRATIONS_DIR_CANDIDATES[0]!;
 
-create table if not exists deliveries (
-  delivery_id text not null,
-  org_id text not null,
-  event text not null,
-  commit_sha text,
-  received_at timestamptz not null default now(),
-  primary key (delivery_id)
-);
+const SCHEMA_NAME_RE = /^[a-z_][a-z0-9_]*$/;
 
-create table if not exists index_rebuild_log (
-  id bigserial primary key,
-  org_id text not null,
-  commit_sha text not null,
-  rebuilt_at timestamptz not null default now()
-);
+function assertValidSchemaName(schema: string): void {
+  if (!SCHEMA_NAME_RE.test(schema)) {
+    throw new Error(`invalid Postgres schema name: ${JSON.stringify(schema)}`);
+  }
+}
 
-create table if not exists nodes (
-  id text not null,
-  org_id text not null,
-  kind text not null, -- tenet | decision | exception | code | test | person | agent
-  title text not null,
-  file_path text,
-  commit_sha text,
-  owner text, -- CODEOWNERS/front-matter owner for this node, persisted by rebuild.ts so
-              -- questions.ts routeQuestion can resolve "records first, else CODEOWNERS owner"
-              -- (review round 1 P0 #2) without re-parsing CODEOWNERS on every read.
-  primary key (org_id, id)
-);
-alter table nodes enable row level security;
-alter table nodes force row level security;
--- Migration for pre-existing tables created before the owner column existed.
-alter table nodes add column if not exists owner text;
-
-create table if not exists relations (
-  org_id text not null,
-  from_id text not null,
-  to_id text not null,
-  type text not null,
-  primary key (org_id, from_id, to_id, type)
-);
-alter table relations enable row level security;
-alter table relations force row level security;
-
-create table if not exists outbox (
-  id bigserial primary key,
-  org_id text not null,
-  kind text not null,
-  ref text,
-  payload jsonb not null,
-  created_at timestamptz not null default now(),
-  delivered_at timestamptz
-);
-alter table outbox enable row level security;
-alter table outbox force row level security;
-create unique index if not exists outbox_org_kind_ref_uniq on outbox (org_id, kind, ref) where ref is not null;
--- T98 server-slo: retry-with-backoff + dead-letter for the outbox relay (R0 server-slo
--- prior-art.md GitHub webhook best practices + pg-boss's own retry/deadLetter pattern,
--- applied here too since relayOutboxOnce is a *separate* failure domain from the pg-boss
--- queue -- a transient fake/real-GitHub-API failure must not retry in a hot loop forever,
--- and a permanently-failing row must stop being re-selected every relay tick.
-alter table outbox add column if not exists attempts int not null default 0;
-alter table outbox add column if not exists next_attempt_at timestamptz not null default now();
-alter table outbox add column if not exists last_error text;
-alter table outbox add column if not exists dead_letter boolean not null default false;
-
-create table if not exists questions_log (
-  id bigserial primary key,
-  org_id text not null,
-  file_path text not null,
-  owner text not null,
-  via text not null,
-  created_at timestamptz not null default now()
-);
-
-do $$ begin
-  if not exists (select from pg_policies where tablename = 'nodes' and policyname = 'nodes_org_isolation') then
-    create policy nodes_org_isolation on nodes
-      using (org_id = current_setting('app.current_org_id', true))
-      with check (org_id = current_setting('app.current_org_id', true));
-  end if;
-  if not exists (select from pg_policies where tablename = 'relations' and policyname = 'relations_org_isolation') then
-    create policy relations_org_isolation on relations
-      using (org_id = current_setting('app.current_org_id', true))
-      with check (org_id = current_setting('app.current_org_id', true));
-  end if;
-  if not exists (select from pg_policies where tablename = 'outbox' and policyname = 'outbox_org_isolation') then
-    create policy outbox_org_isolation on outbox
-      using (org_id = current_setting('app.current_org_id', true))
-      with check (org_id = current_setting('app.current_org_id', true));
-  end if;
-end $$;
-`;
-
-/** Creates (idempotently) a non-owner role used for every RLS-scoped request/job connection. */
-async function ensureAppRole(pool: Pool | pg.PoolClient): Promise<void> {
-  await pool.query(`
+/** Creates (idempotently) a non-owner role used for every RLS-scoped request/job connection,
+ * and grants it on the given schema (default 'public', the only schema a real deploy uses —
+ * non-public schemas are a test-isolation-only feature, see createIsolatedTestPool below). */
+async function ensureAppRole(client: pg.PoolClient | ClientBase, schema: string): Promise<void> {
+  assertValidSchemaName(schema);
+  await client.query(`
     do $$ begin
       if not exists (select from pg_roles where rolname = 'mole_app') then
         create role mole_app login;
       end if;
     end $$;
   `);
-  await pool.query('grant usage on schema public to mole_app');
-  await pool.query('grant all on all tables in schema public to mole_app');
-  await pool.query('grant usage, select on all sequences in schema public to mole_app');
-  await pool.query('alter default privileges in schema public grant all on tables to mole_app');
+  await client.query(`grant usage on schema ${schema} to mole_app`);
+  await client.query(`grant all on all tables in schema ${schema} to mole_app`);
+  await client.query(`grant usage, select on all sequences in schema ${schema} to mole_app`);
+  await client.query(`alter default privileges in schema ${schema} grant all on tables to mole_app`);
 }
 
-export async function runMigrations(pool: Pool): Promise<void> {
-  // Multiple test files run their own migrations concurrently against one DB; take a
-  // session advisory lock so "create table if not exists" races don't duplicate-key on
-  // Postgres's implicit row type for a table (a known concurrent-DDL race, not an M25 bug).
+export interface RunMigrationsOptions {
+  /** Postgres schema migrations run against and tables land in. Defaults to 'public' (every
+   * real deploy). A non-default value is for test isolation only (createIsolatedTestPool). */
+  schema?: string;
+}
+
+export async function runMigrations(pool: Pool, options: RunMigrationsOptions = {}): Promise<void> {
+  const schema = options.schema ?? 'public';
+  assertValidSchemaName(schema);
+  // Multiple test files/processes can call this concurrently against one DB; take a session
+  // advisory lock so node-pg-migrate's own run (and ensureAppRole's grants) never race another
+  // caller's. node-pg-migrate has its own advisory-lock mechanism (PG_MIGRATE_LOCK_ID) too, but
+  // ensureAppRole must run under the SAME lock as the migration (it also mutates shared state),
+  // so noLock:true on the runner call and one lock held for the whole function, as before T104.
   const client = await pool.connect();
   try {
     await client.query('select pg_advisory_lock(727001)');
-    await client.query(SCHEMA_SQL);
-    await ensureAppRole(client as any);
+    await runner({
+      dbClient: client as unknown as ClientBase,
+      dir: MIGRATIONS_DIR,
+      direction: 'up',
+      migrationsTable: 'pgmigrations',
+      migrationsSchema: schema,
+      schema,
+      createSchema: true,
+      createMigrationsSchema: true,
+      noLock: true,
+      log: () => undefined,
+      logger: { info: () => undefined, warn: () => undefined, error: () => undefined },
+    });
+    await ensureAppRole(client, schema);
   } finally {
     await client.query('select pg_advisory_unlock(727001)').catch(() => undefined);
     client.release();
+  }
+}
+
+/** Appends a libpq `options=-c search_path=...` parameter to a Postgres connection string, so
+ * EVERY connection pg opens against it (the whole point of a Pool) defaults to that schema
+ * first, `public` second — without changing createPool's signature or any call site. Used only
+ * by createIsolatedTestPool below; a real deploy always migrates/serves against 'public'. */
+export function withSearchPathSchema(connectionString: string, schema: string): string {
+  assertValidSchemaName(schema);
+  const sep = connectionString.includes('?') ? '&' : '?';
+  return `${connectionString}${sep}options=${encodeURIComponent(`-c search_path=${schema},public`)}`;
+}
+
+/**
+ * T104 db-migrations: fixes the documented test-isolation bug (docs/server-slo.md "Found, not
+ * fixed": outbox.spec's relay selects rows across ALL orgs with no schema scoping, so when
+ * another test file in the same long-lived database leaves an undelivered outbox row behind,
+ * outbox.spec's "relayed exactly once" assertion sees it too and fails 2-or-3 vs 1 on a rerun).
+ * Gives one test FILE its own Postgres schema: creates it, migrates into it (tables + RLS
+ * policies + the pgmigrations tracking table all land inside, via runMigrations({schema})),
+ * and returns a pool whose connections always default their search_path there first. Call
+ * dropIsolatedTestSchema in afterAll to clean up. baseConnectionString must NOT already carry
+ * an `options` query param (it will be overwritten).
+ */
+export async function createIsolatedTestPool(baseConnectionString: string, schema: string): Promise<Pool> {
+  assertValidSchemaName(schema);
+  const admin = new pg.Pool({ connectionString: baseConnectionString, max: 1 });
+  try {
+    await admin.query(`create schema if not exists "${schema}"`);
+  } finally {
+    await admin.end();
+  }
+  const pool = createPool(withSearchPathSchema(baseConnectionString, schema));
+  await runMigrations(pool, { schema });
+  return pool;
+}
+
+/** Drops a schema created by createIsolatedTestPool. Call with the pool already closed. */
+export async function dropIsolatedTestSchema(baseConnectionString: string, schema: string): Promise<void> {
+  assertValidSchemaName(schema);
+  const admin = new pg.Pool({ connectionString: baseConnectionString, max: 1 });
+  try {
+    await admin.query(`drop schema if exists "${schema}" cascade`);
+  } finally {
+    await admin.end();
   }
 }
 

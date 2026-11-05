@@ -1,0 +1,28 @@
+RED (pre-T104 behavior, reproduced against byte-for-byte unmodified main before any code
+change in this task):
+
+1. Test-isolation bug (outbox.spec.ts "relayed exactly once"):
+   $ createdb -h /tmp -p 5432 mole_t104_baseline_red
+   $ npx tsc -b packages/server   # old db.ts, old outbox.spec.ts
+   $ M25_DATABASE_URL="postgres://localhost:5432/mole_t104_baseline_red?host=/tmp" \
+     npx vitest run packages/server/test --reporter=dot
+       Test Files  4 failed | 15 passed (19)
+       Tests  3 failed | 62 passed | 4 skipped (69)
+     (the 4 failures here were crash-restart/queue-prefix host-load flakes, pre-existing and
+      out of this task's scope -- see docs/server-slo.md item 5)
+   $ M25_DATABASE_URL="postgres://localhost:5432/mole_t104_baseline_red?host=/tmp" \
+     npx vitest run packages/server/test/outbox.spec.ts --reporter=dot
+       (rerun ALONE, same DB, after the full-suite run above left stray outbox rows)
+       FAIL packages/server/test/outbox.spec.ts > ... > a written notification is eventually
+       relayed exactly once
+       AssertionError: expected 2 to be 1 // Object.is equality
+       Tests  1 failed | 4 passed (5)
+     This is the exact documented bug (docs/server-slo.md "Found, not fixed": "outbox.spec
+     'relayed exactly once' 3 vs 1").
+
+2. No versioned migrations (pre-T104 db.ts): `runMigrations` ran raw `client.query(SCHEMA_SQL)`
+   with no `pgmigrations` table, no way to tell "has this database seen a migration before",
+   and no node-pg-migrate dependency at all (grep packages/server/package.json: absent).
+
+Both are fixed by this task's changes -- see green.txt for the passing evidence and
+docs/db-migrations.md for the full proof + prior-art writeup.
