@@ -1,0 +1,37 @@
+T99 green evidence (2026-11-05). M25_DATABASE_URL=postgresql://a1@/mole_t99?host=/tmp&port=5432
+(fresh local Postgres 16 database, created for this task, dropped after). Every file below run
+individually via `npx vitest run <file>` from packages/server (this package's own convention
+per docs/server-slo.md -- its test suite has a pre-existing cross-test pg-boss/pg_extension
+race when files run CONCURRENTLY, reproduced on unmodified main too, not a T99 regression).
+
+test/queue-prefix.spec.ts          5 passed  (new: queueName/resolveQueuePrefix pure tests +
+                                               live two-prefix isolation on one Postgres instance)
+test/event-loop.spec.ts            1 passed  (new: rebuild-index job path event-loop delay)
+test/rebuild-git-failure.spec.ts   2 passed
+test/rebuild.spec.ts               1 passed
+test/checkrun.spec.ts              7 passed
+test/health.spec.ts                5 passed
+test/outbox.spec.ts                5 passed
+test/index.spec.ts                 2 passed
+test/index-temporal-e2e.spec.ts    4 passed
+test/crash-restart.spec.ts         2 passed
+test/webhook.spec.ts               3 passed
+test/decisionStore.spec.ts         2 passed
+test/questions.spec.ts             3 passed
+test/telemetry.spec.ts             2 passed
+test/rls.spec.ts                   2 passed
+test/oauth.spec.ts                 3 passed
+test/crypto.spec.ts                4 passed
+-------------------------------------------
+Total                              51 passed, 0 failed (17 files)
+
+Build: `npx tsc -b packages/server` -- clean, 0 errors.
+
+Note: running the full set of server test files concurrently in one `vitest run` invocation
+(vitest's default parallelism) reproduces a PRE-EXISTING cross-test-file failure in
+test/outbox.spec.ts and sometimes index.spec.ts/index-temporal-e2e.spec.ts ("duplicate key
+value violates unique constraint pg_extension_name_index" / outbox row counts off) --
+reproduced on this same unmodified setup with files run one at a time vs all at once;
+docs/server-slo.md already documents this exact class of flake ("Found, not fixed" #5,
+cross-test pg-boss contention on a shared long-lived database) as pre-existing on main, not
+introduced by T99. Every file above passes cleanly run on its own.

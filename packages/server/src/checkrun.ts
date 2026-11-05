@@ -1,12 +1,18 @@
 // Check-run computation per push (M25 "check-run compute < 60s"): which decisions the push
 // touches, any obvious violation (a changed-scope file with no governing decision at all is
 // reported as informational, never blocking — Mole's own rule is "flags, not gates").
-import { execFileSync } from 'node:child_process';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import type { CheckAnnotation } from '@mole/decisions';
 import { prCheck } from '@mole/decisions';
 import type { Pool } from './db.js';
 import { getGoverningDecisions } from './graph.js';
 import { writeOutboxInTx } from './outbox.js';
+
+// T99 server-throughput: same fix as rebuild.ts -- execFileSync blocked the event loop for the
+// duration of every git call on this path too (changedFiles/baseOf/isAncestor, several per
+// push). See rebuild.ts's header comment for the full rationale + citations.
+const execFileAsync = promisify(execFile);
 
 // git's well-known empty-tree object (present in every repository): used as prCheck's base
 // when ref has no parent (the repo's root commit), so a push of the very first commit still
@@ -36,9 +42,10 @@ export interface CheckRunResult {
   annotations: CheckAnnotation[];
 }
 
-function changedFiles(repoDir: string, ref: string): string[] {
+async function changedFiles(repoDir: string, ref: string): Promise<string[]> {
   try {
-    return execFileSync('git', ['show', '--name-only', '--pretty=format:', ref], { cwd: repoDir, encoding: 'utf8' })
+    const { stdout } = await execFileAsync('git', ['show', '--name-only', '--pretty=format:', ref], { cwd: repoDir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    return stdout
       .split('\n')
       .map((s) => s.trim())
       .filter(Boolean);
@@ -48,9 +55,10 @@ function changedFiles(repoDir: string, ref: string): string[] {
 }
 
 /** ref's parent commit, or git's empty-tree sha when ref has no parent (a repo's root commit). */
-function baseOf(repoDir: string, ref: string): string {
+async function baseOf(repoDir: string, ref: string): Promise<string> {
   try {
-    return execFileSync('git', ['rev-parse', '--verify', `${ref}^`], { cwd: repoDir, encoding: 'utf8' }).trim();
+    const { stdout } = await execFileAsync('git', ['rev-parse', '--verify', `${ref}^`], { cwd: repoDir, encoding: 'utf8' });
+    return stdout.trim();
   } catch {
     return EMPTY_TREE_SHA;
   }
@@ -65,13 +73,10 @@ const ALL_ZERO_SHA = /^0+$/;
 /** True when `commit` is an ancestor of `ref` in repoDir (git merge-base --is-ancestor): the
  * same check reviewdog/Danger make before trusting a CI-supplied base sha, because a force push
  * can rewrite history so the old `before` no longer exists on `ref`'s line of history at all. */
-function isAncestor(repoDir: string, commit: string, ref: string): boolean {
-  try {
-    execFileSync('git', ['merge-base', '--is-ancestor', commit, ref], { cwd: repoDir, stdio: ['ignore', 'ignore', 'ignore'] });
-    return true;
-  } catch {
-    return false;
-  }
+function isAncestor(repoDir: string, commit: string, ref: string): Promise<boolean> {
+  return execFileAsync('git', ['merge-base', '--is-ancestor', commit, ref], { cwd: repoDir })
+    .then(() => true)
+    .catch(() => false);
 }
 
 /** T45 P1: prCheck's base for a push range. GitHub's push event payload carries `before` (the
@@ -81,8 +86,10 @@ function isAncestor(repoDir: string, commit: string, ref: string): boolean {
  * diff instead of only the last one. `baseOf`'s ref^/empty-tree fallback is used only when
  * `before` cannot be trusted as a base: absent, all-zero (brand-new branch, nothing to diff
  * against), or not an ancestor of `ref` (a force push rewrote history out from under it). */
-function resolveBase(repoDir: string, ref: string, before: string | undefined): string {
-  if (before && !ALL_ZERO_SHA.test(before) && isAncestor(repoDir, before, ref)) return before;
+function resolveBase(repoDir: string, ref: string, before: string | undefined): Promise<string> {
+  if (before && !ALL_ZERO_SHA.test(before)) {
+    return isAncestor(repoDir, before, ref).then((ok) => (ok ? before : baseOf(repoDir, ref)));
+  }
   return baseOf(repoDir, ref);
 }
 
@@ -95,7 +102,7 @@ export async function computeCheckRun(
   telemetry: { withSpan: <T>(name: string, attrs: Record<string, unknown>, fn: () => Promise<T>) => Promise<T> } | undefined
 ): Promise<CheckRunResult> {
   const run = async () => {
-  const files = changedFiles(repoDir, ref).filter((f) => f.startsWith('src/'));
+    const files = (await changedFiles(repoDir, ref)).filter((f) => f.startsWith('src/'));
     let governed = 0;
     let ungoverned = 0;
     for (const f of files) {
@@ -114,7 +121,7 @@ export async function computeCheckRun(
     let title = `${governed} file(s) governed by a decision, ${ungoverned} not`;
     let annotations: CheckAnnotation[] = [];
     try {
-      const pr = await prCheck({ root: repoDir, base: resolveBase(repoDir, ref, before), head: ref, history: false });
+      const pr = await prCheck({ root: repoDir, base: await resolveBase(repoDir, ref, before), head: ref, history: false });
       title = pr.checkRun.output.title;
       annotations = pr.checkRun.output.annotations;
     } catch (e) {

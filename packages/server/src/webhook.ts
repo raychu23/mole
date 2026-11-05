@@ -7,6 +7,7 @@
 import { verifyGithubSignature } from './crypto.js';
 import type { Pool } from './db.js';
 import type { Boss } from './queue.js';
+import { queueName } from './queue.js';
 
 export interface WebhookRequest {
   headers: Record<string, string | undefined>;
@@ -32,6 +33,10 @@ export interface WebhookHandlerOptions {
    * job side, rebuild.ts/checkrun.ts, emitted spans). Optional so unit tests that don't care
    * about tracing can omit it. */
   telemetry?: WebhookTelemetry;
+  /** T99: namespaces the queues this handler sends to (see queue.ts queueName()). Must match
+   * the prefix the server's own boss.work() registrations use, or enqueued jobs are never
+   * drained. Defaults to '' (pre-T99 literal queue names), same as createQueue()'s default. */
+  queuePrefix?: string;
 }
 
 export function createWebhookHandler(opts: WebhookHandlerOptions) {
@@ -86,8 +91,9 @@ export function createWebhookHandler(opts: WebhookHandlerOptions) {
       }
 
       if (isNew && commitSha) {
-        await opts.boss.send('rebuild-index', { orgId, ref: commitSha });
-        await opts.boss.send('compute-check-run', { orgId, ref: commitSha, before: commitBefore });
+        const prefix = opts.queuePrefix ?? '';
+        await opts.boss.send(queueName(prefix, 'rebuild-index'), { orgId, ref: commitSha });
+        await opts.boss.send(queueName(prefix, 'compute-check-run'), { orgId, ref: commitSha, before: commitBefore });
         return { status: 202, body: { status: 'queued' } };
       }
       return { status: 202, body: { status: isNew ? 'queued' : 'duplicate' } };

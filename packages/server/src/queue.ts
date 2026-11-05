@@ -6,6 +6,43 @@ import PgBoss from 'pg-boss';
 export type Boss = PgBoss;
 
 export const QUEUES = ['rebuild-index', 'compute-check-run', 'relay-outbox'] as const;
+export type QueueBaseName = (typeof QUEUES)[number];
+
+/**
+ * T99 server-throughput (found during T98's load test, docs/server-slo.md "Found, not
+ * fixed" #2): pg-boss queue names are GLOBAL to a Postgres instance -- two server processes
+ * (two deploys, or two test files in this package's own suite, see 4 log/green.txt's
+ * documented pg-boss cross-test flake) pointed at the same database silently share
+ * 'rebuild-index' etc and can claim/fail/dead-letter each other's jobs. Every real queue name
+ * on the wire is now `${prefix}:${base}` for a configurable prefix; `prefix === ''`
+ * reproduces the EXACT pre-T99 literal names (full backward compatibility: a deploy upgrading
+ * in place with no new env var keeps draining whatever it already queued under the old
+ * scheme -- this is the "migration path for existing queued jobs" the task asks for: there
+ * is none needed as long as MOLE_QUEUE_PREFIX is left unset until the existing backlog is
+ * drained, then set it and restart; setting it before the backlog drains would leave the old
+ * un-prefixed jobs queued but un-worked until the prefix is unset again).
+ */
+export function queueName(prefix: string, base: QueueBaseName | string): string {
+  return prefix ? `${prefix}:${base}` : base;
+}
+
+/** Default prefix when MOLE_QUEUE_PREFIX is unset: the database name parsed out of the
+ * connection string. Stable for a given deployment, distinct across deployments that (as is
+ * typical) use distinct database names, without requiring any new configuration. Falls back
+ * to '' (the old, unprefixed behavior) if the connection string can't be parsed as a URL. */
+export function defaultQueuePrefixFromUrl(connectionString: string): string {
+  try {
+    const u = new URL(connectionString);
+    return u.pathname.replace(/^\//, '') || '';
+  } catch {
+    return '';
+  }
+}
+
+export function resolveQueuePrefix(connectionString: string, env: NodeJS.ProcessEnv = process.env): string {
+  if (env.MOLE_QUEUE_PREFIX !== undefined) return env.MOLE_QUEUE_PREFIX;
+  return defaultQueuePrefixFromUrl(connectionString);
+}
 
 /**
  * Root-cause fix (T33 review round 2 blocking finding, 2026-10-29): with no retention/retry
@@ -38,7 +75,10 @@ const QUEUE_RETRY_OPTS = {
   expireInSeconds: 60,
 } as const;
 
-export async function createQueue(connectionString: string): Promise<Boss> {
+/** @param prefix T99: namespaces every queue this boss instance creates/uses, see queueName()
+ * above. Defaults to '' (unprefixed, pre-T99 literal names) for every existing caller
+ * (bench/m25.ts, this package's own tests) that doesn't pass one. */
+export async function createQueue(connectionString: string, prefix = ''): Promise<Boss> {
   const boss = new PgBoss({
     connectionString,
     schema: 'pgboss',
@@ -51,10 +91,11 @@ export async function createQueue(connectionString: string): Promise<Boss> {
   boss.on('error', (err) => console.error('[pg-boss]', err));
   await boss.start();
   for (const q of QUEUES) {
-    const dlq = `${q}-dlq`;
+    const name = queueName(prefix, q);
+    const dlq = `${name}-dlq`;
     // Dead-letter queue must exist before a queue can reference it in `deadLetter`.
     await boss.createQueue(dlq);
-    await boss.createQueue(q, { name: q, ...QUEUE_RETRY_OPTS, deadLetter: dlq });
+    await boss.createQueue(name, { name, ...QUEUE_RETRY_OPTS, deadLetter: dlq });
   }
   return boss;
 }

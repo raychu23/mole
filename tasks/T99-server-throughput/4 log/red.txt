@@ -1,0 +1,46 @@
+T99 red evidence (2026-11-05), captured by temporarily stashing the fix
+(src/{rebuild,checkrun,queue,webhook,index}.ts) back to main's pre-T99 synchronous
+execFileSync code and moving concurrency.ts aside, then running the new tests.
+
+1) tsc -b packages/server against pre-T99 queue.ts/concurrency.ts (queue-prefix.spec.ts and
+   event-loop.spec.ts are not vacuous -- they genuinely require the new exports/module):
+   packages/server/test/event-loop.spec.ts(18,26): error TS2307: Cannot find module '../src/concurrency.js' or its corresponding type declarations.
+   packages/server/test/queue-prefix.spec.ts(12,35): error TS2305: Module '"../src/queue.js"' has no exported member 'queueName'.
+   packages/server/test/queue-prefix.spec.ts(12,46): error TS2305: Module '"../src/queue.js"' has no exported member 'defaultQueuePrefixFromUrl'.
+   packages/server/test/queue-prefix.spec.ts(12,73): error TS2305: Module '"../src/queue.js"' has no exported member 'resolveQueuePrefix'.
+   packages/server/test/queue-prefix.spec.ts(46,41): error TS2554: Expected 1 arguments, but got 2.
+   packages/server/test/queue-prefix.spec.ts(47,41): error TS2554: Expected 1 arguments, but got 2.
+
+2) Isolated vitest run of a COMBINED rebuild+check-run scenario (6 orgs, 15 decisions each,
+   both job types concurrently -- the mixed shape T98's load test exercised) against pre-T99
+   execFileSync rebuild.ts AND checkrun.ts:
+     [event-loop-t99] { p50Ms: '6.42', p99Ms: '1210.06', maxMs: '1210.06' }
+     FAIL: expected 1210.056703 to be less than 150
+   A second run with unbounded org-level fan-out measured p99 2927.62ms -- consistently a
+   multi-hundred-ms-to-multi-second event-loop stall.
+
+3) Isolating further (node --input-type=module scripts, not vitest, same fixtures/dist):
+   rebuild-only, 2 concurrent orgs:            p99  18.89ms  (pre-T99 sync code)
+   rebuild-only, 6 concurrent orgs:            p99   5.05ms  (pre-T99 sync code)
+   check-run-only, 4 concurrent orgs:          p99 1262.49ms (pre-T99 sync code)
+   bare execFileAsync('git --version') x60:    p99    6.12ms (sanity: subprocess spawn itself
+                                                               is not the cost)
+   -> the dominant blocking source in the ORIGINAL combined test was computeCheckRun's call
+   into @mole/decisions' prCheck() (packages/decisions/src/check/pr-check.ts), not
+   checkrun.ts's own thin wrapper calls (changedFiles/baseOf/isAncestor) -- confirmed by
+   re-measuring check-run-only AFTER fixing checkrun.ts's wrapper functions (step 4 below):
+   the fix helps (~42% lower) but does not close the gap, because prCheck's own ~20
+   execFileSync calls (including an UNCONDITIONAL `git worktree add`/`remove` per call) are
+   the larger remaining cost. This is reported as a new "Found, not fixed" item in
+   docs/server-slo.md rather than claimed as fully fixed.
+
+4) After restoring the T99 fix (git stash pop) and re-measuring check-run-only in isolation:
+   check-run-only, 4 concurrent orgs (checkrun.ts's own calls now async): p99 732.95ms --
+   an improvement (~42% lower than the pre-T99 1262.49ms) from checkrun.ts's own wrapper fix,
+   but still a multi-hundred-ms stall: confirms finding #3, prCheck's own ~20 execFileSync
+   calls (out of this task's packages/server/src/** boundary) remain the dominant cost.
+
+event-loop.spec.ts was rescoped to test ONLY the rebuild-index job path (the piece this task
+fully owns and fixed), with the compute-check-run/prCheck finding documented above and in
+docs/server-slo.md instead of asserted green by a loosened threshold. See 4 log/green.txt for
+the passing state and docs/server-slo.md "Found, not fixed" for the write-up.

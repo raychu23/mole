@@ -33,7 +33,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { Pool as TemporalPgPool } from 'pg';
 import { applySchema as applyTemporalSchema } from '@mole/temporal';
 import { createPool, runMigrations, type Pool } from './db.js';
-import { createQueue, type Boss } from './queue.js';
+import { createQueue, queueName, resolveQueuePrefix, type Boss } from './queue.js';
 import { createWebhookHandler } from './webhook.js';
 import { initTelemetry, type Telemetry } from './telemetry.js';
 import { rebuildIndexFromGit } from './rebuild.js';
@@ -42,6 +42,7 @@ import { reconcileDecisions } from './reconcile.js';
 import { createTestIssuer } from './oauth.js';
 import { relayOutboxOnceDetailed, type FakeGithubClient } from './outbox.js';
 import { createCheckRunSink } from './checkRunSink.js';
+import { mapLimit } from './concurrency.js';
 
 export interface CloseOptions {
   /** Drain in-flight work (let pg-boss finish currently-executing jobs) instead of a hard
@@ -95,13 +96,19 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env, opts: Build
   // still letting a deploy point temporal at a separate database if it ever needs to.
   const temporalDbUrl = env.TEMPORAL_DATABASE_URL || dbUrl;
 
+  // T99 server-throughput (docs/server-slo.md "Found, not fixed" #2): pg-boss queue names are
+  // global to the Postgres instance; namespace every queue this process uses so a second
+  // deploy (or a second server instance pointed at the same DB) never shares/steals jobs with
+  // this one. See queue.ts's queueName()/resolveQueuePrefix() for the default + override.
+  const queuePrefix = resolveQueuePrefix(dbUrl, env);
+
   const telemetry = initTelemetry('mole-team-server');
   const pool = createPool(dbUrl);
   await runMigrations(pool);
   const temporalPool = new TemporalPgPool({ connectionString: temporalDbUrl, max: 10 });
   await applyTemporalSchema(temporalPool);
-  const boss = await createQueue(dbUrl);
-  const handler = createWebhookHandler({ secret, pool, boss, orgRepoDirs, telemetry });
+  const boss = await createQueue(dbUrl, queuePrefix);
+  const handler = createWebhookHandler({ secret, pool, boss, orgRepoDirs, telemetry, queuePrefix });
 
   // Wire the jobs enqueued by the webhook handler to real workers: without this, a running
   // server ack'd every push (202 queued) but nothing ever drained rebuild-index /
@@ -109,8 +116,20 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env, opts: Build
   // never got written outside of bench/m25.ts's own copy of this same registration (found
   // during final-build wiring verification, 2026-10-30). batchSize: 1 on rebuild-index
   // matches bench/m25.ts's own reasoning: pg-boss resolves/fails a whole batch as one unit.
-  await boss.work('rebuild-index', { batchSize: 1 }, async (jobs) => {
-    for (const job of jobs) {
+  //
+  // T99 server-throughput: rebuild.ts/checkrun.ts's git calls are now async (promisified
+  // execFile, see those files), so a single job no longer blocks this process's event loop
+  // for the call's duration -- but a batch handler that still processed `jobs` one at a time
+  // with a plain `for` loop would get none of that benefit (each `await` would still run to
+  // completion before starting the next). MOLE_REBUILD_CONCURRENCY/MOLE_CHECKRUN_CONCURRENCY
+  // bound how many of a batch's jobs actually run concurrently (concurrency.ts's mapLimit) --
+  // pg-boss 10.4.2 (this repo's installed version) has no `localConcurrency` WorkOptions field
+  // itself (see concurrency.ts's header comment), so this is the equivalent bounded-fan-out
+  // knob implemented at the handler level instead.
+  const rebuildConcurrency = Number(env.MOLE_REBUILD_CONCURRENCY ?? 2);
+  const checkRunConcurrency = Number(env.MOLE_CHECKRUN_CONCURRENCY ?? 4);
+  await boss.work(queueName(queuePrefix, 'rebuild-index'), { batchSize: 1 }, async (jobs) => {
+    await mapLimit(jobs, rebuildConcurrency, async (job) => {
       const { orgId, ref } = job.data as { orgId: string; ref: string };
       const repoDir = orgRepoDirs[orgId];
       if (!repoDir) throw new Error(`no repo dir configured for org ${orgId}`);
@@ -129,15 +148,15 @@ export async function buildApp(env: NodeJS.ProcessEnv = process.env, opts: Build
       } catch (e) {
         app.log.error({ orgId, err: e }, '[mole-server] decision reconciliation check failed');
       }
-    }
+    });
   });
-  await boss.work('compute-check-run', { batchSize: 10 }, async (jobs) => {
-    for (const job of jobs) {
+  await boss.work(queueName(queuePrefix, 'compute-check-run'), { batchSize: 10 }, async (jobs) => {
+    await mapLimit(jobs, checkRunConcurrency, async (job) => {
       const { orgId, ref, before } = job.data as { orgId: string; ref: string; before?: string };
       const repoDir = orgRepoDirs[orgId];
       if (!repoDir) throw new Error(`no repo dir configured for org ${orgId}`);
       await computeCheckRun(pool, orgId, repoDir, ref, before, telemetry);
-    }
+    });
   });
 
   const app = Fastify({
