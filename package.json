@@ -10,6 +10,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc -b",
+    "postbuild": "node scripts/ci/chmod-bins.mjs",
     "test": "vitest run",
     "check": "npm run build && npm test",
     "bundle": "npm run bundle -w @mole/vscode"
