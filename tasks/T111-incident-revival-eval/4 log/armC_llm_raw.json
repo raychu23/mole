@@ -1,0 +1,23 @@
+[
+ {
+  "case": "npm-unpublish",
+  "prompt": "A team made this decision: \"Any package author may unpublish any version of their own package at any time, with no check on who else depends on it (npm's registry behavior through March 2016).\"\nTwo options were on the table:\n- OPTION_unrestricted: Keep unpublish unrestricted: any author may remove any version of their own package at any time.\n- OPTION_windowed: Restrict unpublish: allow free unpublish only within a short window after publish; after that, require npm support to check who depends on the package before removing it.\nThe team originally went with OPTION_unrestricted.\nLater this real incident happened: \"Azer Kocjulu unpublished 273 packages including left-pad (11 lines, ~2.5M downloads/month) after npm transferred the disputed package name 'kik' to Kik Interactive. Babel, Atom and thousands of dependent projects failed within minutes because a transitive dependency (line-numbers) pinned the exact version left-pad@0.0.3. npm restored the original 0.0.3 from backup after 2.5 hours of outage, an operation the registry does not normally support.\"\nGiven only this incident, which of the two original options does it most vindicate: OPTION_unrestricted or OPTION_windowed? Reply with EXACTLY one token: either 'unrestricted' or 'windowed'. No other text.",
+  "raw_stdout": "windowed",
+  "stderr": "",
+  "rc": 0
+ },
+ {
+  "case": "gh-actions-token",
+  "prompt": "A team made this decision: \"Every GitHub Actions workflow run is issued a GITHUB_TOKEN with read AND write permissions across repository scopes by default, with no opt-in required (GitHub Actions behavior 2019-2023 for repos not explicitly reconfigured).\"\nTwo options were on the table:\n- OPTION_readwrite-default: Keep GITHUB_TOKEN defaulting to read/write: maximizes convenience for workflows that push commits, tags, releases, or packages without per-workflow configuration.\n- OPTION_readonly-default: Default GITHUB_TOKEN to read-only; workflows that need write access must opt in explicitly via the permissions: block.\nThe team originally went with OPTION_readwrite-default.\nLater this real incident happened: \"Security researchers (Palo Alto Networks) demonstrated a worm using a write-permissioned GITHUB_TOKEN to push malicious commits or tags into dependent repositories through the Actions dependency tree, escalating a single compromised Action into a self-propagating supply-chain attack across public repos; GitHub's own Security Lab cites the same write-by-default token as the exploited precondition.\"\nGiven only this incident, which of the two original options does it most vindicate: OPTION_readwrite-default or OPTION_readonly-default? Reply with EXACTLY one token: either 'readwrite-default' or 'readonly-default'. No other text.",
+  "raw_stdout": "readonly-default",
+  "stderr": "",
+  "rc": 0
+ },
+ {
+  "case": "pep479-stopiteration",
+  "prompt": "A team made this decision: \"A StopIteration raised accidentally inside a generator function (not via a normal return) propagates out and is interpreted by the driving loop/next() caller as ordinary, silent end-of-iteration (CPython behavior before PEP 479).\"\nTwo options were on the table:\n- OPTION_propagate-silent: Keep StopIteration propagating silently out of a generator frame: minimal, long-standing behavior, no backwards-incompatible change.\n- OPTION_convert-to-runtimeerror: If a StopIteration is about to bubble out of a generator frame, replace it with RuntimeError so the failure is loud, not silently treated as iteration end.\nThe team originally went with OPTION_propagate-silent.\nLater this real incident happened: \"A generator wrapped by a context manager (contextlib.contextmanager) using yield from silently swallowed a StopIteration raised inside the wrapped block, skipping finalization without any error -- a subtle, hard-to-debug failure mode the PEP's own worked example reproduces exactly (a transaction() context manager whose commit/rollback logic is silently skipped). The same class of bug affects asyncio coroutines and bare next() calls on an unexpectedly empty iterator.\"\nGiven only this incident, which of the two original options does it most vindicate: OPTION_propagate-silent or OPTION_convert-to-runtimeerror? Reply with EXACTLY one token: either 'propagate-silent' or 'convert-to-runtimeerror'. No other text.",
+  "raw_stdout": "convert-to-runtimeerror",
+  "stderr": "",
+  "rc": 0
+ }
+]

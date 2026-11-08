@@ -1,0 +1,87 @@
+{
+  "frozen": "2026-11-08",
+  "n": 3,
+  "cases": [
+    {
+      "id": "npm-unpublish",
+      "domain": "npm registry policy",
+      "decision_id": "npm-unpublish-unrestricted",
+      "decision_text": "Any package author may unpublish any version of their own package at any time, with no check on who else depends on it (npm's registry behavior through March 2016).",
+      "options": [
+        {
+          "id": "unrestricted",
+          "text": "Keep unpublish unrestricted: any author may remove any version of their own package at any time.",
+          "source": "npm registry behavior as described in npm's own postmortem: \"Unrestricted un-publishing caused a lot of pain.\" (blog.npmjs.org/post/141577284765, 2016-03-23)"
+        },
+        {
+          "id": "windowed",
+          "text": "Restrict unpublish: allow free unpublish only within a short window after publish; after that, require npm support to check who depends on the package before removing it.",
+          "source": "npm's own stated need, same postmortem: \"npm needs safeguards to keep anyone from causing so much disruption. If these had been in place yesterday, this post-mortem wouldn't be necessary.\" (blog.npmjs.org/post/141577284765, 2016-03-23)"
+        }
+      ],
+      "incident": {
+        "id": "inc-left-pad",
+        "date": "2016-03-22",
+        "text": "Azer Kocjulu unpublished 273 packages including left-pad (11 lines, ~2.5M downloads/month) after npm transferred the disputed package name 'kik' to Kik Interactive. Babel, Atom and thousands of dependent projects failed within minutes because a transitive dependency (line-numbers) pinned the exact version left-pad@0.0.3. npm restored the original 0.0.3 from backup after 2.5 hours of outage, an operation the registry does not normally support.",
+        "source": "blog.npmjs.org/post/141577284765 (2016-03-23); corroborating timeline dev.to/axrisi/left-pad-incident-explained (fetched 2026-11-08)"
+      },
+      "ground_truth_winner": "windowed",
+      "ground_truth_source": "npm, \"Changes to npm's unpublish policy\" (blog.npmjs.org/post/141905368000, 2016-03-29): unpublish restricted to packages <24h old (later widened to 72h, 2020-01-30); older packages require contacting support, which checks dependents; a fully-removed package name is replaced by a security placeholder. The npm-unpublish-unrestricted decision is REVERSED/SUPERSEDED by npm-unpublish-windowed.",
+      "trigger_to_decision_link": "scope: npm registry unpublish behavior; decision: directly named in both postmortem and policy-change posts (same npm, Inc. author, izs/Laurie Voss, within one week)."
+    },
+    {
+      "id": "gh-actions-token",
+      "domain": "GitHub Actions default permissions",
+      "decision_id": "gh-token-default-readwrite",
+      "decision_text": "Every GitHub Actions workflow run is issued a GITHUB_TOKEN with read AND write permissions across repository scopes by default, with no opt-in required (GitHub Actions behavior 2019-2023 for repos not explicitly reconfigured).",
+      "options": [
+        {
+          "id": "readwrite-default",
+          "text": "Keep GITHUB_TOKEN defaulting to read/write: maximizes convenience for workflows that push commits, tags, releases, or packages without per-workflow configuration.",
+          "source": "GitHub Changelog, \"GitHub Actions - Updating the default GITHUB_TOKEN permissions to read-only\" (github.blog/changelog/2023-02-02-...): \"Previously, GitHub Actions gets a GITHUB_TOKEN with both read/write permissions by default whenever Actions is enabled on a repository. As a default, this is too permissive\" (GitHub's own retrospective framing of the prior default)."
+        },
+        {
+          "id": "readonly-default",
+          "text": "Default GITHUB_TOKEN to read-only; workflows that need write access must opt in explicitly via the permissions: block.",
+          "source": "GitHub Security Lab blog, \"How to secure GitHub Actions workflows\": \"these tokens originally had a very broad set of permissions ... today, the default permissions for new repositories and organizations are set to read-only\" (github.blog/security/supply-chain-security/four-tips...); principle-of-least-privilege framing is GitHub's own."
+        }
+      ],
+      "incident": {
+        "id": "inc-actions-worm",
+        "date": "2023 (Palo Alto Networks Unit42/GitHub Security Lab research; the read-only default itself shipped 2023-02-02, concurrent with this published supply-chain research)",
+        "text": "Security researchers (Palo Alto Networks) demonstrated a worm using a write-permissioned GITHUB_TOKEN to push malicious commits or tags into dependent repositories through the Actions dependency tree, escalating a single compromised Action into a self-propagating supply-chain attack across public repos; GitHub's own Security Lab cites the same write-by-default token as the exploited precondition.",
+        "source": "paloaltonetworks.com/blog/cloud-security/github-actions-worm-dependencies (fetched 2026-11-08); github.blog/security/supply-chain-security/four-tips-to-keep-your-github-actions-workflows-secure/ (fetched 2026-11-08)"
+      },
+      "ground_truth_winner": "readonly-default",
+      "ground_truth_source": "GitHub Changelog, 2023-02-02: new enterprises/orgs/repos get a read-only GITHUB_TOKEN by default going forward; existing repos keep read/write (grandfathered) but can opt in to read-only. gh-token-default-readwrite is REVERSED (for new scopes) by gh-token-default-readonly.",
+      "trigger_to_decision_link": "scope: GitHub Actions GITHUB_TOKEN default permission; both the incident research and the changelog entry name the same mechanism (write-by-default token) as cause and fix."
+    },
+    {
+      "id": "pep479-stopiteration",
+      "domain": "CPython generator semantics",
+      "decision_id": "py-stopiteration-propagates",
+      "decision_text": "A StopIteration raised accidentally inside a generator function (not via a normal return) propagates out and is interpreted by the driving loop/next() caller as ordinary, silent end-of-iteration (CPython behavior before PEP 479).",
+      "options": [
+        {
+          "id": "propagate-silent",
+          "text": "Keep StopIteration propagating silently out of a generator frame: minimal, long-standing behavior, no backwards-incompatible change.",
+          "source": "PEP 479 Background/Rationale (peps.python.org/pep-0479, accepted 2014-11-22): describes this as \"currently somewhat surprising, and can conceal obscure bugs\" -- PEP 479's own framing of the status quo it argues against."
+        },
+        {
+          "id": "convert-to-runtimeerror",
+          "text": "If a StopIteration is about to bubble out of a generator frame, replace it with RuntimeError so the failure is loud, not silently treated as iteration end.",
+          "source": "PEP 479 Proposal section (peps.python.org/pep-0479): \"If a StopIteration is about to bubble out of a generator frame, it is replaced with RuntimeError\" -- the PEP's own accepted text."
+        }
+      ],
+      "incident": {
+        "id": "inc-bpo-stopiteration-bug",
+        "date": "2014 (PEP 479 created 2014-11-15)",
+        "text": "A generator wrapped by a context manager (contextlib.contextmanager) using yield from silently swallowed a StopIteration raised inside the wrapped block, skipping finalization without any error -- a subtle, hard-to-debug failure mode the PEP's own worked example reproduces exactly (a transaction() context manager whose commit/rollback logic is silently skipped). The same class of bug affects asyncio coroutines and bare next() calls on an unexpectedly empty iterator.",
+        "source": "PEP 479, Rationale section, worked `transaction()`/`do_it()` example and \"[2]\" footnote referencing \"the one that started this discussion\" (peps.python.org/pep-0479, fetched 2026-11-08)."
+      },
+      "ground_truth_winner": "convert-to-runtimeerror",
+      "ground_truth_source": "PEP 479, Acceptance section: \"This PEP was accepted by the BDFL on November 22[, 2014].\" Status: Final, shipped as the default behavior starting Python 3.7. py-stopiteration-propagates is REVERSED by PEP 479's accepted behavior.",
+      "trigger_to_decision_link": "scope: CPython generator frame StopIteration handling; the PEP's own Rationale section is simultaneously the incident report and the decision record (single real document, both roles)."
+    }
+  ]
+}

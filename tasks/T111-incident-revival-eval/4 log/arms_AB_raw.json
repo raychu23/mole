@@ -1,0 +1,158 @@
+[
+ {
+  "case": "npm-unpublish",
+  "ground_truth": "windowed",
+  "armA_mole_suggest_raw": {
+   "incident": "inc-left-pad",
+   "candidates": [
+    {
+     "incident": "inc-left-pad",
+     "argument": "windowed",
+     "text": "Restrict unpublish: allow free unpublish only within a short window after publish; after that, require npm support to check who depends on the package before removing it. #tenet-safety",
+     "label": "out",
+     "plainLabel": "undecided",
+     "phase": "before",
+     "decision": "npm-unpublish-unrestricted",
+     "attackers": [
+      "unrestricted"
+     ],
+     "alsoReinstates": [],
+     "score": 0.171,
+     "evidence": [
+      {
+       "kind": "decision",
+       "value": "npm-unpublish-unrestricted",
+       "file": ".mole/incidents/inc-left-pad.md",
+       "line": 5
+      },
+      {
+       "kind": "scope",
+       "value": "npm registry policy",
+       "file": ".mole/incidents/inc-left-pad.md",
+       "line": 6
+      },
+      {
+       "kind": "text",
+       "value": "char-3gram Jaccard 0.171",
+       "file": ".mole/arguments/npm-unpublish-unrestricted.argdown",
+       "line": 2
+      }
+     ]
+    }
+   ]
+  },
+  "armA_top": "windowed",
+  "armA_ranked": [
+   "windowed"
+  ],
+  "armB_bm25_ranked": [
+   "windowed",
+   "unrestricted"
+  ],
+  "armB_top": "windowed"
+ },
+ {
+  "case": "gh-actions-token",
+  "ground_truth": "readonly-default",
+  "armA_mole_suggest_raw": {
+   "incident": "inc-actions-worm",
+   "candidates": [
+    {
+     "incident": "inc-actions-worm",
+     "argument": "readonly-default",
+     "text": "Default GITHUB_TOKEN to read-only; workflows that need write access must opt in explicitly via the permissions: block. #tenet-safety",
+     "label": "out",
+     "plainLabel": "undecided",
+     "phase": "before",
+     "decision": "gh-token-default-readwrite",
+     "attackers": [
+      "readwrite-default"
+     ],
+     "alsoReinstates": [],
+     "score": 0.177,
+     "evidence": [
+      {
+       "kind": "decision",
+       "value": "gh-token-default-readwrite",
+       "file": ".mole/incidents/inc-actions-worm.md",
+       "line": 5
+      },
+      {
+       "kind": "scope",
+       "value": "GitHub Actions default permissions",
+       "file": ".mole/incidents/inc-actions-worm.md",
+       "line": 6
+      },
+      {
+       "kind": "text",
+       "value": "char-3gram Jaccard 0.177",
+       "file": ".mole/arguments/gh-token-default-readwrite.argdown",
+       "line": 2
+      }
+     ]
+    }
+   ]
+  },
+  "armA_top": "readonly-default",
+  "armA_ranked": [
+   "readonly-default"
+  ],
+  "armB_bm25_ranked": [
+   "readwrite-default",
+   "readonly-default"
+  ],
+  "armB_top": "readwrite-default"
+ },
+ {
+  "case": "pep479-stopiteration",
+  "ground_truth": "convert-to-runtimeerror",
+  "armA_mole_suggest_raw": {
+   "incident": "inc-bpo-stopiteration-bug",
+   "candidates": [
+    {
+     "incident": "inc-bpo-stopiteration-bug",
+     "argument": "convert-to-runtimeerror",
+     "text": "If a StopIteration is about to bubble out of a generator frame, replace it with RuntimeError so the failure is loud, not silently treated as iteration end. #tenet-safety",
+     "label": "out",
+     "plainLabel": "undecided",
+     "phase": "before",
+     "decision": "py-stopiteration-propagates",
+     "attackers": [
+      "propagate-silent"
+     ],
+     "alsoReinstates": [],
+     "score": 0.187,
+     "evidence": [
+      {
+       "kind": "decision",
+       "value": "py-stopiteration-propagates",
+       "file": ".mole/incidents/inc-bpo-stopiteration-bug.md",
+       "line": 5
+      },
+      {
+       "kind": "scope",
+       "value": "CPython generator semantics",
+       "file": ".mole/incidents/inc-bpo-stopiteration-bug.md",
+       "line": 6
+      },
+      {
+       "kind": "text",
+       "value": "char-3gram Jaccard 0.187",
+       "file": ".mole/arguments/py-stopiteration-propagates.argdown",
+       "line": 2
+      }
+     ]
+    }
+   ]
+  },
+  "armA_top": "convert-to-runtimeerror",
+  "armA_ranked": [
+   "convert-to-runtimeerror"
+  ],
+  "armB_bm25_ranked": [
+   "convert-to-runtimeerror",
+   "propagate-silent"
+  ],
+  "armB_top": "convert-to-runtimeerror"
+ }
+]
