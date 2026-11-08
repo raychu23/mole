@@ -1,3 +1,11 @@
 # Accidental identities from agents running git with a broken HOME / a test fixture writing the shared .git/config (11-04/05)
 Raymond Chu <98297631+raychu23@users.noreply.github.com> 1 <a1@MacBookPro.grinnell.edu>
 Raymond Chu <98297631+raychu23@users.noreply.github.com> a <a@a.com>
+# Queue/build agents that passed their own -c user.name (11-04..08); brief now forbids it
+Raymond Chu <98297631+raychu23@users.noreply.github.com> <raymond@mole.local>
+Raymond Chu <98297631+raychu23@users.noreply.github.com> <agent@example.com>
+Raymond Chu <98297631+raychu23@users.noreply.github.com> <hermes-build@local>
+Raymond Chu <98297631+raychu23@users.noreply.github.com> <mole-builder@local>
+Raymond Chu <98297631+raychu23@users.noreply.github.com> <noreply@local>
+Raymond Chu <98297631+raychu23@users.noreply.github.com> <mole-queue-agent@local>
+Raymond Chu <98297631+raychu23@users.noreply.github.com> <ci@localhost>
