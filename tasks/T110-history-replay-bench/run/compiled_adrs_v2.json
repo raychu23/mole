@@ -1,0 +1,69 @@
+{
+ "compiledAt": "2026-11-08T23:46:23.285Z",
+ "n_decisions": 2,
+ "compiled": [
+  {
+   "decision": "adr004",
+   "title": "adr004",
+   "match": [
+    {
+     "pattern": "export\\s*\\*\\s*from\\s*['\"]\\./[^'\"]+\\.(ts|tsx)['\"]",
+     "in": "**/index.{ts,tsx}",
+     "why": "Index files that are re-exporting symbols from non-index files should always enumerate all exports"
+    },
+    {
+     "pattern": "^\\s*export\\s*(\\*|\\{[^}]*\\})\\s*from\\s*['\"]",
+     "in": "**/!(index).{ts,tsx}",
+     "why": "only index files will have re-exports"
+    }
+   ],
+   "rules": [],
+   "scope": [
+    "packages/*/src/**/index.ts",
+    "packages/*/src/**/index.tsx"
+   ],
+   "guardTests": [],
+   "usage": {
+    "inputTokens": 2767,
+    "outputTokens": 2512,
+    "costUsd": 0.02961
+   },
+   "raw": "```json\n{\n  \"scope\": [\n    \"packages/*/src/**/index.ts\",\n    \"packages/*/src/**/index.tsx\"\n  ],\n  \"match\": [\n    {\n      \"pattern\": \"export\\\\s*\\\\*\\\\s*from\\\\s*['\\\"]\\\\./[^'\\\"]+\\\\.(ts|tsx)['\\\"]\",\n      \"in\": \"**/index.{ts,tsx}\",\n      \"why\": \"Index files that are re-exporting symbols from non-index files should always enumerate all exports\"\n    },\n    {\n      \"pattern\": \"^\\\\s*export\\\\s*(\\\\*|\\\\{[^}]*\\\\})\\\\s*from\\\\s*['\\\"]\",\n      \"in\": \"**/!(index).{ts,tsx}\",\n      \"why\": \"only index files will have re-exports\"\n    }\n  ]\n}\n```",
+   "ms": 33866
+  },
+  {
+   "decision": "adr003",
+   "title": "adr003",
+   "match": [
+    {
+     "pattern": "^export default\\b",
+     "in": "**/*.{js,jsx,ts,tsx}",
+     "why": "We will stop using default exports except when absolutely necessary (such as React.lazy modules)."
+    },
+    {
+     "pattern": "^export\\s*\\{[^}]*\\bas default\\b[^}]*\\}",
+     "in": "**/*.{js,jsx,ts,tsx}",
+     "why": "They break re-exports due to name conflicts, forcing the developer to manually name each."
+    },
+    {
+     "pattern": "^\\s*export\\s*\\{\\s*default\\s*(as\\s+\\w+\\s*)?\\}\\s*from\\s*['\"]",
+     "in": "**/index.{js,jsx,ts,tsx}",
+     "why": "This is often hidden by Babel's module interop ... break re-exports due to name conflicts."
+    }
+   ],
+   "rules": [],
+   "scope": [
+    "src/",
+    "**/index.{js,jsx,ts,tsx}"
+   ],
+   "guardTests": [],
+   "usage": {
+    "inputTokens": 2648,
+    "outputTokens": 1092,
+    "costUsd": 0.0151125
+   },
+   "raw": "```json\n{\n  \"scope\": [\"src/\", \"**/index.{js,jsx,ts,tsx}\"],\n  \"match\": [\n    {\n      \"pattern\": \"^export default\\\\b\",\n      \"in\": \"**/*.{js,jsx,ts,tsx}\",\n      \"why\": \"We will stop using default exports except when absolutely necessary (such as React.lazy modules).\"\n    },\n    {\n      \"pattern\": \"^export\\\\s*\\\\{[^}]*\\\\bas default\\\\b[^}]*\\\\}\",\n      \"in\": \"**/*.{js,jsx,ts,tsx}\",\n      \"why\": \"They break re-exports due to name conflicts, forcing the developer to manually name each.\"\n    },\n    {\n      \"pattern\": \"^\\\\s*export\\\\s*\\\\{\\\\s*default\\\\s*(as\\\\s+\\\\w+\\\\s*)?\\\\}\\\\s*from\\\\s*['\\\"]\",\n      \"in\": \"**/index.{js,jsx,ts,tsx}\",\n      \"why\": \"This is often hidden by Babel's module interop ... break re-exports due to name conflicts.\"\n    }\n  ]\n}\n```",
+   "ms": 19176
+  }
+ ]
+}

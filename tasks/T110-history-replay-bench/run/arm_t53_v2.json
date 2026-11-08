@@ -1,0 +1,192 @@
+[
+  {
+    "id": "h2v2-bs-18540-prefix",
+    "repo": "backstage/backstage",
+    "adr_id": "adr004",
+    "label_final": "violate",
+    "predictedViolate": true,
+    "routing": [
+      "adr004",
+      "adr011",
+      "adr014",
+      "adr003"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0299415,
+    "routeCostUsd": 0.002815,
+    "totalCostUsd": 0.0327565,
+    "wallMs": 39805
+  },
+  {
+    "id": "h2v2-bs-18540-fixed",
+    "repo": "backstage/backstage",
+    "adr_id": "adr004",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routing": [
+      "adr011",
+      "adr014"
+    ],
+    "llmCallCount": 0,
+    "escalateCostUsd": 0,
+    "routeCostUsd": 0.002189,
+    "totalCostUsd": 0.002189,
+    "wallMs": 13528
+  },
+  {
+    "id": "h2v2-bs-20007-prefix",
+    "repo": "backstage/backstage",
+    "adr_id": "adr004",
+    "label_final": "violate",
+    "predictedViolate": false,
+    "routing": [
+      "adr011",
+      "adr014",
+      "adr003",
+      "adr004"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.032535,
+    "routeCostUsd": 0.001934,
+    "totalCostUsd": 0.034469,
+    "wallMs": 17512
+  },
+  {
+    "id": "h2v2-bs-20007-fixed",
+    "repo": "backstage/backstage",
+    "adr_id": "adr004",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routing": [
+      "adr011",
+      "adr014",
+      "adr003",
+      "adr004"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.032525,
+    "routeCostUsd": 0.001939,
+    "totalCostUsd": 0.034464,
+    "wallMs": 18885
+  },
+  {
+    "id": "h2v2-bs-17875-prefix",
+    "repo": "backstage/backstage",
+    "adr_id": "adr003",
+    "label_final": "violate",
+    "predictedViolate": false,
+    "routing": [
+      "adr004",
+      "adr006",
+      "adr011",
+      "adr014"
+    ],
+    "llmCallCount": 0,
+    "escalateCostUsd": 0,
+    "routeCostUsd": 0.002275,
+    "totalCostUsd": 0.002275,
+    "wallMs": 18286
+  },
+  {
+    "id": "h2v2-bs-17875-fixed",
+    "repo": "backstage/backstage",
+    "adr_id": "adr003",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routing": [
+      "adr011",
+      "adr014",
+      "adr004"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0290575,
+    "routeCostUsd": 0.002522,
+    "totalCostUsd": 0.031579499999999996,
+    "wallMs": 25522
+  },
+  {
+    "id": "h2v2-bs-6882-prefix",
+    "repo": "backstage/backstage",
+    "adr_id": "adr004",
+    "label_final": "violate",
+    "predictedViolate": true,
+    "routing": [
+      "adr004",
+      "adr011",
+      "adr014"
+    ],
+    "llmCallCount": 0,
+    "escalateCostUsd": 0,
+    "routeCostUsd": 0.002648,
+    "totalCostUsd": 0.002648,
+    "wallMs": 17134
+  },
+  {
+    "id": "h2v2-bs-6882-fixed",
+    "repo": "backstage/backstage",
+    "adr_id": "adr004",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routing": [
+      "adr011",
+      "adr014",
+      "adr004",
+      "adr003",
+      "adr002"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.029655,
+    "routeCostUsd": 0.001965,
+    "totalCostUsd": 0.03162,
+    "wallMs": 17817
+  },
+  {
+    "id": "h2v2-bs-23449-neg",
+    "repo": "backstage/backstage",
+    "adr_id": "adr004",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routing": [],
+    "llmCallCount": 0,
+    "escalateCostUsd": 0,
+    "routeCostUsd": 0,
+    "totalCostUsd": 0,
+    "wallMs": 10417,
+    "error": "Error: Command failed: hermes -z You are reviewing a code change against one specific team architecture decision (an ADR).\n\n--- THE DECISION (full text) ---\nDECISION: We will stop using default exports except when absolutely necessary (such as\n[`React.lazy`](https://18.react.dev/reference/react/lazy) modules).\nA workaround exists for those that would prefer to never use `default`:\n\n```ts\nconst Component = React.lazy(() =>\n  import('../path/to/Component').then(m => ({ default: m.Component })),\n);\n```\n\nCONTEXT: When CommonJS was the primary authoring format, the best practice was to export\nonly one thing from a module using the `module.exports = ...` format. This\naligned with the\n[UNIX philosophy](https://en.wikipedia.org/wiki/Unix_philosophy) of \"Do one\nthing well\". The module would be consumed\n(`const localName = require('the-module');`) without having to know the internal\nstructure.\n\nNow, `ESModules` are the primary authoring format. They have numerous benefits,\nsuch as compile-time verification of exports and standards-defined semantics.\nThey have a similar mechanism known as \"default exports\", which allows for a\nconsumer to `import localName from 'the-module';`. This is implicitly the same\nas `import { default as localName } from 'the-module';`.\n\nHowever, there are numerous reasons to avoid default exports, as documented by\nothers before:\n\n- <https://humanwhocodes.com/blog/2019/01/stop-using-default-exports-javascript-module/>\n\nA summary:\n\n- They add indirection by encouraging a developer to create local names for\n  modules, increasing cognitive load and slowing down code comprehension:\n  `import TheListThing from 'not-a-list-thing';`.\n- They thwart tools, such as IDEs, that can automatically rename and refactor\n  code.\n- They promote typos and mistakes, as the imported member is completely up to\n  the consuming developer to define.\n- They are ugly in CommonJS interop, as the default property must be manually\n  specified by the consumer. This is often hidden by Babel's module interop.\n- They break re-exports due to name conflicts, forcing the developer to manually\n  name each.\n\nUsing named exports helps prevent needing to rename symbols, which has myriad\nbenefits. A few are:\n\n- IDE tools like \"Find All References\" and the \"Go To Definition\" function.\n- Manual codebase searching (\"grep\", etc) is easier with a unique symbol.\n\nCONSEQUENCES (descriptive, not argument-evaluated): We will actively work to remove them from our codebases, being as explicit as\npossible. Have a connected component?\n`export const ConnectedComponent = connect(Component)`.\n\nWe will add tools, such as lint rules, to help migrate away from default\nexports.\n\n--- THE CODE CHANGE (unified diff) ---\ndiff --git a/.changeset/chatty-vans-cross.md b/.changeset/chatty-vans-cross.md\ndeleted file mode 100644\nindex fab7af51..00000000\n--- a/.changeset/chatty-vans-cross.md\n+++ /dev/null\n@@ -1,5 +0,0 @@\n----\n-'@backstage/integration': patch\n----\n-\n-Fixed an issue with resolution of SCM URLs against a base URL with a trailing slash.\ndiff --git a/.changeset/slimy-icons-swim.md b/.changeset/slimy-icons-swim.md\nnew file mode 100644\nindex 00000000..52e2769e\n--- /dev/null\n+++ b/.changeset/slimy-icons-swim.md\n@@ -0,0 +1,6 @@\n+---\n+'@backstage/plugin-org': patch\n+---\n+\n+Add `relationsType` argument to `MembersListCard`.\n+This can be used to display an aggregated user list for groups by default.\ndiff --git a/.changeset/ten-wasps-juggle.md b/.changeset/ten-wasps-juggle.md\ndeleted file mode 100644\nindex 25b4f11d..00000000\n--- a/.changeset/ten-wasps-juggle.md\n+++ /dev/null\n@@ -1,5 +0,0 @@\n----\n-'@backstage/plugin-home': minor\n----\n-\n-Resolved styling inconsistencies and title visibility issues in Top Visited and Recently Visited cards\ndiff --git a/.lighthouseci/scripts/guest-auth.js b/.lighthouseci/scripts/guest-auth.js\nindex 9f0d35bc..7f686cbb 100644\n--- a/.lighthouseci/scripts/guest-auth.js\n+++ b/.lighthouseci/scripts/guest-auth.js\n@@ -7,4 +7,5 @@ module.exports = async (browser, context) => {\n   await page.evaluate(() => {\n     localStorage.setItem('@backstage/core:SignInPage:provider', 'guest');\n   });\n+  await page.goto('http://localhost:3000');\n };\ndiff --git a/README.md b/README.md\nindex 6cea4235..f7b74ade 100644\n--- a/README.md\n+++ b/README.md\n@@ -16,7 +16,7 @@ English \\| [한국어](README-ko_kr.md) \\| [中文版](README-zh_Hans.md)\n \n ## What is Backstage?\n \n-[Backstage](https://backstage.io/) is an open source framework for building developer portals. Powered by a centralized software catalog, Backstage restores order to your microservices and infrastructure and enables your product teams to ship high-quality code quickly without compromising autonomy.\n+[Backstage](https://backstage.io/) is an open platform for building developer portals. Powered by a centralized software catalog, Backstage restores order to your microservices and infrastructure and enables your product teams to ship high-quality code quickly without compromising autonomy.\n \n Backstage unifies all your infrastructure tooling, services, and documentation to create a streamlined development environment from end to end.\n \ndiff --git a/docs/faq/product.md b/docs/faq/product.md\nindex 79465cf5..9d2a32f3 100644\n--- a/docs/faq/product.md\n+++ b/docs/faq/product.md\n@@ -6,7 +6,7 @@ description: Questions related to product and design.\n \n ### Can we call Backstage something different? So that it fits our company better?\n \n-Yes, Backstage is just a framework for building your own developer portal. We\n+Yes, Backstage is just a platform for building your own developer portal. We\n happen to call our internal version Backstage, as well, as a reference to our\n music roots. You can call your version whatever suits your team, company, or\n brand.\ndiff --git a/docs/faq/technical.md b/docs/faq/technical.md\nindex c0cabf41..55bb1af6 100644\n--- a/docs/faq/technical.md\n+++ b/docs/faq/technical.md\n@@ -47,7 +47,7 @@ gets a consistent UX, no matter what tool or service is being accessed on the\n other side.\n \n Each plugin is treated as a self-contained web app and can include almost any\n-type of content. Plugins all use a common set of framework APIs and reusable UI\n+type of content. Plugins all use a common set of platform APIs and reusable UI\n components. Plugins can fetch data either from the backend or an API exposed\n through the proxy.\n \n@@ -179,7 +179,7 @@ No. Backstage does not collect any telemetry from any third party using the\n platform. Spotify, and the open source community, do have access to\n [GitHub Insights](https://github.com/features/insights), which contains\n information such as contributors, commits, traffic, and dependencies. Backstage\n-is an open source framework, but you are in control of your own data. You control who\n+is an open platform, but you are in control of your own data. You control who\n has access to any data you provide to your version of Backstage and who that\n data is shared with.\n \ndiff --git a/docs/features/software-catalog/index.md b/docs/features/software-catalog/index.md\nindex 28712ff0..ae3a4ef4 100644\n--- a/docs/features/software-catalog/index.md\n+++ b/docs/features/software-catalog/index.md\n@@ -132,7 +132,7 @@ in the catalog.\n \n ![screenshot of tools](https://backstage.io/assets/images/tabs-abfdf72185d3ceb1d92c4237f7f78809.png)\n \n-Your Backstage developer portal can be customized by incorporating\n+The Backstage platform can be customized by incorporating\n [existing open source plugins](https://github.com/backstage/backstage/tree/master/plugins),\n or by [building your own](../../plugins/index.md).\n \ndiff --git a/docs/overview/what-is-backstage.md b/docs/overview/what-is-backstage.md\nindex ef452d5d..e91b9774 100644\n--- a/docs/overview/what-is-backstage.md\n+++ b/docs/overview/what-is-backstage.md\n@@ -2,12 +2,12 @@\n id: what-is-backstage\n title: What is Backstage?\n # prettier-ignore\n-description: Backstage is an open source framework for building developer portals. Powered by a centralized software catalog, Backstage restores order to your microservices and infrastructure\n+description: Backstage is an open platform for building developer portals. Powered by a centralized software catalog, Backstage restores order to your microservices and infrastructure\n ---\n \n ![software-catalog](../assets/header.png)\n \n-[Backstage](https://backstage.io/) is an open source framework for building developer\n+[Backstage](https://backstage.io/) is an open platform for building developer\n portals. Powered by a centralized software catalog, Backstage restores order to\n your microservices and infrastructure and enables your product teams to ship\n high-quality code quickly — without compromising autonomy.\ndiff --git a/docs/references/glossary.md b/docs/references/glossary.md\nindex 6db16443..8266dd02 100644\n--- a/docs/references/glossary.md\n+++ b/docs/references/glossary.md\n@@ -27,7 +27,7 @@ A type of [OAuth flow](#oauth) used by confidential and public clients to get an\n \n ## Backstage\n \n-1. An open source framework for creating and deploying [developer portals](#developer-portal), originally created at Spotify. Backstage is an incubation-stage open source project of the [Cloud Native Computing Foundation](#cloud-native-computing-foundation).\n+1. A platform for creating and deploying [developer portals](#developer-portal), originally created at Spotify. Backstage is an incubation-stage open source project of the [Cloud Native Computing Foundation](#cloud-native-computing-foundation).\n \n 2. [The Backstage Framework](#backstage-framework).\n \n@@ -105,7 +105,7 @@ An executable or package file with all of the necessary information required to\n \n ## Developer Portal\n \n-A centralized system comprising a user interface and database used to facilitate and document all the software projects within an organization. Backstage is both a developer portal and (by virtue of being based on plugins) a framework for creating developer portals.\n+A centralized system comprising a user interface and database used to facilitate and document all the software projects within an organization. Backstage is both a developer portal and (by virtue of being based on plugins) a platform for creating developer portals.\n \n ## Document (search plugin)\n \ndiff --git a/lighthouserc.js b/lighthouserc.js\nindex 49595068..5e21730b 100644\n--- a/lighthouserc.js\n+++ b/lighthouserc.js\n@@ -52,7 +52,7 @@ module.exports = {\n         outputPath: './.lighthouseci/reports',\n         preset: 'desktop',\n       },\n-      startServerCommand: 'yarn start:lighthouse',\n+      startServerCommand: 'yarn dev',\n       startServerReadyPattern: 'webpack compiled successfully',\n       startServerReadyTimeout: 600000,\n       numberOfRuns: 1,\n@@ -64,7 +64,7 @@ module.exports = {\n         'categories:pwa': 'off',\n         'categories:best-practices': 'off',\n         'categories:seo': 'off',\n-        'categories:accessibility': ['error', { minScore: 0.95 }],\n+        'categories:accessibility': ['error', { minScore: 0.89 }],\n       },\n     },\n   },\ndiff --git a/microsite/docusaurus.config.js b/microsite/docusaurus.config.js\nindex 3f85090e..4bef5edc 100644\n--- a/microsite/docusaurus.config.js\n+++ b/microsite/docusaurus.config.js\n@@ -24,7 +24,7 @@ prismTheme.plain.backgroundColor = '#232323';\n /** @type {import('@docusaurus/types').Config} */\n module.exports = {\n   title: 'Backstage Software Catalog and Developer Platform',\n-  tagline: 'An open source framework for building developer portals',\n+  tagline: 'An open platform for building developer portals',\n   url: 'https://backstage.io',\n   baseUrl: '/',\n   organizationName: 'Spotify',\ndiff --git a/microsite/src/pages/demos/index.tsx b/microsite/src/pages/demos/index.tsx\nindex 9f4a4c28..e3b4b7db 100644\n--- a/microsite/src/pages/demos/index.tsx\n+++ b/microsite/src/pages/demos/index.tsx\n@@ -62,7 +62,7 @@ const Demos = () => {\n     {\n       title: 'Introduction to Backstage',\n       content:\n-        'Backstage is an open source framework for building developer portals. We’ve been using our homegrown version at Spotify for years — so it’s already packed with features. (We have over 120 internal plugins, built by 60 different teams.) In this live demo recording, Stefan Ålund, product manager for Backstage, tells the origin story of Backstage and gives you a tour of how we use it here at Spotify.',\n+        'Backstage is an open source platform for building developer portals. We’ve been using our homegrown version at Spotify for years — so it’s already packed with features. (We have over 120 internal plugins, built by 60 different teams.) In this live demo recording, Stefan Ålund, product manager for Backstage, tells the origin story of Backstage and gives you a tour of how we use it here at Spotify.',\n       actionItemLink: 'https://www.youtube.com/watch?v=1XtJ5FAOjPk',\n       media: {\n         type: 'video',\ndiff --git a/microsite/src/pages/home/_home.tsx b/microsite/src/pages/home/_home.tsx\nindex c0cf39ad..5cf0f850 100644\n--- a/microsite/src/pages/home/_home.tsx\n+++ b/microsite/src/pages/home/_home.tsx\n@@ -74,9 +74,7 @@ const HomePage = () => {\n           >\n             <ContentBlock\n               className={homeStyles.openPlatformBanner}\n-              title={\n-                <h1>An open source framework for building developer portals</h1>\n-              }\n+              title={<h1> An open platform for building developer portals</h1>}\n               actionButtons={[\n                 {\n                   link: 'https://github.com/backstage/backstage#getting-started',\ndiff --git a/mkdocs.yml b/mkdocs.yml\nindex d565ba9b..2176456b 100644\n--- a/mkdocs.yml\n+++ b/mkdocs.yml\n@@ -1,5 +1,5 @@\n site_name: 'Backstage'\n-site_description: 'Main documentation for Backstage features and framework APIs'\n+site_description: 'Main documentation for Backstage features and platform APIs'\n repo_url: https://github.com/backstage/backstage\n edit_uri: edit/master/docs\n \ndiff --git a/package.json b/package.json\nindex c45a3ec4..551d07d0 100644\n--- a/package.json\n+++ b/package.json\n@@ -42,7 +42,6 @@\n     \"start\": \"yarn workspace example-app start\",\n     \"start-backend\": \"yarn workspace example-backend start\",\n     \"start-backend:next\": \"yarn workspace example-backend-next start\",\n-    \"start:lighthouse\": \"concurrently 'yarn start' 'yarn start-backend:next'\",\n     \"start:microsite\": \"cd microsite/ && yarn start\",\n     \"start:next\": \"yarn workspace example-app-next start\",\n     \"storybook\": \"yarn ./storybook run start\",\ndiff --git a/packages/app-next/public/index.html b/packages/app-next/public/index.html\nindex 1bbfda59..a3c3ef19 100644\n--- a/packages/app-next/public/index.html\n+++ b/packages/app-next/public/index.html\n@@ -6,7 +6,7 @@\n     <meta name=\"theme-color\" content=\"#000000\" />\n     <meta\n       name=\"description\"\n-      content=\"Backstage is an open source framework for building developer portals\"\n+      content=\"Backstage is an open platform for building developer portals\"\n     />\n     <!--\n       manifest.json provides metadata used when your web app is installed on a\ndiff --git a/packages/app/public/index.html b/packages/app/public/index.html\nindex 631666da..231e96b3 100644\n--- a/packages/app/public/index.html\n+++ b/packages/app/public/index.html\n@@ -6,7 +6,7 @@\n     <meta name=\"theme-color\" content=\"#000000\" />\n     <meta\n       name=\"description\"\n-      content=\"Backstage is an open source framework for building developer portals\"\n+      content=\"Backstage is an open platform for building developer portals\"\n     />\n     <!--\n       manifest.json provides metadata used when your web app is installed on a\ndiff --git a/packages/cli/templates/serve_index.html b/packages/cli/templates/serve_index.html\nindex bc91f1bc..08e48cb6 100644\n--- a/packages/cli/templates/serve_index.html\n+++ b/packages/cli/templates/serve_index.html\n@@ -6,7 +6,7 @@\n     <meta name=\"theme-color\" content=\"#000000\" />\n     <meta\n       name=\"description\"\n-      content=\"Backstage is an open source framework for building developer portals\"\n+      content=\"Backstage is an open platform for building developer portals\"\n     />\n     <title>Backstage</title>\n   </head>\ndiff --git a/packages/create-app/templates/default-app/packages/app/public/index.html b/packages/create-app/templates/default-app/packages/app/public/index.html\nindex 18da7c47..3337729d 100644\n--- a/packages/create-app/templates/default-app/packages/app/public/index.html\n+++ b/packages/create-app/templates/default-app/packages/app/public/index.html\n@@ -6,7 +6,7 @@\n     <meta name=\"theme-color\" content=\"#000000\" />\n     <meta\n       name=\"description\"\n-      content=\"Backstage is an open source framework for building developer portals\"\n+      content=\"Backstage is an open platform for building developer portals\"\n     />\n     <!--\n       manifest.json provides metadata used when your web app is installed on a\ndiff --git a/packages/integration/src/helpers.test.ts b/packages/integration/src/helpers.test.ts\nindex 72ccd530..7468c83b 100644\n--- a/packages/integration/src/helpers.test.ts\n+++ b/packages/integration/src/helpers.test.ts\n@@ -116,82 +116,6 @@ describe('defaultScmResolveUrl', () => {\n     );\n   });\n \n-  it('works for the root path', () => {\n-    expect(\n-      defaultScmResolveUrl({\n-        url: '/',\n-        base: 'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/folder',\n-      }),\n-    ).toBe(\n-      'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/',\n-    );\n-\n-    expect(\n-      defaultScmResolveUrl({\n-        url: '/',\n-        base: 'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/folder/',\n-      }),\n-    ).toBe(\n-      'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/',\n-    );\n-\n-    expect(\n-      defaultScmResolveUrl({\n-        url: '/',\n-        base: 'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/folder/a.yaml',\n-      }),\n-    ).toBe(\n-      'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/',\n-    );\n-\n-    expect(\n-      defaultScmResolveUrl({\n-        url: '/',\n-        base: 'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/folder/a.yaml?at=master',\n-      }),\n-    ).toBe(\n-      'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/?at=master',\n-    );\n-  });\n-\n-  it('works for files in the repo root', () => {\n-    expect(\n-      defaultScmResolveUrl({\n-        url: '/b.yaml',\n-        base: 'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/folder',\n-      }),\n-    ).toBe(\n-      'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/b.yaml',\n-    );\n-\n-    expect(\n-      defaultScmResolveUrl({\n-        url: '/b.yaml',\n-        base: 'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/folder/',\n-      }),\n-    ).toBe(\n-      'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/b.yaml',\n-    );\n-\n-    expect(\n-      defaultScmResolveUrl({\n-        url: '/b.yaml',\n-        base: 'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/folder/a.yaml',\n-      }),\n-    ).toBe(\n-      'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/b.yaml',\n-    );\n-\n-    expect(\n-      defaultScmResolveUrl({\n-        url: '/b.yaml',\n-        base: 'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/folder/a.yaml?at=master',\n-      }),\n-    ).toBe(\n-      'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/b.yaml?at=master',\n-    );\n-  });\n-\n   it('works for absolute paths and retains query params', () => {\n     expect(\n       defaultScmResolveUrl({\n@@ -202,24 +126,6 @@ describe('defaultScmResolveUrl', () => {\n       'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/other/b.yaml',\n     );\n \n-    expect(\n-      defaultScmResolveUrl({\n-        url: '/other/b.yaml',\n-        base: 'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/folder',\n-      }),\n-    ).toBe(\n-      'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/other/b.yaml',\n-    );\n-\n-    expect(\n-      defaultScmResolveUrl({\n-        url: '/other/b.yaml',\n-        base: 'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/folder/',\n-      }),\n-    ).toBe(\n-      'https://gitlab.com/groupA/teams/teamA/subgroupA/repoA/-/blob/branch/other/b.yaml',\n-    );\n-\n     expect(\n       defaultScmResolveUrl({\n         url: '/other/b.yaml',\ndiff --git a/packages/integration/src/helpers.ts b/packages/integration/src/helpers.ts\nindex b403155c..94aafaa6 100644\n--- a/packages/integration/src/helpers.ts\n+++ b/packages/integration/src/helpers.ts\n@@ -84,10 +84,8 @@ export function defaultScmResolveUrl(options: {\n \n   if (url.startsWith('/')) {\n     // If it is an absolute path, move relative to the repo root\n-    const { href, filepath } = parseGitUrl(base);\n-\n-    updated = new URL(href);\n-\n+    const { filepath } = parseGitUrl(base);\n+    updated = new URL(base);\n     const repoRootPath = trimEnd(\n       updated.pathname.substring(0, updated.pathname.length - filepath.length),\n       '/',\ndiff --git a/packages/techdocs-cli-embedded-app/public/index.html b/packages/techdocs-cli-embedded-app/public/index.html\nindex 18bb3f50..fc758eee 100644\n--- a/packages/techdocs-cli-embedded-app/public/index.html\n+++ b/packages/techdocs-cli-embedded-app/public/index.html\n@@ -6,7 +6,7 @@\n     <meta name=\"theme-color\" content=\"#000000\" />\n     <meta\n       name=\"description\"\n-      content=\"Backstage is an open source framework for building developer portals\"\n+      content=\"Backstage is an open platform for building developer portals\"\n     />\n     <!--\n       manifest.json provides metadata used when your web app is installed on a\ndiff --git a/plugins/home/src/components/VisitList/VisitList.tsx b/plugins/home/src/components/VisitList/VisitList.tsx\nindex 7e79d543..f1dc855d 100644\n--- a/plugins/home/src/components/VisitList/VisitList.tsx\n+++ b/plugins/home/src/components/VisitList/VisitList.tsx\n@@ -15,7 +15,7 @@\n  */\n \n import React from 'react';\n-import { Collapse, List } from '@material-ui/core';\n+import { Collapse, List, Typography, makeStyles } from '@material-ui/core';\n import { Visit } from '../../api/VisitsApi';\n import { VisitListItem } from './VisitListItem';\n import { ItemDetailType } from './ItemDetail';\n@@ -23,23 +23,31 @@ import { VisitListEmpty } from './VisitListEmpty';\n import { VisitListFew } from './VisitListFew';\n import { VisitListSkeleton } from './VisitListSkeleton';\n \n+const useStyles = makeStyles(_theme => ({\n+  title: {\n+    marginBottom: '2rem',\n+  },\n+}));\n+\n export const VisitList = ({\n+  title,\n   detailType,\n   visits = [],\n   numVisitsOpen = 3,\n   numVisitsTotal = 8,\n   collapsed = true,\n  \n...[diff clipped at 20000 chars by the cascade's token budget; 16082 more chars omitted]\n\nDoes this change VIOLATE the decision above? Answer with exactly one line first:\nVERDICT: VIOLATES or VERDICT: COMPLIANT\nThen one short sentence of reasoning. -m claude-sonnet-5 --provider anthropic -t  --safe-mode --usage-file /var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-llm-usage-CDbPus/usage.json\n    at genericNodeError (node:internal/errors:983:15)\n    at wrappedFn (node:internal/errors:537:14)\n    at checkExecSyncError (node:child_process:916:11)\n    at execFileSync (node:child_process:952:15)\n    at Object.complete (file:///Users/a1/Desktop/CS%20Code/Project/Mole/packages/decisions/dist/src/compile/llm.js:18:29)\n    at cascadeCheck (file:///Users/a1/Desktop/CS%20Code/Project/Mole/packages/decisions/dist/src/cascade/cascade.js:169:54)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T110-history-replay-bench/tasks/T110-history-replay-bench/run/run_t53_v2.mjs:45:9"
+  },
+  {
+    "id": "h2v2-bs-28578-neg",
+    "repo": "backstage/backstage",
+    "adr_id": "adr004",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routing": [
+      "adr011",
+      "adr014",
+      "adr004"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.011175,
+    "routeCostUsd": 0.001934,
+    "totalCostUsd": 0.013108999999999999,
+    "wallMs": 17430
+  },
+  {
+    "id": "h2v2-bs-6993-neg",
+    "repo": "backstage/backstage",
+    "adr_id": "adr004",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routing": [
+      "adr011",
+      "adr014",
+      "adr004",
+      "adr003"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.030025,
+    "routeCostUsd": 0.001964,
+    "totalCostUsd": 0.031989,
+    "wallMs": 16328
+  }
+]
