@@ -203,7 +203,7 @@ describe('mole collisions CLI + MCP mole_collisions (T21)', () => {
 
   it('MCP tool mole_collisions returns the library JSON for one run', async () => {
     const client = new Client({ name: 'test', version: '0' });
-    await client.connect(new StdioClientTransport({ command: process.execPath, args: ['--no-warnings', mcpBin], env: { ...env(), MOLE_ROOT: root } }));
+    await client.connect(new StdioClientTransport({ command: process.execPath, args: ['--no-warnings', mcpBin], env: { ...env(), MOLE_ROOT: root, MOLE_MCP_ALL_TOOLS: '1' } })); // T113: mole_collisions is opt-in
     try {
       const tools = await client.listTools();
       expect(tools.tools.map((t) => t.name)).toContain('mole_collisions');
