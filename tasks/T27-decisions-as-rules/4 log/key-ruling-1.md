@@ -44,3 +44,7 @@ key ruling 1
         boundary                .mole/decisions/** is not in T27's boundary list, but the red commit already added rules to 0013/0014 and created 0016      the rename above is allowed as part of ruling 3 only
         assumption              no Raymond input; decided from the repros above      0016/0017 stays status: proposed until he approves it
 ```
+
+## Key-guard record (added 11-05 by the orchestrator: the ruling above was applied in 867774d but never named the new hash, so CI key-guard failed on main since 11-04)
+
+APPROVE applied: packages/decisions/bench/m19-key.json sha256 3c77806f0891ae7a9b03aa9c511a53c5ba45a4bdbd7b29206f1be91151351872 (content written by 867774d, unchanged since)

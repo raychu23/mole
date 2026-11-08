@@ -86,3 +86,7 @@ the key with this fix will very likely raise mole-builder-3/4/5's recall materia
 negatives traced in `key-changes.md` were files correctly owned by a different builder whose commits were
 being double-counted into mole-builder-3's claimed ground truth) -- but that rebuild, and re-running M27a
 against it, is the next round's work, not this ruling's.
+
+## Key-guard record (added 11-05 by the orchestrator: the ruling above was applied in d934a53 but never named the new hash, so CI key-guard failed on main since 11-04)
+
+APPROVE applied: packages/coverage/bench/m27-key.json sha256 8b3a6895b9805b19e3acc5f74c5049170696fc4786a63f7767cfea8ef987e278 (content written by d934a53, unchanged since)
