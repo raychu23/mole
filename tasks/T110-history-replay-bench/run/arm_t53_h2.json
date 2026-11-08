@@ -1,0 +1,124 @@
+[
+  {
+    "id": "h2-bs-18540",
+    "repo": "backstage/backstage",
+    "adr_id": "adr004",
+    "label_final": "violate",
+    "predictedViolate": false,
+    "routing": [
+      "adr011",
+      "adr014"
+    ],
+    "llmCallCount": 0,
+    "escalateCostUsd": 0,
+    "routeCostUsd": 0.002007,
+    "totalCostUsd": 0.002007,
+    "wallMs": 7774
+  },
+  {
+    "id": "h2-bs-20007",
+    "repo": "backstage/backstage",
+    "adr_id": "adr004",
+    "label_final": "violate",
+    "predictedViolate": false,
+    "routing": [
+      "adr011",
+      "adr014",
+      "adr003",
+      "adr004"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0349565,
+    "routeCostUsd": 0.003197,
+    "totalCostUsd": 0.0381535,
+    "wallMs": 13340
+  },
+  {
+    "id": "h2-bs-17875",
+    "repo": "backstage/backstage",
+    "adr_id": "adr003",
+    "label_final": "violate",
+    "predictedViolate": false,
+    "routing": [
+      "adr011",
+      "adr014",
+      "adr004"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0334971,
+    "routeCostUsd": 0.003645,
+    "totalCostUsd": 0.037142100000000004,
+    "wallMs": 19314
+  },
+  {
+    "id": "h2-bs-6882",
+    "repo": "backstage/backstage",
+    "adr_id": "adr004",
+    "label_final": "violate",
+    "predictedViolate": false,
+    "routing": [
+      "adr011",
+      "adr014",
+      "adr004",
+      "adr003",
+      "adr002"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0295446,
+    "routeCostUsd": 0.001963,
+    "totalCostUsd": 0.031507600000000004,
+    "wallMs": 9741
+  },
+  {
+    "id": "h2-bs-23449-neg",
+    "repo": "backstage/backstage",
+    "adr_id": "adr004",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routing": [
+      "adr011",
+      "adr014",
+      "adr004",
+      "adr015"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0248171,
+    "routeCostUsd": 0.003291,
+    "totalCostUsd": 0.0281081,
+    "wallMs": 11779
+  },
+  {
+    "id": "h2-bs-28578-neg",
+    "repo": "backstage/backstage",
+    "adr_id": "adr004",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routing": [
+      "adr011",
+      "adr014",
+      "adr004"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0115846,
+    "routeCostUsd": 0.001932,
+    "totalCostUsd": 0.0135166,
+    "wallMs": 10063
+  },
+  {
+    "id": "h2-bs-6993-neg",
+    "repo": "backstage/backstage",
+    "adr_id": "adr004",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routing": [
+      "adr011",
+      "adr014",
+      "adr004"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0260771,
+    "routeCostUsd": 0.001952,
+    "totalCostUsd": 0.028029099999999998,
+    "wallMs": 9687
+  }
+]
