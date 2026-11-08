@@ -1,0 +1,389 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.7 [39m[90m/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T108b-ci-github[39m
+
+ [31m❯[39m packages/temporal/test/org-isolation.test.ts [2m([22m[2m3 tests[22m[2m | [22m[33m3 skipped[39m[2m)[22m[32m 11[2mms[22m[39m
+   [2m[90m↓[39m[22m org isolation (done-when 2: org A and org B both using D1, as non-owner role)[2m > [22morg A never sees org B's fact for the same fact_id, and vice versa
+   [2m[90m↓[39m[22m org isolation (done-when 2: org A and org B both using D1, as non-owner role)[2m > [22minserting without an org context (no SET LOCAL app.current_org_id) is rejected by the RLS WITH CHECK, not silently written
+   [2m[90m↓[39m[22m org isolation (done-when 2: org A and org B both using D1, as non-owner role)[2m > [22mrecordFact's multi-row FOR PORTION OF path only ever sees/touches its own org's rows, driven as the non-owner role, across two orgs
+ [31m❯[39m packages/temporal/test/recordfact-multiversion.test.ts [2m([22m[2m5 tests[22m[2m | [22m[33m5 skipped[39m[2m)[22m[32m 12[2mms[22m[39m
+   [2m[90m↓[39m[22m recordFact: retroactive change spanning multiple live versions (SQL:2011 FOR PORTION OF)[2m > [22mspans exactly 2 live versions: closes both, re-inserts the one real leftover, flags only the correction
+   [2m[90m↓[39m[22m recordFact: retroactive change spanning multiple live versions (SQL:2011 FOR PORTION OF)[2m > [22mspans exactly 3 live versions: closes all three, flags the two true corrections, no flag on the forward trim
+   [2m[90m↓[39m[22m recordFact: retroactive change spanning multiple live versions (SQL:2011 FOR PORTION OF)[2m > [22mnew range strictly inside one version: splits it into 3 pieces (before/new/after), flagged as a correction
+   [2m[90m↓[39m[22m recordFact: retroactive change spanning multiple live versions (SQL:2011 FOR PORTION OF)[2m > [22mequal-value re-assert is still idempotent (no-op) even after the multi-version rewrite
+   [2m[90m↓[39m[22m recordFact default system time comes from the database clock (parent fix after review-3 property script)[2m > [22m30 back-to-back default-clock writes inside an open-ended version never close a row before it opened
+ [31m❯[39m packages/temporal/test/recordfact-matrix.test.ts [2m([22m[2m4 tests[22m[2m | [22m[33m4 skipped[39m[2m)[22m[32m 16[2mms[22m[39m
+   [2m[90m↓[39m[22m recordFact 2x2: world change vs correction (valid-time direction decides, not mere overlap)[2m > [22m[world change] forward valid-time move: no flag, old belief still holds for its original window
+   [2m[90m↓[39m[22m recordFact 2x2: world change vs correction (valid-time direction decides, not mere overlap)[2m > [22m[correction, same validFrom] retroactive overlap at the SAME validFrom: flag raised, recorded closed
+   [2m[90m↓[39m[22m recordFact 2x2: world change vs correction (valid-time direction decides, not mere overlap)[2m > [22m[late correction] discovered well after the fact: knownAt before vs after the correction disagree
+   [2m[90m↓[39m[22m recordFact 2x2: world change vs correction (valid-time direction decides, not mere overlap)[2m > [22m[retroactive change] new fact starts BEFORE the live row: correction (flag), not a world change
+ [31m❯[39m packages/temporal/test/recordfact-property.test.ts [2m([22m[2m200 tests[22m[2m | [22m[33m200 skipped[39m[2m)[22m[32m 14[2mms[22m[39m
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 1: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 2: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 3: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 4: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 5: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 6: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 7: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 8: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 9: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 10: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 11: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 12: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 13: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 14: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 15: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 16: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 17: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 18: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 19: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 20: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 21: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 22: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 23: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 24: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 25: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 26: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 27: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 28: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 29: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 30: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 31: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 32: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 33: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 34: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 35: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 36: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 37: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 38: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 39: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 40: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 41: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 42: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 43: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 44: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 45: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 46: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 47: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 48: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 49: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 50: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 51: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 52: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 53: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 54: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 55: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 56: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 57: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 58: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 59: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 60: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 61: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 62: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 63: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 64: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 65: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 66: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 67: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 68: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 69: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 70: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 71: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 72: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 73: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 74: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 75: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 76: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 77: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 78: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 79: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 80: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 81: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 82: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 83: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 84: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 85: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 86: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 87: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 88: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 89: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 90: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 91: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 92: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 93: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 94: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 95: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 96: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 97: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 98: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 99: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 100: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 101: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 102: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 103: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 104: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 105: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 106: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 107: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 108: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 109: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 110: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 111: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 112: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 113: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 114: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 115: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 116: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 117: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 118: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 119: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 120: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 121: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 122: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 123: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 124: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 125: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 126: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 127: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 128: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 129: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 130: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 131: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 132: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 133: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 134: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 135: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 136: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 137: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 138: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 139: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 140: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 141: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 142: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 143: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 144: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 145: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 146: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 147: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 148: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 149: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 150: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 151: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 152: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 153: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 154: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 155: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 156: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 157: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 158: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 159: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 160: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 161: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 162: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 163: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 164: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 165: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 166: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 167: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 168: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 169: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 170: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 171: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 172: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 173: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 174: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 175: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 176: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 177: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 178: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 179: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 180: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 181: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 182: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 183: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 184: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 185: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 186: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 187: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 188: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 189: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 190: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 191: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 192: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 193: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 194: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 195: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 196: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 197: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 198: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 199: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+   [2m[90m↓[39m[22m recordFact property test: random sequences vs an independent valid-time reference model[2m > [22mseed 200: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced
+ [31m❯[39m packages/temporal/test/bitemporal-knownat.test.ts [2m([22m[2m2 tests[22m[2m | [22m[33m2 skipped[39m[2m)[22m[32m 12[2mms[22m[39m
+   [2m[90m↓[39m[22m knownAt (recorded/system time) vs asOf (valid/application time) -- 2x2 incl. a late correction[2m > [22ma late correction changes what knownAt(recordedAt=now) returns without changing what was known back then
+   [2m[90m↓[39m[22m knownAt (recorded/system time) vs asOf (valid/application time) -- 2x2 incl. a late correction[2m > [22masOf still answers plain application-time questions once a fact is closed normally
+ [31m❯[39m packages/temporal/test/contradiction.test.ts [2m([22m[2m2 tests[22m[2m | [22m[33m2 skipped[39m[2m)[22m[32m 11[2mms[22m[39m
+   [2m[90m↓[39m[22m contradiction invalidation + flag (done-when 4: history intact)[2m > [22ma conflicting load invalidates the old row (never deletes) and raises a flag
+   [2m[90m↓[39m[22m contradiction invalidation + flag (done-when 4: history intact)[2m > [22ma repeat of the exact same fact is a no-op, not a contradiction (idempotent re-insertion)
+ [31m❯[39m packages/temporal/test/temporal.test.ts [2m([22m[2m5 tests[22m[2m | [22m[33m5 skipped[39m[2m)[22m[32m 11[2mms[22m[39m
+   [2m[90m↓[39m[22m schema integrity (done-when 2: 0 overlapping validity rows, enforced by the database)[2m > [22mrejects two overlapping valid ranges for the same fact via EXCLUDE USING gist
+   [2m[90m↓[39m[22m schema integrity (done-when 2: 0 overlapping validity rows, enforced by the database)[2m > [22mnever rewrites or removes a closed version row; closing writes a new row with a bounded range
+   [2m[90m↓[39m[22m M32 as-of accuracy vs a latest-only baseline (done-when 1)[2m > [22manswers >= 100% of the frozen key's as-of questions correctly, reporting the baseline beside it
+   [2m[90m↓[39m[22m diff between two points in time (done-when: as-of queries)[2m > [22mreports what changed between T1 and T2 for a fact with history
+   [2m[90m↓[39m[22m 0 model calls on any path (R6)[2m > [22mnever calls fetch while loading, querying or benching
+ [31m❯[39m packages/temporal/test/insertfact-backdate.test.ts [2m([22m[2m1 test[22m[2m | [22m[33m1 skipped[39m[2m)[22m[32m 16[2mms[22m[39m
+   [2m[90m↓[39m[22m insertFact system-time backdating (P1: recordedFrom is internal-only)[2m > [22ma caller forcing a third argument past the type system cannot backdate recorded
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 8 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m packages/temporal/test/bitemporal-knownat.test.ts[2m [ packages/temporal/test/bitemporal-knownat.test.ts ][22m
+[41m[1m FAIL [22m[49m packages/temporal/test/contradiction.test.ts[2m [ packages/temporal/test/contradiction.test.ts ][22m
+[41m[1m FAIL [22m[49m packages/temporal/test/insertfact-backdate.test.ts[2m [ packages/temporal/test/insertfact-backdate.test.ts ][22m
+[41m[1m FAIL [22m[49m packages/temporal/test/org-isolation.test.ts[2m [ packages/temporal/test/org-isolation.test.ts ][22m
+[41m[1m FAIL [22m[49m packages/temporal/test/recordfact-matrix.test.ts[2m [ packages/temporal/test/recordfact-matrix.test.ts ][22m
+[41m[1m FAIL [22m[49m packages/temporal/test/recordfact-multiversion.test.ts[2m [ packages/temporal/test/recordfact-multiversion.test.ts ][22m
+[41m[1m FAIL [22m[49m packages/temporal/test/recordfact-property.test.ts[2m [ packages/temporal/test/recordfact-property.test.ts ][22m
+[41m[1m FAIL [22m[49m packages/temporal/test/temporal.test.ts[2m [ packages/temporal/test/temporal.test.ts ][22m
+{
+  stack: 'AggregateError: \n' +
+    '    at internalConnectMultiple (node:net:1134:18)\n' +
+    '    at afterConnectMultiple (node:net:1715:7)',
+  errors: [
+    {
+      stack: 'Error: connect ECONNREFUSED ::1:5433\n' +
+        '    at createConnectionError (node:net:1678:14)\n' +
+        '    at afterConnectMultiple (node:net:1708:16)',
+      message: 'connect ECONNREFUSED ::1:5433',
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 5433,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'Error: connect ECONNREFUSED 127.0.0.1:5433\n' +
+        '    at createConnectionError (node:net:1678:14)\n' +
+        '    at afterConnectMultiple (node:net:1708:16)',
+      message: 'connect ECONNREFUSED 127.0.0.1:5433',
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 5433,
+      constructor: 'Function<Error>',
+      name: 'Error',
+      toString: 'Function<toString>'
+    }
+  ],
+  code: 'ECONNREFUSED',
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'AggregateError',
+  toString: 'Function<toString>',
+  stacks: []
+}
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/16]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m packages/temporal/test/bitemporal-knownat.test.ts[2m [ packages/temporal/test/bitemporal-knownat.test.ts ][22m
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'end')[39m
+[36m [2m❯[22m packages/temporal/test/bitemporal-knownat.test.ts:[2m51:14[22m[39m
+    [90m 49| [39m
+    [90m 50| [39m[34mafterAll[39m([35masync[39m () [33m=>[39m {
+    [90m 51| [39m  [35mawait[39m pool[33m.[39m[34mend[39m()[33m;[39m
+    [90m   | [39m             [31m^[39m
+    [90m 52| [39m  [35mawait[39m [34mwithAdmin[39m([35masync[39m (c) [33m=>[39m {
+    [90m 53| [39m    [35mawait[39m c[33m.[39m[34mquery[39m(sql[33m.[39m[34mdropDb[39m(dbName))[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/16]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m packages/temporal/test/contradiction.test.ts[2m [ packages/temporal/test/contradiction.test.ts ][22m
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'end')[39m
+[36m [2m❯[22m packages/temporal/test/contradiction.test.ts:[2m39:14[22m[39m
+    [90m 37| [39m
+    [90m 38| [39m[34mafterAll[39m([35masync[39m () [33m=>[39m {
+    [90m 39| [39m  [35mawait[39m pool[33m.[39m[34mend[39m()[33m;[39m
+    [90m   | [39m             [31m^[39m
+    [90m 40| [39m  [35mawait[39m [34mwithAdmin[39m([35masync[39m (c) [33m=>[39m {
+    [90m 41| [39m    [35mawait[39m c[33m.[39m[34mquery[39m(sql[33m.[39m[34mdropDb[39m(dbName))[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/16]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m packages/temporal/test/insertfact-backdate.test.ts[2m [ packages/temporal/test/insertfact-backdate.test.ts ][22m
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'end')[39m
+[36m [2m❯[22m packages/temporal/test/insertfact-backdate.test.ts:[2m44:14[22m[39m
+    [90m 42| [39m
+    [90m 43| [39m[34mafterAll[39m([35masync[39m () [33m=>[39m {
+    [90m 44| [39m  [35mawait[39m pool[33m.[39m[34mend[39m()[33m;[39m
+    [90m   | [39m             [31m^[39m
+    [90m 45| [39m  [35mawait[39m [34mwithAdmin[39m([35masync[39m (c) [33m=>[39m {
+    [90m 46| [39m    [35mawait[39m c[33m.[39m[34mquery[39m(sql[33m.[39m[34mdropDb[39m(dbName))[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/16]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m packages/temporal/test/org-isolation.test.ts[2m [ packages/temporal/test/org-isolation.test.ts ][22m
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'end')[39m
+[36m [2m❯[22m packages/temporal/test/org-isolation.test.ts:[2m57:14[22m[39m
+    [90m 55| [39m
+    [90m 56| [39m[34mafterAll[39m([35masync[39m () [33m=>[39m {
+    [90m 57| [39m  [35mawait[39m pool[33m.[39m[34mend[39m()[33m;[39m
+    [90m   | [39m             [31m^[39m
+    [90m 58| [39m  [35mawait[39m [34mwithAdmin[39m([35masync[39m (c) [33m=>[39m {
+    [90m 59| [39m    [35mawait[39m c[33m.[39m[34mquery[39m(sql[33m.[39m[34mdropDb[39m(dbName))[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/16]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m packages/temporal/test/recordfact-matrix.test.ts[2m [ packages/temporal/test/recordfact-matrix.test.ts ][22m
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'end')[39m
+[36m [2m❯[22m packages/temporal/test/recordfact-matrix.test.ts:[2m78:14[22m[39m
+    [90m 76| [39m
+    [90m 77| [39m[34mafterAll[39m([35masync[39m () [33m=>[39m {
+    [90m 78| [39m  [35mawait[39m pool[33m.[39m[34mend[39m()[33m;[39m
+    [90m   | [39m             [31m^[39m
+    [90m 79| [39m  [35mawait[39m [34mwithAdmin[39m([35masync[39m (c) [33m=>[39m {
+    [90m 80| [39m    [35mawait[39m c[33m.[39m[34mquery[39m(sql[33m.[39m[34mdropDb[39m(dbName))[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/16]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m packages/temporal/test/recordfact-multiversion.test.ts[2m [ packages/temporal/test/recordfact-multiversion.test.ts ][22m
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'end')[39m
+[36m [2m❯[22m packages/temporal/test/recordfact-multiversion.test.ts:[2m56:14[22m[39m
+    [90m 54| [39m
+    [90m 55| [39m[34mafterAll[39m([35masync[39m () [33m=>[39m {
+    [90m 56| [39m  [35mawait[39m pool[33m.[39m[34mend[39m()[33m;[39m
+    [90m   | [39m             [31m^[39m
+    [90m 57| [39m  [35mawait[39m [34mwithAdmin[39m([35masync[39m (c) [33m=>[39m {
+    [90m 58| [39m    [35mawait[39m c[33m.[39m[34mquery[39m([32m`DROP DATABASE IF EXISTS [39m[36m${[39mdbName[36m}[39m[32m`[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/16]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m packages/temporal/test/recordfact-property.test.ts[2m [ packages/temporal/test/recordfact-property.test.ts ][22m
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'end')[39m
+[36m [2m❯[22m packages/temporal/test/recordfact-property.test.ts:[2m50:14[22m[39m
+    [90m 48| [39m
+    [90m 49| [39m[34mafterAll[39m([35masync[39m () [33m=>[39m {
+    [90m 50| [39m  [35mawait[39m pool[33m.[39m[34mend[39m()[33m;[39m
+    [90m   | [39m             [31m^[39m
+    [90m 51| [39m  [35mawait[39m [34mwithAdmin[39m([35masync[39m (c) [33m=>[39m {
+    [90m 52| [39m    [35mawait[39m c[33m.[39m[34mquery[39m(sql[33m.[39m[34mdropDb[39m(dbName))[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/16]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m packages/temporal/test/temporal.test.ts[2m [ packages/temporal/test/temporal.test.ts ][22m
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'end')[39m
+[36m [2m❯[22m packages/temporal/test/temporal.test.ts:[2m60:14[22m[39m
+    [90m 58| [39m
+    [90m 59| [39m[34mafterAll[39m([35masync[39m () [33m=>[39m {
+    [90m 60| [39m  [35mawait[39m pool[33m.[39m[34mend[39m()[33m;[39m
+    [90m   | [39m             [31m^[39m
+    [90m 61| [39m  [35mawait[39m [34mwithAdmin[39m([35masync[39m (c) [33m=>[39m {
+    [90m 62| [39m    [35mawait[39m c[33m.[39m[34mquery[39m(sql[33m.[39m[34mdropDb[39m(dbName))[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/16]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m8 failed[39m[22m[90m (8)[39m
+[2m      Tests [22m [33m222 skipped[39m[90m (222)[39m
+[2m   Start at [22m 17:28:45
+[2m   Duration [22m 793ms[2m (transform 242ms, setup 0ms, collect 613ms, tests 103ms, environment 1ms, prepare 682ms)[22m
+

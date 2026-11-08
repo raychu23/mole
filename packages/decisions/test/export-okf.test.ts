@@ -78,7 +78,11 @@ describe('buildOkfBundle', () => {
     const root = repo();
     const bundle = buildOkfBundle(loadGraph(root), root);
     const accepted = bundle.files.find((f) => f.path.endsWith('D-accepted.md'))!.content;
-    expect(accepted).toMatch(/generated: \{ by: human:ahormati, at: \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2} \}/);
+    // git's `--format=%cI` (strict ISO 8601) renders a zero UTC offset as the literal `Z` on newer git
+    // (git.git bb/iso-strict-utc, merged 2024: ISO 8601-1:2020-12 requires `Z` for a zero offset, not
+    // `+00:00`) -- the CI runner's git is newer than this repo's historical dev git, so both forms are
+    // real, valid output of the same command and must both pass (T108b review, github-ci-ea31173-failed.txt).
+    expect(accepted).toMatch(/generated: \{ by: human:ahormati, at: \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2}) \}/);
   });
 
   it('populates `sources[]` (provenance, §5.1) from `source` and `evidence`', () => {

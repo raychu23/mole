@@ -49,3 +49,47 @@ disk              worktree ../Mole-worktrees/T108-ci-green, ~28M checked out; di
 ```
 
 - 11-08 review FAIL (deleg_ebac273d): committing T1's gitignored report leaked a machine path and overrode reused-keys.json's own note -> reverted; tests skip that one regenerated source when absent (h2h.ts stays strict). Merged b8eec35 (authors reset from "ci <ci@localhost>").
+
+## Q1b continuation (GitHub CI on ea31173 still red)
+
+goal: make the real GitHub Actions `check` workflow green (github-ci-ea31173-failed.txt: 8
+packages/temporal/test/* files + 1 packages/decisions/test/export-okf.test.ts assertion).
+
+done-when:
+- (a) MET: root cause = ubuntu-latest has no Postgres (`ECONNREFUSED ::1:5432`/`127.0.0.1:5432`,
+  then an `afterAll` TypeError cascade from the never-assigned pool -- one root cause, not two).
+  Fixed: `.github/workflows/check.yml` gets a `postgres:16` service, `POSTGRES_HOST_AUTH_METHOD:
+  trust` (matches this repo's own local pg_hba.conf: `local/host all all trust`), `MOLE_T38_TEST_PG:
+  postgres://postgres@localhost:5432/postgres` (the image's built-in superuser, needed by
+  schema.sql's `CREATE EXTENSION btree_gist` + `CREATE ROLE mole_temporal_app`).
+- (b) MET: root cause = a real git-version difference, not flakiness. `git show -s --format=%cI`
+  started rendering a zero UTC offset as `Z` instead of `+00:00` in a 2024 git change (ISO
+  8601-1:2020-12 requires `Z` for zero offset); CI's runner ships that newer git, this repo's local
+  dev git doesn't. Fixed the test's regex to accept either form (both are valid output of the same
+  command) -- not an environment-detection skip, the old regex was simply wrong about git's output.
+- (c) N/A to this item (push + watch is the orchestrator's job).
+
+status: submitted (branch ledger/t108b-ci-github)
+
+next: orchestrator reviews, merges, pushes, watches the real Actions run -- the service-container
+step itself never ran here (Docker is off-limits locally per the brief); the closest possible local
+check is the regex-logic confirmation + a run against this machine's own trust-auth Postgres as a
+stand-in for the same auth model.
+
+```notes
+what changed      .github/workflows/check.yml (+postgres:16 service + MOLE_T38_TEST_PG) ·
+                  packages/decisions/test/export-okf.test.ts (regex: Z or +HH:MM offset)
+proof (fail)      4 log/q1b-repro-no-postgres.txt: MOLE_T38_TEST_PG pointed at a dead port ->
+                  same 8-file failure shape as the real CI log
+proof (green)     4 log/q1b-repro-with-postgres-fixed.txt: pointed at local trust-auth Postgres
+                  (same role/auth model the fixed workflow gives the CI service) -> 9/9 files,
+                  234/234 tests, twice
+proof (targeted)  4 log/q1b-final-green.txt: packages/decisions/test + packages/temporal/test
+                  together -> 60/60 files, 781/781 tests green
+not verified      the real ubuntu-latest + postgres:16 service container (Docker off-limits
+                  locally); regex correctness independently confirmed with a 3-case Node check
+                  (Z / +00:00 / -06:00 all match)
+collisions note   "collisions spawnSync ETIMEDOUT" in the CI log (23:15:34) is a printed hook
+                  warning, not a failing test -- the next line is the hook test file passing;
+                  out of this item's 9 named failures, not touched
+```
