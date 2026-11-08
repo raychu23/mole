@@ -170,7 +170,7 @@ await step('mole-mcp initialize + tools/list + agentstate/coverage tools/call', 
   // (seen 11-04 on main and branches). Point HOME at an empty temp dir so the check tests the package, not
   // this machine's history.
   const fakeHome = mkdtempSync(join(tmpdir(), 'mole-code-home-'));
-  const p = spawn(binMcp, [], { cwd: fixture, stdio: ['pipe', 'pipe', 'pipe'], env: { ...process.env, HOME: fakeHome, USERPROFILE: fakeHome } });
+  const p = spawn(binMcp, [], { cwd: fixture, stdio: ['pipe', 'pipe', 'pipe'], env: { ...process.env, HOME: fakeHome, USERPROFILE: fakeHome, MOLE_MCP_ALL_TOOLS: '1' } }); // T113: these calls exercise opt-in (non-core) tools
   let buf = '';
   let errBuf = '';
   p.stdout.on('data', (d) => (buf += d.toString()));

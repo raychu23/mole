@@ -1,0 +1,50 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T113-core-cut
+
+(node:24003) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:24005) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:24002) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/mcp/test/mole-map-max-nodes.test.ts (1 test) 2960ms
+   ✓ mole_map maxNodes caps the returned neighbourhood below the server-side ceiling, caller-tunable  2959ms
+ ✓ packages/mcp/test/check.test.ts (1 test) 3275ms
+   ✓ mole_check (worktree, sha, diff+base) deep-equals the CLI --json; bad input is an error result; no daemon is started  3275ms
+(node:26353) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26666) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/mcp/test/http.test.ts (8 tests) 1454ms
+   ✓ mole_map over streamable HTTP returns the same neighbourhood text as the stdio server  1428ms
+(node:31125) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/mcp/test/bounded-pagination.test.ts (4 tests) 1952ms
+   ✓ mole_check: hunks are bounded + paginated (limit/offset/has_more/next_offset + maxAnswerChars) > limit/offset page the hunks array; has_more + next_offset describe the rest  846ms
+   ✓ mole_check: hunks are bounded + paginated (limit/offset/has_more/next_offset + maxAnswerChars) > maxAnswerChars drops whole hunks from the end of the page (never mid-item) when the page would be too big  606ms
+   ✓ mole_coverage: a whole-repo scan is bounded + paginated > limit/offset page the files array on a whole-repo scan  427ms
+(node:31596) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/mcp/test/tool-annotations-schema.test.ts (3 tests) 167ms
+ ✓ packages/mcp/test/install-deeplinks.test.ts (3 tests) 50ms
+ ✓ packages/mcp/test/decisions-aggregate-budget.test.ts (2 tests) 266ms
+(node:32596) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/mcp/test/mcp.test.ts (1 test) 7918ms
+   ✓ mole_map over stdio returns the same neighbourhood text as the CLI; a down daemon is an error result, not a crash  7917ms
+(node:32722) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/mcp/test/oneonone-tool.test.ts (3 tests) 31ms
+ ✓ packages/mcp/test/pre-commit-hooks-pin.test.ts (2 tests) 3ms
+ ✓ packages/mcp/test/decisions-tool.test.ts (1 test) 43ms
+ ✓ packages/mcp/test/safe-path.test.ts (7 tests) 23ms
+ ✓ packages/mcp/test/reasoning-tools.test.ts (17 tests) 7794ms
+   ✓ T61 mole_proposals_compare > finds this repo's proposal worktrees itself and compares them, equal to the library, writing nothing  2649ms
+   ✓ T61 mole_proposals_compare > T68: defaults to the phase in force today, and shows plainDung beside the phase-resolved changes  2368ms
+   ✓ T61 review 1: a proposal is a worktree on its own mole/proposal/<name> branch, nothing else > ignores an unrelated linked worktree carrying a forged proposal meta (by name or by its own branch)  908ms
+
+ Test Files  13 passed (13)
+      Tests  53 passed (53)
+   Start at  17:17:55
+   Duration  10.26s (transform 1.05s, setup 0ms, collect 8.62s, tests 25.93s, environment 2ms, prepare 803ms)
+

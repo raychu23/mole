@@ -1,0 +1,10 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T113-core-cut
+
+ ✓ packages/daemon/test/cli-help.test.ts (3 tests) 83ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  17:19:08
+   Duration  351ms (transform 31ms, setup 0ms, collect 28ms, tests 83ms, environment 0ms, prepare 55ms)
+

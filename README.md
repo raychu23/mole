@@ -44,6 +44,24 @@ Mole sits in both: as the visualizer inside agent tasks, and in the codebase its
 
 **Still open:** what "propagate" updates, first language and repository, storage, renderer, cost per file entry.
 
+## Core (T113, D77 "cut to a core")
+
+Mole's bloat is in the plan, not the code (`context/product-plan/13 Cut it down.md`), but the surfaces a
+newcomer sees were still 21 MCP tools and 40+ CLI subcommands. The core is small: the **engine** (TypeScript
+Compiler API index, `packages/core`/`packages/indexer`, `packages/scip` for other languages), **decisions +
+rules** (`packages/decisions`: `.mole/decisions`, flags, dependency-cruiser rule enforcement), the **verifier**
+(`packages/questions`: past fixes + guarding tests + up to 3 questions for a change -- `mole check` / `mole_check`),
+and three surfaces: the **VS Code extension** (`apps/vscode`), the **Claude Code plugin** (`plugins/claude-code`),
+and the **PR check** (`docs/pr-check.md`, `packages/decisions/src/check/pr-check.ts`, wired into `packages/server`).
+
+The MCP server (`packages/mcp`) now exposes only 5 core tools by default -- `mole_map`, `mole_decisions`,
+`mole_check`, `mole_claims`, `mole_tried` -- instead of all 21; the rest (reasoning/priorities/incident/
+proposals/recall, hotspots, coupling, outcomes, one-on-one, compile/cascade, collisions, agent-intent,
+coverage, interrogate, as-of) are unchanged, still tested, and one env var away (`MOLE_MCP_ALL_TOOLS=1`; see
+`docs/mcp.md`). The CLI (`mole --help`) marks the same split in its command groups. Nothing was deleted: every
+package and command here still builds and is still covered by its own tests -- "experimental" means not part
+of the 5-job core yet, not unsupported.
+
 ## Installing the CLI + MCP server
 
 `packages/cli-dist` builds one public npm package (`mole-code`, not published yet — T85) bundling the

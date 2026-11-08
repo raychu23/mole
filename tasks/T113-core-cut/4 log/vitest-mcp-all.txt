@@ -1,0 +1,454 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T113-core-cut
+
+(node:95509) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:95510) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:95508) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/mcp/test/mole-map-max-nodes.test.ts (1 test) 3310ms
+   ✓ mole_map maxNodes caps the returned neighbourhood below the server-side ceiling, caller-tunable  3309ms
+(node:97123) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/mcp/test/check.test.ts (1 test) 3813ms
+   ✓ mole_check (worktree, sha, diff+base) deep-equals the CLI --json; bad input is an error result; no daemon is started  3813ms
+(node:97568) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/mcp/test/mcp.test.ts (1 test) 4958ms
+   ✓ mole_map over stdio returns the same neighbourhood text as the CLI; a down daemon is an error result, not a crash  4958ms
+(node:98293) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ packages/mcp/test/reasoning-tools.test.ts (17 tests | 16 failed) 4039ms
+   × T61 mole_priorities > evaluates a phase and compares two, equal to the library, writing nothing 213ms
+     → expected true to be falsy
+   × T61 mole_priorities > an unknown phase is an isError result with the library message, not a throw 181ms
+     → expected 'MCP error -32602: Tool mole_prioritie…' to match /growth/
+   × T61 mole_priorities > T73: the bare call (no phase/at/compare) defaults to the phase in force today, matching its own doc 119ms
+     → expected true to be falsy
+   × T61 mole_incident_suggest > lists revival candidates equal to the library, writing nothing (no accept over MCP) 158ms
+     → expected true to be falsy
+   × T61 mole_incident_suggest > an unknown incident is an isError result 118ms
+     → expected 'MCP error -32602: Tool mole_incident_…' to match /inc-404/
+   × T61 mole_incident_suggest > T68: takes phase/at, defaulting to the phase in force today 201ms
+     → expected true to be falsy
+   × T61 mole_proposals_compare > finds this repo's proposal worktrees itself and compares them, equal to the library, writing nothing 848ms
+     → expected true to be falsy
+   × T61 mole_proposals_compare > T68: defaults to the phase in force today, and shows plainDung beside the phase-resolved changes 619ms
+     → expected true to be falsy
+   × T61 mole_proposals_compare > no proposals, or an unknown name, is an isError result; it takes names, never filesystem paths 129ms
+     → expected 'MCP error -32602: Tool mole_proposals…' to match /no proposals/
+   × T61 review 1: a proposal is a worktree on its own mole/proposal/<name> branch, nothing else > ignores an unrelated linked worktree carrying a forged proposal meta (by name or by its own branch) 539ms
+     → expected true to be falsy
+   × T61 review 1: a proposal is a worktree on its own mole/proposal/<name> branch, nothing else > limit 0 returns no candidates, as the library does (review 1 LOW) 134ms
+     → expected true to be falsy
+   × T61 annotations > all three are read-only, closed-world, with an outputSchema 137ms
+     → mole_priorities: expected undefined to be defined
+   × T71 mole_recall > recalls a similar past decision/incident by text, equal to the library, writing nothing 195ms
+     → expected true to be falsy
+   × T71 mole_recall > recalls by an existing record id, excluding that record from its own results 91ms
+     → expected true to be falsy
+   ✓ T71 mole_recall > neither text nor record, or both, is an isError result 85ms
+   × T71 mole_recall > an unknown record id is an isError result with the library message 138ms
+     → expected 'MCP error -32602: Tool mole_recall no…' to match /no-such-id/
+   × T71 mole_recall > is read-only, closed-world, with an outputSchema 130ms
+     → expected undefined to be defined
+(node:99491) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/mcp/test/tool-annotations-schema.test.ts (3 tests) 215ms
+ ✓ packages/mcp/test/http.test.ts (8 tests) 1495ms
+   ✓ mole_map over streamable HTTP returns the same neighbourhood text as the stdio server  1466ms
+(node:361) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ packages/mcp/test/bounded-pagination.test.ts (4 tests | 1 failed) 2295ms
+   ✓ mole_check: hunks are bounded + paginated (limit/offset/has_more/next_offset + maxAnswerChars) > limit/offset page the hunks array; has_more + next_offset describe the rest  1126ms
+   ✓ mole_check: hunks are bounded + paginated (limit/offset/has_more/next_offset + maxAnswerChars) > maxAnswerChars drops whole hunks from the end of the page (never mid-item) when the page would be too big  1016ms
+   ✓ mole_decisions: decisions array is bounded + paginated, on top of the T43 aggregate rationale budget > limit/offset page the decisions array (files-scoped or not) 58ms
+   × mole_coverage: a whole-repo scan is bounded + paginated > limit/offset page the files array on a whole-repo scan 95ms
+     → Unexpected token 'M', "MCP error "... is not valid JSON
+ ✓ packages/mcp/test/oneonone-tool.test.ts (3 tests) 19ms
+(node:694) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/mcp/test/decisions-aggregate-budget.test.ts (2 tests) 92ms
+ ❯ packages/mcp/test/pre-commit-hooks-pin.test.ts (2 tests | 2 failed) 8ms
+   × .pre-commit-hooks.yaml pins mole-code to release/mole-code/package.json's current version 6ms
+     → ENOENT: no such file or directory, open '/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T113-core-cut/release/mole-code/package.json'
+   × server.json's published version also matches release/mole-code/package.json (same release, same version everywhere) 1ms
+     → ENOENT: no such file or directory, open '/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T113-core-cut/release/mole-code/package.json'
+ ✓ packages/mcp/test/decisions-tool.test.ts (1 test) 48ms
+ ❯ packages/mcp/test/safe-path.test.ts (7 tests | 1 failed) 17ms
+   ✓ undefined input resolves to the root itself 2ms
+   ✓ an absolute path argument is rejected outright, even "/" 1ms
+   ✓ a relative path that stays inside the root resolves fine 1ms
+   ✓ a `..` traversal that escapes the root is rejected 1ms
+   ✓ a symlink inside the root that points outside it is rejected (realpath check) 2ms
+   ✓ end-to-end: mole_check root="/" is rejected by the tool, never passed to fs 7ms
+   × end-to-end: mole_coverage file="/etc/passwd" is rejected by the tool, never passed to @mole/coverage 4ms
+     → Cannot read properties of undefined (reading 'handler')
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/mcp/test/install-deeplinks.test.ts [ packages/mcp/test/install-deeplinks.test.ts ]
+Error: Cannot find module '../../../scripts/test/check-deeplinks.mjs' imported from '/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T113-core-cut/packages/mcp/test/install-deeplinks.test.ts'
+ ❯ packages/mcp/test/install-deeplinks.test.ts:9:1
+      7| import { join, resolve } from 'node:path';
+      8| import { expect, it } from 'vitest';
+      9| import { checkDeeplinks } from '../../../scripts/test/check-deeplinks.…
+       | ^
+     10| 
+     11| const DOC = resolve(import.meta.dirname, '../../../docs/install-mcp-cl…
+
+Caused by: Error: Failed to load url ../../../scripts/test/check-deeplinks.mjs (resolved id: ../../../scripts/test/check-deeplinks.mjs) in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T113-core-cut/packages/mcp/test/install-deeplinks.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../../CS%20Code/Project/Mole/node_modules/vite/dist/node/chunks/config.js:22907:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/21]⎯
+
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 20 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/mcp/test/bounded-pagination.test.ts > mole_coverage: a whole-repo scan is bounded + paginated > limit/offset page the files array on a whole-repo scan
+SyntaxError: Unexpected token 'M', "MCP error "... is not valid JSON
+ ❯ packages/mcp/test/bounded-pagination.test.ts:146:20
+    144|     const client = await connect(root);
+    145|     const res = await client.callTool({ name: 'mole_coverage', argumen…
+    146|     const j = JSON.parse((res.content as Array<{ text: string }>)[0]?.…
+       |                    ^
+    147|     expect(j.files.length).toBe(3);
+    148|     expect(j.hasMore).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/21]⎯
+
+ FAIL  packages/mcp/test/pre-commit-hooks-pin.test.ts > .pre-commit-hooks.yaml pins mole-code to release/mole-code/package.json's current version
+Error: ENOENT: no such file or directory, open '/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T113-core-cut/release/mole-code/package.json'
+ ❯ packageVersion packages/mcp/test/pre-commit-hooks-pin.test.ts:14:26
+     12| 
+     13| function packageVersion(relPath: string): string {
+     14|   const pkg = JSON.parse(readFileSync(resolve(REPO_ROOT, relPath), 'ut…
+       |                          ^
+     15|   return pkg.version;
+     16| }
+ ❯ packages/mcp/test/pre-commit-hooks-pin.test.ts:23:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/21]⎯
+
+ FAIL  packages/mcp/test/pre-commit-hooks-pin.test.ts > server.json's published version also matches release/mole-code/package.json (same release, same version everywhere)
+Error: ENOENT: no such file or directory, open '/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T113-core-cut/release/mole-code/package.json'
+ ❯ packageVersion packages/mcp/test/pre-commit-hooks-pin.test.ts:14:26
+     12| 
+     13| function packageVersion(relPath: string): string {
+     14|   const pkg = JSON.parse(readFileSync(resolve(REPO_ROOT, relPath), 'ut…
+       |                          ^
+     15|   return pkg.version;
+     16| }
+ ❯ packages/mcp/test/pre-commit-hooks-pin.test.ts:29:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/21]⎯
+
+ FAIL  packages/mcp/test/reasoning-tools.test.ts > T61 mole_priorities > evaluates a phase and compares two, equal to the library, writing nothing
+AssertionError: expected true to be falsy
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ packages/mcp/test/reasoning-tools.test.ts:68:24
+     66|     const client = await connect(root);
+     67|     const ev = await call(client, 'mole_priorities', { phase: 'launch'…
+     68|     expect(ev.isError).toBeFalsy();
+       |                        ^
+     69|     expect(ev.structuredContent).toEqual(JSON.parse(JSON.stringify(eva…
+     70|     const at = await call(client, 'mole_priorities', { at: '2026-10-01…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/21]⎯
+
+ FAIL  packages/mcp/test/reasoning-tools.test.ts > T61 mole_priorities > an unknown phase is an isError result with the library message, not a throw
+AssertionError: expected 'MCP error -32602: Tool mole_prioritie…' to match /growth/
+
+[32m- Expected:[39m 
+/growth/
+
+[31m+ Received:[39m 
+"MCP error -32602: Tool mole_priorities not found"
+
+ ❯ packages/mcp/test/reasoning-tools.test.ts:82:61
+     80|     const r = await call(client, 'mole_priorities', { phase: 'growth' …
+     81|     expect(r.isError).toBe(true);
+     82|     expect((r.content as Array<{ text: string }>)[0]!.text).toMatch(/g…
+       |                                                             ^
+     83|   });
+     84| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/21]⎯
+
+ FAIL  packages/mcp/test/reasoning-tools.test.ts > T61 mole_priorities > T73: the bare call (no phase/at/compare) defaults to the phase in force today, matching its own doc
+AssertionError: expected true to be falsy
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ packages/mcp/test/reasoning-tools.test.ts:92:26
+     90|     const client = await connect(root);
+     91|     const bare = await call(client, 'mole_priorities', {});
+     92|     expect(bare.isError).toBeFalsy();
+       |                          ^
+     93|     expect((bare.structuredContent as { phase?: string }).phase).toBe(…
+     94|     expect(bare.structuredContent).toEqual(JSON.parse(JSON.stringify(e…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/21]⎯
+
+ FAIL  packages/mcp/test/reasoning-tools.test.ts > T61 mole_incident_suggest > lists revival candidates equal to the library, writing nothing (no accept over MCP)
+AssertionError: expected true to be falsy
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ packages/mcp/test/reasoning-tools.test.ts:104:23
+    102|     const client = await connect(root);
+    103|     const r = await call(client, 'mole_incident_suggest', { incident: …
+    104|     expect(r.isError).toBeFalsy();
+       |                       ^
+    105|     expect(r.structuredContent).toEqual({ incident: 'inc-1', candidate…
+    106|     expect((r.structuredContent as { candidates: unknown[] }).candidat…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/21]⎯
+
+ FAIL  packages/mcp/test/reasoning-tools.test.ts > T61 mole_incident_suggest > an unknown incident is an isError result
+AssertionError: expected 'MCP error -32602: Tool mole_incident_…' to match /inc-404/
+
+[32m- Expected:[39m 
+/inc-404/
+
+[31m+ Received:[39m 
+"MCP error -32602: Tool mole_incident_suggest not found"
+
+ ❯ packages/mcp/test/reasoning-tools.test.ts:114:61
+    112|     const r = await call(await connect(repo()), 'mole_incident_suggest…
+    113|     expect(r.isError).toBe(true);
+    114|     expect((r.content as Array<{ text: string }>)[0]!.text).toMatch(/i…
+       |                                                             ^
+    115|   });
+    116|   // T68: --at/--phase and the default (phase in force today, not plai…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/21]⎯
+
+ FAIL  packages/mcp/test/reasoning-tools.test.ts > T61 mole_incident_suggest > T68: takes phase/at, defaulting to the phase in force today
+AssertionError: expected true to be falsy
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ packages/mcp/test/reasoning-tools.test.ts:121:24
+    119|     const client = await connect(root);
+    120|     const at = await call(client, 'mole_incident_suggest', { incident:…
+    121|     expect(at.isError).toBeFalsy();
+       |                        ^
+    122|     expect(at.structuredContent).toEqual({ incident: 'inc-1', candidat…
+    123|     const bare = await call(client, 'mole_incident_suggest', { inciden…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/21]⎯
+
+ FAIL  packages/mcp/test/reasoning-tools.test.ts > T61 mole_proposals_compare > finds this repo's proposal worktrees itself and compares them, equal to the library, writing nothing
+AssertionError: expected true to be falsy
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ packages/mcp/test/reasoning-tools.test.ts:141:23
+    139|     const client = await connect(root);
+    140|     const r = await call(client, 'mole_proposals_compare', { phase: 'l…
+    141|     expect(r.isError).toBeFalsy();
+       |                       ^
+    142|     const paths = [join(base, 'a'), join(base, 'b')];
+    143|     expect(r.structuredContent).toEqual(JSON.parse(JSON.stringify(comp…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/21]⎯
+
+ FAIL  packages/mcp/test/reasoning-tools.test.ts > T61 mole_proposals_compare > T68: defaults to the phase in force today, and shows plainDung beside the phase-resolved changes
+AssertionError: expected true to be falsy
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ packages/mcp/test/reasoning-tools.test.ts:157:23
+    155|     const client = await connect(root);
+    156|     const r = await call(client, 'mole_proposals_compare', {});
+    157|     expect(r.isError).toBeFalsy();
+       |                       ^
+    158|     const paths = [join(base, 'a'), join(base, 'b')];
+    159|     expect(r.structuredContent).toEqual(JSON.parse(JSON.stringify(comp…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/21]⎯
+
+ FAIL  packages/mcp/test/reasoning-tools.test.ts > T61 mole_proposals_compare > no proposals, or an unknown name, is an isError result; it takes names, never filesystem paths
+AssertionError: expected 'MCP error -32602: Tool mole_proposals…' to match /no proposals/
+
+[32m- Expected:[39m 
+/no proposals/
+
+[31m+ Received:[39m 
+"MCP error -32602: Tool mole_proposals_compare not found"
+
+ ❯ packages/mcp/test/reasoning-tools.test.ts:168:64
+    166|     const none = await call(client, 'mole_proposals_compare', {});
+    167|     expect(none.isError).toBe(true);
+    168|     expect((none.content as Array<{ text: string }>)[0]!.text).toMatch…
+       |                                                                ^
+    169|     const bad = await call(client, 'mole_proposals_compare', { names: …
+    170|     expect(bad.isError).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/21]⎯
+
+ FAIL  packages/mcp/test/reasoning-tools.test.ts > T61 review 1: a proposal is a worktree on its own mole/proposal/<name> branch, nothing else > ignores an unrelated linked worktree carrying a forged proposal meta (by name or by its own branch)
+AssertionError: expected true to be falsy
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ packages/mcp/test/reasoning-tools.test.ts:188:23
+    186|     const client = await connect(root);
+    187|     const r = await call(client, 'mole_proposals_compare', {});
+    188|     expect(r.isError).toBeFalsy();
+       |                       ^
+    189|     expect((r.structuredContent as { proposals: Array<{ path: string }…
+    190|     // even a meta that claims the evil worktree's own branch name is …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/21]⎯
+
+ FAIL  packages/mcp/test/reasoning-tools.test.ts > T61 review 1: a proposal is a worktree on its own mole/proposal/<name> branch, nothing else > limit 0 returns no candidates, as the library does (review 1 LOW)
+AssertionError: expected true to be falsy
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ packages/mcp/test/reasoning-tools.test.ts:197:23
+    195|     const root = repo();
+    196|     const r = await call(await connect(root), 'mole_incident_suggest',…
+    197|     expect(r.isError).toBeFalsy();
+       |                       ^
+    198|     expect(r.structuredContent).toEqual({ incident: 'inc-1', candidate…
+    199|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/21]⎯
+
+ FAIL  packages/mcp/test/reasoning-tools.test.ts > T61 annotations > all three are read-only, closed-world, with an outputSchema
+AssertionError: mole_priorities: expected undefined to be defined
+ ❯ packages/mcp/test/reasoning-tools.test.ts:207:23
+    205|     for (const name of ['mole_priorities', 'mole_incident_suggest', 'm…
+    206|       const t = tools.find((x) => x.name === name);
+    207|       expect(t, name).toBeDefined();
+       |                       ^
+    208|       expect(t!.annotations).toEqual(expect.objectContaining({ readOnl…
+    209|       expect(t!.outputSchema).toBeDefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/21]⎯
+
+ FAIL  packages/mcp/test/reasoning-tools.test.ts > T71 mole_recall > recalls a similar past decision/incident by text, equal to the library, writing nothing
+AssertionError: expected true to be falsy
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ packages/mcp/test/reasoning-tools.test.ts:220:23
+    218|     const client = await connect(root);
+    219|     const r = await call(client, 'mole_recall', { text: 'hand-roll a j…
+    220|     expect(r.isError).toBeFalsy();
+       |                       ^
+    221|     const cases = (r.structuredContent as { cases: Array<{ id: string …
+    222|     expect(cases.map((c) => c.id)).toContain('D1');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/21]⎯
+
+ FAIL  packages/mcp/test/reasoning-tools.test.ts > T71 mole_recall > recalls by an existing record id, excluding that record from its own results
+AssertionError: expected true to be falsy
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ packages/mcp/test/reasoning-tools.test.ts:229:23
+    227|   it('recalls by an existing record id, excluding that record from its…
+    228|     const r = await call(await connect(repo()), 'mole_recall', { recor…
+    229|     expect(r.isError).toBeFalsy();
+       |                       ^
+    230|     const cases = (r.structuredContent as { cases: Array<{ id: string …
+    231|     expect(cases.map((c) => c.id)).not.toContain('inc-1');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/21]⎯
+
+ FAIL  packages/mcp/test/reasoning-tools.test.ts > T71 mole_recall > an unknown record id is an isError result with the library message
+AssertionError: expected 'MCP error -32602: Tool mole_recall no…' to match /no-such-id/
+
+[32m- Expected:[39m 
+/no-such-id/
+
+[31m+ Received:[39m 
+"MCP error -32602: Tool mole_recall not found"
+
+ ❯ packages/mcp/test/reasoning-tools.test.ts:241:61
+    239|     const r = await call(await connect(repo()), 'mole_recall', { recor…
+    240|     expect(r.isError).toBe(true);
+    241|     expect((r.content as Array<{ text: string }>)[0]!.text).toMatch(/n…
+       |                                                             ^
+    242|   });
+    243|   it('is read-only, closed-world, with an outputSchema', async () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/21]⎯
+
+ FAIL  packages/mcp/test/reasoning-tools.test.ts > T71 mole_recall > is read-only, closed-world, with an outputSchema
+AssertionError: expected undefined to be defined
+ ❯ packages/mcp/test/reasoning-tools.test.ts:246:15
+    244|     const { tools } = await (await connect(repo())).listTools();
+    245|     const t = tools.find((x) => x.name === 'mole_recall');
+    246|     expect(t).toBeDefined();
+       |               ^
+    247|     expect(t!.annotations).toEqual(expect.objectContaining({ readOnlyH…
+    248|     expect(t!.outputSchema).toBeDefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/21]⎯
+
+ FAIL  packages/mcp/test/safe-path.test.ts > end-to-end: mole_coverage file="/etc/passwd" is rejected by the tool, never passed to @mole/coverage
+TypeError: Cannot read properties of undefined (reading 'handler')
+ ❯ packages/mcp/test/safe-path.test.ts:75:41
+     73|   const server = createServer({ root, noStart: true });
+     74|   const handler = (server as unknown as { _registeredTools: Record<str…
+     75|     ._registeredTools['mole_coverage']!.handler;
+       |                                         ^
+     76|   const abs = await handler({ file: '/etc/passwd' }, { requestId: 'r1'…
+     77|   expect(abs.isError).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/21]⎯
+
+
+ Test Files  5 failed | 8 passed (13)
+      Tests  20 failed | 30 passed (50)
+   Start at  17:17:00
+   Duration  8.50s (transform 982ms, setup 0ms, collect 9.19s, tests 20.31s, environment 2ms, prepare 784ms)
+

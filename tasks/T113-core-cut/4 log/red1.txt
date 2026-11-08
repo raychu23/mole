@@ -1,0 +1,60 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T113-core-cut
+
+(node:67070) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ packages/mcp/test/tool-annotations-schema.test.ts (3 tests | 1 failed) 157ms
+   × T113 core cut: the default (no allTools) server exposes only the 5 core tools > listTools() with allTools unset returns exactly CORE_TOOLS, and allTools: true restores the rest 44ms
+     → expected Set{ 'mole_map', 'mole_tried', …(19) } to deeply equal Set{}
+   ✓ every Mole MCP tool declares annotations (readOnlyHint at minimum) and an outputSchema > listTools(): every tool has annotations.readOnlyHint set correctly and a non-empty outputSchema 15ms
+   ✓ every Mole MCP tool declares annotations (readOnlyHint at minimum) and an outputSchema > a real call to a representative read-only tool returns structuredContent that validates against its outputSchema (the SDK throws otherwise) 96ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/mcp/test/tool-annotations-schema.test.ts > T113 core cut: the default (no allTools) server exposes only the 5 core tools > listTools() with allTools unset returns exactly CORE_TOOLS, and allTools: true restores the rest
+AssertionError: expected Set{ 'mole_map', 'mole_tried', …(19) } to deeply equal Set{}
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- Set {}[39m
+[31m+ Set {[39m
+[31m+   "mole_agent_intent",[39m
+[31m+   "mole_cascade_check",[39m
+[31m+   "mole_check",[39m
+[31m+   "mole_claims",[39m
+[31m+   "mole_collisions",[39m
+[31m+   "mole_compile_draft",[39m
+[31m+   "mole_compile_review",[39m
+[31m+   "mole_coupling",[39m
+[31m+   "mole_coverage",[39m
+[31m+   "mole_decisions",[39m
+[31m+   "mole_decisions_asof",[39m
+[31m+   "mole_hotspots",[39m
+[31m+   "mole_incident_suggest",[39m
+[31m+   "mole_interrogate",[39m
+[31m+   "mole_map",[39m
+[31m+   "mole_oneonone",[39m
+[31m+   "mole_outcomes",[39m
+[31m+   "mole_priorities",[39m
+[31m+   "mole_proposals_compare",[39m
+[31m+   "mole_recall",[39m
+[31m+   "mole_tried",[39m
+[31m+ }[39m
+
+ ❯ packages/mcp/test/tool-annotations-schema.test.ts:69:51
+     67|     await Promise.all([coreClient.connect(a), coreOnly.connect(b)]);
+     68|     const { tools: coreTools } = await coreClient.listTools();
+     69|     expect(new Set(coreTools.map((t) => t.name))).toEqual(new Set(CORE…
+       |                                                   ^
+     70|     await coreClient.close();
+     71| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  17:20:08
+   Duration  2.15s (transform 555ms, setup 0ms, collect 1.75s, tests 157ms, environment 0ms, prepare 54ms)
+

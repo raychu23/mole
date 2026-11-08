@@ -19,7 +19,21 @@ import { confineAllToRoot, confineToRoot } from './safe-path.js'; // T91 review 
 export interface MoleMcpOptions extends EnsureOptions {
   /** Do not spawn a daemon if none runs (tests). */
   noStart?: boolean;
+  /**
+   * T113 (D77 cut-to-a-core, "19 Can it stand up.md" fix 5): by default this server exposes only the
+   * CORE_TOOLS below (~5 intent-based tools covering the two proven jobs -- "why is this code like this"
+   * and "is the agent's hand-back true" -- plus what changed since you last looked). Every other tool
+   * (reasoning/priorities/incident/proposals/recall, hotspots, coupling, outcomes, oneonone, compile/cascade,
+   * collisions, agent_intent, coverage, interrogate, decisions_asof) still exists, is still tested, and still
+   * works -- it is just not advertised to a client by default, so a model choosing among tools sees a short,
+   * low-token list instead of 22. Set `allTools: true` (CLI: MOLE_MCP_ALL_TOOLS=1) to get everything, same as
+   * before this change. No tool's behavior, schema or annotations changed; only which ones get registered.
+   */
+  allTools?: boolean;
 }
+
+/** The default-exposed tool set (T113). Keep in sync with docs/mcp.md's "Core (default)" list. */
+export const CORE_TOOLS = ['mole_map', 'mole_decisions', 'mole_check', 'mole_claims', 'mole_tried'] as const;
 
 // T43 review fix P2: documented aggregate rationale budget for mole_decisions when called without `files`
 // (see the handler below). A files-scoped call is already a handful of decisions and skips this cap.
@@ -125,14 +139,18 @@ export function createServer(opts: MoleMcpOptions): McpServer {
       }
     },
   );
+  // T113: everything below this line is NOT one of the 5 core tools (see MoleMcpOptions.allTools above) --
+  // each is still fully registered, tested and working, just gated so a default client doesn't see all 22.
+  if (opts.allTools) {
   registerCollisionsTool(server, opts); // T21: parallel-agent collisions
   registerReasoningTools(server, opts); // T61: T60 priorities, T58 incident suggest, T56 proposals compare -- read-only
   registerHotspotsTool(server, opts); // T70: D68 hotspot ranking -- read-only
   registerCouplingTool(server, opts); // T77: D69 coupling x CODEOWNERS -- read-only
   registerOutcomesTool(server, opts); // T81: D66 outcome ledger -- read-only
+  }
   // T39: external agent-session memory (Entire Checkpoints, git-ai Authorship Logs, Agent Trace v0.1.0) mapped
   // onto the function it touched, re-checked against the function's current body like a T11 note.
-  server.registerTool(
+  if (opts.allTools) server.registerTool(
     'mole_agent_intent',
     {
       title: 'Mole agent intent',
@@ -152,8 +170,8 @@ export function createServer(opts: MoleMcpOptions): McpServer {
       }
     },
   );
-  registerOneOnOneTool(server, opts); // T31: mole_oneonone (prep | readback)
-  registerCompileAndCascadeTools(server, opts); // T46: mole_compile_draft, mole_compile_review, mole_cascade_check
+  if (opts.allTools) registerOneOnOneTool(server, opts); // T31: mole_oneonone (prep | readback)
+  if (opts.allTools) registerCompileAndCascadeTools(server, opts); // T46: mole_compile_draft, mole_compile_review, mole_cascade_check
   server.registerTool(
     'mole_check',
     {
@@ -291,7 +309,7 @@ export function createServer(opts: MoleMcpOptions): McpServer {
   );
   // T35 (M27): which agents cover which code, and where nobody does -- blast radius / weak spots, in the one panel
   // where the agent or developer already works (D31). Same JSON as `mole coverage --json`.
-  server.registerTool(
+  if (opts.allTools) server.registerTool(
     'mole_coverage',
     {
       title: 'Mole agent coverage',
@@ -356,7 +374,7 @@ export function createServer(opts: MoleMcpOptions): McpServer {
   // T23: agents interrogate, people write (D38). Up to 3 pointed questions + which decision(s) govern the change,
   // built only from facts Mole already found (diff hunks, past fixes, governing decisions); silent when nothing
   // governs the change. Mole never drafts a decision record's own why/context/consequences text (R6).
-  server.registerTool(
+  if (opts.allTools) server.registerTool(
     'mole_interrogate',
     {
       title: 'Mole interrogate',
@@ -391,7 +409,7 @@ export function createServer(opts: MoleMcpOptions): McpServer {
   );
   // T38: as-of answers from the bitemporal decision graph in Postgres (what held on a given date),
   // beside what a latest-only store would answer. Same engine @mole/temporal uses for its M32 bench.
-  server.registerTool(
+  if (opts.allTools) server.registerTool(
     'mole_decisions_asof',
     {
       title: 'Mole decisions as-of',

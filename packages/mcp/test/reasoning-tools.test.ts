@@ -44,7 +44,7 @@ function repo(): string {
 }
 
 async function connect(root: string): Promise<Client> {
-  const server = createServer({ root, noStart: true });
+  const server = createServer({ root, noStart: true, allTools: true }); // T113: this file exercises reasoning tools, not core
   const client = new Client({ name: 'test', version: '0' });
   const [c, s] = InMemoryTransport.createLinkedPair();
   await Promise.all([client.connect(c), server.connect(s)]);

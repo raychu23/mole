@@ -18,7 +18,7 @@ afterEach(() => {
 });
 
 async function connect(root: string) {
-  const server = createServer({ root, noStart: true });
+  const server = createServer({ root, noStart: true, allTools: true }); // T113: this file exercises mole_coverage, not a core tool
   const client = new Client({ name: 'test', version: '0' });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   await Promise.all([client.connect(clientTransport), server.connect(serverTransport)]);
