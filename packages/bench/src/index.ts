@@ -1,7 +1,7 @@
 // T41 M35: head-to-head scoreboard assembly. Reads frozen keys/run logs from earlier INTEGRATED
 // tasks (never edits them, R2) plus runs three new reimplemented-from-docs baselines for H3.
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 export interface ReusedSource {
@@ -21,10 +21,16 @@ export function sha256File(root: string, relPath: string): string {
 }
 
 /** Loads keys/reused-keys.json and verifies every frozen source still has the hash recorded at R1-commit time (R2 guard). */
-export function loadReusedKeys(root: string): ReusedKeys {
+// Paths under `generated data/` are gitignored outputs that T1 regenerates on the author's machine (reused-keys.json's own
+// note); a fresh CI checkout doesn't have them. `skipMissingGenerated` lets tests skip exactly those when absent (a present
+// file is still hash-checked); h2h.ts itself keeps the strict default and refuses to run without them.
+export const isRegeneratedSource = (path: string): boolean => path.startsWith('generated data/');
+
+export function loadReusedKeys(root: string, opts: { skipMissingGenerated?: boolean } = {}): ReusedKeys {
   const p = join(root, 'packages/bench/keys/reused-keys.json');
   const keys = JSON.parse(readFileSync(p, 'utf8')) as ReusedKeys;
   for (const [name, src] of Object.entries(keys.sources)) {
+    if (opts.skipMissingGenerated && isRegeneratedSource(src.path) && !existsSync(join(root, src.path))) continue;
     // runs.jsonl files are append-only logs from other tasks' loops: only verify they still contain
     // the frozen byte range (prefix), since later tasks may legitimately append more lines.
     const isLog = src.path.endsWith('.jsonl');

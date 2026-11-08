@@ -35,6 +35,21 @@ export default defineConfig({
     // poolOptions.forks.maxForks).
     testTimeout: 30_000,
     hookTimeout: 30_000,
+    // T108-ci-green: the raw birpc worker->host "Timeout calling onTaskUpdate" RPC error (distinct
+    // from testTimeout/hookTimeout, which only bound a *test's* own wall clock) is a known vitest
+    // 3.x bug -- birpc's RPC ack timeout is hardcoded at 60s with no vitest config surface to raise
+    // it (vitest-dev/vitest#8164, #11082); it is only actually fixed upstream in vitest 4.0.0-beta.4+
+    // (PR #8297, stable in 4.1.6). This repo pins vitest ^3.2.7 (apps/vscode and other deps are not
+    // yet verified against vitest 4's breaking changes), so a major-version bump is out of scope here.
+    // The documented, same-version mitigation other teams shipped for this exact error (e.g.
+    // BerriAI/litellm#32078) is: (1) cap maxForks well below CPU count so the vitest *coordinator*
+    // process (which answers the RPC) is never starved of a core -- already done below -- and
+    // (2) raise teardownTimeout (default 10_000ms, https://vitest.dev/config/teardowntimeout) for
+    // extra slack closing worker forks under contention. Verified: 2 consecutive full `npm run check`
+    // runs green (tasks/T108-ci-green/4 log/test-after-fix-1.txt, check-after-fix-run2.txt) under real
+    // concurrent-host load (avg 27-36, loop rule >= 8) with no onTaskUpdate error in either run, even
+    // before this teardownTimeout addition -- added as further headroom, not because it reproduced here.
+    teardownTimeout: 30_000,
     poolOptions: {
       forks: {
         maxForks: Math.max(1, Math.floor(os.cpus().length / 2)),
