@@ -13,6 +13,27 @@ jobs:
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # packages/temporal's tests (T38/T47 bitemporal store) open a real Postgres and run the
+    # package's own src/schema.sql, which creates the non-owner `mole_temporal_app` role with no
+    # password (RLS test, must connect as a non-superuser). The dev machines these tests were
+    # written against all run local Postgres with `trust` auth (pg_hba.conf: local/host all all
+    # trust) -- POSTGRES_HOST_AUTH_METHOD=trust reproduces exactly that on the runner, so the
+    # service needs no separate password plumbing (Q1b: github-ci-ea31173-failed.txt, 8 files,
+    # ECONNREFUSED ::1:5432 / 127.0.0.1:5432 -- no Postgres existed on the runner at all before).
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      MOLE_T38_TEST_PG: postgres://postgres@localhost:5432/postgres
     steps:
       - name: checkout (full history, the key guard and mole check read past commits)
         uses: actions/checkout@v4
