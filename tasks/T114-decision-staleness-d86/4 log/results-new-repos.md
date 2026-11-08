@@ -51,9 +51,9 @@ two more repos and a properly balanced-everywhere split (n=498 vs the original n
 the ceiling effect goes away and the precision gain (65.0% vs 50.0%) shows up in F1.
 
 McNemar's test (paired per-example correctness, exact disagreement counts, continuity-corrected):
-- support-set vs flag-every-change: b=50 (support-set right, flag-every-change wrong),
-  c=142 (reverse) → chi2=43.1, df=1, p<0.0001. **Statistically significant improvement.**
-- support-set vs OVERLAP: b=90, c=145 → chi2=12.4, p=0.0004. **Statistically significant.**
+- support-set vs flag-every-change: b=142 (support-set right, flag-every-change wrong: the not-stale items it
+  correctly leaves alone), c=50 (reverse: stale items it misses) → chi2=43.1, df=1, p<0.0001. **Statistically significant improvement.**
+- support-set vs OVERLAP: b=145 (support-set right, OVERLAP wrong), c=90 (reverse) → chi2=12.4, p=0.0004. **Statistically significant.**
 
 Against the field's published bar (OVERLAP 68.0, Java, Panthaplackel et al. AAAI 2021): the
 support-set method's overall F1 (71.7) is above 68.0, but per-type it is only above on
@@ -104,3 +104,15 @@ improvement over flagging every change, not yet a precise/complete signal.
 - raw eval output: `results/new-repos.results.json`, `results/new-repos.table.txt`
 - mining stats: `data/es-toolkit.stats.json`, `data/remeda.stats.json`,
   `data/new-repos.raw.stats.json`
+
+## Correction 11-08 (review deleg_8fe9bf23, reproduced by the reviewer)
+
+```notes
+natural base rate     the frozen eval set is BALANCED 1:1 (n=498); the natural pool (n=2,363) has ~10.5% stale comments
+                      at that base rate:   flag-every-change P 10.5 / F1 19.1 · OVERLAP P 16.9 / F1 22.3 · support-set P 18.7 / F1 30.3
+                      → the ranking holds (support-set best, larger relative margin), but the headline P 65.0 / F1 71.7 is a
+                        property of the balanced set (~2.3x the deployment-rate F1); quote both
+McNemar cells         b/c were swapped in the first version; fixed above (statistic unchanged: symmetric in |b-c|)
+D86 context           D101 (11-04) already marked D86 step 1 DONE via B2; this rerun is the comment-level proxy test D86's own
+                      text names ("beat flag-all F1 on test 1 rerun"), not a live .mole/decisions support-set check
+```
