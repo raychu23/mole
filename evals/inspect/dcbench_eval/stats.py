@@ -107,7 +107,7 @@ def wilson(k: int, n: int, z: float = Z95) -> tuple[float, float]:
     p = k / n
     den = 1 + z * z / n
     mid = (p + z * z / (2 * n)) / den
-    half = ((p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / den
+    half = z * ((p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / den  # z factor was dropped in the T93 move
     return (max(0.0, mid - half), min(1.0, mid + half))
 
 

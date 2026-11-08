@@ -12,7 +12,7 @@ What's open: measure how often the agent makes the crisp mistake with no context
 results v4.1   (raw tasks/T97-benchmark-v4-blocking/4 log/raw/runs-v4.1.jsonl 44 rows, all status ok · model claude-sonnet-5
                 via hermes · dcbench pin 9f507ce · Mole pinned e4eafe2 · scorer = v3 fix, intent-to-add, full diffs saved)
     primary (TASK-001 + TASK-013, 8 epochs x 2 arms = 32 runs)
-        (a) crisp violation left at end     R 0/16 · M-block 0/16 · Fisher p = 1.0 · Newcombe diff 0.0 [-0.154, 0.154]
+        (a) crisp violation left at end     R 0/16 · M-block 0/16 · Fisher p = 1.0 · Newcombe diff 0.0 [-0.194, 0.194] (corrected 11-07: stats.py z-factor bug)
         (b) Stop-hook blocks                0/16 M-block runs · resumes 0 · fix-after-block n/a (denominator 0)
         (c) points on the 2 crisp tasks      R 89.6% · M-block 83.3% · paired permutation on task means p = 1.0 (n = 2)
             Holm over (a), (c)               1.0, 1.0

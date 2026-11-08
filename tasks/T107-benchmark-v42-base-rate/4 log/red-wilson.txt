@@ -1,0 +1,4 @@
+=========================== short test summary info ============================
+FAILED dcbench_eval/tests/test_stats_wilson.py::test_wilson_known_values - as...
+FAILED dcbench_eval/tests/test_stats_wilson.py::test_newcombe_diff_matches_newcombe_1998_example
+2 failed in 1.76s
