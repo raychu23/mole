@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""M2 v3 baseline (a): linter-only arm. T109-b2-baselines / Q2.
+"""M2 v3 baseline (a): "naive zero-model grep substitute" arm (NOT Mole's own best zero-model-at-check-time
+design -- see baseline (d), t46_cascade_arm_v3.mjs, for that). T109-b2-baselines / Q2.
+
+Review finding (deleg_ebac273d task 1, F1, HIGH): this arm alone is a strawman answer to "why not a linter?"
+-- it compiles rules by hand-written deterministic regex heuristics over the ADR's prose (never a model,
+never Mole's own T46 compiler), which is a weaker zero-model design than Mole's own compile-at-capture +
+cascade already ships. It is kept here, relabeled, as the "a human reaches for grep/ripgrep, no tooling at
+all" floor -- NOT as the fair comparison to "could Mole itself just not use a model". That comparison is
+baseline (d)'s job.
 
 Compiles each decision's text into a deterministic grep-style rule (regex over added diff lines),
 with ZERO model calls at any point -- matching D92's named baseline ("rule linters") and the Wealthfront

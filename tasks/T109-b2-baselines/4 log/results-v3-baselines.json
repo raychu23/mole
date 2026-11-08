@@ -76,6 +76,89 @@
    "p_exact_two_sided": 0.0
   }
  },
+ "t46_cascade_scored_subset": {
+  "n_scored": 57,
+  "n_total": 89,
+  "n_abstain": 32,
+  "tp": 6,
+  "fp": 1,
+  "tn": 28,
+  "fn": 22,
+  "recall": 0.2143,
+  "recall_wilson_95ci": [
+   0.1021,
+   0.3954
+  ],
+  "precision": 0.8571,
+  "precision_wilson_95ci": [
+   0.4869,
+   0.9743
+  ],
+  "false_alarm_rate": 0.0345,
+  "false_alarm_wilson_95ci": [
+   0.0061,
+   0.1718
+  ],
+  "accuracy": 0.5965,
+  "mean_cost_usd": 0.0,
+  "total_cost_usd": 0.0,
+  "decision_coverage": 1,
+  "case_coverage": 0.6404,
+  "mcnemar_vs_t53": {
+   "n": 57,
+   "both_right": 30,
+   "t53_only_right": 22,
+   "arm_only_right": 4,
+   "both_wrong": 1,
+   "discordant": 26,
+   "p_exact_two_sided": 0.0005
+  },
+  "compile_cost_total_usd": 0.7125,
+  "compile_cost_mean_per_decision_usd": 0.023,
+  "check_cost_per_case_usd": 0,
+  "caveat": "n=57/89: McNemar here only compares the cases the cascade did NOT abstain on -- not a fair deployment comparison (see t46_cascade_abstain_as_compliant below for the n=89 view)."
+ },
+ "t46_cascade_abstain_as_compliant": {
+  "n_scored": 89,
+  "n_total": 89,
+  "n_abstain": 0,
+  "tp": 6,
+  "fp": 1,
+  "tn": 59,
+  "fn": 23,
+  "recall": 0.2069,
+  "recall_wilson_95ci": [
+   0.0985,
+   0.3839
+  ],
+  "precision": 0.8571,
+  "precision_wilson_95ci": [
+   0.4869,
+   0.9743
+  ],
+  "false_alarm_rate": 0.0167,
+  "false_alarm_wilson_95ci": [
+   0.0029,
+   0.0886
+  ],
+  "accuracy": 0.7303,
+  "mean_cost_usd": 0.0,
+  "total_cost_usd": 0.0,
+  "decision_coverage": 1,
+  "case_coverage": 0.6404,
+  "mcnemar_vs_t53": {
+   "n": 89,
+   "both_right": 61,
+   "t53_only_right": 23,
+   "arm_only_right": 4,
+   "both_wrong": 1,
+   "discordant": 27,
+   "p_exact_two_sided": 0.0003
+  },
+  "compile_cost_total_usd": 0.7125,
+  "compile_cost_mean_per_decision_usd": 0.023,
+  "check_cost_per_case_usd": 0
+ },
  "guidelines": {
   "n_scored": 89,
   "n_total": 89,

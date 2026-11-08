@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
-"""Score the 3 new B2 baselines (linter, guidelines, two-sided judge) on v3's held-out 89, same methodology
-as v3/results.json: Wilson 95% CI (reusing the already-verified formula from
+"""Score the 4 new B2 baselines (naive zero-model grep substitute, guidelines, two-sided judge, T46 cascade) on
+v3's held-out 89, same methodology as v3/results.json: Wilson 95% CI (reusing the already-verified formula from
 context/product-plan/systems/metrics-proof/prelim-11-01/mc-agent-ab/v4/raw/stats.py), McNemar exact
 (correctness-based, same as v3/results.md "McNemar exact" section) for each new arm vs T53.
+
+The 4th arm (t46_cascade_*) is Mole's OWN T46 compile-at-capture + zero-LLM cascade (packages/decisions/src/
+cascade, packages/decisions/src/compile/draft.ts), run via t46_cascade_arm_v3.mjs -- NOT the naive grep
+substitute (review deleg_ebac273d task 1, F1: the grep arm alone is a strawman answer to "why not a linter?",
+since it was never Mole's own best zero-model-at-check-time design). Cost is split into a one-time, amortized
+compile_cost (one real hermes call per unique ADR, independent of case count) and a check_cost_per_case_usd of
+$0 (zero model calls at check time) -- the two numbers a cascade's economics actually turn on.
 """
 import importlib.util
 import json
@@ -173,6 +180,41 @@ def main():
     out["linter_abstain_as_compliant"]["decision_coverage"] = linter["decision_coverage"]
     out["linter_abstain_as_compliant"]["case_coverage"] = linter["case_coverage"]
     out["linter_abstain_as_compliant"]["mcnemar_vs_t53"] = mcnemar_vs_t53(rows_v2)
+
+    cascade_path = Path(__file__).parent / "arm_cascade_heldout_v3.json"
+    if cascade_path.exists():
+        cascade = json.loads(cascade_path.read_text())
+        # View 1: scored-only (cases where a `match:` pattern was compiled for that case's ADR at all).
+        out["t46_cascade_scored_subset"] = metrics(cascade["rows"])
+        out["t46_cascade_scored_subset"]["decision_coverage"] = cascade["decision_coverage"]
+        out["t46_cascade_scored_subset"]["case_coverage"] = cascade["case_coverage"]
+        out["t46_cascade_scored_subset"]["mcnemar_vs_t53"] = mcnemar_vs_t53(cascade["rows"])
+        out["t46_cascade_scored_subset"]["compile_cost_total_usd"] = cascade["compile_cost_total_usd"]
+        out["t46_cascade_scored_subset"]["compile_cost_mean_per_decision_usd"] = cascade["compile_cost_mean_per_decision_usd"]
+        out["t46_cascade_scored_subset"]["check_cost_per_case_usd"] = cascade["check_cost_per_case_usd"]
+        out["t46_cascade_scored_subset"]["caveat"] = (
+            "n=%d/89: McNemar here only compares the cases the cascade did NOT abstain on -- not a fair "
+            "deployment comparison (see t46_cascade_abstain_as_compliant below for the n=89 view)."
+        ) % out["t46_cascade_scored_subset"]["n_scored"]
+
+        # View 2: abstain-as-compliant (what a team actually experiences when compile-at-capture drafted no
+        # match: pattern for that decision: it simply doesn't block). Fair n=89 comparison to T53/reviewer/RAG.
+        rows_v2 = []
+        for r in cascade["rows"]:
+            r2 = dict(r)
+            if r2.get("abstain"):
+                r2["abstain"] = False
+                r2["predictedViolate"] = False
+            rows_v2.append(r2)
+        out["t46_cascade_abstain_as_compliant"] = metrics(rows_v2)
+        out["t46_cascade_abstain_as_compliant"]["decision_coverage"] = cascade["decision_coverage"]
+        out["t46_cascade_abstain_as_compliant"]["case_coverage"] = cascade["case_coverage"]
+        out["t46_cascade_abstain_as_compliant"]["mcnemar_vs_t53"] = mcnemar_vs_t53(rows_v2)
+        out["t46_cascade_abstain_as_compliant"]["compile_cost_total_usd"] = cascade["compile_cost_total_usd"]
+        out["t46_cascade_abstain_as_compliant"]["compile_cost_mean_per_decision_usd"] = cascade["compile_cost_mean_per_decision_usd"]
+        out["t46_cascade_abstain_as_compliant"]["check_cost_per_case_usd"] = cascade["check_cost_per_case_usd"]
+    else:
+        out["t46_cascade"] = {"status": "NOT RUN", "reason": "arm_cascade_heldout_v3.json missing"}
 
     for name, fname in [("guidelines", "arm_guidelines_heldout_v3.json"), ("two_sided_judge", "arm_judge_heldout_v3.json")]:
         p = Path(__file__).parent / fname

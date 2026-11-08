@@ -33,14 +33,32 @@ Read in full before writing baselines/linter_arm_v3.py, run_guidelines_arm_v3.py
    "dependency-cruiser / grep rules" phrasing, queue/brief.md) -- the choice is logged, not silently
    substituted.
 
-4. **Mole's own real rules compiler (for contrast, not reused here)** -- docs/decisions-and-rules.md and
-   plugins/claude-code/scripts/lib.mjs (T92's "crisp (zero-model, deterministic: TS AST + dependency-
-   cruiser...) rule" compiler, packages/decisions/src/rules). That compiler DOES operate on Mole's own
-   .mole decision records, which carry a structured `rules:` field (import/call-graph constraints) Mole's
-   authoring flow requires. v3's cases are real external ADRs with no such structured field -- there is
-   nothing to "compile" in the T92 sense, which is exactly D92/19-fix-3's complaint this task answers.
+4. **Mole's own real rules compiler, T92** -- docs/decisions-and-rules.md and plugins/claude-code/scripts/
+   lib.mjs (T92's "crisp (zero-model, deterministic: TS AST + dependency-cruiser...) rule" compiler,
+   packages/decisions/src/rules). That compiler operates on Mole's own .mole decision records' structured
+   `rules:` field (import/call-graph constraints), which v3's real external ADRs do not carry and cannot be
+   inferred to carry without a checked-out module graph -- still not reused directly here.
 
-5. **v3's own stats code (reused verbatim, not re-derived)** --
+5. **Mole's own real COMPILE-AT-CAPTURE + CASCADE, T46 (review F1 fix, deleg_ebac273d task 1, HIGH)** --
+   packages/decisions/src/compile/draft.ts (`draftChecksFor`, the same compiler
+   tasks/T46-decision-check-compiler/4 log/bench/compile_adrs.mjs used on Backstage's own ADRs) +
+   packages/decisions/src/cascade/cascade.ts (`isCrisp`: a `match:` content-anchor hit decides outright,
+   zero-LLM, no escalation). Review finding: the grep-over-prose linter (baseline a, now relabeled "naive
+   zero-model grep substitute") is a strawman for "why not a linter?" -- it was never Mole's OWN best
+   zero-model-at-check-time design, so it understates what a real zero-model check can do. Baseline (d),
+   t46_cascade_arm_v3.mjs, IS reused directly: one real `hermes` call per unique held-out ADR (31, excluding
+   the 30 adr_id="none" distractor cases) drafts `match:` patterns from the ADR's own text alone (compile-
+   at-capture, amortized/offline, never seeing a case diff or label), then those patterns are applied with
+   ZERO model calls at check time, using the SAME per-line regex test pr-check.ts's content anchors use
+   (`c.re.test(line)`, bounded to MAX_MATCH_LINE). `rules:` (dependency-cruiser) drafts are reported but NOT
+   applied -- v3's case diffs have no checked-out module graph to run a real dependency-cruiser cruise
+   against, and prior-art.md item 3 already found 0 of v3's 51 ADRs encode an import-graph constraint in the
+   first place, so this gap is expected to cost nothing. The LLM escalation tier (cascade.ts's second call
+   for a scope-anchor-only, non-crisp hit) is deliberately NOT run here either, per the task's own "zero-LLM
+   checks at check time" framing for this arm -- a real difference from Mole's shipped cascade, stated in
+   results-v3-baselines.md, not hidden.
+
+6. **v3's own stats code (reused verbatim, not re-derived)** --
    context/product-plan/systems/metrics-proof/prelim-11-01/mc-agent-ab/v4/raw/stats.py: Wilson score
    interval, already verified against v3's own published number (regression_wilson95 x=0,n=14) before this
    task's results.json computation. McNemar exact (scipy.stats or a from-scratch binomial, same formula
