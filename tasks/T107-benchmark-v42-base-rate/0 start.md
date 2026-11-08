@@ -1,14 +1,22 @@
 ---
-state: prepared
+status (11-07)   ANALYSIS DONE (Q3, queue item). Pilot's 16/16 runs (raw runs-v4.2.jsonl) analysed exactly
+                  per the frozen protocol's prescribed snippet (launch-command.md): pooled 0/16 crisp
+                  violations, Wilson 95% CI [0.047, 0.146], upper bound < 0.20 -> decision rule says
+                  SEEDED-TRAP BENCHMARK NEXT (not a powered R vs M-block comparison). Results written to
+                  context/product-plan/systems/metrics-proof/productivity/results-v42.md and this task's
+                  4 log/results-v42.md (identical). Flagged to the orchestrator as new queue item Q9
+                  (seeded-trap benchmark). Older status lines below are history.
+state: analysed
 owner: hermes-build
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch: ledger/t107-benchmark-v42-base-rate
-worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T107-benchmark-v42-base-rate
+worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T107-benchmark-v42-base-rate (may no longer exist;
+          this analysis was done read-only from main, no worktree needed)
 base: d97bdea
 reviewer: not yet requested
-updated: 2026-11-05 14:40
-status: v4.2 prepared + frozen + smoked; full run NOT LAUNCHED (needs Raymond's go)
-next: Raymond reviews v4.2 smoke evidence, then launches with the command in 4 log/launch-command.md
+updated: 2026-11-07 19:03
+status: v4.2 prepared + frozen + smoked + 16-run pilot RUN + ANALYSED. Decision rule: seeded-trap next.
+next: orchestrator reviews results-v42.md, adds Q9 (seeded-trap benchmark) to queue.json
 claimed: 2026-11-05 08:30
 ---
 ```notes
