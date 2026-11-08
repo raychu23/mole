@@ -1,0 +1,194 @@
+{
+ "linter_only_scored_subset": {
+  "n_scored": 33,
+  "n_total": 89,
+  "n_abstain": 56,
+  "tp": 1,
+  "fp": 0,
+  "tn": 16,
+  "fn": 16,
+  "recall": 0.0588,
+  "recall_wilson_95ci": [
+   0.0105,
+   0.2698
+  ],
+  "precision": 1.0,
+  "precision_wilson_95ci": [
+   0.2065,
+   1.0
+  ],
+  "false_alarm_rate": 0.0,
+  "false_alarm_wilson_95ci": [
+   0.0,
+   0.1936
+  ],
+  "accuracy": 0.5152,
+  "mean_cost_usd": 0.0,
+  "total_cost_usd": 0.0,
+  "decision_coverage": 0.5098,
+  "case_coverage": 0.3708,
+  "mcnemar_vs_t53": {
+   "n": 33,
+   "both_right": 15,
+   "t53_only_right": 15,
+   "arm_only_right": 2,
+   "both_wrong": 1,
+   "discordant": 17,
+   "p_exact_two_sided": 0.0023
+  },
+  "caveat": "n=33/89: McNemar here only compares the cases the linter did NOT abstain on -- not a fair deployment comparison (see linter_abstain_as_compliant below for the n=89 view)."
+ },
+ "linter_abstain_as_compliant": {
+  "n_scored": 89,
+  "n_total": 89,
+  "n_abstain": 0,
+  "tp": 1,
+  "fp": 0,
+  "tn": 60,
+  "fn": 28,
+  "recall": 0.0345,
+  "recall_wilson_95ci": [
+   0.0061,
+   0.1718
+  ],
+  "precision": 1.0,
+  "precision_wilson_95ci": [
+   0.2065,
+   1.0
+  ],
+  "false_alarm_rate": 0.0,
+  "false_alarm_wilson_95ci": [
+   0.0,
+   0.0602
+  ],
+  "accuracy": 0.6854,
+  "mean_cost_usd": 0.0,
+  "total_cost_usd": 0.0,
+  "decision_coverage": 0.5098,
+  "case_coverage": 0.3708,
+  "mcnemar_vs_t53": {
+   "n": 89,
+   "both_right": 57,
+   "t53_only_right": 27,
+   "arm_only_right": 4,
+   "both_wrong": 1,
+   "discordant": 31,
+   "p_exact_two_sided": 0.0
+  }
+ },
+ "guidelines": {
+  "n_scored": 89,
+  "n_total": 89,
+  "n_abstain": 0,
+  "tp": 29,
+  "fp": 15,
+  "tn": 45,
+  "fn": 0,
+  "recall": 1.0,
+  "recall_wilson_95ci": [
+   0.883,
+   1.0
+  ],
+  "precision": 0.6591,
+  "precision_wilson_95ci": [
+   0.5114,
+   0.7812
+  ],
+  "false_alarm_rate": 0.25,
+  "false_alarm_wilson_95ci": [
+   0.1578,
+   0.3723
+  ],
+  "accuracy": 0.8315,
+  "mean_cost_usd": 0.0816,
+  "total_cost_usd": 7.2586,
+  "p50_latency_s": 18.926,
+  "p95_latency_s": 64.151,
+  "mcnemar_vs_t53": {
+   "n": 89,
+   "both_right": 73,
+   "t53_only_right": 11,
+   "arm_only_right": 1,
+   "both_wrong": 4,
+   "discordant": 12,
+   "p_exact_two_sided": 0.0063
+  }
+ },
+ "two_sided_judge": {
+  "n_scored": 71,
+  "n_total": 89,
+  "n_abstain": 18,
+  "tp": 24,
+  "fp": 3,
+  "tn": 39,
+  "fn": 5,
+  "recall": 0.8276,
+  "recall_wilson_95ci": [
+   0.6545,
+   0.924
+  ],
+  "precision": 0.8889,
+  "precision_wilson_95ci": [
+   0.7194,
+   0.9615
+  ],
+  "false_alarm_rate": 0.0714,
+  "false_alarm_wilson_95ci": [
+   0.0246,
+   0.1901
+  ],
+  "accuracy": 0.8873,
+  "mean_cost_usd": 0.0298,
+  "total_cost_usd": 2.1144,
+  "p50_latency_s": 35.806,
+  "p95_latency_s": 79.668,
+  "mcnemar_vs_t53": {
+   "n": 71,
+   "both_right": 60,
+   "t53_only_right": 6,
+   "arm_only_right": 3,
+   "both_wrong": 2,
+   "discordant": 9,
+   "p_exact_two_sided": 0.5078
+  }
+ },
+ "two_sided_judge_abstain_as_compliant": {
+  "n_scored": 89,
+  "n_total": 89,
+  "n_abstain": 0,
+  "tp": 24,
+  "fp": 3,
+  "tn": 57,
+  "fn": 5,
+  "recall": 0.8276,
+  "recall_wilson_95ci": [
+   0.6545,
+   0.924
+  ],
+  "precision": 0.8889,
+  "precision_wilson_95ci": [
+   0.7194,
+   0.9615
+  ],
+  "false_alarm_rate": 0.05,
+  "false_alarm_wilson_95ci": [
+   0.0171,
+   0.137
+  ],
+  "accuracy": 0.9101,
+  "mean_cost_usd": 0.0298,
+  "total_cost_usd": 2.1144,
+  "p50_latency_s": 35.806,
+  "p95_latency_s": 79.668,
+  "mcnemar_vs_t53": {
+   "n": 89,
+   "both_right": 78,
+   "t53_only_right": 6,
+   "arm_only_right": 3,
+   "both_wrong": 2,
+   "discordant": 9,
+   "p_exact_two_sided": 0.5078
+  },
+  "note": "abstain (0 routed candidates, 18/89) treated as predicted-compliant for a full n=89 view"
+ }
+}
