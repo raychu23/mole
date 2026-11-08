@@ -18,6 +18,8 @@ const server = await startMoleHttpServer(
     stateDir: process.env.MOLE_STATE_DIR,
     tsconfig: process.env.MOLE_TSCONFIG,
     srcDir: process.env.MOLE_SRC_DIR,
+    // T113 (core cut, D77): same opt-in as cli.ts's stdio form -- see docs/mcp.md.
+    allTools: process.env.MOLE_MCP_ALL_TOOLS === '1',
   },
   { port, host, allowNonLoopback, bearerToken }
 );

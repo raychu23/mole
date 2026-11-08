@@ -251,12 +251,16 @@ async function main(): Promise<number> {
   console.error(
     'usage: mole <command> [target] [--root DIR] [--json]\n' +
       '  core:        daemon | map | impact | check | status | reindex | stop | demo | init\n' +
+      '  core (decisions + rules): decision | decisions | rules | pr-check | scip stamp\n' +
       '  notes:       note add | memory | since | seen\n' +
-      '  decisions:   decision | decisions | rules | incident | priorities | recall | export | assurance | outcomes | proposals | compile | arguments | cascade-check | pr-check | scip stamp\n' +
-      '  agent state: runs | run | tried | agents | agent-intent | collisions | claims | steer\n' +
-      '  analysis:    coverage | hotspots | coupling | flows | interrogate | check-records\n' +
+      '  experimental, decisions extras: incident | priorities | recall | export | assurance | outcomes | proposals | compile | arguments | cascade-check\n' +
+      '  agent state (core): tried | claims\n' +
+      '  experimental, agent state: runs | run | agents | agent-intent | collisions | steer\n' +
+      '  experimental, analysis:    coverage | hotspots | coupling | flows | interrogate | check-records\n' +
       '  flags:       [--state-dir DIR] [--tsconfig F] [--src-dir D] [--idle-minutes N]\n' +
-      '  new here? -> mole init (scaffold .mole/decisions) then mole demo',
+      '  new here? -> mole init (scaffold .mole/decisions) then mole demo\n' +
+      '  "experimental" commands still work and are still tested -- they are just not part of the 5-job core\n' +
+      '  (T113, D77 "cut to a core"; see docs/mcp.md and README.md "Core" section).',
   );
   return cmd === 'help' ? 0 : 2;
 }

@@ -1,0 +1,7 @@
+default (core) tools: 5 mole_check, mole_claims, mole_decisions, mole_map, mole_tried
+allTools tools: 21
+default tool-description payload: 6404 chars (~1601 tokens, ~4 chars/token)
+allTools tool-description payload: 26212 chars (~6553 tokens)
+reduction: 75.6% fewer description chars, 16 fewer tools exposed by default (5 vs 21)
+(node:45187) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)

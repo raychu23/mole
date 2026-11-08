@@ -37,7 +37,7 @@ afterEach(() => {
 });
 
 async function connect(root: string) {
-  const server = createServer({ root, noStart: true });
+  const server = createServer({ root, noStart: true, allTools: true });
   const client = new Client({ name: 'test', version: '0' });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   await Promise.all([client.connect(clientTransport), server.connect(serverTransport)]);
@@ -52,6 +52,33 @@ const READ_ONLY_TOOLS = ['mole_map', 'mole_tried', 'mole_claims', 'mole_collisio
 const READ_ONLY_OPEN_WORLD_TOOLS = ['mole_cascade_check'];
 // tools that actually write local state or a decision record (never read-only)
 const WRITE_TOOLS = ['mole_oneonone', 'mole_compile_draft', 'mole_compile_review'];
+
+// T113 (D77 cut-to-a-core): with allTools passed above, connect() still sees every tool the audit covers --
+// this file proves the annotations/outputSchema contract for the FULL roster regardless of default exposure.
+describe('T113 core cut: the default (no allTools) server exposes only the 5 core tools', () => {
+  it('listTools() with allTools unset returns exactly CORE_TOOLS, and allTools: true restores the rest', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'mole-mcp-core-cut-'));
+    dirs.push(root);
+    const { CORE_TOOLS } = await import('../src/server.js');
+
+    const coreOnly = createServer({ root, noStart: true });
+    const coreClient = new Client({ name: 'test', version: '0' });
+    const [a, b] = InMemoryTransport.createLinkedPair();
+    await Promise.all([coreClient.connect(a), coreOnly.connect(b)]);
+    const { tools: coreTools } = await coreClient.listTools();
+    expect(new Set(coreTools.map((t) => t.name))).toEqual(new Set(CORE_TOOLS));
+    await coreClient.close();
+
+    const full = createServer({ root, noStart: true, allTools: true });
+    const fullClient = new Client({ name: 'test', version: '0' });
+    const [c, d] = InMemoryTransport.createLinkedPair();
+    await Promise.all([fullClient.connect(c), full.connect(d)]);
+    const { tools: fullTools } = await fullClient.listTools();
+    expect(fullTools.length).toBeGreaterThan(coreTools.length);
+    for (const name of CORE_TOOLS) expect(fullTools.map((t) => t.name)).toContain(name);
+    await fullClient.close();
+  });
+});
 
 describe('every Mole MCP tool declares annotations (readOnlyHint at minimum) and an outputSchema', () => {
   it('listTools(): every tool has annotations.readOnlyHint set correctly and a non-empty outputSchema', async () => {

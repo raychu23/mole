@@ -9,6 +9,10 @@ const server = createServer({
   stateDir: process.env.MOLE_STATE_DIR,
   tsconfig: process.env.MOLE_TSCONFIG,
   srcDir: process.env.MOLE_SRC_DIR,
+  // T113 (core cut, D77): default exposes only the 5 core tools; set MOLE_MCP_ALL_TOOLS=1 to get the rest
+  // (reasoning/priorities/incident/proposals/recall, hotspots, coupling, outcomes, oneonone, compile/cascade,
+  // collisions, agent_intent, coverage, interrogate, decisions_asof) -- see docs/mcp.md.
+  allTools: process.env.MOLE_MCP_ALL_TOOLS === '1',
 });
 // T16: spans when MOLE_OTEL=1 (no-op otherwise); flush them when the client goes away
 const otel = await import('@mole/telemetry');

@@ -1,0 +1,12 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T113-core-cut
+
+(node:95331) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/mcp/test/tool-annotations-schema.test.ts (3 tests) 167ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  17:16:55
+   Duration  2.08s (transform 541ms, setup 0ms, collect 1.68s, tests 167ms, environment 0ms, prepare 52ms)
+

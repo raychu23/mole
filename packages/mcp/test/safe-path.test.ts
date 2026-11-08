@@ -70,7 +70,7 @@ it('end-to-end: mole_check root="/" is rejected by the tool, never passed to fs'
 // but wasn't confined -- `file: '/etc/passwd'` or `file: '../../etc/passwd'` reached @mole/coverage directly.
 it('end-to-end: mole_coverage file="/etc/passwd" is rejected by the tool, never passed to @mole/coverage', async () => {
   const root = freshRoot();
-  const server = createServer({ root, noStart: true });
+  const server = createServer({ root, noStart: true, allTools: true }); // T113: this test exercises mole_coverage, not a core tool
   const handler = (server as unknown as { _registeredTools: Record<string, { handler: (args: unknown, extra: unknown) => Promise<{ isError?: boolean; content: Array<{ text: string }> }> }> })
     ._registeredTools['mole_coverage']!.handler;
   const abs = await handler({ file: '/etc/passwd' }, { requestId: 'r1' });
