@@ -1,0 +1,55 @@
+[
+  {
+    "decision": "adr006",
+    "recordFile": ".mole/decisions/adr006.md",
+    "draftedAt": "2026-11-02T02:26:45.949Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"scope\": [\"**/*.tsx\", \"**/*.ts\"],\n  \"match\": [\n    {\n      \"pattern\": \"[:<]\\\\s*React\\\\.FC\\\\b\",\n      \"in\": \"**/*.tsx\",\n      \"why\": \"`React.FC` and `React.SFC` should be avoided in our codebase when adding new code\"\n    },\n    {\n      \"pattern\": \"[:<]\\\\s*React\\\\.SFC\\\\b\",\n      \"in\": \"**/*.tsx\",\n      \"why\": \"`React.FC` and `React.SFC` should be avoided in our codebase when adding new code\"\n    },\n    {\n      \"pattern\": \"import\\\\s*(?:type\\\\s*)?\\\\{[^}]*\\\\bFC\\\\b[^}]*\\\\}\\\\s*from\\\\s*['\\\"]react['\\\"]\",\n      \"in\": \"**/*.tsx\",\n      \"why\": \"`React.FC` and `React.SFC` should be avoided\"\n    },\n    {\n      \"pattern\": \"import\\\\s*(?:type\\\\s*)?\\\\{[^}]*\\\\bSFC\\\\b[^}]*\\\\}\\\\s*from\\\\s*['\\\"]react['\\\"]\",\n      \"in\": \"**/*.tsx\",\n      \"why\": \"`React.FC` and `React.SFC` should be avoided\"\n    },\n    {\n      \"pattern\": \":\\\\s*FC(<[^=]*)?\\\\s*=\",\n      \"in\": \"**/*.tsx\",\n      \"why\": \"Avoid this: const BadComponent: FC<BadProps> = (...)\"\n    },\n    {\n      \"pattern\": \":\\\\s*SFC(<[^=]*)?\\\\s*=\",\n      \"in\": \"**/*.tsx\",\n      \"why\": \"`React.SFC` should be avoided\"\n    }\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 2299,
+      "outputTokens": 1963,
+      "costUsd": 0.0230213
+    },
+    "scope": [
+      "**/*.tsx",
+      "**/*.ts"
+    ],
+    "match": [
+      {
+        "pattern": "[:<]\\s*React\\.FC\\b",
+        "in": "**/*.tsx",
+        "why": "`React.FC` and `React.SFC` should be avoided in our codebase when adding new code"
+      },
+      {
+        "pattern": "[:<]\\s*React\\.SFC\\b",
+        "in": "**/*.tsx",
+        "why": "`React.FC` and `React.SFC` should be avoided in our codebase when adding new code"
+      },
+      {
+        "pattern": "import\\s*(?:type\\s*)?\\{[^}]*\\bFC\\b[^}]*\\}\\s*from\\s*['\"]react['\"]",
+        "in": "**/*.tsx",
+        "why": "`React.FC` and `React.SFC` should be avoided"
+      },
+      {
+        "pattern": "import\\s*(?:type\\s*)?\\{[^}]*\\bSFC\\b[^}]*\\}\\s*from\\s*['\"]react['\"]",
+        "in": "**/*.tsx",
+        "why": "`React.FC` and `React.SFC` should be avoided"
+      },
+      {
+        "pattern": ":\\s*FC(<[^=]*)?\\s*=",
+        "in": "**/*.tsx",
+        "why": "Avoid this: const BadComponent: FC<BadProps> = (...)"
+      },
+      {
+        "pattern": ":\\s*SFC(<[^=]*)?\\s*=",
+        "in": "**/*.tsx",
+        "why": "`React.SFC` should be avoided"
+      }
+    ],
+    "rules": [],
+    "guardTests": [],
+    "version": 1,
+    "approvedBy": "m2v2-automated-one-shot (ADR text only, no human edit)",
+    "approvedAt": "2026-11-02T02:26:45.952Z"
+  }
+]

@@ -1,0 +1,56 @@
+[
+  {
+    "decision": "adr009",
+    "recordFile": ".mole/decisions/adr009.md",
+    "draftedAt": "2026-11-02T02:27:53.091Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"scope\": [\n    \"packages/catalog-model/src/**\",\n    \"packages/catalog-model/src/index.ts\",\n    \"packages/catalog-client/src/**\"\n  ],\n  \"match\": [\n    {\n      \"pattern\": \":kind/:namespace/:name\",\n      \"in\": \"**/*routes*.{ts,tsx}\",\n      \"why\": \"the URL containing the reference shall take the following form: :namespace/:kind/:name\"\n    },\n    {\n      \"pattern\": \":kind/:name/:namespace\",\n      \"in\": \"**/*routes*.{ts,tsx}\",\n      \"why\": \"the URL containing the reference shall take the following form: :namespace/:kind/:name\"\n    },\n    {\n      \"pattern\": \":name/:namespace/:kind\",\n      \"in\": \"**/*routes*.{ts,tsx}\",\n      \"why\": \"the URL containing the reference shall take the following form: :namespace/:kind/:name\"\n    },\n    {\n      \"pattern\": \":name/:kind/:namespace\",\n      \"in\": \"**/*routes*.{ts,tsx}\",\n      \"why\": \"the URL containing the reference shall take the following form: :namespace/:kind/:name\"\n    },\n    {\n      \"pattern\": \":namespace/:name/:kind\",\n      \"in\": \"**/*routes*.{ts,tsx}\",\n      \"why\": \"the URL containing the reference shall take the following form: :namespace/:kind/:name\"\n    },\n    {\n      \"pattern\": \"entityRoute(Ref|Params)?\\\\s*=\\\\s*['\\\"`]:kind/:name['\\\"`]\",\n      \"in\": \"**/*routes*.{ts,tsx}\",\n      \"why\": \"All three parts are required under all circumstances.\"\n    }\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 2474,
+      "outputTokens": 3324,
+      "costUsd": 0.0370688
+    },
+    "scope": [
+      "packages/catalog-model/src/**",
+      "packages/catalog-model/src/index.ts",
+      "packages/catalog-client/src/**"
+    ],
+    "match": [
+      {
+        "pattern": ":kind/:namespace/:name",
+        "in": "**/*routes*.{ts,tsx}",
+        "why": "the URL containing the reference shall take the following form: :namespace/:kind/:name"
+      },
+      {
+        "pattern": ":kind/:name/:namespace",
+        "in": "**/*routes*.{ts,tsx}",
+        "why": "the URL containing the reference shall take the following form: :namespace/:kind/:name"
+      },
+      {
+        "pattern": ":name/:namespace/:kind",
+        "in": "**/*routes*.{ts,tsx}",
+        "why": "the URL containing the reference shall take the following form: :namespace/:kind/:name"
+      },
+      {
+        "pattern": ":name/:kind/:namespace",
+        "in": "**/*routes*.{ts,tsx}",
+        "why": "the URL containing the reference shall take the following form: :namespace/:kind/:name"
+      },
+      {
+        "pattern": ":namespace/:name/:kind",
+        "in": "**/*routes*.{ts,tsx}",
+        "why": "the URL containing the reference shall take the following form: :namespace/:kind/:name"
+      },
+      {
+        "pattern": "entityRoute(Ref|Params)?\\s*=\\s*['\"`]:kind/:name['\"`]",
+        "in": "**/*routes*.{ts,tsx}",
+        "why": "All three parts are required under all circumstances."
+      }
+    ],
+    "rules": [],
+    "guardTests": [],
+    "version": 1,
+    "approvedBy": "m2v2-automated-one-shot (ADR text only, no human edit)",
+    "approvedAt": "2026-11-02T02:27:53.093Z"
+  }
+]

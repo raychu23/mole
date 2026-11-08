@@ -1,0 +1,54 @@
+[
+  {
+    "decision": "adr010",
+    "recordFile": ".mole/decisions/adr010.md",
+    "draftedAt": "2026-11-02T02:28:07.297Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"scope\": [\"packages/*/src/**\", \"plugins/*/src/**\"],\n  \"match\": [\n    {\n      \"pattern\": \"from\\\\s+['\\\"]moment(-timezone)?['\\\"]\",\n      \"in\": \"**/*.{ts,tsx,js,jsx}\",\n      \"why\": \"Luxon as the standard date library within Backstage\"\n    },\n    {\n      \"pattern\": \"require\\\\(\\\\s*['\\\"]moment(-timezone)?['\\\"]\\\\s*\\\\)\",\n      \"in\": \"**/*.{ts,tsx,js,jsx}\",\n      \"why\": \"Luxon as the standard date library within Backstage\"\n    }\n  ],\n  \"rules\": [\n    {\n      \"forbid\": \"import\",\n      \"from\": \"packages/*/src/**\",\n      \"to\": [\"moment\", \"moment-timezone\"],\n      \"why\": \"All core packages and plugins within Backstage should use Luxon for any date manipulation or formatting\"\n    },\n    {\n      \"forbid\": \"import\",\n      \"from\": \"plugins/*/src/**\",\n      \"to\": [\"moment\", \"moment-timezone\"],\n      \"why\": \"All core packages and plugins within Backstage should use Luxon for any date manipulation or formatting\"\n    }\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 2253,
+      "outputTokens": 975,
+      "costUsd": 0.0130263
+    },
+    "scope": [
+      "packages/*/src/**",
+      "plugins/*/src/**"
+    ],
+    "match": [
+      {
+        "pattern": "from\\s+['\"]moment(-timezone)?['\"]",
+        "in": "**/*.{ts,tsx,js,jsx}",
+        "why": "Luxon as the standard date library within Backstage"
+      },
+      {
+        "pattern": "require\\(\\s*['\"]moment(-timezone)?['\"]\\s*\\)",
+        "in": "**/*.{ts,tsx,js,jsx}",
+        "why": "Luxon as the standard date library within Backstage"
+      }
+    ],
+    "rules": [
+      {
+        "forbid": "import",
+        "from": "packages/*/src/**",
+        "to": [
+          "moment",
+          "moment-timezone"
+        ],
+        "why": "All core packages and plugins within Backstage should use Luxon for any date manipulation or formatting"
+      },
+      {
+        "forbid": "import",
+        "from": "plugins/*/src/**",
+        "to": [
+          "moment",
+          "moment-timezone"
+        ],
+        "why": "All core packages and plugins within Backstage should use Luxon for any date manipulation or formatting"
+      }
+    ],
+    "guardTests": [],
+    "version": 1,
+    "approvedBy": "m2v2-automated-one-shot (ADR text only, no human edit)",
+    "approvedAt": "2026-11-02T02:28:07.299Z"
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "decision": "adr011",
+    "recordFile": ".mole/decisions/adr011.md",
+    "draftedAt": "2026-11-02T02:30:43.840Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"match\": [\n    {\n      \"pattern\": \"\\\"name\\\"\\\\s*:\\\\s*\\\"@backstage/plugin-[^\\\"]*\\\"\",\n      \"in\": \"packages/!(catalog-client|catalog-model)/package.json\",\n      \"why\": \"The `packages/` directory is reserved for core package of Backstage.\"\n    },\n    {\n      \"pattern\": \"\\\"name\\\"\\\\s*:\\\\s*\\\"@backstage/(?!plugin-)[^\\\"]*\\\"\",\n      \"in\": \"plugins/*/package.json\",\n      \"why\": \"We prefix the package names with `@backstage/plugin-`.\"\n    },\n    {\n      \"pattern\": \"\\\"name\\\"\\\\s*:\\\\s*\\\"@backstage/plugin-[a-z0-9-]+-(utils|common-lib|shared|helpers)\\\"\",\n      \"in\": \"plugins/*/package.json\",\n      \"why\": \"We follow this structure for plugin packages: x, x-module-<name>, x-backend, x-backend-module-<name>, x-react, x-node, x-common.\"\n    }\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 3058,
+      "outputTokens": 2720,
+      "costUsd": 0.0324888
+    },
+    "scope": [],
+    "match": [
+      {
+        "pattern": "\"name\"\\s*:\\s*\"@backstage/plugin-[^\"]*\"",
+        "in": "packages/!(catalog-client|catalog-model)/package.json",
+        "why": "The `packages/` directory is reserved for core package of Backstage."
+      },
+      {
+        "pattern": "\"name\"\\s*:\\s*\"@backstage/(?!plugin-)[^\"]*\"",
+        "in": "plugins/*/package.json",
+        "why": "We prefix the package names with `@backstage/plugin-`."
+      },
+      {
+        "pattern": "\"name\"\\s*:\\s*\"@backstage/plugin-[a-z0-9-]+-(utils|common-lib|shared|helpers)\"",
+        "in": "plugins/*/package.json",
+        "why": "We follow this structure for plugin packages: x, x-module-<name>, x-backend, x-backend-module-<name>, x-react, x-node, x-common."
+      }
+    ],
+    "rules": [],
+    "guardTests": [],
+    "version": 1,
+    "approvedBy": "m2v2-automated-one-shot (ADR text only, no human edit)",
+    "approvedAt": "2026-11-02T02:30:43.842Z"
+  }
+]

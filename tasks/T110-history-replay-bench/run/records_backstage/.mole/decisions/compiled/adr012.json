@@ -1,0 +1,34 @@
+[
+  {
+    "decision": "adr012",
+    "recordFile": ".mole/decisions/adr012.md",
+    "draftedAt": "2026-11-02T02:30:52.511Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"scope\": [\"**/*.{ts,tsx}\"],\n  \"match\": [\n    {\n      \"pattern\": \"luxon\\\\.DateTime\\\\.now\\\\(\\\\)\\\\.toFormat\\\\(|DateTime\\\\.now\\\\(\\\\)\\\\.toFormat\\\\(\",\n      \"in\": \"**/*.{ts,tsx}\",\n      \"why\": \"custom formats and the `toFormat` method, which leads to inconsistent and unfamiliar formats\"\n    },\n    {\n      \"pattern\": \"\\\\.toFormat\\\\(\\\\s*['\\\"](?:yyyy|MM|dd|LLL|MMM|MMMM)[^'\\\"]*['\\\"]\",\n      \"in\": \"**/*.{ts,tsx}\",\n      \"why\": \"Avoid this: date.toFormat('yyyy LLL dd')\"\n    }\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 2398,
+      "outputTokens": 289,
+      "costUsd": 0.0065288
+    },
+    "scope": [
+      "**/*.{ts,tsx}"
+    ],
+    "match": [
+      {
+        "pattern": "luxon\\.DateTime\\.now\\(\\)\\.toFormat\\(|DateTime\\.now\\(\\)\\.toFormat\\(",
+        "in": "**/*.{ts,tsx}",
+        "why": "custom formats and the `toFormat` method, which leads to inconsistent and unfamiliar formats"
+      },
+      {
+        "pattern": "\\.toFormat\\(\\s*['\"](?:yyyy|MM|dd|LLL|MMM|MMMM)[^'\"]*['\"]",
+        "in": "**/*.{ts,tsx}",
+        "why": "Avoid this: date.toFormat('yyyy LLL dd')"
+      }
+    ],
+    "rules": [],
+    "guardTests": [],
+    "version": 1,
+    "approvedBy": "m2v2-automated-one-shot (ADR text only, no human edit)",
+    "approvedAt": "2026-11-02T02:30:52.513Z"
+  }
+]

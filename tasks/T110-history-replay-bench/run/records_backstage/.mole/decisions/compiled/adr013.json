@@ -1,0 +1,57 @@
+[
+  {
+    "decision": "adr013",
+    "recordFile": ".mole/decisions/adr013.md",
+    "draftedAt": "2026-11-02T02:32:04.464Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"match\": [\n    {\n      \"pattern\": \"from\\\\s+['\\\"]axios['\\\"]|require\\\\(\\\\s*['\\\"]axios['\\\"]\\\\s*\\\\)\",\n      \"in\": \"{packages,plugins}/**/src/**/*.{ts,tsx,js}\",\n      \"why\": \"We will gradually transition away from third party packages such as `axios`, `got` and others.\"\n    },\n    {\n      \"pattern\": \"from\\\\s+['\\\"]got['\\\"]|require\\\\(\\\\s*['\\\"]got['\\\"]\\\\s*\\\\)\",\n      \"in\": \"{packages,plugins}/**/src/**/*.{ts,tsx,js}\",\n      \"why\": \"We will gradually transition away from third party packages such as `axios`, `got` and others.\"\n    },\n    {\n      \"pattern\": \"import\\\\s+fetch\\\\s+from\\\\s+['\\\"]node-fetch['\\\"]\",\n      \"in\": \"plugins/*/src/components/**/*.{ts,tsx}\",\n      \"why\": \"Frontend plugins and packages should prefer to use the `fetchApiRef`\"\n    }\n  ],\n  \"rules\": [\n    {\n      \"forbid\": \"import\",\n      \"from\": \"{packages,plugins}/*-backend/src/**\",\n      \"to\": [\"axios\", \"got\", \"superagent\", \"request\"],\n      \"why\": \"Backend (node) packages should use the `node-fetch` package for HTTP data fetching.\"\n    },\n    {\n      \"forbid\": \"import\",\n      \"from\": \"plugins/*/src/components/**\",\n      \"to\": [\"node-fetch\"],\n      \"except\": [],\n      \"why\": \"Frontend plugins and packages should prefer to use the `fetchApiRef`\"\n    }\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 2595,
+      "outputTokens": 1796,
+      "costUsd": 0.0220913
+    },
+    "scope": [],
+    "match": [
+      {
+        "pattern": "from\\s+['\"]axios['\"]|require\\(\\s*['\"]axios['\"]\\s*\\)",
+        "in": "{packages,plugins}/**/src/**/*.{ts,tsx,js}",
+        "why": "We will gradually transition away from third party packages such as `axios`, `got` and others."
+      },
+      {
+        "pattern": "from\\s+['\"]got['\"]|require\\(\\s*['\"]got['\"]\\s*\\)",
+        "in": "{packages,plugins}/**/src/**/*.{ts,tsx,js}",
+        "why": "We will gradually transition away from third party packages such as `axios`, `got` and others."
+      },
+      {
+        "pattern": "import\\s+fetch\\s+from\\s+['\"]node-fetch['\"]",
+        "in": "plugins/*/src/components/**/*.{ts,tsx}",
+        "why": "Frontend plugins and packages should prefer to use the `fetchApiRef`"
+      }
+    ],
+    "rules": [
+      {
+        "forbid": "import",
+        "from": "{packages,plugins}/*-backend/src/**",
+        "to": [
+          "axios",
+          "got",
+          "superagent",
+          "request"
+        ],
+        "why": "Backend (node) packages should use the `node-fetch` package for HTTP data fetching."
+      },
+      {
+        "forbid": "import",
+        "from": "plugins/*/src/components/**",
+        "to": [
+          "node-fetch"
+        ],
+        "why": "Frontend plugins and packages should prefer to use the `fetchApiRef`"
+      }
+    ],
+    "guardTests": [],
+    "version": 1,
+    "approvedBy": "m2v2-automated-one-shot (ADR text only, no human edit)",
+    "approvedAt": "2026-11-02T02:32:04.475Z"
+  }
+]

@@ -1,0 +1,41 @@
+[
+  {
+    "decision": "adr005",
+    "recordFile": ".mole/decisions/adr005.md",
+    "draftedAt": "2026-11-02T02:28:58.926Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"scope\": [\n    \"packages/catalog-model/src/entity/**\",\n    \"packages/catalog-model/src/index.ts\",\n    \"plugins/catalog-backend/src/ingestion/**\"\n  ],\n  \"match\": [\n    {\n      \"pattern\": \"kind\\\\s*[:=]{1,2}\\\\s*['\\\"]API['\\\"]\",\n      \"in\": \"packages/catalog-model/src/entity/**\",\n      \"why\": \"For now, we'll start by only implementing support for the Component entity in the Backstage catalog.\"\n    },\n    {\n      \"pattern\": \"kind\\\\s*[:=]{1,2}\\\\s*['\\\"]Resource['\\\"]\",\n      \"in\": \"packages/catalog-model/src/entity/**\",\n      \"why\": \"For now, we'll start by only implementing support for the Component entity in the Backstage catalog.\"\n    },\n    {\n      \"pattern\": \"class\\\\s+(Api|Resource)EntityProcessor\\\\b\",\n      \"in\": \"plugins/catalog-backend/src/ingestion/**\",\n      \"why\": \"For now, we'll start by only implementing support for the Component entity ... This can later be extended to APIs, Resources and other potentially useful entities.\"\n    }\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 3000,
+      "outputTokens": 2884,
+      "costUsd": 0.0339838
+    },
+    "scope": [
+      "packages/catalog-model/src/entity/**",
+      "packages/catalog-model/src/index.ts",
+      "plugins/catalog-backend/src/ingestion/**"
+    ],
+    "match": [
+      {
+        "pattern": "kind\\s*[:=]{1,2}\\s*['\"]API['\"]",
+        "in": "packages/catalog-model/src/entity/**",
+        "why": "For now, we'll start by only implementing support for the Component entity in the Backstage catalog."
+      },
+      {
+        "pattern": "kind\\s*[:=]{1,2}\\s*['\"]Resource['\"]",
+        "in": "packages/catalog-model/src/entity/**",
+        "why": "For now, we'll start by only implementing support for the Component entity in the Backstage catalog."
+      },
+      {
+        "pattern": "class\\s+(Api|Resource)EntityProcessor\\b",
+        "in": "plugins/catalog-backend/src/ingestion/**",
+        "why": "For now, we'll start by only implementing support for the Component entity ... This can later be extended to APIs, Resources and other potentially useful entities."
+      }
+    ],
+    "rules": [],
+    "guardTests": [],
+    "version": 1,
+    "approvedBy": "m2v2-automated-one-shot (ADR text only, no human edit)",
+    "approvedAt": "2026-11-02T02:28:58.927Z"
+  }
+]

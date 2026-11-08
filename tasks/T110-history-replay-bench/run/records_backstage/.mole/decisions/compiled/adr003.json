@@ -1,0 +1,42 @@
+[
+  {
+    "decision": "adr003",
+    "recordFile": ".mole/decisions/adr003.md",
+    "draftedAt": "2026-11-02T02:26:18.400Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"scope\": [\n    \"**/index.ts\",\n    \"**/index.tsx\",\n    \"**/index.js\",\n    \"**/index.jsx\"\n  ],\n  \"match\": [\n    {\n      \"pattern\": \"^\\\\s*export\\\\s+default\\\\b\",\n      \"in\": \"src/**/*.{js,jsx,ts,tsx,mjs,cjs}\",\n      \"why\": \"We will stop using default exports except when absolutely necessary\"\n    },\n    {\n      \"pattern\": \"export\\\\s*\\\\{[^}]*\\\\bas\\\\s+default\\\\b[^}]*\\\\}\",\n      \"in\": \"src/**/*.{js,jsx,ts,tsx,mjs,cjs}\",\n      \"why\": \"They break re-exports due to name conflicts, forcing the developer to manually name each.\"\n    },\n    {\n      \"pattern\": \"export\\\\s*\\\\{[^}]*\\\\bdefault\\\\b[^}]*\\\\}\\\\s*from\\\\s*['\\\"]\",\n      \"in\": \"**/index.{js,jsx,ts,tsx}\",\n      \"why\": \"They break re-exports due to name conflicts, forcing the developer to manually name each.\"\n    }\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 2638,
+      "outputTokens": 2781,
+      "costUsd": 0.034404
+    },
+    "scope": [
+      "**/index.ts",
+      "**/index.tsx",
+      "**/index.js",
+      "**/index.jsx"
+    ],
+    "match": [
+      {
+        "pattern": "^\\s*export\\s+default\\b",
+        "in": "src/**/*.{js,jsx,ts,tsx,mjs,cjs}",
+        "why": "We will stop using default exports except when absolutely necessary"
+      },
+      {
+        "pattern": "export\\s*\\{[^}]*\\bas\\s+default\\b[^}]*\\}",
+        "in": "src/**/*.{js,jsx,ts,tsx,mjs,cjs}",
+        "why": "They break re-exports due to name conflicts, forcing the developer to manually name each."
+      },
+      {
+        "pattern": "export\\s*\\{[^}]*\\bdefault\\b[^}]*\\}\\s*from\\s*['\"]",
+        "in": "**/index.{js,jsx,ts,tsx}",
+        "why": "They break re-exports due to name conflicts, forcing the developer to manually name each."
+      }
+    ],
+    "rules": [],
+    "guardTests": [],
+    "version": 1,
+    "approvedBy": "m2v2-automated-one-shot (ADR text only, no human edit)",
+    "approvedAt": "2026-11-02T02:26:18.409Z"
+  }
+]

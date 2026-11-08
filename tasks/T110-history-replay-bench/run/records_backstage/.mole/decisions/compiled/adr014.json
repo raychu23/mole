@@ -1,0 +1,55 @@
+[
+  {
+    "decision": "adr014",
+    "recordFile": ".mole/decisions/adr014.md",
+    "draftedAt": "2026-11-02T02:29:28.801Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"scope\": [\"packages/\", \"plugins/\"],\n  \"match\": [\n    {\n      \"pattern\": \"from\\\\s+['\\\"]node-fetch['\\\"]\",\n      \"in\": \"**/*.{ts,tsx,js,jsx}\",\n      \"why\": \"We will gradually transition away from third party fetch replacement packages such as node-fetch\"\n    },\n    {\n      \"pattern\": \"require\\\\(\\\\s*['\\\"]node-fetch['\\\"]\\\\s*\\\\)\",\n      \"in\": \"**/*.{ts,tsx,js,jsx}\",\n      \"why\": \"We will gradually transition away from third party fetch replacement packages such as node-fetch\"\n    },\n    {\n      \"pattern\": \"from\\\\s+['\\\"]isomorphic-fetch['\\\"]\",\n      \"in\": \"**/*.{ts,tsx,js,jsx}\",\n      \"why\": \"transition away from third party fetch replacement packages such as node-fetch and others\"\n    },\n    {\n      \"pattern\": \"from\\\\s+['\\\"]whatwg-fetch['\\\"]\",\n      \"in\": \"**/*.{ts,tsx,js,jsx}\",\n      \"why\": \"transition away from third party fetch replacement packages such as node-fetch and others\"\n    },\n    {\n      \"pattern\": \"\\\"node-fetch\\\"\\\\s*:\\\\s*\\\"\",\n      \"in\": \"**/package.json\",\n      \"why\": \"We will gradually transition away from third party fetch replacement packages such as node-fetch\"\n    },\n    {\n      \"pattern\": \"\\\"isomorphic-fetch\\\"\\\\s*:\\\\s*\\\"\",\n      \"in\": \"**/package.json\",\n      \"why\": \"We will gradually transition away from third party fetch replacement packages such as node-fetch and others\"\n    }\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 2838,
+      "outputTokens": 2649,
+      "costUsd": 0.0312288
+    },
+    "scope": [
+      "packages/",
+      "plugins/"
+    ],
+    "match": [
+      {
+        "pattern": "from\\s+['\"]node-fetch['\"]",
+        "in": "**/*.{ts,tsx,js,jsx}",
+        "why": "We will gradually transition away from third party fetch replacement packages such as node-fetch"
+      },
+      {
+        "pattern": "require\\(\\s*['\"]node-fetch['\"]\\s*\\)",
+        "in": "**/*.{ts,tsx,js,jsx}",
+        "why": "We will gradually transition away from third party fetch replacement packages such as node-fetch"
+      },
+      {
+        "pattern": "from\\s+['\"]isomorphic-fetch['\"]",
+        "in": "**/*.{ts,tsx,js,jsx}",
+        "why": "transition away from third party fetch replacement packages such as node-fetch and others"
+      },
+      {
+        "pattern": "from\\s+['\"]whatwg-fetch['\"]",
+        "in": "**/*.{ts,tsx,js,jsx}",
+        "why": "transition away from third party fetch replacement packages such as node-fetch and others"
+      },
+      {
+        "pattern": "\"node-fetch\"\\s*:\\s*\"",
+        "in": "**/package.json",
+        "why": "We will gradually transition away from third party fetch replacement packages such as node-fetch"
+      },
+      {
+        "pattern": "\"isomorphic-fetch\"\\s*:\\s*\"",
+        "in": "**/package.json",
+        "why": "We will gradually transition away from third party fetch replacement packages such as node-fetch and others"
+      }
+    ],
+    "rules": [],
+    "guardTests": [],
+    "version": 1,
+    "approvedBy": "m2v2-automated-one-shot (ADR text only, no human edit)",
+    "approvedAt": "2026-11-02T02:29:28.803Z"
+  }
+]

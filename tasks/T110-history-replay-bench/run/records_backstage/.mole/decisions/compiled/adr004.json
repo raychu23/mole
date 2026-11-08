@@ -1,0 +1,35 @@
+[
+  {
+    "decision": "adr004",
+    "recordFile": ".mole/decisions/adr004.md",
+    "draftedAt": "2026-11-02T02:30:09.977Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"scope\": [\"**/src/**/index.ts\", \"**/src/**/index.tsx\"],\n  \"match\": [\n    {\n      \"pattern\": \"^\\\\s*export\\\\s+(type\\\\s+)?(\\\\*(\\\\s+as\\\\s+\\\\w+)?|\\\\{[^}]*\\\\})\\\\s*from\\\\s+['\\\"]\",\n      \"in\": \"**/src/**/!(index).{ts,tsx}\",\n      \"why\": \"only index files will have re-exports\"\n    },\n    {\n      \"pattern\": \"from\\\\s+['\\\"]\\\\.{1,2}\\\\/[^'\\\"]+\\\\/[^'\\\"]+['\\\"]\",\n      \"in\": \"**/index.{ts,tsx}\",\n      \"why\": \"Each index file will only re-export from its own immediate directory children\"\n    }\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 2745,
+      "outputTokens": 3463,
+      "costUsd": 0.0391363
+    },
+    "scope": [
+      "**/src/**/index.ts",
+      "**/src/**/index.tsx"
+    ],
+    "match": [
+      {
+        "pattern": "^\\s*export\\s+(type\\s+)?(\\*(\\s+as\\s+\\w+)?|\\{[^}]*\\})\\s*from\\s+['\"]",
+        "in": "**/src/**/!(index).{ts,tsx}",
+        "why": "only index files will have re-exports"
+      },
+      {
+        "pattern": "from\\s+['\"]\\.{1,2}\\/[^'\"]+\\/[^'\"]+['\"]",
+        "in": "**/index.{ts,tsx}",
+        "why": "Each index file will only re-export from its own immediate directory children"
+      }
+    ],
+    "rules": [],
+    "guardTests": [],
+    "version": 1,
+    "approvedBy": "m2v2-automated-one-shot (ADR text only, no human edit)",
+    "approvedAt": "2026-11-02T02:30:09.979Z"
+  }
+]
