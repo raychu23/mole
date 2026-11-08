@@ -1,0 +1,1721 @@
+
+> mole@0.0.0 check
+> npm run build && npm test
+
+
+> mole@0.0.0 build
+> tsc -b
+
+
+> mole@0.0.0 postbuild
+> node scripts/ci/chmod-bins.mjs
+
+chmod-bins: 6 bin file(s) made executable
+
+> mole@0.0.0 test
+> vitest run
+
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T108-ci-green
+
+(node:53574) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53572) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53574) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53763) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53761) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53759) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53765) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53766) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53760) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53767) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53758) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53762) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53757) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53755) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53770) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53756) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53769) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53768) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53764) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53574) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53864) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53857) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53861) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53852) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53855) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53860) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53862) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53856) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53851) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53849) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53854) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53850) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53853) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53858) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53859) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53863) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53984) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53983) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53985) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53986) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53990) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53980) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53982) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53979) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53978) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53988) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53987) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53993) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53981) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53992) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53989) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53991) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54073) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54071) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54063) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54060) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54065) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54061) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54068) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54072) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54066) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54070) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54058) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54059) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54062) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54067) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54064) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54069) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54185) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54191) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54184) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54179) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54190) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54180) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54182) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54181) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54188) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54176) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54189) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54183) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54177) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54187) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54186) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54178) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54321) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54317) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54316) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54314) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54318) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54319) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54313) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54312) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54323) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54325) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54326) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54320) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54322) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54327) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54315) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54324) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54399) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54394) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54397) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54406) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54396) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54404) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54405) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54393) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54392) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54402) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54403) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54398) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54395) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54400) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54401) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54378) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54495) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54497) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54500) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54491) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54492) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54503) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54493) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54490) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54498) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54489) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54499) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54504) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54501) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54494) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54496) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54502) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54616) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54618) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54611) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54606) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54603) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54609) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54605) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54614) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54617) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54612) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54607) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54604) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54615) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54613) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54610) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54608) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54749) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54748) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54743) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54735) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54745) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54737) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54747) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54744) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54739) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54736) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54746) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54734) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54740) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54738) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54741) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54742) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54820) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54817) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54823) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54816) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54815) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54821) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54826) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54819) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54827) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54830) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54814) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54822) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54824) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54829) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53574) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54828) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54818) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54928) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54931) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54930) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54924) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54925) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54923) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54935) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54922) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54929) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54926) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54933) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54927) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54932) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54934) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54937) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54936) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55038) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55032) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55025) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55024) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55030) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55037) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55029) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55026) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55033) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55023) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55031) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55028) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55035) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55034) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53574) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55027) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55036) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55174) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55181) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55170) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55169) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55180) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55178) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55182) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55173) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55185) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55175) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55179) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55171) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55177) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55176) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55183) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55184) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55278) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55269) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55276) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55275) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55283) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55277) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55273) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53574) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55271) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55280) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55272) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55281) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53574) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55270) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55279) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55282) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55268) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55274) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55439) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55432) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55442) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55441) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55433) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55431) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55440) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55435) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55434) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55430) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55445) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55438) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55446) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55444) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55437) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55436) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55556) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55560) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55557) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55565) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55563) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55551) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55553) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55562) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55550) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55555) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55561) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55554) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55559) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55564) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55558) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55552) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53574) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55677) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55676) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55684) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55679) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55675) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55670) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55673) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55681) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55671) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55680) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55683) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55685) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55678) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55672) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55674) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55682) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/decisions/test/captured-arguments-lock.test.ts (1 test) 151914ms
+   ✓ T80 review MEDIUM 3: concurrent CLI approves on the same decision never lose an update > 12 concurrent approves x 10 rounds: every row ends approved by its LAST round's approver, none lost  151912ms
+(node:55780) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55789) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55788) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55791) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55793) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55784) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55781) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55786) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55785) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55787) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55782) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55778) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55790) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55783) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55792) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55779) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ packages/daemon/test/daemon.test.ts (23 tests | 1 failed) 160361ms
+   ✓ idle shutdown (T9) > a daemon with no requests stops itself and removes its lock and socket; requests keep it alive  10622ms
+   ✓ default sources (T9) > uses src when it exists, the whole folder when it does not, and never overrides an explicit choice 20ms
+   ✓ default sources (T9) > a repo with .ts files in packages/*/src and no root src folder is indexed, not left empty  17611ms
+   ✓ call-site lines (T7) > a caller carries the first call-site line and the site count, next to its declaration line  7769ms
+   ✓ call-site lines (T7) > file-level callers and importers print the site line and count in the text map too  4160ms
+   ✓ call-site lines (T7) > an importer carries the import statement line  4406ms
+   ✓ call-site lines (T7) > callees keep the declaration line (that is where you go next)  3870ms
+   ✓ neighborhood (pure query) > file map lists its symbols, callers, callees and importers  5081ms
+   ✓ neighborhood (pure query) > symbol map: container file, callers and callees  5058ms
+   ✓ neighborhood (pure query) > impact view flags transitive callers  6010ms
+   ✓ neighborhood (pure query) > a file outside the index is "not-indexed", not an error  5900ms
+   ✓ neighborhood (pure query) > caps the map at MAX_MAP_NODES and groups the rest as +N more  8188ms
+   ✓ review fixes (T2 adversarial review) > impact reports transitive callers (not just the ones on the map) and a self-call is not "impacted"  6154ms
+   ✓ review fixes (T2 adversarial review) > a "%" or "_" in a symbol target is literal, not a LIKE wildcard  1160ms
+   ✓ review fixes (T2 adversarial review) > a bare name that matches several symbols names the others  3523ms
+   ✓ review fixes (T2 adversarial review) > normalizeTarget: ./, backslashes and absolute paths inside the repo all mean the repo-relative path 1ms
+   ✓ daemon > serves map over the socket, is the only writer, and re-indexes a changed file  15174ms
+   ✓ daemon > one daemon per repo: a second start fails, a stale lock is taken over 141ms
+   ✓ daemon > FAILURE: daemon down → "index-unavailable", no throw 150ms
+   ✓ daemon > FAILURE: file outside the index → "not-indexed" through the daemon  15929ms
+   × daemon robustness (T2 review) > worktrees sharing a state dir get separate daemons and indexes 21112ms
+     → expected 'indexing' to be 'ok' // Object.is equality
+   ✓ daemon robustness (T2 review) > simultaneous starts for one repo: exactly one wins, the rest get AlreadyRunning (never a raw EEXIST) 14ms
+   ✓ daemon robustness (T2 review) > a full re-index never makes an indexed file look "not-indexed"  18304ms
+(node:56581) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56604) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56603) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56553) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56568) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56545) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56558) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56548) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56589) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56571) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56556) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56562) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56588) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56579) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56580) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56570) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+mole steer: deliver skipped this call for session sess-kill9: mole steer: inbox lock timeout for session sess-kill9 (tried 31x over ~2480ms): Lock file is already being held
+mole steer: deliver skipped this call for session sess-kill9: mole steer: inbox lock timeout for session sess-kill9 (tried 31x over ~2480ms): Lock file is already being held
+mole steer: deliver skipped this call for session sess-budget: mole steer: inbox lock timeout for session sess-budget (tried 31x over ~2480ms): Lock file is already being held
+ ✓ packages/temporal/test/recordfact-property.test.ts (200 tests) 172231ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 1: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1264ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 2: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  917ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 3: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1395ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 4: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  2313ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 5: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1164ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 6: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  981ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 7: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1216ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 8: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  2233ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 9: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1571ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 10: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  729ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 11: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  929ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 12: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1141ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 13: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1014ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 14: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1381ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 15: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1107ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 16: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  921ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 17: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1635ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 18: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1933ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 19: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1074ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 20: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  390ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 21: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  779ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 22: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  323ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 23: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1131ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 24: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  737ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 25: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  505ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 26: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1103ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 27: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1098ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 28: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1017ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 29: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  644ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 31: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  463ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 32: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  482ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 34: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1311ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 35: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  580ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 36: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1089ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 37: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  988ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 38: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1432ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 39: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  884ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 40: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  413ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 42: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  515ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 43: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1353ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 44: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1355ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 45: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  874ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 46: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  2146ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 47: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1657ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 48: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  744ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 49: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  889ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 50: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  628ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 51: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1123ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 52: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  599ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 53: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  853ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 54: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1147ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 55: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  764ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 56: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  410ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 58: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  2364ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 59: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1688ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 60: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1166ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 61: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  2000ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 62: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1098ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 63: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  653ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 64: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1131ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 66: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  336ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 67: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1157ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 68: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1337ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 69: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1556ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 70: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1101ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 71: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1491ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 72: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1797ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 73: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  465ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 74: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1299ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 75: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1441ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 76: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1139ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 77: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  2775ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 78: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  512ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 79: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  720ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 81: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  327ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 82: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  757ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 83: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  619ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 84: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  931ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 85: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  408ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 86: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  720ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 87: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  707ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 88: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  403ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 89: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  552ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 92: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  459ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 93: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  792ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 94: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1955ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 95: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  634ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 96: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  569ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 97: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  497ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 98: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  842ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 99: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1529ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 100: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  2460ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 101: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  916ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 102: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  2028ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 103: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  2273ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 104: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1044ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 105: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  376ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 106: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  499ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 107: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  328ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 108: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1211ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 109: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1503ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 110: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1119ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 111: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  650ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 112: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1512ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 113: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  687ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 114: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  803ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 115: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1663ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 116: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  2180ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 117: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  793ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 118: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1871ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 119: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1540ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 120: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  695ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 121: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  2155ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 122: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1955ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 123: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1453ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 124: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1985ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 125: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  823ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 126: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  723ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 127: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  970ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 128: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  2105ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 129: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1561ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 130: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  396ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 131: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  528ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 132: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1361ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 133: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1008ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 134: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  617ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 135: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  431ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 136: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  316ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 137: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  582ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 138: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1260ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 139: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  2822ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 140: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  480ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 141: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1290ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 142: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  1138ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 143: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  575ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 144: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  576ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 145: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  507ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 146: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  327ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 148: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  613ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 149: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  561ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 150: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  395ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 151: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  407ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 152: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  512ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 153: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  579ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 154: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  405ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 157: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  447ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 159: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  481ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 160: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  474ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 161: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  401ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 162: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  354ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 163: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  458ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 164: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  643ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 166: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  307ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 167: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  459ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 168: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  489ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 169: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  431ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 172: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  483ms
+   ✓ recordFact property test: random sequences vs an independent valid-time reference model > seed 173: asOf/knownAt match the reference model, no exceptions, live rows disjoint and coalesced  530ms
+mole steer: deliver skipped this call for session sess-budget: mole steer: inbox lock timeout for session sess-budget (tried 31x over ~2480ms): Lock file is already being held
+ ✓ packages/steer/test/steer-stress.test.ts (4 tests) 173383ms
+   ✓ Review 2 HIGH: senders and deliverers racing AT THE SAME TIME (not sent-then-raced) > 8 concurrent senders x 8 concurrent deliverers, 20 iterations: every sent item delivered exactly once, none lost, none doubled  161379ms
+   ✓ Review 2 HIGH: a kill -9'd lock holder is reclaimed after it goes stale; inbox stays intact > a process that dies mid-critical-section leaves a stale lock dir, not a corrupt/orphaned inbox  5648ms
+   ✓ Review 2: lock-acquire failure fits the hook budget and never loses queued items > a long-held lock makes withInboxClaim give up within ~3s, and deliverPending returns empty (not a throw) so the hook can exit 0  5952ms
+ ✓ plugins/claude-code/test/stop-baseline.test.ts (4 tests) 37658ms
+   ✓ T92 review-1 fix (HIGH 2): Stop blocks only on violations THIS session introduced > a violation already COMMITTED to HEAD before the session, touched only by an unrelated edit -> no block  10805ms
+   ✓ T92 review-1 fix (HIGH 2): Stop blocks only on violations THIS session introduced > a violation already DIRTY in the working tree at session start, touched only by an unrelated edit -> no block  4344ms
+   ✓ T92 review-1 fix (HIGH 2): Stop blocks only on violations THIS session introduced > a violation the SESSION introduces (clean at SessionStart) -> block, reason names the decision  4251ms
+   ✓ T92 review-1 fix (HIGH 2): Stop blocks only on violations THIS session introduced > stop_hook_active true still never blocks, and the per-session cap is still respected, with a real SessionStart baseline  18257ms
+ ✓ packages/coupling/test/coupling.test.ts (15 tests) 39519ms
+   ✓ computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > finds the a.ts/b.ts pair with its shared-commit evidence  2564ms
+   ✓ computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > never returns a pair below min-shared-revs (a.ts/e.ts co-changed only once)  2215ms
+   ✓ computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > maps CODEOWNERS teams and flags the cross-team pair (a/b: @team-a vs @team-b)  2149ms
+   ✓ computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > sorts cross-team pairs first (Cataldo & Herbsleb: surface the under-coordinated coupling)  2161ms
+   ✓ computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > attaches the decision whose scope covers both a.ts and b.ts, not c.ts/d.ts  7519ms
+   ✓ computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > respects --top  2043ms
+   ✓ computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > STOP clause: every returned pair carries non-empty shared-commit evidence (never a bare pair)  2210ms
+   ✓ computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > reports the CODEOWNERS path found at HEAD  2444ms
+   ✓ computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > a repo with no CODEOWNERS still returns pairs, honestly with empty owner arrays (never fabricated)  836ms
+   ✓ computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > formatCoupling renders a human-readable summary that names the evidence  2186ms
+   ✓ computeCoupling (T77 done-when: co-change pairs, each explained by shared commits + owners + decisions) > timed on this fixture -- well under a 10s budget  2608ms
+   ✓ T77 review-1 HIGH: degree from the RAW average, not the ceiled one (code-maat logical_coupling.clj) > revsA=17 revsB=24 shared=12 -> degree 58 (58.54% raw truncated), not 57 (ceil-average would give 57.14 -> 57)  3920ms
+   ✓ T77 review-1 HIGH: max-coupling filters floor(coupling) <= max (code-maat coupling_algos.clj within-threshold?) > raw coupling 52.63% (floor 52): kept at --max-coupling 52, dropped at --max-coupling 51  2075ms
+   ✓ T77 review-1 MED: min-revs filters the PAIR's average-revs after pairing, not per-file before (code-maat coupling_algos.clj within-threshold?) > --min-revs 10 --min-shared-revs 5: pair revsA=6 revsB=20 shared=6 is KEPT (average-revs=13 >= 10) even though file A alone has only 6 revisions  2948ms
+   ✓ T77 review-1 MED: max-changeset-size drops an oversized commit entirely, not only from pairing > a 31-file commit (> default max-changeset-size=30) must not manufacture coupling between any of its files  1125ms
+ ✓ plugins/claude-code/test/mole-code-pack.test.ts (10 tests) 34215ms
+   ✓ T86/D97: mole-code installed from a real npm tarball, used as the Claude Code plugin root > npm pack --dry-run lists LICENSE (D97: copied into the package at build time)  4756ms
+   ✓ T86/D97: mole-code installed from a real npm tarball, used as the Claude Code plugin root > every vendored dependency keeps its license file (MIT/Apache notices must ship with the code)  5777ms
+   ✓ T86/D97: mole-code installed from a real npm tarball, used as the Claude Code plugin root > PreToolUse (Edit) names the decision governing the edited file (sample stdin per docs)  2523ms
+   ✓ T86/D97: mole-code installed from a real npm tarball, used as the Claude Code plugin root > Stop never blocks and degrades quietly (sample stdin per docs)  3868ms
+   ✓ T86/D97: mole-code installed from a real npm tarball, used as the Claude Code plugin root > the bundled MCP server answers initialize + tools/list over stdio  472ms
+   ✓ T86/D97: mole-code installed from a real npm tarball, used as the Claude Code plugin root > mole rules finds the planted violation (exit 1, cites the decision)  1505ms
+   ✓ T86/D97: mole-code installed from a real npm tarball, used as the Claude Code plugin root > daemon start (via `mole map`, auto-spawned) / status / stop round trip  2229ms
+ ✓ plugins/claude-code/test/stop-block.test.ts (5 tests) 30454ms
+   ✓ T92/D102 stop.mjs: crisp-rule violation blocks by default > a seeded violation -> decision: "block", reason names the decision id, the rule, and a fix hint  4133ms
+   ✓ T92/D102 stop.mjs: crisp-rule violation blocks by default > a clean diff never blocks  2485ms
+   ✓ T92/D102 stop.mjs: crisp-rule violation blocks by default > stop_hook_active: true -- already continuing from a block this turn -- never blocks again  7132ms
+   ✓ T92/D102 stop.mjs: crisp-rule violation blocks by default > a retry cap (MOLE_STOP_BLOCK_CAP) stops forcing a block after N blocks in one session, even with stop_hook_active false  14659ms
+   ✓ T92/D102 stop.mjs: crisp-rule violation blocks by default > MOLE_STOP_BLOCK=0 opts out: the violation still shows as text, but never blocks  2044ms
+(node:9933) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+fatal: git cat-file: could not get object info
+ ✓ packages/decisions/test/worktree-cache.test.ts (8 tests) 24116ms
+   ✓ T102 review fix: cache location and worktree registration > never registers a git worktree (finding 2)  1804ms
+   ✓ T102 review fix: cache location and worktree registration > creates nothing under os.tmpdir() (finding 1): transient dirs it does create are gone by the time it returns  1510ms
+   ✓ T102 review fix: cache location and worktree registration > lives inside the repo's own .git dir and dies with the repo (finding 1)  908ms
+   ✓ T102 review fix: cache location and worktree registration > clearWorktreeCache(root) removes only this repo's cache  1369ms
+   ✓ T102 review fix: symlink tamper refusal > refuses a slot tampered into a symlink pointing at the main worktree  1226ms
+   ✓ T102 review fix: lock stale window (finding 3) > a lock left by a killed process recovers within STALE_MS, not the old 120s  15226ms
+   ✓ T102 review r2: gc safety without touching the user repo > after git gc --prune=now removes a commit only a slot had checked out, the next call self-heals  1428ms
+   ✓ T102 review r2: gc safety without touching the user repo > never creates refs, branches or tags in the user repo (a hook must leave the repo untouched)  642ms
+stdout | plugins/claude-code/test/pretooluse-deny.test.ts > T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > p95 latency on a fixture repo (never the pinned dcbench copy) stays well under the 15s PreToolUse timeout
+T92 pre-tool-use.mjs crisp-deny check: n=5 p50=2357ms p95=2579ms max=2865ms
+
+ ✓ plugins/claude-code/test/pretooluse-deny.test.ts (6 tests) 20107ms
+   ✓ T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > Write that adds the import -> permissionDecision deny, names the decision/rule/fix hint; file left untouched  2035ms
+   ✓ T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > Edit that adds the import -> deny  2083ms
+   ✓ T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > a clean Edit (no new violation) is allowed silently: no permissionDecision field  1741ms
+   ✓ T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > a file an existing violation already touches, edited elsewhere, is NOT re-denied (only a NEW violation denies)  1937ms
+   ✓ T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > MultiEdit that adds the import -> deny  2228ms
+   ✓ T92/D102 pre-tool-use.mjs: crisp-rule violation denies the edit > p95 latency on a fixture repo (never the pinned dcbench copy) stays well under the 15s PreToolUse timeout  10082ms
+ ✓ packages/proposals/test/cli.test.ts (8 tests) 22761ms
+   ✓ mole-proposals CLI (T56) > two proposals from one pinned baseline: compare shows which arguments and decisions each one changes, baseline untouched  3652ms
+   ✓ mole-proposals CLI (T56) > evaluate reports one proposal against its baseline  1781ms
+   ✓ mole-proposals CLI (T56) > rejects unsafe names, existing paths and existing branches without writing anything  4584ms
+   ✓ mole-proposals CLI (T56) > refuses a non-git folder and a proposal path that is not a Mole proposal  1695ms
+   ✓ mole-proposals CLI (T56) > reports a deleted decision record even when it cites no arguments  2681ms
+   ✓ mole-proposals CLI (T56) > refuses a proposal path inside the repository git directory  1426ms
+   ✓ mole-proposals CLI (T56) > reports a missing baseline commit cleanly  2737ms
+   ✓ mole-proposals CLI (T56) > compare refuses proposals made from different baselines  4204ms
+(node:27617) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/verify/test/review-2.test.ts (5 tests) 21032ms
+   ✓ T22 review-2 P1-A: tests the test file skips on purpose are "skipped by the test file", not an error > a harmless mul edit: skip / todo / describe.skip / skipIf / runIf tests are reported skipped, exit 0  6985ms
+   ✓ T22 review-2 P1-A: tests the test file skips on purpose are "skipped by the test file", not an error > a selected test that did not run for another reason stays an error, beside skipped ones  2367ms
+   ✓ T22 review-2 P2-A: non-literal titles run without a name filter > a harmless add edit runs it(name) and it("concat " + "title"): pass, exit 0; a broken add fails them, exit 1  9904ms
+   ✓ T22 review-2 P2-D: helper inside a test file > editing a helper selects the tests of that file that call it  420ms
+   ✓ T22 review-2 P2-B: docs-only change > says "no code change to test", exit 0  1181ms
+ ✓ packages/decisions/test/pr-check-options.test.ts (23 tests) 22186ms
+   ✓ content anchors (option 1) > govern an added line matching the pattern inside the glob  927ms
+   ✓ content anchors (option 1) > do not fire on lines without the construct, or outside the glob; deprecated records never govern  1806ms
+   ✓ content anchors (option 1) > are ignored when switched off (the round-1 behaviour)  898ms
+   ✓ content anchors (option 1) > annotate the matched line with the pattern as the anchor  987ms
+   ✓ version-bump rule (option 2) > a folder anchor does not govern a version-only hunk; with both gates off it does  1799ms
+   ✓ version-bump rule (option 2) > a content anchor naming the dependency in the enclosing block still fires on a version bump  589ms
+   ✓ version-bump rule (option 2) > a non-version change under the folder is still governed  637ms
+   ✓ title-term bump gate (option 3, options round 2) > default on: a provider bump that names none of the folder record's title terms is not governed  781ms
+   ✓ title-term bump gate (option 3, options round 2) > a bump whose enclosing block names a title term still governs (helm_release bump, title "Use Helm for infra package management")  814ms
+   ✓ title-term bump gate (option 3, options round 2) > a non-version change under the folder is unaffected by the gate (option 3 only looks at version-only hunks)  648ms
+   ✓ title-term bump gate (option 3, options round 2) > versionBumpRule (option 2) still wins when both are set: the bump is dropped even with a title-term match  913ms
+   ✓ export-convention AST detector (option 4, options round 3) > a new name added to an existing barrel re-export list governs (bs#34892 shape: the "export {" header predates the PR)  895ms
+   ✓ export-convention AST detector (option 4, options round 3) > a whole new exported declaration governs (its name did not exist in the old file)  811ms
+   ✓ export-convention AST detector (option 4, options round 3) > editing the BODY of an existing export never governs: the name already existed in the old file  1029ms
+   ✓ export-convention AST detector (option 4, options round 3) > is off when switched off  980ms
+   ✓ scope noise filter (option 5, options round 3) > a comment/doc-only hunk never governs a folder/file scope anchor  1392ms
+   ✓ scope noise filter (option 5, options round 3) > a hunk in a test file never governs a folder/file scope anchor (option 4 also skips test files)  635ms
+   ✓ Terraform bare-block title gate (option 6, options round 3) > a bare-block (locals) edit in the SAME file as a titled resource stays governed  746ms
+   ✓ Terraform bare-block title gate (option 6, options round 3) > the same kind of edit in a DIFFERENT file under the folder, with no titled resource in that file, is gated  844ms
+   ✓ Terraform bare-block title gate (option 6, options round 3) > switched off: the other-file edit is governed again (round-2 behaviour)  708ms
+(node:45850) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/decisions/test/priorities.test.ts (41 tests) 18105ms
+   ✓ T73 what-if: an order NOT read from or written to .mole/priorities.md > CLI whatif never touches .mole/priorities.md (git status stays clean)  307ms
+   ✓ T73 review 1 fixes > N concurrent writes to DIFFERENT phases: every edit lands, none lost  3556ms
+   ✓ T73 review 1 fixes > N concurrent writes to the SAME phase: last writer wins, the file is never corrupt  2988ms
+   ✓ T73 review 2 fixes > a live holder sleeping PAST the stale bound keeps its lock: the waiter is blocked until release, never steals it, and the release never touches the waiter's own later lock  5423ms
+   ✓ T73 review 2 fixes > a crash-orphaned lock (kill -9 mid-hold) is reclaimed once stale, not left dead forever  4968ms
+   ✓ T73 review 2: the lock directory is never committed > setPriorities writes .mole/.gitignore ignoring the lock in a repo that does not already ignore it  399ms
+ ✓ packages/verify/test/verify.test.ts (5 tests) 17479ms
+   ✓ T22 selection: past-fix lineage + call-graph reachability (done-when 1) > an edit to add() selects its direct test and the guarding test of the fix that wrote the line, not the unrelated ones  1811ms
+   ✓ T22 selection: past-fix lineage + call-graph reachability (done-when 1) > a call inside beforeEach selects every test of that describe block, and nothing outside it  1746ms
+   ✓ T22 selection: past-fix lineage + call-graph reachability (done-when 1) > runs only the selected tests with vitest and reports pass/fail beside the past-fix lines  3114ms
+   ✓ T22 failure case: no test reaches the change (done-when 3) > says so, suggests the nearest guarding test and the CLI exits 0  3217ms
+   ✓ T22 CLI: mole check --run-tests > runs the selection and exits 1 on a failing selected test; plain `mole check` is unchanged (no test run)  7112ms
+(node:50260) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/questions/test/questions.test.ts (10 tests) 20374ms
+   ✓ done-when 1: at most 3 questions, each citing its fact with a clickable source > a change over 5 past fixes gets 3 past-fix questions, one per fix sha, each with sha + file:line  1638ms
+   ✓ done-when 1: at most 3 questions, each citing its fact with a clickable source > mole check prints a "questions (n):" block after the past fixes and puts them under "questions" in --json  2743ms
+   ✓ done-when 2: 0 questions on a change touching nothing known > edits of lines no fix wrote, with no notes, get no questions (library and CLI)  1527ms
+   ✓ done-when 2: 0 questions on a change touching nothing known > a change that only adds new files gets no questions  1357ms
+   ✓ done-when 3: a question when the change edits or deletes a guarding test of a past fix > deleting the test the fix added asks about it, citing the test file and the fix  1237ms
+   ✓ done-when 3: a question when the change edits or deletes a guarding test of a past fix > editing a line inside the guarding test asks too; only adding a new test to the same file does not  3563ms
+   ✓ done-when 3: a question when the change edits or deletes a guarding test of a past fix > ranks past fix > note > guard-test, and a guard-test edit keeps a slot under the cap of 3  2414ms
+   ✓ done-when 3: a question when the change edits or deletes a guarding test of a past fix > a note on an edited symbol is asked after the past fixes, citing the note file  746ms
+   ✓ done-when 5: works with no model configured > --reword with no model is a no-op plus a notice; 0 model calls; same questions  3078ms
+   ✓ done-when 5: works with no model configured > a model only rewords: kinds, order, cites and sources stay; a reply that drops the cited sha is discarded  1888ms
+ ✓ packages/verify/test/review-1.test.ts (3 tests) 15335ms
+   ✓ T22 review-1 P1-1: titles containing " > " are run, not skipped > a broken add() fails the selected tests "ranks a > b" and "outer > inner > adds > again"; the CLI exits 1  9436ms
+   ✓ T22 review-1 P1-1: titles containing " > " are run, not skipped > a selected test the runner did not run is an error line and fails the run  3536ms
+   ✓ T22 review-1 P2-3: nearest guarding test by import > an edit no test calls names the test file that imports the edited file, not the first file in the repo  2233ms
+ ✓ packages/decisions/test/pr-check-review-fixes.test.ts (11 tests) 17564ms
+   ✓ P1-1 records come from the merge base, not the PR side or the checkout > a PR that supersedes the governing record still reports it (checked out at the head)  983ms
+   ✓ P1-1 records come from the merge base, not the PR side or the checkout > the same base/head gives an identical result whatever is checked out  4332ms
+   ✓ P1-1 records come from the merge base, not the PR side or the checkout > records the PR changes are listed in their own section, with the status change  880ms
+   ✓ P1-1 records come from the merge base, not the PR side or the checkout > deleting the governing record does not silence it; the deletion is listed  1153ms
+   ✓ P1-1 records come from the merge base, not the PR side or the checkout > a record the PR adds does not govern its own change but is listed (not silent)  1338ms
+   ✓ P2-3 match: pattern hazards are reported at file:line > an invalid regex and a nested quantifier are problems at the record line, and the check stays fast  939ms
+   ✓ P2-3 match: pattern hazards are reported at file:line > lines longer than 2000 characters are not tested against match: patterns  2456ms
+   ✓ P1-1 citator flags are computed at the merge base too > a record whose anchor is intact at the base is green whichever side is checked out (not red for a missing file)  4145ms
+(node:74612) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/indexer/test/fixture-repo.test.ts (1 test) 26322ms
+   ✓ ui-tui fixture > indexes every src file and every current-layer node/edge has file:line@commit  26321ms
+ ✓ packages/decisions/test/pr-check-async.test.ts (3 tests) 15846ms
+   ✓ prCheckAsync: identical result to prCheck, non-blocking for the server > returns the exact same payload as the sync prCheck for the same PR  3939ms
+   ✓ prCheckAsync: identical result to prCheck, non-blocking for the server > two concurrent calls against the SAME repo at DIFFERENT revisions both get their own correct result  2217ms
+   ✓ prCheckAsync: identical result to prCheck, non-blocking for the server > repeated concurrent async calls match their own sync equivalents (no cross-talk from the shared worktree cache)  8657ms
+ ✓ plugins/claude-code/test/steer-hook.test.ts (12 tests) 12927ms
+   ✓ Review 1 HIGH 1: PreToolUse matcher is exactly "Edit|Write" again > this file's decisions additionalContext for a governed Edit is byte-identical to the pre-T74 base commit  352ms
+   ✓ Review 1 HIGH 1: PreToolUse matcher is exactly "Edit|Write" again > a Read tool call (matcher no longer "*") gets no decisions/steering output even with a pending signal  1338ms
+   ✓ PreToolUse: delivers a pending signal/update once, on Edit|Write only > an Edit tool call gets the signal as additionalContext; a second call gets nothing new  1847ms
+   ✓ PreToolUse: delivers a pending signal/update once, on Edit|Write only > an accepted update is delivered once on a Write tool call  1771ms
+   ✓ PreToolUse: delivers a pending signal/update once, on Edit|Write only > never blocks: no permissionDecision/decision field even when steering is delivered  2471ms
+   ✓ UserPromptSubmit: delivers a pending signal/update once, alongside any governing-decisions text > a queued signal reaches the next prompt as additionalContext, then is gone  2452ms
+   ✓ Review 1 HIGH 2: never spawns `mole steer deliver` for an empty/absent inbox > a fully-delivered inbox (nothing undelivered) never calls the mole CLI either  1791ms
+   ✓ never blocks or fails the session (T74 stop condition) > malformed stdin, an unknown session, or no mole CLI: exit 0, no crash  334ms
+ ✓ packages/intake/test/intake.test.ts (10 tests) 11684ms
+   ✓ M30a: seeded-flaw recall + real-record false flags (key: bench/m30-key.json) > setup: run checkAllRecords with the seeded corpus copied alongside the real one (in an isolated worktree)  3161ms
+   ✓ done-when 3: Mole never drafts a record (no generated text in why/context/consequences) > checkAllRecords leaves every decision record byte-for-byte unchanged  1086ms
+   ✓ done-when 5: nothing governs the change -> silent > a change to an ungoverned file returns governed: false and 0 questions  934ms
+   ✓ a change governed by a decision gets up to 3 questions with real evidence > a past fix on the governed file produces a cited question  2347ms
+   ✓ question usefulness: useless share <= 10% (key written by hand, M4's shape) > case A: a past fix on governed code -> top question cites that fix (useful)  1925ms
+   ✓ question usefulness: useless share <= 10% (key written by hand, M4's shape) > case B: a change on governed code with no history fact -> no false "useful" claim either way (counts as useful: the governing decision itself is surfaced)  1158ms
+ ✓ plugins/claude-code/test/collisions-hook.test.ts (4 tests) 9668ms
+   ✓ Claude Code hooks: parallel-agent collisions (T21 done-when 2) > SessionStart names the other parallel run and the function they share  2525ms
+   ✓ Claude Code hooks: parallel-agent collisions (T21 done-when 2) > Stop tells the session what it changed that another parallel run relies on  2433ms
+   ✓ Claude Code hooks: parallel-agent collisions (T21 done-when 2) > Stop says nothing about collisions when this session only read the shared code  2096ms
+   ✓ Claude Code hooks: parallel-agent collisions (T21 done-when 2) > silent when the session collides with nothing (done-when 4)  2372ms
+ ✓ packages/mcp/test/reasoning-tools.test.ts (17 tests) 16688ms
+   ✓ T61 mole_incident_suggest > lists revival candidates equal to the library, writing nothing (no accept over MCP)  306ms
+   ✓ T61 mole_proposals_compare > finds this repo's proposal worktrees itself and compares them, equal to the library, writing nothing  5550ms
+   ✓ T61 mole_proposals_compare > T68: defaults to the phase in force today, and shows plainDung beside the phase-resolved changes  4777ms
+   ✓ T61 mole_proposals_compare > no proposals, or an unknown name, is an isError result; it takes names, never filesystem paths  334ms
+   ✓ T61 review 1: a proposal is a worktree on its own mole/proposal/<name> branch, nothing else > ignores an unrelated linked worktree carrying a forged proposal meta (by name or by its own branch)  3462ms
+(node:1650) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/decisions/test/rules-scip-stale.test.ts (13 tests) 9058ms
+   ✓ SCIP staleness detection (T95 review round-2 HIGH-1: content hashes, not mtimes) > a fresh `git clone` of a repo with a committed index.scip + manifest is not stale  357ms
+   ✓ SCIP staleness detection (T95 review round-2 HIGH-1: content hashes, not mtimes) > editing a source file's content makes the index stale  511ms
+   ✓ SCIP staleness detection (T95 review round-2 HIGH-1: content hashes, not mtimes) > touching a file (mtime only, content unchanged) stays fresh -- mtime is not used at all  1478ms
+   ✓ SCIP staleness detection (T95 review round-2 HIGH-1: content hashes, not mtimes) > a new source file added since stamping makes the index stale  630ms
+   ✓ SCIP staleness detection (T95 review round-2 HIGH-1: content hashes, not mtimes) > removing a source file the manifest covers makes the index stale  504ms
+   ✓ SCIP staleness detection (T95 review round-2 HIGH-1: content hashes, not mtimes) > no manifest at all is "stale-unknown": fails loud and names `mole scip stamp`  461ms
+   ✓ SCIP staleness detection (T95 review round-2 HIGH-1: content hashes, not mtimes) > a manifest whose indexSha256 does not match the current index.scip (re-indexed, not re-stamped) is "stale-unknown"  315ms
+   ✓ SCIP staleness detection (T95 review round-2 HIGH-1: content hashes, not mtimes) > checkRules throws StaleScipIndexError (not a silent 0-violation pass) when there is no manifest  381ms
+   ✓ SCIP staleness detection (T95 review round-2 HIGH-1: content hashes, not mtimes) > rulesCli exits 3 (distinct from 0 clean / 1 violations / 2 rule errors) with a clear message  612ms
+   ✓ SCIP staleness detection (T95 review round-2 HIGH-1: content hashes, not mtimes) > --allow-stale-scip overrides and still catches the real violation, with no manifest at all  715ms
+   ✓ SCIP staleness detection (T95 review round-2 HIGH-1: content hashes, not mtimes) > a stale index that would otherwise hide a NEW violation fails loudly instead of reporting 0 violations  665ms
+   ✓ SCIP staleness detection (T95 review round-2 HIGH-1: content hashes, not mtimes) > `mole scip stamp` (stampScip) makes a just-indexed-but-never-stamped repo fresh  426ms
+   ✓ SCIP staleness detection (T95 review round-2 HIGH-1: content hashes, not mtimes) > 5,000 ignored files in .venv do not slow down the staleness check (git respects .gitignore)  2003ms
+ ✓ packages/indexer/test/indexer.test.ts (13 tests) 5902ms
+   ✓ indexer fixtures > resolves a call through a barrel re-export to the defining file  1242ms
+   ✓ indexer fixtures > resolves a method call on a class instance  522ms
+   ✓ indexer fixtures > every current-layer node and edge carries file:line@commit  474ms
+   ✓ indexer failure cases > stores a file with a syntax error as partial and keeps indexing the rest  570ms
+   ✓ incremental update > re-indexes one changed file and leaves the rest  510ms
+   ✓ review fixes (T1 adversarial review) > updateFile drops edges that point at a symbol the file no longer defines  460ms
+   ✓ review fixes (T1 adversarial review) > two ambient modules in one file keep separate nodes with the same member name  468ms
+   ✓ review fixes (T1 adversarial review) > overloads keep the first declaration line  547ms
+   ✓ review fixes (T1 adversarial review) > facts from a file with syntax errors are marked inferred, clean files observed  441ms
+   ✓ contextual member calls > this.x!() inside an object literal passed to a typed parameter resolves to the interface member  470ms
+ ✓ packages/decisions/test/flags.test.ts (22 tests) 10609ms
+   ✓ green and grey > accepted, anchors intact, evidence present -> green with no reasons; tenets green  433ms
+   ✓ green and grey > proposed and rejected -> grey; no scope and no evidence listed is not a flag  374ms
+   ✓ yellow: scope changed since confirmed > a body change in a scoped symbol after the record was committed -> yellow scope_changed at the scope entry line  501ms
+   ✓ yellow: scope changed since confirmed > an uncommitted working-tree edit counts too  569ms
+   ✓ yellow: scope changed since confirmed > whitespace-only and comment-only edits in scope stay green  778ms
+   ✓ yellow: scope changed since confirmed > an edit outside every scope stays green (another symbol in the same file, another file)  625ms
+   ✓ yellow: scope changed since confirmed > an explicit confirmed sha wins over the record commit; re-confirming at the new sha turns it green  845ms
+   ✓ yellow: scope changed since confirmed > a folder scope changes when a file under it changes  418ms
+   ✓ done-when 4: anchors gone > the only scope path no longer exists -> red orphaned, never green  389ms
+   ✓ done-when 4: anchors gone > every anchor gone (a deleted symbol + a deleted file) -> red orphaned  478ms
+   ✓ done-when 4: anchors gone > a missing folder scope is gone too  436ms
+   ✓ done-when 4: anchors gone > one of two anchors gone -> yellow anchor_gone at that entry line  585ms
+   ✓ yellow: evidence > the evidence test name is gone -> yellow evidence_missing at the evidence line  464ms
+   ✓ yellow: evidence > the evidence test file is gone -> yellow evidence_missing  539ms
+   ✓ yellow: evidence > a failing test in a vitest JSON report -> yellow evidence_failing; a passing one stays green  418ms
+   ✓ red and yellow from other records > status superseded / deprecated / superseded_by -> red  325ms
+   ✓ red and yellow from other records > a new ACCEPTED record superseding 0007 -> 0007 red, the exception overriding 0007 yellow (propagation)  333ms
+   ✓ red and yellow from other records > a new PROPOSED record that conflicts with / supersedes / overrides an accepted one -> yellow; the proposal itself stays grey  345ms
+   ✓ red and yellow from other records > a retired tenet is red and every decision tracing to it turns yellow  302ms
+   ✓ red and yellow from other records > propagation runs to a fixed point along traces_to / overrides / cites, and terminates on cycles  824ms
+   ✓ plain ADR folders > Superseded by / Deprecated -> red, Amends a yellow record -> yellow, Pending -> grey, body links ignored  416ms
+ ✓ packages/decisions/test/pr-check.test.ts (11 tests) 11726ms
+   ✓ pr-check: which records govern the changed lines > a symbol anchor governs edits inside the symbol only, with a line annotation on the changed line  1689ms
+   ✓ pr-check: which records govern the changed lines > silent when nothing governs: neutral, 0 annotations, title says nothing governed  696ms
+   ✓ pr-check: which records govern the changed lines > a superseded record never governs  497ms
+   ✓ pr-check: which records govern the changed lines > a folder anchor governs a file added under it  619ms
+   ✓ pr-check: which records govern the changed lines > deleting the anchored symbol is still governed (old side)  821ms
+   ✓ pr-check: which records govern the changed lines > failure case: a renamed file whose anchor cannot re-attach is grey unanchored, never another record  1014ms
+   ✓ pr-check: owners, payload shape, determinism > owners follow CODEOWNERS at the base (last match wins, an owner-less line leaves a file unowned)  2143ms
+   ✓ pr-check: owners, payload shape, determinism > ONE check-run payload in the GitHub API shape, at most 50 annotations, at most 3 questions  676ms
+   ✓ pr-check: owners, payload shape, determinism > deterministic: the same PR gives the same payload  2000ms
+ ✓ packages/history/test/history.test.ts (10 tests) 8398ms
+   ✓ mole check: past fixes per hunk (T12 done-when 1) > sha mode: names the fix that last wrote the edited line, with reason, guarding test and a clickable source  881ms
+   ✓ mole check: past fixes per hunk (T12 done-when 1) > text output: per hunk file:range, then each fix with why, tests and source  864ms
+   ✓ mole check: past fixes per hunk (T12 done-when 1) > diff-file mode against a base, and working-tree mode, find the same fix  774ms
+   ✓ mole check: past fixes per hunk (T12 done-when 1) > the fix rule is configurable (option and .mole/config.json)  846ms
+   ✓ mole check: past fixes per hunk (T12 done-when 1) > a .mole note that names the fix sha is a reason source  537ms
+   ✓ mole check: past fixes per hunk (T12 done-when 1) > CLI: mole check <sha> prints the fix; --json returns the same structure; exit 0  1893ms
+   ✓ mole check: empty cases (T12 done-when 6) > brand-new lines (a new file, lines appended) have no past fixes; exit 0  955ms
+   ✓ mole check: empty cases (T12 done-when 6) > a repo with no fix commits has no past fixes; exit 0 (also via --worktree)  649ms
+   ✓ mole check: empty cases (T12 done-when 6) > a root commit (nothing before it) has no past fixes  425ms
+   ✓ planted regression B3 on Mole (T12 done-when 3) > names 9e19c51, its reason (editing counts as use; running index never idle) and the daemon idle test  451ms
+(node:32212) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ plugins/claude-code/test/pretooluse-no-write.test.ts (10 tests) 8605ms
+   ✓ T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > SIGKILL 200ms after spawn: the real file never diverges from its original bytes  374ms
+   ✓ T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > SIGKILL 500ms after spawn: the real file never diverges from its original bytes  758ms
+   ✓ T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > SIGKILL 900ms after spawn: the real file never diverges from its original bytes  1096ms
+   ✓ T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > SIGKILL 1300ms after spawn: the real file never diverges from its original bytes  1474ms
+   ✓ T92 review-1 fix (HIGH 1): PreToolUse never writes the real file > concurrent PreToolUse invocations on the same file never corrupt it and each gets a correct answer  4041ms
+ ✓ packages/memory/test/rename.test.ts (7 tests) 7917ms
+   ✓ mole memory: renamed symbols keep their notes (done-when 1) > a renamed function keeps its note fresh and reports renamed: old → new (working tree and committed)  1325ms
+   ✓ rename + body edit is renamed + changed, stale (done-when 4) > reports renamed + changed and stale, never silently fresh  1108ms
+   ✓ ambiguous renames are never guessed (done-when 3) > two new symbols with the same body: stays orphaned and lists both candidates  2095ms
+   ✓ mole since follows renames (done-when 1, seen history) > a seen symbol that was renamed shows renamed, not deleted; rename + edit shows renamed + changed  2043ms
+   ✓ mole since follows renames (done-when 1, seen history) > a later look at the new name supersedes the look at the old name  501ms
+   ✓ an unrelated delete stays deleted > memory: orphaned without candidates; since: deleted  577ms
+ ✓ packages/proposals/test/phase.test.ts (7 tests) 7067ms
+   ✓ T68: evaluateProposal under the phase in force (done-when 1, 2, STOP) > plain Dung always shows the change (the cycle breaks because security-window is unranked and unattacked)  621ms
+   ✓ T68: evaluateProposal under the phase in force (done-when 1, 2, STOP) > under 'launch' (tenet-focus wins at baseline) the phase-resolved change is REAL: best-effort holds, then the untagged attacker defeats it in every phase  1072ms
+   ✓ T68: evaluateProposal under the phase in force (done-when 1, 2, STOP) > under 'scale' (tenet-users already wins at baseline) ADR-0002 is ALREADY defeated: the proposal's phase-resolved change is a NO-OP, unlike plain Dung's contested->defeated (the T61 replay case)  1363ms
+   ✓ T68: evaluateProposal under the phase in force (done-when 1, 2, STOP) > done-when 3: default (no --phase/--at) uses the phase in force today, not plain Dung  1393ms
+   ✓ T68: evaluateProposal under the phase in force (done-when 1, 2, STOP) > --at resolves each side against its own priorities.md  1046ms
+   ✓ T68: evaluateProposal under the phase in force (done-when 1, 2, STOP) > no priorities file: changes equals plainDung (T60 no-audience fallback, unchanged)  669ms
+   ✓ T68: evaluateProposal under the phase in force (done-when 1, 2, STOP) > sel.order overrides phase/at: judges both sides under the given order, writing neither priorities.md  902ms
+ ✓ plugins/claude-code/test/hooks.test.ts (5 tests) 5359ms
+   ✓ hook scripts on a fixture session > SessionStart: notes for the files in play (fresh and stale), not for files out of play, as hookSpecificOutput.additionalContext  672ms
+   ✓ hook scripts on a fixture session > Stop: the session re-edits the fix lines -> mole check printed as systemMessage, questions first, with fix reason + test + source  1141ms
+   ✓ hook scripts on a fixture session > Stop: the session's diff includes what it committed (base = HEAD at SessionStart)  897ms
+   ✓ hook scripts on a fixture session > silent (no output, exit 0) when the session changed nothing, outside git, or when no mole CLI is found  984ms
+ ✓ packages/agentstate/test/agentstate.test.ts (15 tests) 7517ms
+   ✓ done-when 1: runs + run graph > CLI: mole runs --json and mole run <id> --json  2979ms
+   ✓ done-when 2: already tried, across compaction > CLI mole tried --json and MCP mole_tried return the same JSON  1381ms
+   ✓ done-when 3: context version + stale context > flags the step that read a note T11 now marks stale  651ms
+   ✓ done-when 4: which agent runs touched this > mole agents <file#Symbol> lists the runs + steps that edited it, newest first  763ms
+   ✓ done-when 7 + 8: missing sources, read-only, privacy > a missing or unreadable source is skipped with a reason, exit 0  1188ms
+ ✓ packages/memory/test/since.test.ts (10 tests) 5691ms
+   ✓ seen log writer (done-when 1: what the extension writes through) > `mole seen --stdin` (the extension's sink) records a batch; `mole note add` records a note look  925ms
+   ✓ mole since (done-when 2) > lists exactly the seen-then-changed symbols with commit, author and Co-authored-by agent; unseen and ws-only never  568ms
+   ✓ mole since (done-when 2) > looking again clears an entry (a newer seen event with the current body)  458ms
+   ✓ mole since (done-when 2) > deleted since you looked; moved with the same body is not a change; uncommitted edits are listed as uncommitted  448ms
+   ✓ mole since (done-when 2) > `mole since --json` and the text form name the symbol, short sha, author and agent  1654ms
+   ✓ no seen log yet (done-when 4) > since() says nothing seen; the CLI prints how to start and exits 0 (text and --json)  808ms
+
+  plugins/claude-code/dist/worker.cjs  9.5mb ⚠️
+
+⚡ Done in 782ms
+
+  plugins/claude-code/dist/cli.js  13.5mb ⚠️
+
+⚡ Done in 976ms
+
+  plugins/claude-code/dist/mcp.cjs  14.0mb ⚠️
+
+⚡ Done in 1088ms
+ ✓ packages/temporal/test/recordfact-multiversion.test.ts (5 tests) 8890ms
+   ✓ recordFact: retroactive change spanning multiple live versions (SQL:2011 FOR PORTION OF) > spans exactly 2 live versions: closes both, re-inserts the one real leftover, flags only the correction  330ms
+   ✓ recordFact default system time comes from the database clock (parent fix after review-3 property script) > 30 back-to-back default-clock writes inside an open-ended version never close a row before it opened  808ms
+(node:55459) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ plugins/claude-code/test/dist-standalone.test.ts (5 tests) 7407ms
+   ✓ T86: the plugin as a standalone directory copy (no repo checkout, no npm install) > Stop never blocks and degrades quietly with no session history (sample stdin per docs)  2144ms
+   ✓ T86: the plugin as a standalone directory copy (no repo checkout, no npm install) > the bundled MCP server answers initialize + tools/list over stdio (MCP JSON-RPC handshake)  399ms
+(node:57794) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/questions/test/review-fixes.test.ts (8 tests) 6571ms
+   ✓ P1-1: a guard-test question needs a test the fix wrote, not a file-wide describe it sat in > editing an it() the fix never touched, inside a describe the fix added a test to, asks nothing  801ms
+   ✓ P1-1: a guard-test question needs a test the fix wrote, not a file-wide describe it sat in > editing lines inside an it() whose title line the fix added still asks (lines later rewritten by a non-fix)  850ms
+   ✓ P1-1: a guard-test question needs a test the fix wrote, not a file-wide describe it sat in > a guard on a fix already asked about is merged into that past-fix question; it never evicts a past fix  819ms
+   ✓ P2-1: snapshots are never named as guarding tests > a fix that only added a .snap has "no test"; editing the .snap lines it wrote asks no guard question  620ms
+   ✓ P2-4: no questions on non-code lines (the past fixes stay in the facts) > editing a CHANGELOG.md line a fix wrote asks nothing, but T12 still reports the past fix  733ms
+   ✓ P2-2: the "why" is the fix's own reason, not a nearby comment or a squash list > a bullet-list body and a comment far from the blamed lines give no "why"  704ms
+   ✓ P2-2: the "why" is the fix's own reason, not a nearby comment or a squash list > the first body sentence is used and a long one is clipped on a word boundary  853ms
+   ✓ P1-1 (blame form): fix-written lines outside every describe/it are not a guarding test > editing an import line a fix last wrote in a test file asks no guard question  1105ms
+ ✓ packages/decisions/test/cli.test.ts (6 tests) 6561ms
+   ✓ mole decisions (done-when 1) > --json lists every decision and tenet with flag + reasons + file:line  805ms
+   ✓ mole decisions (done-when 1) > text output: one line per decision with flag, id and file:line, reasons indented with file:line  885ms
+   ✓ mole decisions (done-when 1) > --test-report makes a decision with failing evidence yellow  862ms
+   ✓ mole decisions (done-when 1) > Mole's own .mole records load without problems and every scope anchor exists  757ms
+   ✓ MCP mole_decisions > is in the tool list (toContain) and returns the same JSON as the CLI  3247ms
+mole hook: collisions failed: spawnSync /usr/local/bin/node ETIMEDOUT
+ ✓ plugins/claude-code/test/collisions-hook-review2.test.ts (3 tests) 7214ms
+   ✓ Stop hook collisions: direction + time budget (T21 review 2) > P1-1: editing a caller of what the other run read is not "the other run relies on it"  3213ms
+   ✓ Stop hook collisions: direction + time budget (T21 review 2) > P1-1: editing a function the other run's code calls is reported  2504ms
+   ✓ Stop hook collisions: direction + time budget (T21 review 2) > P1-2: a collisions call slower than MOLE_COLLISIONS_TIMEOUT_MS is cut; the hook ends quietly  1288ms
+ ✓ packages/agentstate/test/collisions.test.ts (9 tests) 9476ms
+   ✓ collisions (T21) > same function edited by two parallel runs: both run ids + harness, shared function, which run changed what, newest first  810ms
+   ✓ mole collisions CLI + MCP mole_collisions (T21) > mole collisions --json = the library result; text view lists the pair; --run keeps that run only  6070ms
+   ✓ mole collisions CLI + MCP mole_collisions (T21) > MCP tool mole_collisions returns the library JSON for one run  2454ms
+ ✓ packages/steer/test/steer.test.ts (14 tests) 8713ms
+   ✓ CLI: mole steer signal|update|query|deliver > signal --session, then deliver --session returns it once  3940ms
+   ✓ CLI: mole steer signal|update|query|deliver > update rejected -> non-zero exit and a reason on stdout/json; never queued  2253ms
+   ✓ CLI: mole steer signal|update|query|deliver > query --session --json on the fixture hermes run  2075ms
+ ✓ scripts/export-public.test.ts (244 tests) 7158ms
+   ✓ export-public.mjs redacts comments only, never code (T93 review FAIL fix #1) > the export script's own private-string scan reports clean  3047ms
+ ✓ plugins/claude-code/test/stop-verifier.test.ts (6 tests) 7061ms
+   ✓ T65 stop.mjs runs the verifier on the session change > no model (MOLE_STOP_VERIFY_LLM=0): the semantically routed decision shows as not judged; repo untouched  3995ms
+   ✓ T65 stop.mjs runs the verifier on the session change > MOLE_STOP_VERIFY=0 turns it off; a repo with no records never runs it  3053ms
+ ✓ packages/proposals/test/lesson.test.ts (10 tests) 6037ms
+   ✓ mole-proposals lesson (T59) > drafts the tenet on a proposal branch, lists decisions to re-review, leaves the approved checkout untouched  1209ms
+   ✓ mole-proposals lesson (T59) > refuses a lesson with no owner, writing nothing  471ms
+   ✓ mole-proposals lesson (T59) > refuses a lesson with no learned_from incident, writing nothing  375ms
+   ✓ mole-proposals lesson (T59) > refuses a lesson with an unknown incident, writing nothing  412ms
+   ✓ mole-proposals lesson (T59) > refuses a lesson with an unknown tenet, writing nothing  695ms
+   ✓ mole-proposals lesson (T59) > refuses records that are not committed at the baseline (.mole gitignored), leaving no branch or worktree  692ms
+   ✓ mole-proposals lesson (T59) > validates against the baseline commit, not the working tree (skip-worktree edit to a retired tenet)  699ms
+   ✓ mole-proposals lesson (T59) > refuses an uncommitted lesson (the draft must come from the pinned baseline)  348ms
+   ✓ mole-proposals lesson (T59) > refuses a lesson with no Proposed tenet section, and an unknown lesson id  909ms
+ ✓ packages/hotspots/test/hotspots.test.ts (12 tests) 6041ms
+   ✓ computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > ranks the file with high churn+complexity above a flat file (review-1 HIGH 1: no any-zero gate)  441ms
+   ✓ computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > every rank carries its own four raw inputs and their normalized [0,1] scores (never a bare score)  519ms
+   ✓ computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > respects --top / top option  731ms
+   ✓ computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 HIGH 1: a repo with no decisions and no fix commits still ranks by churn x complexity  632ms
+   ✓ computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 HIGH 1: --by volatility / --by fixes resort without changing the raw inputs  846ms
+   ✓ computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 HIGH 2: lockfiles are excluded from the default (source-only) ranking  500ms
+   ✓ computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 HIGH 2: *.json/*.md/*.yaml and generated dirs are excluded unless --all  363ms
+   ✓ computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 MED 3: a rename merges churn/incidents under the current name, not split across old/new  772ms
+   ✓ computeHotspots (T70 done-when: ranking, each rank explained by its raw inputs) > review-1 MED 3: timed on this fixture -- must stay well under the 10s budget  531ms
+ ✓ packages/server/test/checkrun.spec.ts (7 tests) 4637ms
+   ✓ computeCheckRun wires prCheck into the live conclusion (T45) > is never the old hardcoded success, and carries no annotation when nothing governs the diff  1063ms
+   ✓ computeCheckRun wires prCheck into the live conclusion (T45) > surfaces a real content-anchor match as an annotation instead of discarding it (the T45 gap)  750ms
+   ✓ computeCheckRun uses the push range base, not just the last commit (T45 review 2 P1) > without `before`, falls back to ref^ and misses the violation buried earlier in the push (documents the old gap)  688ms
+   ✓ computeCheckRun uses the push range base, not just the last commit (T45 review 2 P1) > with `before`, diffs the whole push range and catches the violation in the first commit  383ms
+   ✓ computeCheckRun uses the push range base, not just the last commit (T45 review 2 P1) > falls back to ref^ when `before` is all-zero (GitHub's new-branch sentinel)  343ms
+   ✓ computeCheckRun uses the push range base, not just the last commit (T45 review 2 P1) > falls back to ref^ when `before` is not an ancestor of ref (a force push rewrote history)  435ms
+ ✓ packages/telemetry/test/key-guard.test.ts (5 tests) 6045ms
+   ✓ key guard (R2) > is green when every key equals its checks-first commit, and lists each key with that commit  825ms
+   ✓ key guard (R2) > is red when a key is edited and committed, and names the key  703ms
+   ✓ key guard (R2) > is red for an uncommitted edit and for a deleted key  1180ms
+   ✓ key guard (R2) > allows a change only with an APPROVE ruling naming the key and the exact sha256 of the new content  2908ms
+   ✓ key guard (R2) > refuses a shallow clone (exit 2): the checks-first commit cannot be found there  428ms
+(node:85052) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/proposals/test/list.test.ts (2 tests) 6439ms
+   ✓ T62 listProposals / summarizeProposals (one source for MCP, CLI and panel) > lists only worktrees createProposal made for this repo, on their own branch, sorted by name  1204ms
+   ✓ T62 listProposals / summarizeProposals (one source for MCP, CLI and panel) > summarize: none -> no proposals; one -> its evaluation; two+ -> compareProposals; unknown name refused  5234ms
+ ✓ packages/flows/test/flows.test.ts (10 tests) 8137ms
+   ✓ mole flows record / mole flows <file#Symbol> > recordFlows runs vitest with the instrumentation and stores per-test flows; the plain run records nothing  4494ms
+   ✓ mole flows record / mole flows <file#Symbol> > the daemon CLI registers `mole flows`: record, then query a symbol  3476ms
+ ✓ packages/mcp/test/mcp.test.ts (1 test) 5794ms
+   ✓ mole_map over stdio returns the same neighbourhood text as the CLI; a down daemon is an error result, not a crash  5793ms
+ ✓ packages/decisions/test/cascade-worktree.test.ts (8 tests) 5801ms
+   ✓ T65 snapshotWorktree > captures tracked edits, untracked files and staged changes as a commit; index, refs, status and files untouched  659ms
+   ✓ T65 snapshotWorktree > leaves .mole/ out of the snapshot (records are not code under check)  362ms
+   ✓ T65 snapshotWorktree > review 1: a nested pkg/.mole is left out too  469ms
+   ✓ T65 snapshotWorktree > a clean worktree gives head === base (nothing to check)  561ms
+   ✓ T65 mole cascade-check --worktree > routes the unscoped decision by meaning and reports its violation; same verdicts as cascadeCheck on the snapshot commit  2729ms
+   ✓ T65 mole cascade-check --worktree > the compliant version is not flagged  846ms
+ ✓ packages/decisions/test/tree.test.ts (14 tests) 5674ms
+   ✓ decorations: flag, badge, propagation > a folder gets the worst flag of the decisions in force on it or below and a badge counting them  600ms
+   ✓ decorations: flag, badge, propagation > a file is decorated by the decisions scoped to it; grey (proposed) never colors or counts  334ms
+   ✓ decorations: flag, badge, propagation > accepts trailing slashes and ./ in paths  466ms
+   ✓ decorations: flag, badge, propagation > the badge is at most 2 characters (VS Code limit), even with 120 decisions  533ms
+   ✓ done-when 4: a folder with no records shows nothing > no decoration, no card, no line in the tree text  387ms
+   ✓ intent card > purpose / end state / tenets / who to ask from the intent record and approvers; missing fields are left out  366ms
+   ✓ intent card > decisions with flag, evidence state, exceptions, summary; proposed and replaced listed apart  441ms
+   ✓ intent card > your read state shows only when it is given  417ms
+   ✓ Mole's own records > packages/daemon: the intent card from .mole/intent/packages/daemon.md and 0007 with its exceptions  940ms
+ ✓ packages/decisions/test/cascade-argument-engine.test.ts (3 tests) 3238ms
+   ✓ cascadeCheck escalation prompt carries the engine's argument-chain labels (T54) > a rejected option defeated by a stated reason is named settled, not raised as live doubt  712ms
+   ✓ cascadeCheck escalation prompt carries the engine's argument-chain labels (T54) > a rejected option with no stated defeating reason is flagged as a standing, unresolved objection  629ms
+   ✓ cascadeCheck escalation prompt carries the engine's argument-chain labels (T54) > a record with no Considered Options at all still carries its plain decision text unchanged (no spurious engine noise)  1180ms
+stdout | packages/decisions/test/export-okf.test.ts > mole export --format okf > writes the bundle under --out (default .mole/export/okf) and returns 0
+wrote OKF v0.2 bundle (4 files) to /var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-okf-export-HZJrAg/my-export
+
+stderr | packages/decisions/test/export-okf.test.ts > mole export --format okf > rejects an unknown --format
+usage: mole export --format okf [--out DIR] (unsupported format: yaml)
+
+stdout | packages/decisions/test/export-okf.test.ts > OKF v0.2 round-trip through the reference validator > validate_okf.py reports no conformance errors for an exported bundle (external consumer, done-when #3)
+wrote OKF v0.2 bundle (4 files) to /var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-okf-export-5ow3CK/okf-out
+
+ ✓ packages/decisions/test/export-okf.test.ts (12 tests) 3521ms
+   ✓ buildOkfBundle > populates `generated.by`/`verified` (trust, §5.2) from `approver` using the OKF actor convention (§7)  522ms
+   ✓ buildOkfBundle > populates `generated.at` (freshness, §5.2) as an ISO 8601 datetime from the record's git history  384ms
+   ✓ buildOkfBundle > a concept with no optional families (no approver/source/evidence) still passes conformance rule 2 (just `type`)  304ms
+   ✓ mole export --format okf > writes the bundle under --out (default .mole/export/okf) and returns 0  316ms
+   ✓ OKF v0.2 round-trip through the reference validator > validate_okf.py reports no conformance errors for an exported bundle (external consumer, done-when #3)  476ms
+   ✓ T72 review: the bundle carries no machine-local path > no file in the bundle contains the absolute repo path or the home directory  339ms
+ ✓ packages/decisions/test/pr-check-rules-wiring.test.ts (4 tests) 4048ms
+   ✓ prCheck wires rules/check.ts (import:/call: rule items) into governed > a decision with ONLY a rules: item (no scope, no content anchor) governs the line that violates it  1159ms
+   ✓ prCheck wires rules/check.ts (import:/call: rule items) into governed > a PR that deletes the rule record in the same diff is still checked against the merge-base record  752ms
+   ✓ prCheck wires rules/check.ts (import:/call: rule items) into governed > a PR that strips the rules: key in the same diff is still checked against the merge-base record  811ms
+   ✓ prCheck wires rules/check.ts (import:/call: rule items) into governed > an edit that never touches the import line (unrelated file) reports silent for D-rule  515ms
+ ✓ packages/decisions/test/cascade-batch.test.ts (4 tests) 3311ms
+   ✓ cascadeCheck: multiple escalating decisions on one check batch into exactly ONE LLM call > two scope-only decisions escalate together in one call, each getting its own parsed verdict  645ms
+   ✓ cascadeCheck: multiple escalating decisions on one check batch into exactly ONE LLM call > a crisp hit decides zero-llm and is excluded from the batched call; only the ambiguous ones escalate together  761ms
+   ✓ cascadeCheck: multiple escalating decisions on one check batch into exactly ONE LLM call > reports a `routing` list: which decisions govern this change, computed with zero LLM calls  780ms
+   ✓ cascadeCheck: multiple escalating decisions on one check batch into exactly ONE LLM call > routing is populated even with NO llm configured at all (zero-LLM routing never needs a model call)  606ms
+(node:15639) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:16327) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/decisions/test/cascade.test.ts (5 tests) 3766ms
+   ✓ cascadeCheck: zero-LLM tier decides a crisp content anchor, no escalation > a `match:` hit is tier zero-llm, flag violates, and makes no LLM call  673ms
+   ✓ cascadeCheck: zero-LLM tier decides a crisp content anchor, no escalation > a silent file (no decision scope touches it) produces no verdict at all  398ms
+   ✓ cascadeCheck: scope-anchor-only governance escalates to exactly one LLM call > escalates with the decision's own text, parses VERDICT, reports tier llm + tokens/cost  782ms
+   ✓ cascadeCheck: scope-anchor-only governance escalates to exactly one LLM call > a COMPLIANT LLM verdict is reported as flag compliant, still tier llm  697ms
+   ✓ cascadeCheck: scope-anchor-only governance escalates to exactly one LLM call > with no llm configured, an ambiguous case reports zero-llm and says why it did not escalate  706ms
+ ✓ packages/decisions/test/rules-review-fixes.test.ts (12 tests) 2637ms
+   ✓ P1: the --emit config runs under the depcruise CLI > depcruise -c .dependency-cruiser.mole.cjs src validates the config and reports the planted violation  1151ms
+   ✓ P1: the --emit config runs under the depcruise CLI > depcruise -c .dependency-cruiser.mole.cjs . validates the config and reports the planted violation  1117ms
+(node:17875) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/mcp/test/mole-map-max-nodes.test.ts (1 test) 2612ms
+   ✓ mole_map maxNodes caps the returned neighbourhood below the server-side ceiling, caller-tunable  2611ms
+ ✓ packages/agentstate/test/langgraph-export.test.ts (5 tests) 2657ms
+   ✓ T20 LangGraph export > CLI: mole run <id> --export langgraph <file> writes the file and says so; a 0-step run exits 0 with the note  2422ms
+ ✓ packages/mcp/test/check.test.ts (1 test) 3845ms
+   ✓ mole_check (worktree, sha, diff+base) deep-equals the CLI --json; bad input is an error result; no daemon is started  3845ms
+ ✓ packages/mcp/test/bounded-pagination.test.ts (4 tests) 2792ms
+   ✓ mole_check: hunks are bounded + paginated (limit/offset/has_more/next_offset + maxAnswerChars) > limit/offset page the hunks array; has_more + next_offset describe the rest  1104ms
+   ✓ mole_check: hunks are bounded + paginated (limit/offset/has_more/next_offset + maxAnswerChars) > maxAnswerChars drops whole hunks from the end of the page (never mid-item) when the page would be too big  1264ms
+   ✓ mole_coverage: a whole-repo scan is bounded + paginated > limit/offset page the files array on a whole-repo scan  323ms
+warning: --depth is ignored in local clones; use file:// instead.
+ ✓ plugins/claude-code/test/marketplace-npm-source.test.ts (3 tests) 4186ms
+ ✓ packages/decisions/test/cascade-export-convention-title.test.ts (3 tests) 2548ms
+   ✓ T66: a title that merely contains an export-prefixed word is not a crisp module-export signal > "Audit every data export" + a new TS export: NOT a crisp zero-llm violation when an LLM tier is configured -- escalates and lets the judge decide  872ms
+   ✓ T66: a title that merely contains an export-prefixed word is not a crisp module-export signal > routing is unaffected: the data-export decision still becomes a candidate and still gets an export-convention hit  666ms
+   ✓ T66: a title that merely contains an export-prefixed word is not a crisp module-export signal > the real M24-shaped module-export decision ("Avoid Default Exports and Prefer Named Exports") stays crisp: zero-llm, no judge call needed  641ms
+ ✓ plugins/claude-code/test/claims-hook.test.ts (2 tests) 2655ms
+   ✓ Stop hook: unsupported claims, one line each > names the unsupported claim and not the supported one  1119ms
+   ✓ Stop hook: unsupported claims, one line each > says nothing when every claim is supported and nothing changed  1320ms
+ ✓ packages/decisions/test/madr4-adrkit.test.ts (12 tests) 2115ms
+ ✓ packages/decisions/test/cascade-semantic-route.test.ts (3 tests) 2887ms
+   ✓ cascadeCheck: semanticRoute finds a decision scope-anchor routing never could > without semanticRoute, a scope:[] decision with no content anchor never appears in routing at all  619ms
+   ✓ cascadeCheck: semanticRoute finds a decision scope-anchor routing never could > with semanticRoute, the same decision is added to routing and escalates (no crisp anchor fired)  1039ms
+   ✓ cascadeCheck: semanticRoute finds a decision scope-anchor routing never could > semanticRoute never duplicates a decision scope/content anchors already routed  921ms
+ ✓ packages/decisions/test/argument-capture.test.ts (24 tests) 3055ms
+   ✓ review 2: property-style re-capture -- random insert/move/edit/delete sequences never corrupt invariants > 30 random sequences across 2-3 options: no duplicate ids, approvedHash matches, evaluate() labels match recomputation, and every edge targets its OWN name (never a reused id)  2107ms
+ ✓ packages/decisions/test/pr-check-cli.test.ts (5 tests) 2308ms
+   ✓ mole pr-check CLI > reads base/head from a pull_request event file and writes the check-run payload to --out  1094ms
+   ✓ mole pr-check CLI > the daemon CLI registers the subcommand with one line and runs it  920ms
+(node:35731) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:35730) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/memory/test/memory.test.ts (12 tests) 2104ms
+   ✓ notes: add and list (done-when 1) > mole note add / mole memory --json via the CLI  1156ms
+   ✓ malformed notes (done-when 5) > a note missing required keys is invalid with a line, and the CLI does not crash on it  391ms
+ ✓ packages/agentstate/test/claims.test.ts (12 tests) 1618ms
+   ✓ mole claims <run> (CLI) and mole_claims (MCP) > MCP mole_claims is listed and returns the CLI --json  1118ms
+ ✓ packages/mcp/test/http.test.ts (8 tests) 1706ms
+   ✓ mole_map over streamable HTTP returns the same neighbourhood text as the stdio server  1650ms
+ ✓ packages/temporal/test/contradiction.test.ts (2 tests) 6430ms
+ ✓ packages/memory/test/seen-log.test.ts (2 tests) 1281ms
+   ✓ seen log robustness > `mole seen file#Symbol --how hover` records; an unknown symbol exits 1  1074ms
+ ✓ packages/reviews/test/drafts.test.ts (3 tests) 2005ms
+   ✓ draftsFromNotes (M34 part 1: drafts link to the right functions, D38 never invents) > links >= 90% of fixtures with an expected anchor to the right symbol, and invents 0  2001ms
+ ✓ packages/decisions/test/rules-check.test.ts (8 tests) 1904ms
+   ✓ checkRules on a fixture repo > catches exactly the planted import and call violations, each citing its decision  329ms
+   ✓ Mole dogfood > Mole's own records carry rules (0013 lazy CLI, 0014 read-only agent states, 0017 core layering) and they hold today  1266ms
+ ✓ packages/telemetry/test/telemetry-off.test.ts (2 tests) 1178ms
+   ✓ telemetry off (MOLE_OTEL unset) > mole check with MOLE_OTEL unset sends 0 requests to a configured OTLP endpoint  963ms
+(node:38181) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/coverage/test/index.test.ts (3 tests) 651ms
+ ✓ plugins/claude-code/test/session-start-batch.test.ts (1 test) 811ms
+   ✓ T92 review-2: SessionStart snapshots dirty files in one git call > 500 dirty files: every blob recorded and correct, under 2 s  810ms
+ ✓ packages/temporal/test/bitemporal-knownat.test.ts (2 tests) 2216ms
+ ✓ packages/temporal/test/org-isolation.test.ts (3 tests) 5761ms
+ ✓ packages/temporal/test/insertfact-backdate.test.ts (1 test) 6495ms
+ ✓ packages/temporal/test/recordfact-matrix.test.ts (4 tests) 6801ms
+ ✓ packages/telemetry/test/telemetry-on.test.ts (2 tests) 813ms
+   ✓ telemetry on (MOLE_OTEL=1) > mole check emits git blame, fix lookup, symbol resolution and questions stages under mole.check, flushed before exit  569ms
+ ✓ plugins/claude-code/test/route-by-meaning.test.ts (11 tests) 924ms
+ ✓ packages/temporal/test/temporal.test.ts (5 tests) 954ms
+(node:40449) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/decisions/test/incident-revive.test.ts (27 tests) 900ms
+   ✓ T58 review 1 (deleg_27342d20) findings > HIGH (review 2): suggest on a 10,000-argument attack chain stays fast (adjacency BFS, was 71 s)  704ms
+(node:40519) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/daemon/test/init-pty.test.ts (3 tests) 952ms
+   ✓ T96 review FAIL #2: mole init (real pty) -- Ctrl-D/EOF at the y/N prompt > EOF (Ctrl-D) is treated as the default No: exits 0 and still writes the decision scaffold  416ms
+ ✓ packages/decisions/test/parser.test.ts (6 tests) 935ms
+ ✓ packages/agentstate/test/attribute-quiet.test.ts (2 tests) 856ms
+   ✓ links a quiet commit by its subject, not the failed retry after it; a background commit by the sha in its later poll  787ms
+ ✓ packages/history/test/fix-rule-subject.test.ts (1 test) 832ms
+   ✓ a feature commit whose body says "regression tests" is not a past fix; a "fix:" subject is  831ms
+ ✓ packages/coverage/test/cross-repo.test.ts (2 tests) 732ms
+   ✓ coverage never attributes another repo's files > control: the same session still counts for a Mole checkout (T35 fallback kept)  448ms
+ ✓ packages/decisions/test/review-fixes.test.ts (3 tests) 413ms
+ ✓ plugins/claude-code/test/claims-hook-quiet.test.ts (1 test) 650ms
+   ✓ unknown session id: exit 0, no stdout, no stderr  545ms
+ ✓ packages/decisions/test/recall.test.ts (10 tests) 592ms
+   ✓ recallSimilar: performance at scale (done-when-adjacent, review-1 finding #2) > answers in under 2s with 1000 synthetic decision records  550ms
+ ✓ packages/daemon/test/init.test.ts (23 tests) 389ms
+ ✓ plugins/claude-code/test/decisions-rationale-hook.test.ts (1 test) 464ms
+   ✓ PreToolUse: the governing-decisions block carries full rationale, not just the one-liner > a decision with a long Decision + Consequences body reaches additionalContext intact, named by section  463ms
+ ✓ apps/vscode/test/tree.test.ts (4 tests) 475ms
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+stdout | packages/decisions/test/rules-check-scip-go.test.ts > checkRules on a Go repo (SCIP path) > `mole rules` exits 1 on the Go SCIP path, 0 once the violations are fixed
+1 rule (1 import, 0 call) from 1 decision: 0 violations (261 ms)
+
+ ✓ packages/decisions/test/rules-check-scip-go.test.ts (4 tests) 1329ms
+   ✓ checkRules on a Go repo (SCIP path) > `mole rules` exits 1 on the Go SCIP path, 0 once the violations are fixed  840ms
+ ✓ packages/decisions/test/argdown-loader.test.ts (6 tests) 635ms
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+(node:44947) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+stdout | packages/decisions/test/rules-check-scip.test.ts > checkRules on a Python repo (SCIP path) > `mole rules` exits 1 on the SCIP path, 0 once the violations are fixed
+1 rule (1 import, 0 call) from 1 decision: 0 violations (100 ms)
+
+ ✓ packages/decisions/test/rules-check-scip.test.ts (4 tests) 865ms
+(node:44804) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/decisions/test/pr-check-owners.test.ts (9 tests) 527ms
+   ✓ CODEOWNERS location > .github/CODEOWNERS wins over the root and docs/ at the given revision  521ms
+ ✓ plugins/claude-code/test/pretooluse-guard-evidence.test.ts (1 test) 195ms
+stdout | packages/decisions/test/capture.test.ts > mole decision new > creates an explicit-id proposed record without changing an existing record
+wrote .mole/decisions/D-42.md
+
+stdout | packages/decisions/test/capture.test.ts > mole decision supersede > marks the explicit predecessor superseded and writes reciprocal links to both records
+wrote .mole/decisions/D-old.md
+wrote .mole/decisions/D-new.md
+superseded D-old with D-new
+
+ ✓ packages/mcp/test/tool-annotations-schema.test.ts (2 tests) 492ms
+stdout | packages/decisions/test/capture.test.ts > mole decision link > writes a supported relation and its reciprocal to the named records
+wrote .mole/decisions/D-one.md
+wrote .mole/decisions/D-two.md
+linked D-one amends D-two
+
+ ✓ packages/memory/test/review-fixes.test.ts (3 tests) 469ms
+   ✓ T11 review fixes > P1-1: a deleted symbol is orphaned, not "moved" to an unrelated same-named function with another body  350ms
+stdout | packages/decisions/test/capture.test.ts > capture transaction recovery > restores both records after a failure between two replacements
+wrote .mole/decisions/D-a.md
+wrote .mole/decisions/D-b.md
+
+stdout | packages/decisions/test/capture.test.ts > duplicate suggestions > reads candidates without writing and rejects a malformed source record
+wrote .mole/decisions/D-existing.md
+
+ ✓ packages/decisions/test/capture.test.ts (7 tests) 749ms
+   ✓ mole decision new > creates an explicit-id proposed record without changing an existing record  483ms
+ ✓ packages/agentstate/test/claims-precision.test.ts (32 tests) 848ms
+(node:46225) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/reasoning/test/cli.test.ts (5 tests) 277ms
+(node:46258) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/decisions/test/argdown-reasoning.test.ts (5 tests) 215ms
+ ✓ packages/agentstate/test/claims-r8.test.ts (24 tests) 223ms
+ ✓ packages/decisions/test/rationale-import.test.ts (4 tests) 169ms
+(node:46529) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+ ✓ packages/decisions/test/incident-loader-indent-snapshot.test.ts (1 test) 392ms
+   ✓ T82: before/after snapshot of every bench-corpora + fixture record through frontMatter() > agrees with the pre-fix parse on every file except the ones the fix actually changes  391ms
+ ✓ packages/mcp/test/decisions-aggregate-budget.test.ts (2 tests) 387ms
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+stdout | packages/scip/test/manifest.test.ts > scipCli > `scip stamp --index other.scip` stamps the named index instead of root/index.scip
+wrote /var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-scip-cli-named-yw2IT2/other.scip.manifest.json (0 file(s), tool: scip-python 0.6.8)
+
+ ✓ packages/scip/test/manifest.test.ts (6 tests) 369ms
+ ✓ packages/reasoning/test/bulk-initialization.test.ts (3 tests) 100ms
+ ✓ packages/daemon/test/cli-help.test.ts (3 tests) 164ms
+ ✓ packages/reasoning/test/property.test.ts (2 tests) 214ms
+ ✓ packages/mcp/test/decisions-tool.test.ts (1 test) 110ms
+stdout | packages/decisions/test/outcomes.test.ts > outcomesReport > CLI prints JSON with --json and a non-zero exit never happens on a clean report
+{
+  "root": "/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-outcomes-dVk6vE",
+  "generatedAt": "2026-11-08T01:38:06.107Z",
+  "entries": [
+    {
+      "decisionId": "ok",
+      "title": "OK",
+      "file": ".mole/decisions/ok.md",
+      "line": 1,
+      "prediction": {
+        "expected": "x",
+        "signal": "y",
+        "checkAt": "2099-01-01",
+        "file": ".mole/decisions/ok.md",
+        "line": 5
+      },
+      "due": false,
+      "overdue": false,
+      "contradicts": false
+    }
+  ],
+  "malformed": []
+}
+
+ ✓ packages/decisions/test/outcomes.test.ts (13 tests) 70ms
+fatal: not a git repository (or any of the parent directories): .git
+stdout | packages/scip/test/cli-paths.test.ts > mole scip stamp path handling > uses the dispatcher-resolved root once (no doubled --root) and an absolute --index as given
+wrote /var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/scip-cli-MaZr8p/repo/index.scip.manifest.json (22 file(s), tool: scip-python 0.6.8)
+
+ ✓ packages/scip/test/cli-paths.test.ts (1 test) 70ms
+ ✓ apps/vscode/test/render.test.ts (11 tests) 86ms
+stdout | packages/decisions/test/assurance.test.ts > assuranceReport > CLI prints JSON with --json and a non-zero exit never happens on a clean report
+{
+  "root": "/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-assurance-H1i32x",
+  "generatedAt": "2026-11-08T01:38:06.309Z",
+  "folders": [
+    {
+      "folder": ".mole/decisions",
+      "oneWayDoors": 1,
+      "links": 1,
+      "assured": 0,
+      "assuredShare": 0,
+      "overdue": []
+    }
+  ],
+  "totalOneWayDoors": 1,
+  "totalLinks": 1,
+  "totalAssured": 0,
+  "assuredShare": 0,
+  "malformed": []
+}
+
+stdout | packages/decisions/test/assurance.test.ts > assuranceReport > CLI text output shows malformed entries, and --json includes the malformed array
+{
+  "root": "/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-assurance-8K4qgd",
+  "generatedAt": "2026-11-08T01:38:06.348Z",
+  "folders": [
+    {
+      "folder": ".mole/decisions",
+      "oneWayDoors": 1,
+      "links": 1,
+      "assured": 0,
+      "assuredShare": 0,
+      "overdue": []
+    }
+  ],
+  "totalOneWayDoors": 1,
+  "totalLinks": 1,
+  "totalAssured": 0,
+  "assuredShare": 0,
+  "malformed": [
+    {
+      "decisionId": "bad-doubt",
+      "to": "other",
+      "field": "doubt",
+      "value": "made-up-type",
+      "reason": "not a recognized doubt type (rebutting|undermining|undercutting)",
+      "file": ".mole/decisions/bad-doubt.md",
+      "line": 7
+    }
+  ]
+}
+
+ ✓ packages/decisions/test/assurance.test.ts (15 tests) 96ms
+ ✓ packages/mcp/test/install-deeplinks.test.ts (3 tests) 60ms
+ ✓ packages/scip/test/go-counterfixture.test.ts (9 tests) 58ms
+(node:47020) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/decisions/test/rules-parse.test.ts (15 tests) 68ms
+ ✓ packages/agentstate/test/collisions-gap.test.ts (2 tests) 83ms
+ ✓ packages/decisions/test/import-t36.test.ts (9 tests) 72ms
+ ✓ packages/decisions/test/compile.test.ts (8 tests) 102ms
+ ✓ packages/agentstate/test/t39-importers.test.ts (11 tests) 38ms
+ ✓ packages/agentstate/test/t76-real-gitai.test.ts (12 tests) 40ms
+ ✓ plugins/claude-code/test/decisions-block-aggregate-budget.test.ts (1 test) 5ms
+ ✓ packages/scip/test/counterfixture.test.ts (10 tests) 55ms
+ ✓ packages/server/test/metrics-buckets.spec.ts (1 test) 30ms
+stderr | packages/decisions/test/argdown-parser.test.ts > parseArgdown reports problems instead of silently accepting invalid/unsupported syntax (T48 P1) > a blank line inside an indented relation block: real @argdown/core rejects it too, and this parser must not attach the relation across the blank
+[build-model/ModelPlugin]: Error: No "ast" field in response.
+    at createMissingResponseFieldError (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@argdown/core/dist/ArgdownPluginError.js:13:12)
+    at checkResponseFields (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@argdown/core/dist/ArgdownPluginError.js:18:19)
+    at ModelPlugin.run (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@argdown/core/dist/plugins/ModelPlugin.js:186:9)
+    at ArgdownApplication.run (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@argdown/core/dist/ArgdownApplication.js:212:32)
+    at realArgdownRejects (/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T108-ci-green/packages/decisions/test/argdown-parser.test.ts:122:26)
+    at /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T108-ci-green/packages/decisions/test/argdown-parser.test.ts:132:12
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20
+    at new Promise (<anonymous>)
+
+stderr | packages/decisions/test/argdown-parser.test.ts > parseArgdown reports problems instead of silently accepting invalid/unsupported syntax (T48 P1) > two relations separated by a blank line (both orphaned): neither relation is attached, both reported
+[build-model/ModelPlugin]: Error: No "ast" field in response.
+    at createMissingResponseFieldError (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@argdown/core/dist/ArgdownPluginError.js:13:12)
+    at checkResponseFields (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@argdown/core/dist/ArgdownPluginError.js:18:19)
+    at ModelPlugin.run (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@argdown/core/dist/plugins/ModelPlugin.js:186:9)
+    at ArgdownApplication.run (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@argdown/core/dist/ArgdownApplication.js:212:32)
+    at realArgdownRejects (/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T108-ci-green/packages/decisions/test/argdown-parser.test.ts:122:26)
+    at /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T108-ci-green/packages/decisions/test/argdown-parser.test.ts:152:12
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20
+    at new Promise (<anonymous>)
+
+stderr | packages/decisions/test/argdown-parser.test.ts > parseArgdown reports problems instead of silently accepting invalid/unsupported syntax (T48 P1) > a relation token on the very first line is reported (real @argdown/core reports a parser error too)
+[build-model/ModelPlugin]: Error: No "ast" field in response.
+    at createMissingResponseFieldError (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@argdown/core/dist/ArgdownPluginError.js:13:12)
+    at checkResponseFields (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@argdown/core/dist/ArgdownPluginError.js:18:19)
+    at ModelPlugin.run (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@argdown/core/dist/plugins/ModelPlugin.js:186:9)
+    at ArgdownApplication.run (file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@argdown/core/dist/ArgdownApplication.js:212:32)
+    at realArgdownRejects (/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T108-ci-green/packages/decisions/test/argdown-parser.test.ts:122:26)
+    at /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T108-ci-green/packages/decisions/test/argdown-parser.test.ts:170:12
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26
+    at file:///Users/a1/Desktop/CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20
+    at new Promise (<anonymous>)
+
+ ✓ packages/decisions/test/argdown-parser.test.ts (15 tests) 52ms
+ ✓ plugins/claude-code/test/decisions-repo-wide-fallback.test.ts (3 tests) 34ms
+ ✓ packages/mcp/test/oneonone-tool.test.ts (3 tests) 42ms
+(node:47136) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/decisions/test/tree-bench.test.ts (2 tests) 31ms
+ ✓ packages/reviews/test/drift.test.ts (1 test) 28ms
+ ✓ packages/oneonone/test/oneonone.test.ts (7 tests) 25ms
+(node:47157) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ packages/decisions/test/rationale-ts-js-parity.test.ts (41 tests) 11ms
+ ✓ packages/mcp/test/safe-path.test.ts (7 tests) 30ms
+ ✓ packages/bench/test/h2h.test.ts (9 tests) 34ms
+mole steer: inbox for session s4 was not valid JSON (Unterminated string in JSON at position 31 (line 1 column 32)); kept as /var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-steer-boot-hgZmtd/.mole/local/steer/s4.json.corrupt-1794101890856
+ ✓ packages/steer/test/steer-bootstrap.test.ts (4 tests) 22ms
+ ✓ packages/decisions/test/incident-loader-indent.test.ts (7 tests) 21ms
+ ✓ packages/server/test/oauth.spec.ts (3 tests) 21ms
+ ✓ packages/decisions/test/argdown-prose-reasons.test.ts (18 tests) 9ms
+ ✓ apps/vscode/test/reasoning-section.test.ts (16 tests) 16ms
+ ✓ packages/scip/test/reader.test.ts (5 tests) 10ms
+ ✓ apps/vscode/test/seen.test.ts (8 tests) 10ms
+ ✓ packages/layout/test/layout.test.ts (5 tests) 16ms
+ ✓ packages/reviews/test/diagram.test.ts (3 tests) 8ms
+ ✓ packages/oneonone/test/m23-bench.test.ts (2 tests) 29ms
+ ✓ packages/reasoning/test/fixtures.test.ts (10 tests) 12ms
+ ✓ apps/vscode/test/decisions-for-file.test.ts (8 tests) 7ms
+ ✓ packages/server/test/queue-prefix.spec.ts (16 tests | 2 skipped) 8ms
+ ✓ packages/decisions/test/argdown-derive-adr.test.ts (6 tests) 18ms
+ ✓ packages/agentstate/test/t76-real-entire.test.ts (7 tests) 14ms
+ ✓ packages/decisions/test/route.test.ts (12 tests) 9ms
+ ✓ apps/vscode/test/hover.test.ts (15 tests) 9ms
+ ✓ apps/vscode/test/panel.test.ts (4 tests) 10ms
+ ✓ apps/vscode/test/oneonone-section.test.ts (3 tests) 5ms
+ ✓ packages/decisions/test/route-bm25.test.ts (8 tests) 5ms
+ ✓ packages/bench/test/h2-suite-share.test.ts (1 test) 2ms
+ ✓ packages/daemon/test/study-score.test.ts (5 tests) 8ms
+ ✓ packages/decisions/test/rationale.test.ts (12 tests) 8ms
+ ✓ scripts/demo-assets-sync.test.ts (5 tests) 3ms
+ ✓ packages/core/test/core.test.ts (3 tests) 7ms
+ ✓ apps/vscode/test/review-notes-section.test.ts (3 tests) 5ms
+ ✓ packages/mcp/test/pre-commit-hooks-pin.test.ts (2 tests) 4ms
+ ✓ apps/vscode/test/since.test.ts (4 tests) 3ms
+ ✓ packages/scip/test/statement-starts.test.ts (10 tests) 5ms
+ ✓ packages/decisions/test/pr-check-review-drafts.test.ts (1 test) 3ms
+ ✓ packages/verify/test/m14-summary.test.ts (4 tests) 4ms
+ ✓ packages/decisions/test/options-module-export-title.test.ts (35 tests) 4ms
+ ✓ apps/vscode/test/seen-spans.test.ts (2 tests) 4ms
+ ✓ packages/server/test/crypto.spec.ts (4 tests) 3ms
+ ✓ packages/flows/test/fixtures/mini/test/app.spec.ts (1 test) 4ms
+ ✓ packages/server/test/health.spec.ts (5 tests | 4 skipped) 1ms
+ ✓ packages/server/test/index.spec.ts (2 tests | 1 skipped) 6ms
+ ✓ packages/server/test/index-temporal-e2e.spec.ts (4 tests | 2 skipped) 4ms
+ ↓ packages/server/test/event-loop.spec.ts (1 test | 1 skipped)
+ ↓ packages/server/test/decisionStore.spec.ts (2 tests | 2 skipped)
+ ↓ packages/server/test/crash-restart.spec.ts (2 tests | 2 skipped)
+ ↓ packages/server/test/migrations.spec.ts (3 tests | 3 skipped)
+ ↓ packages/server/test/outbox.spec.ts (5 tests | 5 skipped)
+ ↓ packages/server/test/questions.spec.ts (3 tests | 3 skipped)
+ ↓ packages/server/test/rebuild.spec.ts (1 test | 1 skipped)
+ ↓ packages/server/test/rebuild-git-failure.spec.ts (2 tests | 2 skipped)
+ ↓ packages/server/test/rls.spec.ts (2 tests | 2 skipped)
+ ↓ packages/server/test/webhook.spec.ts (3 tests | 3 skipped)
+ ↓ packages/server/test/metrics.spec.ts (4 tests | 4 skipped)
+ ↓ packages/server/test/telemetry.spec.ts (2 tests | 2 skipped)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/daemon/test/daemon.test.ts > daemon robustness (T2 review) > worktrees sharing a state dir get separate daemons and indexes
+AssertionError: expected 'indexing' to be 'ok' // Object.is equality
+
+Expected: [32m"ok"[39m
+Received: [31m"indexing"[39m
+
+ ❯ packages/daemon/test/daemon.test.ts:300:54
+    298|     const cb = new MoleClient({ root: b, stateDir });
+    299|     await until(() => cb.map('src/only-in-b.ts'), (x) => x.state === '…
+    300|     expect((await cb.map('src/only-in-b.ts')).state).toBe('ok');
+       |                                                      ^
+    301|     await until(() => ca.map('src/svc.ts'), (x) => x.state === 'ok'); …
+    302|     expect((await ca.map('src/only-in-b.ts')).state).toBe('not-indexed…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 1 unhandled error during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-worker]: Timeout calling "onTaskUpdate"
+ ❯ Object.onTimeoutError ../../../../CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/vitest/dist/chunks/rpc.-pEldfrD.js:53:10
+ ❯ Timeout._onTimeout ../../../../CS%20Code/Project/Mole-worktrees/T108-ci-green/node_modules/vitest/dist/chunks/index.B521nVV-.js:59:62
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ processTimers node:internal/timers:523:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  1 failed | 180 passed | 12 skipped (193)
+      Tests  1 failed | 1774 passed | 39 skipped (1814)
+     Errors  1 error
+   Start at  19:31:42
+   Duration  395.45s (transform 5.62s, setup 0ms, collect 107.23s, tests 1417.74s, environment 55ms, prepare 15.36s)
+
+EXIT=1
