@@ -4,11 +4,6 @@
 current data/
 training data/
 generated data/
-# T108-ci-green: m0-engine-report.json is a frozen benchmark-key artifact (like the other
-# packages/*/bench/*-key.json files already committed) read by packages/bench/test/h2h.test.ts;
-# everything else in reused-keys.json's sources is tracked, this one wasn't -- a fresh CI
-# checkout (unlike main's long-lived disk) never has it, so the test always failed there.
-!generated data/m0-engine-report.json
 # Private local project context and cross-project source links, never publish.
 context
 
