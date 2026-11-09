@@ -1,0 +1,3 @@
+RAG reads-all, v4.1 heldout: mean $/check = 0.0479 n= 42 max= 0.08764
+T53 cascade, v4.1 heldout: mean total $/check = 0.01128 mean BM25-route-only $/check = 0.00132 mean escalate-call $ (when it escalates) = 0.01195 escalates 35/42 cases
+T53 cascade, v3 heldout: mean total $/check = 0.00543 mean BM25-route-only $/check = 0.0013 mean escalate-call $ (when it escalates) = 0.00556 escalates 66/89 cases
