@@ -1,0 +1,6 @@
+Wilson 95% CI for T117's T46-cascade re-run (results-v2.md "T117 follow-up" note), python3 -c, 2026-11-08:
+
+recall 2/4   -> (0.150, 0.850)
+false-alarm 1/7 -> (0.026, 0.513)
+
+(same wilson() formula style as the existing 95% CIs already in results-v2.md's CORRECTION note, z=1.96)

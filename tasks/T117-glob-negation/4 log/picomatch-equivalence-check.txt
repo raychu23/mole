@@ -1,0 +1,11 @@
+{pkg,plugins}/*/src/** | plugins/x/src/a/b.ts -> true OK
+{pkg,plugins}/*/src/** | plugins/x/y/src/b.ts -> false OK
+**/*.test.{ts,tsx} | a/b/c.test.tsx -> true OK
+**/*.test.{ts,tsx} | c.test.ts -> true OK
+terraform/** | terraform/a/b.tf -> true OK
+terraform/** | other/terraform/b.tf -> false OK
+**/!(index).{ts,tsx} | a/foo.ts -> true OK
+**/!(index).{ts,tsx} | a/index.ts -> false OK
+infra/** | infra/main.tf -> true OK
+{pkg,plugins}/src/** | pkg/src/lib.ts -> true OK
+ALL PASS

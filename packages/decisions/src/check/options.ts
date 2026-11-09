@@ -8,7 +8,9 @@
 //     enclosing-block header still fires).
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import picomatch from 'picomatch';
 import ts from 'typescript';
+import { Git, repoFiles } from '../anchors.js';
 import { frontMatter } from '../graph.js';
 import type { GraphNode, Problem } from '../types.js';
 
@@ -72,29 +74,42 @@ export interface ContentAnchor {
   line: number;
 }
 
-/** gitignore-ish glob -> anchored RegExp: `**` any depth (incl. none), `*` and `?` within a segment, `{a,b}` alternatives */
+/** gitignore-ish glob -> anchored RegExp, via picomatch (T117, prior-art.md): `**` any depth (incl. none), `*`
+ *  and `?` within a segment, `{a,b}` alternatives, PLUS full Bash extglob support (`!(pattern)`, `+(pattern)`,
+ *  `@(pattern)`, ...) that the previous hand-rolled version did not implement -- `!(index)` used to compile
+ *  as the literal regex-escaped string `!(index)`, matching no real file (T110 v2 DEFECT_V2_FILESCOPE.md's
+ *  side finding: a dead rule, Backstage adr004's own two-star-slash-bang-index-dot-braces content-anchor
+ *  scope). picomatch is already a transitive dependency (via `dependency-cruiser`, this package's own direct
+ *  dependency; pinned 4.0.7, zero deps of its own) -- made explicit here rather than reimplementing extglob
+ *  by hand (prior-art.md decision). `dot: true` keeps the old engine's behavior of matching dotfiles under
+ *  the wildcard forms (picomatch's default excludes them, same as a real shell glob, which the old
+ *  hand-rolled version never did). */
 export function globToRegExp(glob: string): RegExp {
-  let out = '';
   const g = glob.replace(/^\.?\//, '');
-  for (let i = 0; i < g.length; i++) {
-    const c = g[i]!;
-    if (c === '*') {
-      if (g[i + 1] === '*') {
-        const slash = g[i + 2] === '/';
-        out += slash ? '(?:.*/)?' : '.*';
-        i += slash ? 2 : 1;
-      } else out += '[^/]*';
-    } else if (c === '?') out += '[^/]';
-    else if (c === '{') {
-      const j = g.indexOf('}', i);
-      if (j < 0) out += '\\{';
-      else {
-        out += `(?:${g.slice(i + 1, j).split(',').map((s) => s.replace(/[.+^$()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*')).join('|')})`;
-        i = j;
-      }
-    } else out += c.replace(/[.+^$()|[\]\\]/g, '\\$&');
+  return picomatch.makeRe(g, { dot: true });
+}
+
+/** T117 (DEFECT_V2_FILESCOPE.md side finding): a `match:` item's `in:` glob can be authored once and never
+ *  checked against the real codebase -- a syntax the glob engine doesn't support (the motivating case: the
+ *  pre-fix hand-rolled engine on Backstage adr004's extglob-negation pattern), or simply a typo'd folder, both
+ *  compile to a RegExp that matches NOTHING, so the anchor silently never governs a line. This is a
+ *  compile-time, no-model check (same posture as the invalid-regex / nested-quantifier problems above): given
+ *  the content anchors already parsed from a record and the real repo's current file listing, flag any `in:`
+ *  glob with zero matches as a Problem at the record's own file:line, so `mole decisions` / `mole pr-check`
+ *  surface a dead rule instead of it passing silently forever. Reuses anchors.ts's own `Git`/`repoFiles` (the
+ *  same tracked+untracked-but-not-ignored file listing T100's glob-anchor orphan check already computes) so
+ *  this never grows a second, divergent definition of "every file in the repo". */
+export function deadInGlobProblems(root: string, anchors: Pick<ContentAnchor, 'in' | 'inRe' | 'file' | 'line'>[]): Problem[] {
+  const withGlob = anchors.filter((a) => a.in && a.inRe);
+  if (!withGlob.length) return [];
+  const files = repoFiles(root, new Git(root));
+  const out: Problem[] = [];
+  for (const a of withGlob) {
+    if (!files.some((f) => a.inRe!.test(f))) {
+      out.push({ file: a.file, line: a.line, message: `match: in: glob ${JSON.stringify(a.in)} matches no file in the repo; this anchor can never fire (dead rule)` });
+    }
   }
-  return new RegExp(`^${out}$`);
+  return out;
 }
 
 /** the `match:` items of a record (read from its file under the records root). Invalid regexes and nested quantifiers are

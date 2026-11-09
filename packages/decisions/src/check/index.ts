@@ -9,7 +9,7 @@ import { formatPrCheck, prCheck } from './pr-check.js';
 export type * from './types.js';
 export { codeownersAt, parseCodeowners } from './codeowners.js';
 export { parseGitDiff, type ChangedFile, type Hunk } from './diff.js';
-export { contentAnchorsOf, globToRegExp, hasNestedQuantifier, isVersionOnlyHunk, MAX_MATCH_LINE, type ContentAnchor } from './options.js';
+export { contentAnchorsOf, deadInGlobProblems, globToRegExp, hasNestedQuantifier, isVersionOnlyHunk, MAX_MATCH_LINE, type ContentAnchor } from './options.js';
 export { CHECK_NAME, formatPrCheck, MAX_ANNOTATIONS, prCheck } from './pr-check.js';
 export { getPrCheckPoolQueueDepth, prCheckAsync, shutdownPrCheckAsyncPool } from './pr-check-async.js';
 

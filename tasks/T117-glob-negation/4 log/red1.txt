@@ -1,0 +1,113 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T117-glob-negation/packages/decisions
+
+ ❯ test/pr-check-options.test.ts (28 tests | 5 failed) 6896ms
+   ✓ isVersionOnlyHunk (option 2) > is true when old and new lines differ only in version-like tokens 1ms
+   ✓ isVersionOnlyHunk (option 2) > is false for any other change 0ms
+   ✓ globToRegExp > handles **, * and {a,b} 1ms
+   × globToRegExp > handles extglob negation !(pattern): matches a non-index file, not index itself 6ms
+     → expected false to be true // Object.is equality
+   × deadInGlobProblems (T117): compile-time warning when a match: in: glob matches zero repo files > warns when the glob matches no file in the repo (a dead rule, e.g. unsupported syntax or a typo) 1ms
+     → (0 , deadInGlobProblems) is not a function
+   × deadInGlobProblems (T117): compile-time warning when a match: in: glob matches zero repo files > does not warn when the glob matches a real file 0ms
+     → (0 , deadInGlobProblems) is not a function
+   × deadInGlobProblems (T117): compile-time warning when a match: in: glob matches zero repo files > is a no-op for anchors with no in: glob 0ms
+     → (0 , deadInGlobProblems) is not a function
+   × deadInGlobProblems (T117): compile-time warning when a match: in: glob matches zero repo files > now correctly reports the fixed adr004-shaped pattern as NOT dead (it matches real non-index files) 0ms
+     → (0 , deadInGlobProblems) is not a function
+   ✓ content anchors (option 1) > govern an added line matching the pattern inside the glob 284ms
+   ✓ content anchors (option 1) > do not fire on lines without the construct, or outside the glob; deprecated records never govern  482ms
+   ✓ content anchors (option 1) > are ignored when switched off (the round-1 behaviour) 230ms
+   ✓ content anchors (option 1) > annotate the matched line with the pattern as the anchor 233ms
+   ✓ version-bump rule (option 2) > a folder anchor does not govern a version-only hunk; with both gates off it does  518ms
+   ✓ version-bump rule (option 2) > a content anchor naming the dependency in the enclosing block still fires on a version bump 272ms
+   ✓ version-bump rule (option 2) > a non-version change under the folder is still governed 263ms
+   ✓ title-term bump gate (option 3, options round 2) > default on: a provider bump that names none of the folder record's title terms is not governed 242ms
+   ✓ title-term bump gate (option 3, options round 2) > a bump whose enclosing block names a title term still governs (helm_release bump, title "Use Helm for infra package management") 295ms
+   ✓ title-term bump gate (option 3, options round 2) > a non-version change under the folder is unaffected by the gate (option 3 only looks at version-only hunks) 259ms
+   ✓ title-term bump gate (option 3, options round 2) > versionBumpRule (option 2) still wins when both are set: the bump is dropped even with a title-term match 235ms
+   ✓ export-convention AST detector (option 4, options round 3) > a new name added to an existing barrel re-export list governs (bs#34892 shape: the "export {" header predates the PR) 247ms
+   ✓ export-convention AST detector (option 4, options round 3) > a whole new exported declaration governs (its name did not exist in the old file) 247ms
+   ✓ export-convention AST detector (option 4, options round 3) > editing the BODY of an existing export never governs: the name already existed in the old file 250ms
+   ✓ export-convention AST detector (option 4, options round 3) > is off when switched off 219ms
+   ✓ scope noise filter (option 5, options round 3) > a comment/doc-only hunk never governs a folder/file scope anchor  469ms
+   ✓ scope noise filter (option 5, options round 3) > a hunk in a test file never governs a folder/file scope anchor (option 4 also skips test files) 220ms
+   ✓ Terraform bare-block title gate (option 6, options round 3) > a bare-block (locals) edit in the SAME file as a titled resource stays governed 262ms
+   ✓ Terraform bare-block title gate (option 6, options round 3) > the same kind of edit in a DIFFERENT file under the folder, with no titled resource in that file, is gated 258ms
+   ✓ Terraform bare-block title gate (option 6, options round 3) > switched off: the other-file edit is governed again (round-2 behaviour) 224ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/pr-check-options.test.ts > globToRegExp > handles extglob negation !(pattern): matches a non-index file, not index itself
+AssertionError: expected false to be true // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+ ❯ test/pr-check-options.test.ts:140:67
+    138|   // parens), so it never matched a real file at all -- this is the de…
+    139|   it('handles extglob negation !(pattern): matches a non-index file, n…
+    140|     expect(globToRegExp('**/!(index).{ts,tsx}').test('a/foo.ts')).toBe…
+       |                                                                   ^
+    141|     expect(globToRegExp('**/!(index).{ts,tsx}').test('a/index.ts')).to…
+    142|     expect(globToRegExp('**/!(index).{ts,tsx}').test('foo.tsx')).toBe(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  test/pr-check-options.test.ts > deadInGlobProblems (T117): compile-time warning when a match: in: glob matches zero repo files > warns when the glob matches no file in the repo (a dead rule, e.g. unsupported syntax or a typo)
+TypeError: (0 , deadInGlobProblems) is not a function
+ ❯ test/pr-check-options.test.ts:150:22
+    148|   it('warns when the glob matches no file in the repo (a dead rule, e.…
+    149|     const anchors = [{ pattern: 'x', re: /x/, in: 'nonexistent-dir-xyz…
+    150|     const problems = deadInGlobProblems(root, anchors);
+       |                      ^
+    151|     expect(problems).toEqual([{ file: '.mole/decisions/d.md', line: 3,…
+    152|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  test/pr-check-options.test.ts > deadInGlobProblems (T117): compile-time warning when a match: in: glob matches zero repo files > does not warn when the glob matches a real file
+TypeError: (0 , deadInGlobProblems) is not a function
+ ❯ test/pr-check-options.test.ts:155:12
+    153|   it('does not warn when the glob matches a real file', () => {
+    154|     const anchors = [{ pattern: 'x', re: /x/, in: 'infra/**', inRe: gl…
+    155|     expect(deadInGlobProblems(root, anchors)).toEqual([]);
+       |            ^
+    156|   });
+    157|   it('is a no-op for anchors with no in: glob', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  test/pr-check-options.test.ts > deadInGlobProblems (T117): compile-time warning when a match: in: glob matches zero repo files > is a no-op for anchors with no in: glob
+TypeError: (0 , deadInGlobProblems) is not a function
+ ❯ test/pr-check-options.test.ts:159:12
+    157|   it('is a no-op for anchors with no in: glob', () => {
+    158|     const anchors = [{ pattern: 'x', re: /x/, file: '.mole/decisions/d…
+    159|     expect(deadInGlobProblems(root, anchors)).toEqual([]);
+       |            ^
+    160|   });
+    161|   it('now correctly reports the fixed adr004-shaped pattern as NOT dea…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  test/pr-check-options.test.ts > deadInGlobProblems (T117): compile-time warning when a match: in: glob matches zero repo files > now correctly reports the fixed adr004-shaped pattern as NOT dead (it matches real non-index files)
+TypeError: (0 , deadInGlobProblems) is not a function
+ ❯ test/pr-check-options.test.ts:163:12
+    161|   it('now correctly reports the fixed adr004-shaped pattern as NOT dea…
+    162|     const anchors = [{ pattern: 'x', re: /x/, in: '**/!(index).{ts,tsx…
+    163|     expect(deadInGlobProblems(root, anchors)).toEqual([]); // pkg/src/…
+       |            ^
+    164|   });
+    165| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 23 passed (28)
+   Start at  19:32:35
+   Duration  8.06s (transform 333ms, setup 0ms, collect 929ms, tests 6.90s, environment 0ms, prepare 65ms)
+

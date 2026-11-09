@@ -163,7 +163,9 @@ function walkAll(root: string): string[] {
   return out;
 }
 
-function repoFiles(root: string, git: Git): string[] {
+/** exported for T117's dead-`in:`-glob check (options.ts): the same tracked+untracked-but-not-ignored file
+ *  listing this module already uses for glob-pattern scope anchors, reused rather than re-walked. */
+export function repoFiles(root: string, git: Git): string[] {
   return git.lsFiles() ?? walkAll(root);
 }
 
