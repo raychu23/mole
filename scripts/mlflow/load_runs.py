@@ -39,6 +39,25 @@ def _name(label: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.\-]", "_", label.strip().replace(" ", "_").replace("/", "_"))
 
 
+# MLflow tag/param/metric names may only contain alphanumerics, "_", "-", ".", space, ":", "/"
+# (mlflow.utils.validation.validate_param_and_metric_name) and must normalize to themselves under
+# posixpath.normpath (path_not_unique: no "..", no leading "/", no doubled "/"). runs.jsonl's "metrics"
+# keys are sometimes a free-text evidence label straight from a task write-up (e.g.
+# "M-B dev B3 arm, post-review-fix"), not a slug, so they can carry commas, parens, etc. that MLflow's
+# tag-name validator rejects outright (mlflow.exceptions.MlflowException: Invalid value ... for
+# parameter 'key'), crashing the whole load before any run is created. Sanitize only the MLflow tag
+# NAME built from that text; the raw text itself is untouched in runs.jsonl and in the tag's VALUE
+# (mole.raw.<name>'s value has no charset restriction, only a length cap), so no evidence is altered.
+_TAG_NAME_BAD = re.compile(r"[^A-Za-z0-9_.\- :/]")
+
+
+def _tag_name(raw: str) -> str:
+    s = _TAG_NAME_BAD.sub("_", raw)
+    s = re.sub(r"/{2,}", "/", s)  # collapse doubled "/" and "." runs so normpath(s) == s (path_not_unique)
+    s = re.sub(r"\.{2,}", ".", s)
+    return s.lstrip("/")
+
+
 def _num(s: str) -> float | int:
     f = float(s)
     return int(f) if f.is_integer() else f
@@ -86,7 +105,7 @@ def parse_metric(key: str, raw) -> dict[str, float | int]:
 def parse_metrics(metrics: dict) -> dict[str, float | int]:
     out: dict[str, float | int] = {}
     for k, v in (metrics or {}).items():
-        out.update(parse_metric(str(k), v))
+        out.update(parse_metric(_name(str(k)), v))
     return out
 
 
@@ -155,7 +174,7 @@ def load(repo: Path, tracking_uri: str) -> dict:
             if isinstance(d.get("exit"), int):
                 metrics["exit"] = d["exit"]
             for k, v in (d.get("metrics") or {}).items():
-                tags[f"mole.raw.{k}"[:250]] = (v if isinstance(v, str) else json.dumps(v))[:5000]
+                tags[_tag_name(f"mole.raw.{k}")[:250]] = (v if isinstance(v, str) else json.dumps(v))[:5000]
             for k in ("time", "detail", "check"):
                 if d.get(k) is not None:
                     tags[f"mole.{k}"] = str(d[k])[:5000]

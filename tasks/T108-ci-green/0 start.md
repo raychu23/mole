@@ -93,3 +93,72 @@ collisions note   "collisions spawnSync ETIMEDOUT" in the CI log (23:15:34) is a
                   warning, not a failing test -- the next line is the hook test file passing;
                   out of this item's 9 named failures, not touched
 ```
+
+## Q1c (GitHub run 9dc54b8 / 42535930765: test step green, last red = bench M13 mlflow loader)
+
+goal: fix the last red `check` step, "bench M13 (T16, traces + MLflow runs + this workflow's key
+guard red/green)" -- `node packages/telemetry/dist/bench/m13.js`'s mlflow loader
+(`scripts/mlflow/load_runs.py`) crashing, root cause not the frozen M13 key.
+
+done-when: MET. Root cause (reproduced in a scratch venv, mlflow-skinny==3.17.2, Python 3.12/3.13,
+identical traceback to the CI log): `load_runs.py` builds MLflow tag/metric **names** straight from
+`tasks/*/4 log/runs.jsonl`'s free-text `"metrics"` keys (e.g. `tasks/T43-.../runs.jsonl` line 5:
+`"M-B dev B3 arm, post-review-fix"`, a prose evidence label, not a slug). MLflow's
+`validate_param_and_metric_name` only allows `[A-Za-z0-9_.\- :/]` in a tag/param/metric *name*
+(not a value -- values are free text, length-capped only); the comma in that label made
+`_validate_tag_name` raise, which `create_run`/`log_batch` never catches, so the whole load aborts
+before any run is written. Two call sites built names from the raw label: (1) the `mole.raw.<k>` tag
+name (line ~158) and (2) `parse_metrics`' `parse_metric(str(k), ...)`, whose own metric names are
+`f"{key}.{sanitized_label}"` -- `key` itself (`str(k)`) was never sanitized, so the *second* load
+also failed on `"M-B dev ... .vs_v2_hand-made_B2"` once (1) was fixed alone.
+Fix: added `_tag_name()` (replaces any char outside MLflow's charset with `_`, then collapses
+doubled `/`/`.` runs so `posixpath.normpath` round-trips -- `path_not_unique`'s other check) and
+applied it to the `mole.raw.<k>` tag name; sanitized `parse_metrics`' `k` through the existing
+`_name()` helper before use as a metric-name prefix. The raw text itself is untouched in
+`runs.jsonl` and in the tag's *value* (`mole.raw.<name>`'s value, no charset limit) -- nothing
+about the M13 key, the frozen benchmark key, or any evidence file was weakened or edited.
+Verified: full `node packages/telemetry/dist/bench/m13.js` green end to end against the fixed
+loader (321/321 runs loaded, second load adds 0, 10/10 parse cases match the frozen key's `expect`
+values, `at target: true`, exit 0) -- `4 log/q1c-m13-full-bench-details.json`.
+
+bootstrap note (asked by the task): M13's `"ci green <n> red <n>"` numbers do **not** come from
+GitHub's real Actions run history -- `m13.ts`'s CI section never calls `gh`/the Actions API (grepped,
+none found). It spins up its own detached temp git worktree of `HEAD` and runs the workflow's
+"key guard" shell command directly, 4 times: once as-is (expect exit 0 = green), once after editing
+and committing a protected key in that temp worktree (expect nonzero = red), once with an approved
+hash ruling added (green again), once with a wrong-hash ruling (red again). So it is self-contained
+and self-bootstrapping: the very first run of `m13.js` on a repo that has never had a GitHub Actions
+run produces real green/red numbers, because it manufactures both states itself rather than reading
+history. There is no "needs a prior green CI run to go green" cycle in the actual code -- that was
+this item's working assumption, not what `m13.ts` does; the only thing the bench depends on
+externally is `.github/workflows/check.yml` existing with the right step name/command (checked by
+YAML parsing, not run history).
+
+status: submitted (branch ledger/t108c-m13)
+
+next: orchestrator reviews, merges, pushes, watches the real Actions `check` run go green.
+
+```notes
+what changed      scripts/mlflow/load_runs.py (+_tag_name() tag/metric-name sanitizer; applied to
+                  the mole.raw.<k> tag name and to parse_metrics' key)
+why               mlflow-skinny 3.17.2's _validate_tag_name/validate_param_and_metric_name reject
+                  any tag/metric NAME containing a char outside [A-Za-z0-9_.\- :/]; runs.jsonl's
+                  free-text metric labels aren't slugs and can contain commas/parens; values have
+                  no such restriction, only names -- fix sanitizes names only, leaves all raw
+                  evidence text (runs.jsonl + the tags' values) untouched
+repro (red)       4 log/q1c-repro-red.txt: scratch venv (mlflow-skinny==3.17.2, Python 3.13),
+                  pre-fix load_runs.py against the real tasks/ tree -> identical
+                  MlflowException("Invalid value \"mole.raw.M-B dev B3 arm, post-review-fix\" ...")
+                  to the GitHub log (4 log/q1c-github-run-42535930765-full.log line 1815)
+repro (green)     4 log/q1c-repro-green.txt: same venv, fixed load_runs.py -> 321/321 lines loaded,
+                  0 errors, second load adds 0 (skips all 321)
+full bench        4 log/q1c-m13-full-bench-details.json: real node packages/telemetry/dist/bench/
+                  m13.js run against the main checkout (fixed load_runs.py swapped in for the run,
+                  then restored -- git diff confirmed clean after) -> stage coverage 100%, mlflow
+                  runs 321/321 (second load 0), parse 10/10, ci green 0 red 1 ruled 0, at target true
+not touched       packages/telemetry/bench/m13-key.json (the frozen key) · any tasks/*/4 log/
+                  runs.jsonl (the raw evidence, including T43's comma-bearing metric label)
+disk              worktree ../Mole-worktrees/T108c-m13, sparse (scripts/mlflow, packages/telemetry,
+                  this task folder, .github); scratch venv under
+                  /Users/a1/.hermes/cache/scratch/t108c, deleted after this item
+```

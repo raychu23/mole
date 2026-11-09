@@ -1,0 +1,341 @@
+{
+  "key": "/Users/a1/Desktop/CS Code/Project/Mole/packages/telemetry/bench/m13-key.json",
+  "written": "2026-10-29T01:20:00-0500",
+  "repoRoot": "/Users/a1/Desktop/CS Code/Project/Mole",
+  "checkExit": 0,
+  "checkSpans": [
+    {
+      "name": "mole.git.resolve_change",
+      "service": "mole-cli",
+      "attributes": {}
+    },
+    {
+      "name": "mole.git.blame",
+      "service": "mole-cli",
+      "attributes": {
+        "mole.files": 3
+      }
+    },
+    {
+      "name": "mole.history.fix_lookup",
+      "service": "mole-cli",
+      "attributes": {
+        "mole.commits": 3
+      }
+    },
+    {
+      "name": "mole.history.symbol_resolution",
+      "service": "mole-cli",
+      "attributes": {
+        "mole.fix_hunks": 1
+      }
+    },
+    {
+      "name": "mole.history.check",
+      "service": "mole-cli",
+      "attributes": {
+        "mole.change.kind": "sha",
+        "mole.hunks": 11,
+        "mole.past_fixes": 1
+      }
+    },
+    {
+      "name": "mole.questions",
+      "service": "mole-cli",
+      "attributes": {}
+    },
+    {
+      "name": "mole.check",
+      "service": "mole-cli",
+      "attributes": {
+        "mole.change.kind": "sha",
+        "mole.change.ref": "61564ebf85",
+        "mole.hunks": 11,
+        "mole.past_fixes": 1,
+        "mole.questions.count": 1
+      }
+    }
+  ],
+  "mcpText": "file src/a.ts:1 [@unversion, indexed 2026-11-09T00:00:31.349Z]\ndefines: a:1\ncalled by: b src/b.ts:3\nimported by: src/b.ts:1\n(4 nodes, 1 call edges, 1 ms)",
+  "mcpSpans": [
+    {
+      "name": "mole.daemon.rpc",
+      "service": "mole-daemon",
+      "attributes": {
+        "mole.rpc.method": "map"
+      }
+    },
+    {
+      "name": "mole.daemon.rpc",
+      "service": "mole-daemon",
+      "attributes": {
+        "mole.rpc.method": "map"
+      }
+    },
+    {
+      "name": "mole.daemon.rpc",
+      "service": "mole-daemon",
+      "attributes": {
+        "mole.rpc.method": "map"
+      }
+    },
+    {
+      "name": "mole.daemon.rpc",
+      "service": "mole-daemon",
+      "attributes": {
+        "mole.rpc.method": "map"
+      }
+    },
+    {
+      "name": "mole.daemon.rpc",
+      "service": "mole-daemon",
+      "attributes": {
+        "mole.rpc.method": "map"
+      }
+    },
+    {
+      "name": "mole.daemon.rpc",
+      "service": "mole-daemon",
+      "attributes": {
+        "mole.rpc.method": "map"
+      }
+    },
+    {
+      "name": "mole.daemon.rpc",
+      "service": "mole-daemon",
+      "attributes": {
+        "mole.rpc.method": "map"
+      }
+    },
+    {
+      "name": "execute_tool mole_map",
+      "service": "mole-mcp",
+      "attributes": {
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "mole_map",
+        "gen_ai.tool.call.id": "1",
+        "mcp.method.name": "tools/call",
+        "mole.target": "src/a.ts",
+        "mole.map.state": "ok"
+      }
+    }
+  ],
+  "protobufRejected": 0,
+  "stages": [
+    {
+      "span": "mole.check",
+      "ok": true,
+      "why": ""
+    },
+    {
+      "span": "mole.questions",
+      "ok": true,
+      "why": ""
+    },
+    {
+      "span": "mole.history.check",
+      "ok": true,
+      "why": ""
+    },
+    {
+      "span": "mole.git.resolve_change",
+      "ok": true,
+      "why": ""
+    },
+    {
+      "span": "mole.git.blame",
+      "ok": true,
+      "why": ""
+    },
+    {
+      "span": "mole.history.fix_lookup",
+      "ok": true,
+      "why": ""
+    },
+    {
+      "span": "mole.history.symbol_resolution",
+      "ok": true,
+      "why": ""
+    },
+    {
+      "span": "execute_tool mole_map",
+      "ok": true,
+      "why": ""
+    },
+    {
+      "span": "mole.daemon.rpc",
+      "ok": true,
+      "why": ""
+    }
+  ],
+  "mlflowLoads": [
+    {
+      "lines": 321,
+      "added": 321,
+      "skipped": 0,
+      "experiment": "mole-build-loop",
+      "experiment_id": "237080787937220766",
+      "tracking_uri": "file:/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-m13-W5jHNM/mlruns"
+    },
+    {
+      "lines": 321,
+      "added": 0,
+      "skipped": 321,
+      "experiment": "mole-build-loop",
+      "experiment_id": "237080787937220766",
+      "tracking_uri": "file:/var/folders/55/nkhj4v2x2fg1pd_l8gdrlpb00000gn/T/mole-m13-W5jHNM/mlruns"
+    }
+  ],
+  "metricPrefixes": {
+    "M1": true,
+    "M2": true,
+    "M3": true,
+    "M4": true,
+    "M5": true
+  },
+  "parse": [
+    {
+      "raw": "precision 100% (3/3), recall 100% (3/3), unseen listed 0",
+      "ok": true,
+      "got": {
+        "M3.precision": 100,
+        "M3.recall": 100,
+        "M3.unseen_listed": 0
+      }
+    },
+    {
+      "raw": "p95 423 ms over 53 changes, model calls 0",
+      "ok": true,
+      "got": {
+        "M5.p95_ms": 423,
+        "M5.changes": 53,
+        "M5.model_calls": 0
+      }
+    },
+    {
+      "raw": "R1-R5 5/5 (R1 1, R2 1, R3 1, R4 1, R5 1; lenient 5/5), R6 1",
+      "ok": true,
+      "got": {
+        "M2.R1-R5": 5,
+        "M2.R1-R5.total": 5,
+        "M2.R1": 1,
+        "M2.R2": 1,
+        "M2.R3": 1,
+        "M2.R4": 1,
+        "M2.R5": 1,
+        "M2.lenient": 5,
+        "M2.lenient.total": 5,
+        "M2.R6": 1
+      }
+    },
+    {
+      "raw": "past-fix in top3 8/8, empty-case questions 0, useless share 0.0% (0/15)",
+      "ok": true,
+      "got": {
+        "M4.past-fix_in_top3": 8,
+        "M4.past-fix_in_top3.total": 8,
+        "M4.empty-case_questions": 0,
+        "M4.useless_share": 0
+      }
+    },
+    {
+      "raw": "recall 100% (136/136), false flags 0% (0/1151), ws/comment-only flagged 0",
+      "ok": true,
+      "got": {
+        "M1.recall": 100,
+        "M1.false_flags": 0,
+        "M1.ws_comment-only_flagged": 0
+      }
+    },
+    {
+      "raw": "21/21",
+      "ok": true,
+      "got": {
+        "B2": 21,
+        "B2.total": 21
+      }
+    },
+    {
+      "raw": "pass",
+      "ok": true,
+      "got": {
+        "B3": 1
+      }
+    },
+    {
+      "raw": "fail {\"names9e19c51\":false}",
+      "ok": true,
+      "got": {
+        "B3": 0
+      }
+    },
+    {
+      "raw": true,
+      "ok": true,
+      "got": {
+        "at_target": 1
+      }
+    },
+    {
+      "raw": 0.5,
+      "ok": true,
+      "got": {
+        "M9": 0.5
+      }
+    }
+  ],
+  "runsFiles": {
+    "T105-vscode-reasoning-surface": 6,
+    "T11-l2-memory-notes": 4,
+    "T12-l2-why-and-past-fixes": 6,
+    "T13-l1-since-you-last-looked": 4,
+    "T14-l3-questions": 7,
+    "T15-surface-hover-and-agent-hooks": 3,
+    "T16-traces-runs-ci": 5,
+    "T17-agent-eval-inspect": 6,
+    "T18-agent-states": 6,
+    "T19-rename-proof-anchors": 16,
+    "T20-langgraph-checkpoint-export": 3,
+    "T21-parallel-agent-collisions": 7,
+    "T22-hand-back-test-selection": 6,
+    "T23-decision-traces-intake": 15,
+    "T24-agent-claim-check": 12,
+    "T25-hand-back-verify-gate": 7,
+    "T27-decisions-as-rules": 9,
+    "T28-runtime-flows-from-tests": 7,
+    "T29-decision-graph-core": 7,
+    "T30-annotated-file-tree": 17,
+    "T31-one-on-one-loop-readback": 4,
+    "T32-team-pr-check": 8,
+    "T33-team-server": 66,
+    "T34-one-panel": 26,
+    "T35-agent-coverage": 7,
+    "T36-spec-kit-and-adr-import": 11,
+    "T37-plugin-decisions-first": 17,
+    "T38-bitemporal-decision-graph": 8,
+    "T39-import-agent-session-logs": 1,
+    "T40-design-review-and-meeting-capture": 1,
+    "T41-head-to-head-benchmarks": 1,
+    "T42-reasoning-engine": 2,
+    "T43-full-rationale-records": 5,
+    "T51-capture-cli-dedupe": 11
+  },
+  "guardCommand": "node scripts/ci/key-guard.mjs",
+  "guardGreen": "ok       packages/agentstate/bench/m10-key.json  (checks-first 626a462 \"T20 checks first (R1): key + red tests\")\nok       packages/agentstate/bench/m11-key.json  (checks-first acd2737 \"T21 checks first (R1): key + red tests\")\nok       packages/agentstate/bench/m33-key.json  (checks-first 693d282 \"T39 M33: red commit (bench + frozen key + failing tests only)\")\nruled    packages/coverage/bench/m27-key.json  sha256 8b3a6895b9805b19e3acc5f74c5049170696fc4786a63f7767cfea8ef987e278 approved by tasks/T35-agent-coverage/4 log/key-ruling-1.md  (checks-first 8086aaa \"T35 R1: prior art + M27 key (git log on ledger branches, independent of transcript parsing) + failing tests\")\nruled    packages/decisions/bench/m19-key.json  sha256 3c77806f0891ae7a9b03aa9c511a53c5ba45a4bdbd7b29206f1be91151351872 approved by tasks/T27-decisions-as-rules/4 log/key-ruling-1.md  (checks-first 1c39a04 \"T27 red: M19 bench + key + failing tests\")\nok       packages/decisions/bench/m21-key.json  (checks-first 53aafc6 \"T29 red: M21 bench + key + failing tests\")\nok       packages/decisions/bench/m22-key.json  (checks-first f230afd \"T30 red: M22 bench + key + failing tests\")\nok       packages/decisions/bench/m22b-key.json  (checks-first 3cae6f9 \"T30 R1: M22b key (9 why-questions, backstage ADRs) + bench harness (hermes chat subagents, claude-sonnet-5) + round 1 runs -- MISS: 27/27 both arms, ~3 tool calls each (corpus too small, bulk reads collapse search cost)\")\nok       packages/decisions/bench/m24-heldout-key.json  (checks-first 23178c4 \"T32 held-out key (labeled before scoring)\")\nok       packages/decisions/bench/m24-key.json  (checks-first feb813d \"T32 red: M24 bench + key + failing tests\")\nok       packages/decisions/bench/m29-key.json  (checks-first b75f9cd \"T36: spec-kit + MADR/KEP ADR import into the decision graph\")\nok       packages/flows/bench/m20-key.json  (checks-first 66f2c76 \"T28 red: M20 bench + hand-labelled key (50 call edges, 11 non-edges, written 05:31), failing @mole/flows tests, API stubs\")\nok       packages/history/bench/keys/m8-key.json  (checks-first 8297d8a \"T12 red: M2/M5 bench + keys + failing tests\")\nok       packages/history/bench/keys/past-fix-overlap.json  (checks-first 8297d8a \"T12 red: M2/M5 bench + keys + failing tests\")\nok       packages/intake/bench/m30-key.json  (checks-first 79a80b3 \"T23 R0+R1: prior-art + M30 bench key (hand-labeled) + seeded flaw fixtures + red tests\")\nok       packages/memory/bench/m1-key.json  (checks-first 8a065c6 \"T11 red: M1 key + bench + failing tests\")\nok       packages/memory/bench/m3-key.json  (checks-first b56bbe8 \"T13 red: M3 key + bench + failing tests\")\nok       packages/memory/bench/m9-heldout-key.json  (checks-first 1716ca6 \"T19 rename-proof anchors: integrate body-only matcher (D33 fallback, mole-builder-6)\")\nok       packages/memory/bench/m9-heldout2-key.json  (checks-first 1716ca6 \"T19 rename-proof anchors: integrate body-only matcher (D33 fallback, mole-builder-6)\")\nok       packages/memory/bench/m9-key.json  (",
+  "guardRed": "ok       packages/agentstate/bench/m10-key.json  (checks-first 626a462 \"T20 checks first (R1): key + red tests\")\nok       packages/agentstate/bench/m11-key.json  (checks-first acd2737 \"T21 checks first (R1): key + red tests\")\nok       packages/agentstate/bench/m33-key.json  (checks-first 693d282 \"T39 M33: red commit (bench + frozen key + failing tests only)\")\nruled    packages/coverage/bench/m27-key.json  sha256 8b3a6895b9805b19e3acc5f74c5049170696fc4786a63f7767cfea8ef987e278 approved by tasks/T35-agent-coverage/4 log/key-ruling-1.md  (checks-first 8086aaa \"T35 R1: prior art + M27 key (git log on ledger branches, independent of transcript parsing) + failing tests\")\nruled    packages/decisions/bench/m19-key.json  sha256 3c77806f0891ae7a9b03aa9c511a53c5ba45a4bdbd7b29206f1be91151351872 approved by tasks/T27-decisions-as-rules/4 log/key-ruling-1.md  (checks-first 1c39a04 \"T27 red: M19 bench + key + failing tests\")\nok       packages/decisions/bench/m21-key.json  (checks-first 53aafc6 \"T29 red: M21 bench + key + failing tests\")\nok       packages/decisions/bench/m22-key.json  (checks-first f230afd \"T30 red: M22 bench + key + failing tests\")\nok       packages/decisions/bench/m22b-key.json  (checks-first 3cae6f9 \"T30 R1: M22b key (9 why-questions, backstage ADRs) + bench harness (hermes chat subagents, claude-sonnet-5) + round 1 runs -- MISS: 27/27 both arms, ~3 tool calls each (corpus too small, bulk reads collapse search cost)\")\nok       packages/decisions/bench/m24-heldout-key.json  (checks-first 23178c4 \"T32 held-out key (labeled before scoring)\")\nok       packages/decisions/bench/m24-key.json  (checks-first feb813d \"T32 red: M24 bench + key + failing tests\")\nok       packages/decisions/bench/m29-key.json  (checks-first b75f9cd \"T36: spec-kit + MADR/KEP ADR import into the decision graph\")\nok       packages/flows/bench/m20-key.json  (checks-first 66f2c76 \"T28 red: M20 bench + hand-labelled key (50 call edges, 11 non-edges, written 05:31), failing @mole/flows tests, API s",
+  "ci": {
+    "workflowOk": true,
+    "why": [],
+    "green": 0,
+    "red": 1,
+    "ruled": 0,
+    "wrongHash": 1,
+    "keysListed": true
+  },
+  "metrics": {
+    "M13": "stage coverage 100% (9/9), off requests 0, mlflow runs 321/321 (second load 0), parse 10/10, ci green 0 red 1 ruled 0",
+    "M13_detail": "stages missing: none; workflow ok; keys listed true; wrong-hash ruling exit 1; params true; M1-M5 metrics true",
+    "at_target": true
+  },
+  "errors": []
+}
