@@ -1,46 +1,52 @@
-# T112-b2-powered (Q6) -- B2 v4.2: strengthened leakage gate + 60 NEW never-seen held-out cases
+# T112-b2-powered (Q6) -- B2 v4.2a: fixes to v4.2's review FAIL (blind re-adjudication + write-up corrections)
 
-**Goal:** per queue brief Q6 (revised 11-08) + the fresh-reviewer FAIL on v4.1 (per-class leak: no-ADR
-LLM scored 7/9=0.778 on `no_decision` alone, pooled 0.310 hid it; 3 held-out distractors were
-brand-new files like every violate/compliant case). Strengthen the gate BEFORE building (per-class
-accuracy within each class's own chance CI + a structural-feature classifier trained on v4.1/scored on
-new held-out + a repo+path-aware no-ADR LLM), build a brand-new held-out set from the ~18 previously
-untouched real ADRs so the primary result is on never-seen cases, fix v4.1's 3 miscoded distractors in
-a corrected copy (secondary, "seen before"), then label/gate/freeze/run once.
+**Goal:** per queue brief Q6 + the fresh-reviewer FAIL on v4.2 (`/Users/a1/.hermes/cache/delegation/
+live/deleg_b94d7cd2/task-0.log`): re-adjudicate the 7 labeler-disagreement cases blind (third model,
+no constructor intent, no arm outputs), re-score all 5 arms from v4.2's EXISTING raw run outputs (no
+re-runs) under both label sets, and fix 4 write-up defects (ADR count, final label mix, the
+`v42-claw-0005-compliant` flip narration, the structural-stump "lucky" framing, T53's routing-failure
+disclosure, and the closing summary's one-sided framing). v4.2's own files are kept untouched; all new
+work is v4.2a/, a new subdirectory.
 
-**Done-when:** gate strengthened and pre-registered BEFORE any case was built; >=60 NEW held-out cases
-built, mixing new-file/edit-existing shapes across violate/compliant/no_decision (not just the
-no_decision bucket); labeled (2 models) + adjudicated + frozen 3x by sha256; 5 arms run once; primary
-McNemar (false alarms, T53 vs RAG) on the NEW held-out only, pre-registered; v4.1's 3 defective
-distractors fixed and reported secondary; results-v4.2.md reports losses first.
+**Done-when:** 7 disagreement cases re-adjudicated by a fresh `claude-sonnet-5` (`hermes -z --safe-mode`)
+given ONLY the literal ADR text + diff + written rule (blind to constructor intent, blind to every
+arm's output), each required to quote the ADR sentence relied on; new labels frozen by sha256 BEFORE
+re-scoring; T53/RAG re-scored from the existing raw run files under both the original and reaudited
+label sets; primary McNemar (false alarms) reported under both; write-up states 16 ADRs, final mix
+17/15/28, narrates the `v42-claw-0005-compliant` flip, discloses the structural stump predicts
+violate on 59/60 cases (uninformative, not "lucky"), states T53's 4 original misses are all routing
+failures (`routedCorrectly=false`), and states the recall trade-off plainly alongside the false-alarm
+result.
 
 **Status:** DONE.
-- Gate: 2/3 checks (keyword classifier; no-ADR LLM with repo+path) pass cleanly, per class. Check 2
-  (structural classifier trained on v4.1, scored on new held-out) is MIXED: pooled accuracy stays
-  below majority, but a weak (43.9% train-accuracy) stump lands a lucky 16/16 hit on `violate` alone --
-  reported, not hidden, and traced to v4.1's own training-data confound, not v4.2's construction.
-- Built 60 new held-out cases (17 ADRs' violate/compliant pairs + 28 no_decision distractors), all
-  never seen in v3/v4/v4.1. violate/compliant are each exactly 50.0% new-file (no confound between
-  those two classes); no_decision sits at 35.7% new-file (narrowed from v4.1's 100%-vs-33% gap, not
-  fully closed -- stated as a loss).
-- Labeled (opus/haiku), kappa 0.765, adjudicated, frozen 3x (frozen_raw/final/run_v4_2.sha256, all
-  verify).
-- 5 arms run once. **Primary McNemar (false alarms, T53 vs RAG, n_nonviolate=43): b=0, c=8, p=0.0078 --
-  significant.** T46 cascade loses badly on this round (0/17 recall on violate). Optional pooled
-  analysis (v4.1 SEEN 42 + v4.2 UNSEEN 60): p=0.000244 -- NOT the primary result (mixes seen/unseen).
-- v4.1's v4-none-3/4/5 fixed in `v4_1_corrected/cases_v4_1_corrected.json` (real pre-existing files now
-  targeted, no longer silently new-file) -- reported secondary, does not change v4.1's frozen arm runs.
-- n (60) still below the task's full >=175 / v3's 155-175 power band -- hand-authoring time, not call
-  budget, bound this round, same posture as v4/v4.1.
+- Blind re-adjudication: 5 of 7 disagreement cases flipped label under the blind third-model check
+  (4 compliant->violate, 1 violate->compliant; 2 unchanged). Frozen BEFORE re-scoring:
+  `v4.2a/frozen_v42a_reaudit.sha256` (verifies).
+- Re-scored from `run/*.json` (no re-runs). Primary McNemar (false alarms, T53 vs RAG): label set A
+  (v4.2 original) n=43, b=0, c=8, p=0.0078 (reproduces v4.2's own number exactly); label set B
+  (v4.2a reaudited) n=40, b=0, c=6, p=0.0313 -- both significant at alpha=0.05, gap narrows.
+- Write-up fixes applied in `v4.2a/results-v4.2a.md`: 16 ADRs (not 17); v4.2's actual final label mix
+  is 17/15/28 (not the pre-adjudication 16/16/28 `results-v4.2.md` reported); the
+  `v42-claw-0005-compliant` flip is narrated (both labelers + the no-ADR-LLM gate check all read it as
+  `violate` despite `compliant` constructor intent -- this single case explains 17/15/28 vs 16/16/28);
+  the structural stump is shown to predict `violate` on 59/60 cases (a near-constant predictor, not a
+  lucky per-class hit); T53's 4 original-label-set misses are confirmed `routedCorrectly=false` for
+  all 4 (routing-layer failures, not judgment failures); the closing summary states the recall
+  trade-off (T53 recall drops 0.765 -> 0.700 under reaudited labels, RAG holds at 1.000) next to the
+  false-alarm result, not instead of it.
+- v4.2's own files (`protocol_v4.2.md`, `results-v4.2.md`, `cases_with_labels_v4_2_new.json`,
+  `arm_metrics_v4_2.json`, `mcnemar_v4_2.json`, etc.) are UNTOUCHED -- verified no writes landed
+  outside `v4.2a/` during this fix.
 
-All artifacts live in `context/product-plan/systems/metrics-proof/m2-conflict/v4.2/` (gitignored, main
-checkout only, same convention as v3/v4/v4.1 -- this task folder is the git-tracked summary +
-pointers). v4 and v4.1's own directories are untouched.
+All artifacts live in `context/product-plan/systems/metrics-proof/m2-conflict/v4.2/v4.2a/`
+(gitignored, main checkout only, same convention as v3/v4/v4.1/v4.2). v4.2's own directory contents
+are untouched; v4, v4.1 untouched.
 
-**Next:** grow the held-out set using claw-operator ADR-0004/0020 (held back this round) and close the
-no_decision file-mode gap further (currently 35.7% vs violate/compliant's 50.0%); fix v4.1's broader
-new-file confound at the source (not just the 3 distractors) so check 2's structural-classifier gate
-stops landing lucky per-class hits trained on it.
+**Next:** a full re-score of the reviewer/cascade/judge arms under the reaudited label set (only
+T53/RAG were re-scored, since they are the primary test's pair); consider a second blind labeler for
+the 7 reaudited cases to compute a blind-vs-blind kappa instead of relying on a single third-model
+call per case.
 
-See `4 log/v4.2-new-heldout.md` for the full evidence trail; `4 log/v4.1-review-fix.md` and
-`4 log/evidence.md` for v4/v4.1's prior evidence trails, kept for history.
+See `4 log/v4.2a-review-fix.md` for the full evidence trail; `4 log/v4.2-new-heldout.md`,
+`4 log/v4.1-review-fix.md`, `4 log/evidence.md` for v4.2/v4.1/v4's prior evidence trails, kept for
+history.
