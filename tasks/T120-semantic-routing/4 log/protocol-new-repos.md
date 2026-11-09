@@ -6,9 +6,9 @@ runs it"), this protocol is written and code-hash-pinned but this task does not 
 ## 1. Frozen implementation
 
 Code under test: `packages/decisions/src/route/route.ts` + `types.ts` as of commit
-`<FILLED AFTER FINAL COMMIT — see frozen.sha256>` (embedBoost + useGovernsSummary, this task).
-Any code change after that commit invalidates this freeze; re-run the gate steps below before
-trusting a result from a later commit.
+`4fdb3e5e7a30c84c6269948206ff5c7d71c1a234` (embedBoost + useGovernsSummary, this task) — see
+`4 log/frozen.sha256` for the per-file sha256. Any code change after that commit invalidates this
+freeze; re-run the gate steps below before trusting a result from a later commit.
 
 ## 2. Repo selection — must satisfy ALL of:
 
