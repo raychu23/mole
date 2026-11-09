@@ -1,0 +1,88 @@
+[
+  {
+    "name": "bm25+embedBoost+governs(FIXED)+listwise-k10-haiku",
+    "perRepo": {
+      "semantic-kernel": {
+        "n": 16,
+        "hits1": 7,
+        "hits3": 14,
+        "hits5": 14,
+        "nNone": 13,
+        "falseAlarms": 6,
+        "ms": 127196
+      },
+      "jaeger": {
+        "n": 14,
+        "hits1": 12,
+        "hits3": 14,
+        "hits5": 14,
+        "nNone": 12,
+        "falseAlarms": 6,
+        "ms": 112962
+      },
+      "content-publisher": {
+        "n": 28,
+        "hits1": 13,
+        "hits3": 21,
+        "hits5": 24,
+        "nNone": 16,
+        "falseAlarms": 11,
+        "ms": 189476
+      },
+      "email-alert-api": {
+        "n": 10,
+        "hits1": 4,
+        "hits3": 10,
+        "hits5": 10,
+        "nNone": 15,
+        "falseAlarms": 8,
+        "ms": 116767
+      }
+    },
+    "llmCalls": 120,
+    "llmCostUsd": 0.1894059999999999
+  },
+  {
+    "name": "bm25+embedBoost+governs(FIXED)+listwise-k15-haiku",
+    "perRepo": {
+      "semantic-kernel": {
+        "n": 16,
+        "hits1": 7,
+        "hits3": 14,
+        "hits5": 14,
+        "nNone": 13,
+        "falseAlarms": 7,
+        "ms": 124898
+      },
+      "jaeger": {
+        "n": 14,
+        "hits1": 12,
+        "hits3": 14,
+        "hits5": 14,
+        "nNone": 12,
+        "falseAlarms": 7,
+        "ms": 112554
+      },
+      "content-publisher": {
+        "n": 28,
+        "hits1": 13,
+        "hits3": 21,
+        "hits5": 24,
+        "nNone": 16,
+        "falseAlarms": 12,
+        "ms": 176946
+      },
+      "email-alert-api": {
+        "n": 10,
+        "hits1": 4,
+        "hits3": 10,
+        "hits5": 10,
+        "nNone": 15,
+        "falseAlarms": 8,
+        "ms": 109567
+      }
+    },
+    "llmCalls": 120,
+    "llmCostUsd": 0.20498399999999992
+  }
+]

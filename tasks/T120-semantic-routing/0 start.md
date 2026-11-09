@@ -6,9 +6,9 @@ branch: ledger/t120-semantic-routing
 worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T120-semantic-routing
 base: 9c0ec45
 reviewer:
-updated: 2026-11-08 23:55
-status: ledger running — tests-first embedBoost+useGovernsSummary implemented (594/594 pass); DEV recall@1/3/5 measured (4 log/recall-dev.md); NEW-repo protocol frozen, NOT run
-next: submit with --report citing 4 log/{prior-art.md,red.txt,recall-dev.md,protocol-new-repos.md,frozen.sha256}
+updated: 2026-11-09 01:00
+status: ledger running — Q13 follow-up done (4 log/results.md): fixed governsSummary id-resolution bug (0/79→77/79 semantic-kernel coverage) AND a ground-truth bug found while diagnosing it (12 wrong gt_file labels in semantic-kernel, all now corrected — true baseline R@1 0.375, matches frozen v4.3 bench exactly); re-measured all 4 stage-1 configs + 2 new LLM-listwise configs (k10/k15 haiku, real cost+FA); recommendation: +embedBoost alone, defer governsSummary, k10 if stage-2 included; NEW-repo protocol still frozen, NOT run
+next: submit with --report citing 4 log/{prior-art.md,red.txt,recall-dev.md,results.md,protocol-new-repos.md,frozen.sha256}
 claimed: 2026-11-08 23:55
 ---
 ```notes
