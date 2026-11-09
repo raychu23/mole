@@ -12,75 +12,57 @@ losses first.
 re-adjudicated, frozen by sha256, all 4 arms run once each, pooled-or-standalone McNemar + Wilson CIs
 reported per the pre-registered design, write-up states losses first.
 
-**Status:** PARTIAL -- pre-registration + repo selection DONE; case build/gate/label/run NOT RUN this
-session (see Next).
+**Status:** DONE. 124 new held-out cases (55 Part A + 69 Part B, >=95 target met) built, combined
+leakage-gated (all 3 checks + 2 task-specific build-fix cue checks pass), dual-labeled (opus+haiku,
+kappa 0.81), 8 disputed cases blind-reaudited (1 flip), frozen, all 4 arms (T53/RAG/Reviewer/Judge)
+run once on all 124, standalone + 2 pooled McNemar readings computed, per-repo breakdown and T53
+miss-mechanism reported. Full write-up: `4 log/results-v4.3.md`.
 
-Done so far:
-- Repo search logged (`4 log/prior-art.md`, dated 2026-11-08): grepped v2-v4.2's `REPOS` dicts for the
-  9 already-used repos, then ~45 repo+path candidates checked via GitHub's contents API + web_search +
-  one browser check, against the >=10-real-ADR / has-its-own-source-tree bar.
-- 4 new repos selected (within the 3-6 range), each API-verified with real ADR file counts:
-  `microsoft/semantic-kernel` (80), `jaegertracing/jaeger` (15), `alphagov/content-publisher` (16),
-  `alphagov/email-alert-api` (10). 2 candidates with >=10 files were REJECTED for being docs-only repos
-  with no source tree to diff against (`archivematica/archivematica-architectural-decisions`,
-  `home-assistant/architecture`); several more rejected for <10 real ADRs (`openstatusHQ/openstatus`,
-  `dotnet/reactive`, `alphagov/whitehall`, others -- full list in the prior-art log).
-- `protocol_v4.3.md` written and committed BEFORE any case exists (`context/product-plan/systems/
-  metrics-proof/m2-conflict/v4.3/protocol_v4.3.md`, gitignored/main-checkout, not tracked here):
-  pre-registers POOLING with v4.2 (clean: same method, same gate design, same arms, same primary stat)
-  as the primary design, with a pre-registered standalone fallback if the new repos' cases fail the
-  leak gate; pre-registers the power analysis (section 2): v4.2's observed primary discordance (b=0,
-  c=8, n_nonviolate=43) gives a POINT-ESTIMATE required n_nonviolate of ~40 (already met by v4.2 alone)
-  but a CONSERVATIVE reading (true discordant split at the Wilson lower bound of the observed 8/8 split,
-  0.676) requires ~340 -- this round's pooled projection (~111-125 non-violate) clears the optimistic
-  bar by a wide margin and falls far short of the conservative one. Both numbers are in the protocol,
-  not just the favorable one.
+## Headline result (losses first -- see `4 log/results-v4.3.md` for full detail)
 
-## Losses first
+- Standalone v4.3 primary (McNemar, FA, T53 vs RAG, this round's 124 cases only) is **NOT
+  significant** (p=0.143, n_nonviolate=85). Pooled with v4.2 original labels it IS significant
+  (p=0.004, n_nonviolate=128); pooled with v4.2a's reaudited labels also significant (p=0.011,
+  n_nonviolate=125). Both reported, standalone is NOT suppressed in favor of the pooled number.
+- T53's recall fell sharply on the 4 new repos (0.513 vs v4.2's 0.765), driven mostly by the
+  semantic router never finding the governing decision (17/19 misses routedCorrectly=False), not
+  judgment error once routed. `email-alert-api` (0/7 T53 recall) is additionally confounded by an
+  id-normalization mismatch between this repo's `adr-NNN-*.md` filenames and the arm runner's
+  (v4.2-inherited, unmodified this round) id-matching logic -- disclosed, not patched.
+- Power: pooled n_nonviolate=128 clears the pre-registered OPTIMISTIC target (~40-50) by 2.6-3.2x
+  but remains well short (37.6%) of the pre-registered CONSERVATIVE target (~340). Both stated.
+- Blind reaudit fix applied and verified: the third reader is now explicitly told (twice) to judge
+  ONLY against the ADR's accepted Decision Outcome/Decision section, never a Considered
+  Options/Rejected Alternatives section -- v4.2a's reaudit had no such constraint. 1/8 disputed
+  cases flipped under the fixed reaudit.
 
-1. **The build/label/gate/run/stats pipeline is NOT RUN.** Building >=95 hand-authored cases (real ADR
-   text + synthetic diff against real file paths, per repo, mixed new/append across all 3 classes, no
-   cue words) across 4 repos, at the quality bar v4.2's own `build_cases_v4_2_new.py` demonstrates (each
-   case hand-written, not templated), is itself the bulk of the work v4.2 needed a dedicated task+review
-   cycle to do for 60 cases. This session produced the pre-registration and repo selection only.
-   Reason: scope -- a single session's realistic tool/time budget does not cover hand-authoring ~95-115
-   cases plus the per-class/structural leak gate, dual LLM labeling, blind re-adjudication of disputed
-   cases, freezing, and 4 arm runs (T53, RAG, reviewer, judge) to the rigor this bench's history
-   requires (v4.2's own run took a dedicated task + a fresh-reviewer FAIL + a fix round).
-2. **Repo selection's own gate (leakage gate, per-class) has not been run on any of the 4 new repos'
-   content yet** -- it is possible one or more of the 4 fails the gate once real cases exist, which
-   would change the final repo count below 4 (still inside the 3-6 range, but worth flagging now rather
-   than after the fact).
-3. **No GitHub API auth token used** -- the unauthenticated 60/hr rate limit was hit once during the
-   search; this slowed, but did not block, the search (switched to `web_search`/browser for a few
-   checks). Not a defect in the result, but costs are disclosed.
+## What was done this session (continuing from the PARTIAL state left by the build sessions)
 
-## Next
+1. Merged `cases_v4_3_part_A_raw.json` (55) + `cases_v4_3_part_B_raw.json` (69) -> 124, no id
+   collisions, repo split content-publisher 44/semantic-kernel 29/jaeger 26/email-alert-api 25.
+2. Combined leak gate (`leakage_gate_v4_3_combined.py`): keyword, structural (trained on v4.2),
+   no-ADR LLM (path+repo), all per-class, all PASS. Added the two task-specific build-fix cue
+   checks (the "read from"/"derived from" phrase added to 12 Part A distractors; the
+   `require("json")` injected into ~half of Part B's 61 `.rb` cases) -- neither is separable by
+   class. Froze (`frozen_raw_v4_3.sha256`).
+3. Dual-labeled all 124 (opus+haiku, 248 calls, `labeler_v4_3.py`), adjudicated
+   (`adjudicate_v4_3.py`, same 3-step rule as v4.2), 8 disputes -> blind third-reader reaudit
+   (`reaudit_blind_v4_3.py`, FIXES v4.2a's reaudit flaw per this task's instruction: explicit,
+   doubled instruction to judge only the accepted Decision Outcome/Decision section, never
+   Considered Options/Rejected Alternatives). 1/8 flipped. Froze (`frozen_final_v4_3.sha256`).
+4. Re-cloned the 2 repos whose Part-A build clones had already been deleted
+   (`microsoft/semantic-kernel`, `jaegertracing/jaeger`) and reused Part B's surviving clones
+   (`content-publisher`, `email-alert-api`); verified every repo's current HEAD matches the
+   recorded shared `base` SHA. Reconstructed each case's `head` commit
+   (`reconstruct_commits_v4_3.py`, disclosed as a loss) since the original synthetic head commits
+   were local-only and deleted with the Part-A clones.
+5. Ran T53 (frozen k5/m0/c1.01/haiku-router params, flags off), RAG, Reviewer, Judge once each on
+   all 124 cases (`run/run_t53_semantic_route_v4_3.mjs`, `run/run_arms_v4_3.py`,
+   `baselines/run_judge_arm_v4_3.py`). Froze (`frozen_run_v4_3.sha256`).
+6. Computed stats (`analysis_v4_3.py`): standalone + 2 pooled McNemar readings, recall diff with
+   Wilson CIs + paired test, per-repo breakdown, T53 miss mechanism via `routedCorrectly`.
+7. Wrote `4 log/results-v4.3.md` (losses first, both McNemar/recall numbers equally plain, power
+   shortfall vs conservative n~340 stated).
 
-1. For each of the 4 repos: clone shallow (`--depth 1`) to scratch, read the repo's own real ADR text
-   (verbatim, like v4.2's `read_adr()`), hand-author violate/compliant pairs + no_decision distractors
-   per `protocol_v4.3.md` section 4's class-mix rules, construct real diffs via `git` against the
-   cloned tree (new-file vs append, mixed across all 3 classes), target >=95 across the 4 repos.
-   Disk discipline: scratch budget is 500 MB per the queue brief; delete each repo's clone once its
-   cases are extracted, `df -h` before/after each clone (disk was at 6.0-6.1 GB free at session start,
-   near the 4 GB floor -- do not clone all 4 repos at once).
-2. Run `leakage_gate_v4_2.py`'s per-class + structural checks (reused, not relaxed) on the new cases
-   BEFORE labeling.
-3. Dual-label (opus+haiku style, reusing `labeler_v4_2.py`'s shape) via `hermes -z --safe-mode` only.
-4. Blind re-adjudicate every disputed case with a FRESH `hermes -z claude-sonnet-5 --safe-mode` call
-   given ONLY the literal ADR text + diff + written rule, required to quote the ADR's **Decision
-   Outcome** section verbatim (never "Considered Options", never constructor intent) -- this is a
-   stricter instruction than v4.2a's own reaudit (which quoted "the ADR sentence" generically); make
-   this explicit in the reaudit script's prompt.
-5. Freeze by sha256 before scoring (cases, gate output, labels, reaudit output -- each its own frozen
-   artifact, same posture as v4.2/v4.2a).
-6. Run T53 (frozen params, flags off), RAG (reads all decisions), reviewer (given the decision), judge
-   (once each) on the new held-out set.
-7. Per `protocol_v4.3.md` section 3: if all 4 repos' cases pass the gate, compute the PRIMARY McNemar
-   (T53 vs RAG, false alarms) on the POOLED (v4.2's 60 + new) non-violate set, under v4.2's original
-   label set, with v4.2a's reaudited label set reported alongside as secondary; else report the
-   standalone (new-only) result and say why pooling was dropped.
-8. Report losses first, both McNemar and the recall-difference co-primary (with Wilson CIs) equally
-   plainly, per the task instruction.
-
-See `4 log/prior-art.md` for the full repo search log.
+See `4 log/prior-art.md`, `4 log/build-part-A.md`, `4 log/build-part-B.md` for the repo-selection
+and case-build history that preceded this session.
