@@ -1,0 +1,542 @@
+[
+ {
+  "case": "py-finally-controlflow",
+  "ground_truth": "pep601-forbid",
+  "n_options": 3,
+  "candidate_set_size": 2,
+  "armA_mole_suggest_raw": {
+   "incident": "inc-katriel-finally-study",
+   "candidates": [
+    {
+     "incident": "inc-katriel-finally-study",
+     "argument": "change-semantics-exception-wins",
+     "text": "Change the semantics instead of forbidding the syntax: keep return/break/continue legal inside finally, but make any in-flight exception always win (propagate) over them. #tenet-py-finally-controlflow-2",
+     "label": "out",
+     "plainLabel": "undecided",
+     "phase": "before",
+     "decision": "py-finally-silently-swallows",
+     "attackers": [
+      "status-quo-linters"
+     ],
+     "alsoReinstates": [],
+     "score": 0.194,
+     "evidence": [
+      {
+       "kind": "decision",
+       "value": "py-finally-silently-swallows",
+       "file": ".mole/incidents/inc-katriel-finally-study.md",
+       "line": 5
+      },
+      {
+       "kind": "scope",
+       "value": "finally blocks",
+       "file": ".mole/incidents/inc-katriel-finally-study.md",
+       "line": 6
+      },
+      {
+       "kind": "text",
+       "value": "char-3gram Jaccard 0.194",
+       "file": ".mole/arguments/py-finally-silently-swallows.argdown",
+       "line": 3
+      }
+     ]
+    },
+    {
+     "incident": "inc-katriel-finally-study",
+     "argument": "pep601-forbid",
+     "text": "Deprecate then forbid return/break/continue that exit a finally block: emit SyntaxWarning in 3.9/3.10, then turn it into a SyntaxError. #tenet-py-finally-controlflow-1",
+     "label": "out",
+     "plainLabel": "undecided",
+     "phase": "before",
+     "decision": "py-finally-silently-swallows",
+     "attackers": [
+      "status-quo-linters"
+     ],
+     "alsoReinstates": [],
+     "score": 0.166,
+     "evidence": [
+      {
+       "kind": "decision",
+       "value": "py-finally-silently-swallows",
+       "file": ".mole/incidents/inc-katriel-finally-study.md",
+       "line": 5
+      },
+      {
+       "kind": "scope",
+       "value": "finally blocks",
+       "file": ".mole/incidents/inc-katriel-finally-study.md",
+       "line": 6
+      },
+      {
+       "kind": "text",
+       "value": "char-3gram Jaccard 0.166",
+       "file": ".mole/arguments/py-finally-silently-swallows.argdown",
+       "line": 2
+      }
+     ]
+    }
+   ]
+  },
+  "armA_top": "change-semantics-exception-wins",
+  "armA_ranked": [
+   "change-semantics-exception-wins",
+   "pep601-forbid"
+  ],
+  "armB_bm25_ranked": [
+   "status-quo-linters",
+   "change-semantics-exception-wins",
+   "pep601-forbid"
+  ],
+  "armB_top": "status-quo-linters"
+ },
+ {
+  "case": "py-script-deps-format",
+  "ground_truth": "toml-block",
+  "n_options": 3,
+  "candidate_set_size": 2,
+  "armA_mole_suggest_raw": {
+   "incident": "inc-pep722-steering-rejection",
+   "candidates": [
+    {
+     "incident": "inc-pep722-steering-rejection",
+     "argument": "toml-block",
+     "text": "Embed a TOML-formatted metadata block instead of a plain comment block, reusing pyproject.toml's own data format for consistency with the rest of Python packaging. #tenet-py-script-deps-format-1",
+     "label": "out",
+     "plainLabel": "undecided",
+     "phase": "before",
+     "decision": "py-script-deps-comment-block",
+     "attackers": [
+      "comment-block"
+     ],
+     "alsoReinstates": [],
+     "score": 0.307,
+     "evidence": [
+      {
+       "kind": "decision",
+       "value": "py-script-deps-comment-block",
+       "file": ".mole/incidents/inc-pep722-steering-rejection.md",
+       "line": 5
+      },
+      {
+       "kind": "scope",
+       "value": "single-file script dependency metadata",
+       "file": ".mole/incidents/inc-pep722-steering-rejection.md",
+       "line": 6
+      },
+      {
+       "kind": "text",
+       "value": "char-3gram Jaccard 0.307",
+       "file": ".mole/arguments/py-script-deps-comment-block.argdown",
+       "line": 2
+      }
+     ]
+    },
+    {
+     "incident": "inc-pep722-steering-rejection",
+     "argument": "embed-pyproject-toml",
+     "text": "Embed an actual (partial) pyproject.toml file inside the script, reusing the existing [project] table instead of inventing any new format. #tenet-py-script-deps-format-2",
+     "label": "out",
+     "plainLabel": "undecided",
+     "phase": "before",
+     "decision": "py-script-deps-comment-block",
+     "attackers": [
+      "comment-block"
+     ],
+     "alsoReinstates": [],
+     "score": 0.179,
+     "evidence": [
+      {
+       "kind": "decision",
+       "value": "py-script-deps-comment-block",
+       "file": ".mole/incidents/inc-pep722-steering-rejection.md",
+       "line": 5
+      },
+      {
+       "kind": "scope",
+       "value": "single-file script dependency metadata",
+       "file": ".mole/incidents/inc-pep722-steering-rejection.md",
+       "line": 6
+      },
+      {
+       "kind": "text",
+       "value": "char-3gram Jaccard 0.179",
+       "file": ".mole/arguments/py-script-deps-comment-block.argdown",
+       "line": 3
+      }
+     ]
+    }
+   ]
+  },
+  "armA_top": "toml-block",
+  "armA_ranked": [
+   "toml-block",
+   "embed-pyproject-toml"
+  ],
+  "armB_bm25_ranked": [
+   "toml-block",
+   "embed-pyproject-toml",
+   "comment-block"
+  ],
+  "armB_top": "toml-block"
+ },
+ {
+  "case": "py-subinterpreters",
+  "ground_truth": "interpreters-stdlib-module",
+  "n_options": 3,
+  "candidate_set_size": 2,
+  "armA_mole_suggest_raw": {
+   "incident": "inc-gil-removal-pep703",
+   "candidates": [
+    {
+     "incident": "inc-gil-removal-pep703",
+     "argument": "interpreters-stdlib-module",
+     "text": "Add a stdlib 'interpreters' module exposing subinterpreters plus a channel-based communication API directly to pure-Python code. #tenet-py-subinterpreters-1",
+     "label": "out",
+     "plainLabel": "undecided",
+     "phase": "before",
+     "decision": "py-parallel-via-multiprocessing-only",
+     "attackers": [
+      "multiprocessing-only"
+     ],
+     "alsoReinstates": [],
+     "score": 0.175,
+     "evidence": [
+      {
+       "kind": "decision",
+       "value": "py-parallel-via-multiprocessing-only",
+       "file": ".mole/incidents/inc-gil-removal-pep703.md",
+       "line": 5
+      },
+      {
+       "kind": "scope",
+       "value": "parallel execution via multiple interpreters",
+       "file": ".mole/incidents/inc-gil-removal-pep703.md",
+       "line": 6
+      },
+      {
+       "kind": "text",
+       "value": "char-3gram Jaccard 0.175",
+       "file": ".mole/arguments/py-parallel-via-multiprocessing-only.argdown",
+       "line": 2
+      }
+     ]
+    },
+    {
+     "incident": "inc-gil-removal-pep703",
+     "argument": "pipes-based-comm-api",
+     "text": "If a stdlib module is added at all, communicate between interpreters via raw OS pipes directly, instead of a higher-level channel/queue abstraction. #tenet-py-subinterpreters-2",
+     "label": "out",
+     "plainLabel": "undecided",
+     "phase": "before",
+     "decision": "py-parallel-via-multiprocessing-only",
+     "attackers": [
+      "multiprocessing-only"
+     ],
+     "alsoReinstates": [],
+     "score": 0.154,
+     "evidence": [
+      {
+       "kind": "decision",
+       "value": "py-parallel-via-multiprocessing-only",
+       "file": ".mole/incidents/inc-gil-removal-pep703.md",
+       "line": 5
+      },
+      {
+       "kind": "scope",
+       "value": "parallel execution via multiple interpreters",
+       "file": ".mole/incidents/inc-gil-removal-pep703.md",
+       "line": 6
+      },
+      {
+       "kind": "text",
+       "value": "char-3gram Jaccard 0.154",
+       "file": ".mole/arguments/py-parallel-via-multiprocessing-only.argdown",
+       "line": 3
+      }
+     ]
+    }
+   ]
+  },
+  "armA_top": "interpreters-stdlib-module",
+  "armA_ranked": [
+   "interpreters-stdlib-module",
+   "pipes-based-comm-api"
+  ],
+  "armB_bm25_ranked": [
+   "multiprocessing-only",
+   "interpreters-stdlib-module",
+   "pipes-based-comm-api"
+  ],
+  "armB_top": "multiprocessing-only"
+ },
+ {
+  "case": "py-lockfile-format",
+  "ground_truth": "standard-lockfile-format",
+  "n_options": 3,
+  "candidate_set_size": 2,
+  "armA_mole_suggest_raw": {
+   "incident": "inc-lockfile-fragmentation-pain",
+   "candidates": [
+    {
+     "incident": "inc-lockfile-fragmentation-pain",
+     "argument": "standard-lockfile-format",
+     "text": "Define one standard, tool-agnostic lock-file format so any installer can consume a lock file regardless of which tool generated it. #tenet-py-lockfile-format-1",
+     "label": "out",
+     "plainLabel": "undecided",
+     "phase": "before",
+     "decision": "py-lockfiles-per-tool-adhoc",
+     "attackers": [
+      "status-quo-per-tool"
+     ],
+     "alsoReinstates": [],
+     "score": 0.167,
+     "evidence": [
+      {
+       "kind": "decision",
+       "value": "py-lockfiles-per-tool-adhoc",
+       "file": ".mole/incidents/inc-lockfile-fragmentation-pain.md",
+       "line": 5
+      },
+      {
+       "kind": "scope",
+       "value": "dependency lock files",
+       "file": ".mole/incidents/inc-lockfile-fragmentation-pain.md",
+       "line": 6
+      },
+      {
+       "kind": "text",
+       "value": "char-3gram Jaccard 0.167",
+       "file": ".mole/arguments/py-lockfiles-per-tool-adhoc.argdown",
+       "line": 2
+      }
+     ]
+    },
+    {
+     "incident": "inc-lockfile-fragmentation-pain",
+     "argument": "adopt-poetry-lock-as-standard",
+     "text": "Rather than invent a new format, standardize on Poetry's existing poetry.lock format, already in wide use. #tenet-py-lockfile-format-2",
+     "label": "out",
+     "plainLabel": "undecided",
+     "phase": "before",
+     "decision": "py-lockfiles-per-tool-adhoc",
+     "attackers": [
+      "status-quo-per-tool"
+     ],
+     "alsoReinstates": [],
+     "score": 0.14,
+     "evidence": [
+      {
+       "kind": "decision",
+       "value": "py-lockfiles-per-tool-adhoc",
+       "file": ".mole/incidents/inc-lockfile-fragmentation-pain.md",
+       "line": 5
+      },
+      {
+       "kind": "scope",
+       "value": "dependency lock files",
+       "file": ".mole/incidents/inc-lockfile-fragmentation-pain.md",
+       "line": 6
+      },
+      {
+       "kind": "text",
+       "value": "char-3gram Jaccard 0.14",
+       "file": ".mole/arguments/py-lockfiles-per-tool-adhoc.argdown",
+       "line": 3
+      }
+     ]
+    }
+   ]
+  },
+  "armA_top": "standard-lockfile-format",
+  "armA_ranked": [
+   "standard-lockfile-format",
+   "adopt-poetry-lock-as-standard"
+  ],
+  "armB_bm25_ranked": [
+   "standard-lockfile-format",
+   "adopt-poetry-lock-as-standard",
+   "status-quo-per-tool"
+  ],
+  "armB_top": "standard-lockfile-format"
+ },
+ {
+  "case": "py-annotations-eval",
+  "ground_truth": "deferred-eval-function",
+  "n_options": 3,
+  "candidate_set_size": 2,
+  "armA_mole_suggest_raw": {
+   "incident": "inc-stringized-annotations-runtime-pain",
+   "candidates": [
+    {
+     "incident": "inc-stringized-annotations-runtime-pain",
+     "argument": "deferred-eval-function",
+     "text": "Delay evaluation of annotation expressions by compiling them into a hidden per-object function (an 'implicit lambda expression') that is only called when annotations are actually requested, instead of stringizing them. #tenet-py-annotations-eval-1",
+     "label": "out",
+     "plainLabel": "undecided",
+     "phase": "before",
+     "decision": "py-annotations-stringized",
+     "attackers": [
+      "stringized-annotations"
+     ],
+     "alsoReinstates": [],
+     "score": 0.155,
+     "evidence": [
+      {
+       "kind": "decision",
+       "value": "py-annotations-stringized",
+       "file": ".mole/incidents/inc-stringized-annotations-runtime-pain.md",
+       "line": 5
+      },
+      {
+       "kind": "scope",
+       "value": "annotation evaluation timing",
+       "file": ".mole/incidents/inc-stringized-annotations-runtime-pain.md",
+       "line": 6
+      },
+      {
+       "kind": "text",
+       "value": "char-3gram Jaccard 0.155",
+       "file": ".mole/arguments/py-annotations-stringized.argdown",
+       "line": 2
+      }
+     ]
+    },
+    {
+     "incident": "inc-stringized-annotations-runtime-pain",
+     "argument": "store-strings-lazily",
+     "text": "Keep storing annotation strings (as PEP 563 does) but make retrieval lazy/opt-in via a new accessor function, without compiling a hidden per-object function. #tenet-py-annotations-eval-2",
+     "label": "out",
+     "plainLabel": "undecided",
+     "phase": "before",
+     "decision": "py-annotations-stringized",
+     "attackers": [
+      "stringized-annotations"
+     ],
+     "alsoReinstates": [],
+     "score": 0.136,
+     "evidence": [
+      {
+       "kind": "decision",
+       "value": "py-annotations-stringized",
+       "file": ".mole/incidents/inc-stringized-annotations-runtime-pain.md",
+       "line": 5
+      },
+      {
+       "kind": "scope",
+       "value": "annotation evaluation timing",
+       "file": ".mole/incidents/inc-stringized-annotations-runtime-pain.md",
+       "line": 6
+      },
+      {
+       "kind": "text",
+       "value": "char-3gram Jaccard 0.136",
+       "file": ".mole/arguments/py-annotations-stringized.argdown",
+       "line": 3
+      }
+     ]
+    }
+   ]
+  },
+  "armA_top": "deferred-eval-function",
+  "armA_ranked": [
+   "deferred-eval-function",
+   "store-strings-lazily"
+  ],
+  "armB_bm25_ranked": [
+   "stringized-annotations",
+   "deferred-eval-function",
+   "store-strings-lazily"
+  ],
+  "armB_top": "stringized-annotations"
+ },
+ {
+  "case": "py-enum-type",
+  "ground_truth": "flufl-style-class-enum",
+  "n_options": 3,
+  "candidate_set_size": 2,
+  "armA_mole_suggest_raw": {
+   "incident": "inc-python-ideas-2013-enum-thread",
+   "candidates": [
+    {
+     "incident": "inc-python-ideas-2013-enum-thread",
+     "argument": "pep354-functional-enum",
+     "text": "Add a functional enum(*names) constructor returning an opaque enumeration object, with no class syntax. #tenet-py-enum-type-1",
+     "label": "out",
+     "plainLabel": "undecided",
+     "phase": "before",
+     "decision": "py-enum-via-int-constants",
+     "attackers": [
+      "int-constants"
+     ],
+     "alsoReinstates": [],
+     "score": 0.119,
+     "evidence": [
+      {
+       "kind": "decision",
+       "value": "py-enum-via-int-constants",
+       "file": ".mole/incidents/inc-python-ideas-2013-enum-thread.md",
+       "line": 5
+      },
+      {
+       "kind": "scope",
+       "value": "enumeration type",
+       "file": ".mole/incidents/inc-python-ideas-2013-enum-thread.md",
+       "line": 6
+      },
+      {
+       "kind": "text",
+       "value": "char-3gram Jaccard 0.119",
+       "file": ".mole/arguments/py-enum-via-int-constants.argdown",
+       "line": 2
+      }
+     ]
+    },
+    {
+     "incident": "inc-python-ideas-2013-enum-thread",
+     "argument": "flufl-style-class-enum",
+     "text": "Add a class-based Enum type (subclass Enum, define members as class attributes), based on Barry Warsaw's flufl.enum third-party package. #tenet-py-enum-type-2",
+     "label": "out",
+     "plainLabel": "undecided",
+     "phase": "before",
+     "decision": "py-enum-via-int-constants",
+     "attackers": [
+      "int-constants"
+     ],
+     "alsoReinstates": [],
+     "score": 0.11,
+     "evidence": [
+      {
+       "kind": "decision",
+       "value": "py-enum-via-int-constants",
+       "file": ".mole/incidents/inc-python-ideas-2013-enum-thread.md",
+       "line": 5
+      },
+      {
+       "kind": "scope",
+       "value": "enumeration type",
+       "file": ".mole/incidents/inc-python-ideas-2013-enum-thread.md",
+       "line": 6
+      },
+      {
+       "kind": "text",
+       "value": "char-3gram Jaccard 0.11",
+       "file": ".mole/arguments/py-enum-via-int-constants.argdown",
+       "line": 3
+      }
+     ]
+    }
+   ]
+  },
+  "armA_top": "pep354-functional-enum",
+  "armA_ranked": [
+   "pep354-functional-enum",
+   "flufl-style-class-enum"
+  ],
+  "armB_bm25_ranked": [
+   "int-constants",
+   "flufl-style-class-enum",
+   "pep354-functional-enum"
+  ],
+  "armB_top": "int-constants"
+ }
+]
