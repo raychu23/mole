@@ -10,6 +10,11 @@ export interface RouteDoc {
   summary: string;
   /** BM25 index text: title + summary + clipped rationale key terms (indexTextOf) */
   text: string;
+  /** T118: the decision's own `scope:` / `in:` glob patterns (GraphNode.scope anchor targets), when the record
+   *  declares any. Used ONLY as an optional ranking signal (scopeBoost) -- never a pre-filter: a decision with
+   *  no scope, or a scope that matches nothing, must still compete on BM25 alone (T49's recall-ceiling finding:
+   *  a decision with no authored anchor never got to compete). */
+  scopeGlobs?: string[];
 }
 
 export interface RouteCandidate {
@@ -51,4 +56,14 @@ export interface RouteOptions {
   confidenceRatio?: number;
   /** injectable stage-2 listwise pick call; omit to run the BM25-only tier (tests, or no LLM budget). */
   llm?: LlmClient;
+  /** T118: file paths this change touches (caller-assembled, e.g. cascade.ts's own `pr.files`). Required for
+   *  scopeBoost to do anything; with no changedFiles, scopeBoost is a no-op (falls back to plain BM25 order). */
+  changedFiles?: string[];
+  /** T118: opt-in (default false/undefined -- never changes existing behavior unless a caller asks). Re-ranks
+   *  bm25Candidates by Reciprocal Rank Fusion (Cormack et al. 2009, k=60) of (a) the plain BM25 rank and (b) a
+   *  second rank ordering decisions whose `scopeGlobs` match >=1 changedFiles ahead of those that don't, by match
+   *  count. A decision with no scopeGlobs or no match is NEVER excluded or penalized below its BM25 rank's own
+   *  contribution -- it just gets no boost from signal (b), same recall-ceiling-preserving rule as the base
+   *  router (see RouteDoc.scopeGlobs doc). */
+  scopeBoost?: boolean;
 }

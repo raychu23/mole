@@ -147,6 +147,8 @@ export async function cascadeCheck(opts: CascadeOptions): Promise<CascadeResult>
       minScore: opts.semanticRoute.minScore,
       confidenceRatio: opts.semanticRoute.confidenceRatio,
       llm: opts.semanticRoute.llm,
+      changedFiles: pr.files,
+      scopeBoost: opts.semanticRoute.scopeBoost,
     });
     semanticRouteUsage = routed.usage;
     for (const c of routed.routed) {

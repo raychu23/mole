@@ -134,3 +134,94 @@ describe('indexTextOf / oneLineSummaryOf: title + summary + rationale key terms,
     expect(oneLineSummaryOf('My Title', '')).toBe('My Title');
   });
 });
+
+// T118: routing recall fix -- B2 v4.2 miss analysis (all misses were routedCorrectly=false) found concrete cases
+// where the TRUE decision carries a `scope:` glob that exactly matches the changed file's path (M2 v3 dev
+// 'v3-pt-millisecond-compliant': pt-0002's scope `aws_lambda_powertools/utilities/**` matches the diff's touched
+// file, but plain BM25 ranked it #6/7, just outside topK=5) while lexically weaker/unrelated candidates scored
+// higher purely on prose-term overlap. Prior art (4 log/prior-art.md): RRF (Cormack et al. 2009) fuses two
+// independently-scored rankings without needing comparable score scales; CODEOWNERS/Cursor rules use path globs
+// as a routing signal. `scopeBoost` (opt-in flag, default off -- never changes existing behavior unless a caller
+// asks) fuses BM25 rank with a path-glob-match rank via RRF: never excludes a candidate with no scope or no glob
+// match (T49's recall-ceiling finding: a decision with no authored anchor must still get to compete).
+describe('routeDecisions: scopeBoost (opt-in, RRF of BM25 rank + scope-glob-match rank)', () => {
+  const DOC_SCOPED: RouteDoc = {
+    id: 'pt-0002',
+    title: 'Every millisecond counts',
+    summary: 'Lazy imports only inside aws_lambda_powertools/utilities.',
+    text: 'every millisecond counts lazy import performance cold start',
+    scopeGlobs: ['aws_lambda_powertools/utilities/**'],
+  };
+  const DOC_UNSCOPED_STRONGER_LEXICAL: RouteDoc = {
+    id: 'pt-0009',
+    title: 'Logging format',
+    summary: 'Structured JSON logging only.',
+    // deliberately shares more raw tokens with the change text below than DOC_SCOPED does, so plain BM25 ranks
+    // it #1 and DOC_SCOPED #2 -- the miss shape actually observed in baseline_recall.json.
+    text: 'def get pandas import pandas as pd returned lazily only when this optional feature path is actually used',
+  };
+
+  it('without scopeBoost, a lexically weaker scoped candidate can still rank behind an unscoped one (baseline behavior, unchanged)', async () => {
+    const r = await routeDecisions({
+      changeText: 'def get_pandas():\n  import pandas as pd  # imported lazily, only when this optional feature path is actually used\n  return pd',
+      decisions: [DOC_UNSCOPED_STRONGER_LEXICAL, DOC_SCOPED],
+      topK: 1,
+    });
+    expect(r.routed.map((c) => c.id)).toEqual(['pt-0009']);
+  });
+
+  it('with scopeBoost + changedFiles, a scope-glob match promotes the true candidate via RRF even when its raw BM25 score trails', async () => {
+    const r = await routeDecisions({
+      changeText: 'def get_pandas():\n  import pandas as pd  # imported lazily, only when this optional feature path is actually used\n  return pd',
+      decisions: [DOC_UNSCOPED_STRONGER_LEXICAL, DOC_SCOPED],
+      changedFiles: ['aws_lambda_powertools/utilities/_lazy_import.py'],
+      scopeBoost: true,
+      topK: 1,
+    });
+    expect(r.routed.map((c) => c.id)).toEqual(['pt-0002']);
+  });
+
+  it('a scope glob that matches nothing never excludes a candidate that BM25 already found (recall-ceiling preserved, T49)', async () => {
+    // DOC_SCOPED's scope glob (aws_lambda_powertools/utilities/**) matches NONE of this change's files, but its
+    // text still has some lexical overlap with the change ('default' / 'export'), so plain BM25 alone would
+    // have surfaced it (score > 0) -- scopeBoost must not knock it back out just because its scope didn't match.
+    const r = await routeDecisions({
+      changeText: 'export default CopyTextButton; // every millisecond counts here, lazy import performance matters',
+      decisions: [DOC_SCOPED, DOC_EXPORTS],
+      changedFiles: ['src/components/CopyTextButton.tsx'], // does not match aws_lambda_powertools/utilities/**
+      scopeBoost: true,
+    });
+    expect(r.bm25Candidates.map((c) => c.id)).toContain('pt-0002'); // still present, just not boosted
+  });
+
+  it('scopeBoost with no changedFiles given is a no-op (falls back to plain BM25 order)', async () => {
+    const r = await routeDecisions({
+      changeText: 'def get_pandas():\n  import pandas as pd  # imported lazily, only when this optional feature path is actually used\n  return pd',
+      decisions: [DOC_UNSCOPED_STRONGER_LEXICAL, DOC_SCOPED],
+      scopeBoost: true,
+      topK: 1,
+    });
+    expect(r.routed.map((c) => c.id)).toEqual(['pt-0009']);
+  });
+
+  // T118 self-review (adversarial check against B2 v3 dev's 'none' cases, 4 log/false_alarm_check_v3dev_none.mjs):
+  // decision 0003 ("Use Go As Server Language", easi-app) declares `scope: [pkg/apperrors/**, pkg/**, cmd/**]` --
+  // `pkg/**` and `cmd/**` are catch-all, single-literal-segment globs that match almost every file under those
+  // top-level dirs regardless of what the change actually is. Naively boosting on raw match count routed 16/22
+  // dev 'none' cases (changes that govern NO decision) to 0003 -- a concrete false-alarm regression. Fix: a
+  // scope glob only counts toward the boost when its literal (non-wildcard) prefix names at least 2 path
+  // segments -- `pkg/apperrors/**` (specific) counts, `pkg/**` (catch-all) does not. Same posture as the Cursor
+  // rules prior art: scope narrowly to the folders a rule actually guards, not a whole top-level tree.
+  it('a catch-all single-segment scope glob (e.g. "pkg/**") never wins the boost -- only a narrower, >=2-segment glob does', async () => {
+    const DOC_CATCHALL: RouteDoc = { id: '0003', title: 'Use Go As Server Language', summary: 'Go only.', text: 'go golang server language runtime', scopeGlobs: ['pkg/apperrors/**', 'pkg/**', 'cmd/**'] };
+    const DOC_UNRELATED: RouteDoc = { id: '0020', title: 'Some unrelated decision', summary: 'unrelated', text: 'some unrelated decision about caching redis session store' };
+    const r = await routeDecisions({
+      changeText: 'add a redis session cache helper',
+      decisions: [DOC_UNRELATED, DOC_CATCHALL],
+      changedFiles: ['pkg/session/cache.go'], // matches pkg/** (catch-all) but NOT pkg/apperrors/**
+      scopeBoost: true,
+      topK: 1,
+    });
+    expect(r.routed.map((c) => c.id)).toEqual(['0020']); // BM25's own pick, unmoved by the catch-all glob
+  });
+});
