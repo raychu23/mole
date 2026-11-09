@@ -20,7 +20,7 @@ T120-semantic-routing      ledger task (rules.md §3 code features)      project
     pinned
     mode                    one worker
     boundary               packages/decisions only (route/bm25/types/mentions); no edits to frozen benchmark keys/held-out labels; prior-art.md before code; repos fetched via GitHub contents API or throwaway shallow clones under scratch, never main
-    checks                 npx vitest run packages/decisions (targeted); npx tsc -b packages/decisions
+    checks                 npx vitest run packages/decisions && npx tsc -b packages/decisions
     non-goals               not re-litigating B2 significance; not a new benchmark version bump (v4.4); not installing paid embedding APIs
     proof                  tasks/T120-semantic-routing/4 log/{prior-art.md,red*.txt,recall-dev.md,protocol-new-repos.md}
     stop                    never edit a frozen benchmark key/held-out label to make a number look better; never run the new pre-registered NEW-repo eval (orchestrator runs it)
