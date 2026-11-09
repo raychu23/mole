@@ -18,10 +18,10 @@ T120-semantic-routing      ledger task (rules.md §3 code features)      project
     next                    fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
     pinned
     mode                    one worker
-    boundary
-    checks
-    non-goals
-    proof
+    boundary               packages/decisions only (route/bm25/types/mentions); no edits to frozen benchmark keys/held-out labels; prior-art.md before code; repos fetched via GitHub contents API or throwaway shallow clones under scratch, never main
+    checks                 npx vitest run packages/decisions (targeted); npx tsc -b packages/decisions
+    non-goals               not re-litigating B2 significance; not a new benchmark version bump (v4.4); not installing paid embedding APIs
+    proof                  tasks/T120-semantic-routing/4 log/{prior-art.md,red*.txt,recall-dev.md,protocol-new-repos.md}
     stop                    never edit a frozen benchmark key/held-out label to make a number look better; never run the new pre-registered NEW-repo eval (orchestrator runs it)
     came from               Q13 (B2 v4.3 17/19 misses routing, semantic-kernel recall 0.375)
     links                   4 log/ledger.md (every transition + its evidence)
