@@ -140,9 +140,20 @@ export async function cascadeCheck(opts: CascadeOptions): Promise<CascadeResult>
   if (opts.semanticRoute) {
     const candidates = opts.semanticRoute.decisions.filter((d) => !alreadyGoverned.has(d.id));
     const changeText = [...pr.files, gitDiffFor(opts.root, pr.mergeBase, pr.head, pr.files)].join('\n');
+    // T120c: embedBoost's whole point (B2 Q13 NEW-repo review) is reachable only if SOMETHING computes real
+    // embeddings and feeds them to routeDecisions -- ONE batched embedder.embed call (every remaining
+    // candidate's own index text, plus the change text last), never one call per candidate. No-op (falls back
+    // to plain BM25, same as route.ts's own contract) with no embedder, or with zero candidates to embed.
+    let embeddedCandidates = candidates;
+    let changeEmbedding: number[] | undefined;
+    if (opts.semanticRoute.embedBoost && opts.semanticRoute.embedder && candidates.length) {
+      const vectors = await opts.semanticRoute.embedder.embed([...candidates.map((c) => c.text), changeText]);
+      changeEmbedding = vectors[vectors.length - 1];
+      embeddedCandidates = candidates.map((c, i) => ({ ...c, embedding: vectors[i] }));
+    }
     const routed = await routeDecisions({
       changeText,
-      decisions: candidates,
+      decisions: embeddedCandidates,
       topK: opts.semanticRoute.topK,
       minScore: opts.semanticRoute.minScore,
       confidenceRatio: opts.semanticRoute.confidenceRatio,
@@ -150,6 +161,8 @@ export async function cascadeCheck(opts: CascadeOptions): Promise<CascadeResult>
       changedFiles: pr.files,
       scopeBoost: opts.semanticRoute.scopeBoost,
       mentionBoost: opts.semanticRoute.mentionBoost,
+      embedBoost: opts.semanticRoute.embedBoost,
+      changeEmbedding,
     });
     semanticRouteUsage = routed.usage;
     for (const c of routed.routed) {

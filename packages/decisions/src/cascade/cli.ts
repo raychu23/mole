@@ -46,7 +46,7 @@ export async function cascadeCheckCli(_pos: string[], flags: Record<string, stri
     }
   }
   if (!base || !head) {
-    console.error('usage: mole cascade-check (--base SHA --head SHA | --worktree [--base SHA]) [--root DIR] [--records DIR] [--adr-dir DIR[,DIR]] [--no-llm] [--no-route] [--json]');
+    console.error('usage: mole cascade-check (--base SHA --head SHA | --worktree [--base SHA]) [--root DIR] [--records DIR] [--adr-dir DIR[,DIR]] [--no-llm] [--no-route] [--embed-route] [--json]');
     return 2;
   }
   const recordsRoot = str(flags.records) ? str(flags.records)! : root;
@@ -54,6 +54,11 @@ export async function cascadeCheckCli(_pos: string[], flags: Record<string, stri
   const graph = loadGraph(recordsRoot, { adrDirs });
   const client = flags['no-llm'] ? undefined : llm ?? hermesLlmClient();
   const routeClient = flags['no-llm'] ? undefined : llm ?? hermesLlmClient({ model: SEMANTIC_ROUTE_DEFAULTS.routeModel });
+  // T120c: --embed-route (default OFF) is the only path that reaches embedder-minilm.ts, and only via this
+  // dynamic import -- cli.ts itself never statically imports the adapter, so the core bundle never grows just
+  // because this flag exists (see bundle-size.md). --no-route still wins over --embed-route (no semanticRoute
+  // object at all means embedBoost, which lives inside it, never runs either).
+  const embedder = flags['embed-route'] && !flags['no-route'] ? (await import('./embedder-minilm.js')).createMiniLmEmbedder() : undefined;
   const r = await cascadeCheck({
     root,
     base,
@@ -62,7 +67,18 @@ export async function cascadeCheckCli(_pos: string[], flags: Record<string, stri
     adrDirs,
     llm: client,
     decisionText: decisionTextFromRecords(recordsRoot, graph.nodes),
-    ...(flags['no-route'] ? {} : { semanticRoute: { decisions: semanticRouteDocs(recordsRoot, graph, listRepoFiles(root)), topK: SEMANTIC_ROUTE_DEFAULTS.topK, minScore: SEMANTIC_ROUTE_DEFAULTS.minScore, confidenceRatio: SEMANTIC_ROUTE_DEFAULTS.confidenceRatio, llm: routeClient } }),
+    ...(flags['no-route']
+      ? {}
+      : {
+          semanticRoute: {
+            decisions: semanticRouteDocs(recordsRoot, graph, listRepoFiles(root)),
+            topK: SEMANTIC_ROUTE_DEFAULTS.topK,
+            minScore: SEMANTIC_ROUTE_DEFAULTS.minScore,
+            confidenceRatio: SEMANTIC_ROUTE_DEFAULTS.confidenceRatio,
+            llm: routeClient,
+            ...(embedder ? { embedBoost: true, embedder } : {}),
+          },
+        }),
   });
   console.log(flags.json ? JSON.stringify(r, null, 2) : formatCascade(r));
   return 0;
