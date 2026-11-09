@@ -5,7 +5,7 @@ import { cascadeCheck, decisionTextFromRecords } from './cascade.js';
 import { hermesLlmClient } from '../compile/llm.js';
 import type { LlmClient } from '../compile/types.js';
 import type { CascadeResult } from './types.js';
-import { semanticRouteDocs } from './semantic-docs.js';
+import { semanticRouteDocs, listRepoFiles } from './semantic-docs.js';
 import { snapshotWorktree } from './worktree.js';
 
 const str = (v: string | true | undefined): string | undefined => (typeof v === 'string' ? v : undefined);
@@ -62,7 +62,7 @@ export async function cascadeCheckCli(_pos: string[], flags: Record<string, stri
     adrDirs,
     llm: client,
     decisionText: decisionTextFromRecords(recordsRoot, graph.nodes),
-    ...(flags['no-route'] ? {} : { semanticRoute: { decisions: semanticRouteDocs(recordsRoot, graph), topK: SEMANTIC_ROUTE_DEFAULTS.topK, minScore: SEMANTIC_ROUTE_DEFAULTS.minScore, confidenceRatio: SEMANTIC_ROUTE_DEFAULTS.confidenceRatio, llm: routeClient } }),
+    ...(flags['no-route'] ? {} : { semanticRoute: { decisions: semanticRouteDocs(recordsRoot, graph, listRepoFiles(root)), topK: SEMANTIC_ROUTE_DEFAULTS.topK, minScore: SEMANTIC_ROUTE_DEFAULTS.minScore, confidenceRatio: SEMANTIC_ROUTE_DEFAULTS.confidenceRatio, llm: routeClient } }),
   });
   console.log(flags.json ? JSON.stringify(r, null, 2) : formatCascade(r));
   return 0;

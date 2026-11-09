@@ -42,10 +42,17 @@ export interface SemanticRouteOptions {
   /** every decision's BM25 index doc (title + summary + index text) -- the repo's WHOLE candidate set, built by
    *  the caller with route/index-text.ts's indexTextOf/oneLineSummaryOf (cascade.ts has no opinion on how a
    *  decision's record text becomes an index doc, same posture as CascadeOptions.decisionText). */
-  decisions: Array<{ id: string; title: string; summary: string; text: string }>;
+  decisions: Array<{ id: string; title: string; summary: string; text: string; scopeGlobs?: string[]; mentionPaths?: string[]; mentionIdentifiers?: string[] }>;
   topK?: number;
   minScore?: number;
   confidenceRatio?: number;
+  /** T118: opt-in (default off, see route/types.ts RouteOptions.scopeBoost) -- fuses BM25 rank with a
+   *  scope-glob-match rank via RRF when a candidate's `scopeGlobs` entry matches a changed file path. */
+  scopeBoost?: boolean;
+  /** T118 step B: opt-in (default off, see route/types.ts RouteOptions.mentionBoost) -- fuses BM25 rank with a
+   *  rank over paths/identifiers the decision's OWN TEXT mentions (not an author-declared scope field), for
+   *  real ADR corpora that carry zero scope anchors. Independent of scopeBoost; both may be on at once. */
+  mentionBoost?: boolean;
   /** stage 2's model call; can be the same LlmClient as CascadeOptions.llm, or a cheaper one -- the router's own
    *  budget is independent of the escalation tier's. Omit to run the BM25-only tier. */
   llm?: LlmClient;
