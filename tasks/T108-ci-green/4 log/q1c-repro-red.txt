@@ -1,0 +1,34 @@
+Traceback (most recent call last):
+  File "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T108c-m13/scripts/mlflow/load_runs.py", line 203, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T108c-m13/scripts/mlflow/load_runs.py", line 194, in main
+    r = load(repo, uri)
+  File "/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T108c-m13/scripts/mlflow/load_runs.py", line 167, in load
+    run = client.create_run(exp_id, start_time=start, tags=tags)
+  File "/Users/a1/.hermes/cache/scratch/t108c/venv/lib/python3.13/site-packages/mlflow/tracking/client.py", line 636, in create_run
+    return self._tracking_client.create_run(experiment_id, start_time, tags, run_name)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/a1/.hermes/cache/scratch/t108c/venv/lib/python3.13/site-packages/mlflow/telemetry/track.py", line 24, in wrapper
+    return func(*args, **kwargs)
+  File "/Users/a1/.hermes/cache/scratch/t108c/venv/lib/python3.13/site-packages/mlflow/tracking/_tracking_service/client.py", line 185, in create_run
+    return self.store.create_run(
+           ~~~~~~~~~~~~~~~~~~~~~^
+        experiment_id=experiment_id,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        run_name=run_name,
+        ^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/a1/.hermes/cache/scratch/t108c/venv/lib/python3.13/site-packages/mlflow/store/tracking/file_store.py", line 777, in create_run
+    self.set_tag(run_uuid, tag)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/Users/a1/.hermes/cache/scratch/t108c/venv/lib/python3.13/site-packages/mlflow/store/tracking/file_store.py", line 1208, in set_tag
+    _validate_tag_name(tag.key)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/a1/.hermes/cache/scratch/t108c/venv/lib/python3.13/site-packages/mlflow/utils/validation.py", line 533, in _validate_tag_name
+    raise MlflowException(
+    ...<2 lines>...
+    )
+mlflow.exceptions.MlflowException: Invalid value "mole.raw.M-B dev B3 arm, post-review-fix" for parameter 'key' supplied: Names may only contain alphanumerics, underscores (_), dashes (-), periods (.), spaces ( ), colon(:) and slashes (/).
