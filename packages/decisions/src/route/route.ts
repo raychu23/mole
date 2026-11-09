@@ -42,6 +42,33 @@ function rankFromMatchCounts(bm25Candidates: RouteCandidate[], matchCounts: Map<
   return rank;
 }
 
+/** T120: cosine similarity between two equal-length vectors; 0 if either is a zero vector (avoids NaN) or the
+ *  lengths mismatch (caller error -- embeddings from two different models/dimensions are never comparable). */
+function cosineSim(a: number[], b: number[]): number {
+  if (a.length !== b.length || a.length === 0) return 0;
+  let dot = 0, na = 0, nb = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i]! * b[i]!;
+    na += a[i]! * a[i]!;
+    nb += b[i]! * b[i]!;
+  }
+  if (na === 0 || nb === 0) return 0;
+  return dot / (Math.sqrt(na) * Math.sqrt(nb));
+}
+
+/** T120: same contract as rankFromMatchCounts but for a continuous per-candidate SCORE map (cosine similarity)
+ *  instead of integer match counts -- a candidate with no score (no embedding, or no changeEmbedding at all) is
+ *  tied at the worst rank (bm25Candidates.length + 1), never excluded, never distinguished from any other
+ *  no-score candidate (T49's recall-ceiling rule, same as rankFromMatchCounts). */
+function rankFromScores(bm25Candidates: RouteCandidate[], scores: Map<string, number | undefined>): Map<string, number> {
+  const order = bm25Candidates
+    .map((c) => ({ id: c.id, score: scores.get(c.id) }))
+    .sort((a, b) => (b.score ?? -Infinity) - (a.score ?? -Infinity));
+  const rank = new Map<string, number>();
+  order.forEach((c, i) => rank.set(c.id, c.score !== undefined && c.score > 0 ? i + 1 : bm25Candidates.length + 1));
+  return rank;
+}
+
 /** T118: literal (non-wildcard) path-segment count of a glob's prefix, e.g. 'pkg/apperrors/**' -> 2,
  *  'pkg/**' -> 1, '**\/*.ts' -> 0. Used as a specificity floor: a catch-all single-segment glob like 'pkg/**'
  *  or 'cmd/**' matches almost everything under a top-level dir and must never win the boost on its own (found
@@ -118,6 +145,16 @@ function applyBoosts(bm25Candidates: RouteCandidate[], byId: Map<string, RouteDo
     const counts = new Map(bm25Candidates.map((c) => [c.id, mentionMatchCount(byId.get(c.id), opts.changedFiles ?? [], opts.changeText)]));
     signalRanks.push(rankFromMatchCounts(bm25Candidates, counts));
   }
+  if (opts.embedBoost && opts.changeEmbedding?.length) {
+    const changeEmbedding = opts.changeEmbedding;
+    const scores = new Map<string, number | undefined>(
+      bm25Candidates.map((c) => {
+        const emb = byId.get(c.id)?.embedding;
+        return [c.id, emb?.length ? cosineSim(changeEmbedding, emb) : undefined];
+      }),
+    );
+    signalRanks.push(rankFromScores(bm25Candidates, scores));
+  }
   return rrfFuse(bm25Candidates, signalRanks);
 }
 
@@ -155,12 +192,32 @@ export async function routeDecisions(opts: RouteOptions): Promise<RouteResult> {
   const confidenceRatio = opts.confidenceRatio ?? DEFAULT_CONFIDENCE_RATIO;
 
   const idx = new Bm25Index();
-  for (const d of opts.decisions) idx.add(d.id, d.text);
+  for (const d of opts.decisions) {
+    // T120: doc2query-style expansion -- fold the capture-time governsSummary into the INDEXED text only
+    // (never mutates RouteDoc.text itself), opt-in via useGovernsSummary so a corpus with no summaries is
+    // scored identically with the flag on or off.
+    const indexed = opts.useGovernsSummary && d.governsSummary ? `${d.text} ${d.governsSummary}` : d.text;
+    idx.add(d.id, indexed);
+  }
   const byId = new Map<string, RouteDoc>(opts.decisions.map((d) => [d.id, d]));
-  const scored = idx.score(opts.changeText).filter((h) => h.score > minScore);
+  const allScored = idx.score(opts.changeText);
+  const scored = allScored.filter((h) => h.score > minScore);
   let bm25Candidates: RouteCandidate[] = scored.map((h) => ({ id: h.id, title: byId.get(h.id)?.title ?? h.id, bm25Score: h.score }));
 
-  if ((opts.scopeBoost || opts.mentionBoost) && bm25Candidates.length > 1) {
+  // T120: embedBoost's whole point is recovering decisions BM25 scores at/below minScore (zero lexical
+  // overlap -- the real-ADR routing-miss shape in prior-art.md). A pure re-rank of the already-filtered
+  // bm25Candidates can never surface those, so when the signal is active, every remaining candidate is
+  // added back (at its true, filtered-out BM25 score, appended after the already-qualifying ones) BEFORE
+  // boosts run -- rrfFuse + the embedding rank then decide whether any of them actually deserves to surface.
+  if (opts.embedBoost && opts.changeEmbedding?.length) {
+    const included = new Set(bm25Candidates.map((c) => c.id));
+    for (const h of allScored) {
+      if (included.has(h.id)) continue;
+      bm25Candidates.push({ id: h.id, title: byId.get(h.id)?.title ?? h.id, bm25Score: h.score });
+    }
+  }
+
+  if ((opts.scopeBoost || opts.mentionBoost || opts.embedBoost) && bm25Candidates.length > 1) {
     bm25Candidates = applyBoosts(bm25Candidates, byId, opts);
   }
 
