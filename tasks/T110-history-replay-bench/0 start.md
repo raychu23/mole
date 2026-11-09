@@ -8,11 +8,14 @@ done-when  defect fixed + v1 kept as a recorded failed attempt; widen search log
           yield reported honestly even if short of target); v2 case set frozen by sha256 BEFORE any arm;
           T53/reviewer/RAG/T46-cascade run once; results-v2.md losses-first with Wilson CIs + McNemar where
           n allows + per-failure (routing vs check) analysis. DONE.
-status    VERIFIED (this task's own run, not independently reviewed yet). v2 n=11 (4 positive/7 negative,
-          backstage/backstage only). Widen search (41 repos, ~128 queries, `4 log/search_log_v2.txt`)
-          found 0 ADDITIONAL confirmed positives beyond the original 4 -- the >=30 target is NOT met,
-          reported honestly (protocol_v2.md "Widen search" section). All 4 arms run once, no significance
-          claim (n far below the ~415-440 power target), McNemar computed but flagged uninformative.
+status    VERIFIED (this task's own run; v2 review FAIL #2 fixed 2026-11-08 -- not yet independently
+          re-reviewed). v2 n=11 (4 positive/7 negative, backstage/backstage only). Widen search (41 repos,
+          ~128 queries, `4 log/search_log_v2.txt`) found 0 ADDITIONAL confirmed positives beyond the
+          original 4 -- the >=30 target is NOT met, reported honestly. All 4 arms run once, no significance
+          claim (n far below power target), McNemar computed but flagged uninformative. 2026-11-08: fixed
+          run_t46_cascade_v2.mjs's checkStep() ignoring compiled patterns' `in:` glob scope
+          (DEFECT_V2_FILESCOPE.md); check-only re-run (no recompile); T46 cascade numbers in results-v2.md
+          corrected in place (recall 1.000->0.250, false-alarm 0.429->0.143).
 next      Q6 (T112-b2-powered, this task covers "the first half") still needs either a genuinely larger
           real-history set (a different mining strategy than keyword/comment search -- this task's finding
           is that AI review bots now do a large share of what a human ADR citation used to look like, and

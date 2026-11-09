@@ -1,5 +1,41 @@
 # T110 (Q4) v2 results -- H2-style real-history benchmark, v2 case set (11 cases), run once
 
+## CORRECTION (2026-11-08, v2 review FAIL #2 -- see `run/test_file_scope_fix.mjs`, `DEFECT_V2_FILESCOPE.md`)
+
+`run/run_t46_cascade_v2.mjs`'s `checkStep()` applied every compiled `match:` pattern to ALL of a case's
+added lines, ignoring the pattern's own `in:` glob scope entirely -- real Mole
+(`packages/decisions/src/check/pr-check.ts:318`) scopes a content anchor to the files its `in:` glob
+covers BEFORE testing the pattern (`if (f.newPath === null || (c.inRe && !c.inRe.test(f.newPath)))
+continue;`). Fixed by mirroring that line exactly, file-by-file, reusing Mole's own `globToRegExp` helper
+(`packages/decisions/src/check/options.ts`, exported via `check/index.js`) instead of a new one; see
+`run/test_file_scope_fix.mjs` for a standalone demonstration using case `h2v2-bs-18540-fixed`'s real diff
+(an `export * from './types'` line added to `index.ts` no longer matches adr004's non-index-scoped
+pattern). Re-run was CHECK-ONLY: `compiled_adrs_v2.json`'s 2 compiled ADRs were reused as-is, no model
+call, no recompile.
+
+**T46 cascade's numbers below are now WRONG by 3 rows and are superseded by this note; every mention of
+T46 cascade matching reviewer's "4/4 recall" or being tied for highest recall is FALSE as of this
+correction.** Corrected: recall 0.250 (1/4, 95% CI 0.046-0.699), false-alarm 0.143 (1/7, 95% CI
+0.026-0.513) -- TP=1 FN=3 FP=1 TN=6 (`arm_t46_cascade_v2.json`, `scored_v2.json`, both updated in place;
+pre-fix copy kept at `run/arm_t46_cascade_v2.json.PRE_FILESCOPE_FIX.bak`). Three of T46 cascade's
+"true positives" (h2v2-bs-18540-prefix, h2v2-bs-20007-prefix, h2v2-bs-6882-prefix) were false: all 3 hit
+ONLY via adr004's `in: "**/!(index).{ts,tsx}"` pattern misapplied outside its own scope, and once properly
+scoped that pattern matches NOTHING real (`globToRegExp` does not support the `!(...)` extglob negation
+syntax the compiler drafted here -- a separate, real limitation of Mole's compiled scope glob, noted but
+NOT fixed by this task, since fixing it would require a new drafted pattern, not a scoping bug). Two of
+T46 cascade's reported "false positives" (h2v2-bs-18540-fixed, h2v2-bs-6882-fixed) are also corrected: they
+are now TRUE NEGATIVES (the index.ts re-export lines that drove them no longer fire at all). Only
+h2v2-bs-17875-fixed remains a genuine false positive (adr003's `^export default\b` pattern, correctly
+scoped to `**/*.{js,jsx,ts,tsx}`, legitimately still matches an unrelated `export default {` elsewhere in
+that diff) -- this ONE case is the only part of the original "given the right decision, still said
+violates" framing (Per-failure analysis, below) that survives the fix; the other two T46-cascade FPs
+attributed to that framing were artifacts of the file-scope bug, not real check failures. T53 vs T46
+cascade McNemar is now b10=3, b01=1, n_discordant=4, p=0.6250 (not significant, same conclusion as before
+the fix, just different underlying numbers) -- see `run/rescore_t46_filescope_fix.py`. T53/reviewer/RAG
+numbers are UNCHANGED (their own scripts were not part of this defect, not re-run).
+
+---
+
 v2 fixes the review FAIL on v1 (see `DEFECT.md`, `protocol_v2.md`): v1 scored its 4 "violate" positives
 against the FINAL MERGED (already-fixed) PR diff; v2 scores them against `base...original_commit_id`, the
 commit the human's ADR-citing review comment was actually anchored to, and adds the final merged diff of
@@ -10,16 +46,18 @@ NOT met, reasons logged in `protocol_v2.md`. n stays at 11 (4 positive / 7 negat
 ## Losses first
 
 ```notes
-all 3 LLM-driven arms (reviewer, RAG, T46 cascade) have 3 false positives on the 4 "fixed" paired
-negatives/same-file negatives -- reviewer and T46 cascade both flag 3 of the 4 POST-FIX diffs as still
-violating; RAG flags 3 different negatives (2 fixed pairs + 1 same-file). This is the paired design doing
+all 3 LLM-driven arms (reviewer, RAG, T46 cascade) have false positives on the 4 "fixed" paired
+negatives/same-file negatives -- reviewer and RAG both flag 3 of the 7 negatives as still violating; T46
+cascade (zero-LLM, CORRECTED 2026-11-08, see correction note at top) has only 1 FP after the file-scope
+fix, h2v2-bs-17875-fixed, a genuine adr003 re-match, not an artifact. This is the paired design doing
 its job: a model/pattern that merely recognizes "this touches ADR004-governed code" (lexical/topical
 match) cannot tell FIXED from NOT-FIXED without actually checking whether the specific violation (a
 missing types.ts, a wildcard export, a surviving default export) was resolved -- T53 Mole is the only arm
-with ZERO false positives across all 7 negatives (reviewer 3/7, RAG 3/7, T46 cascade 3/7), but T53's own
-true-positive recall is still the worst of the four (0.500 vs reviewer's 1.000, T46 cascade's 1.000, RAG's
-0.750) -- it misses 2 of 4 real violations outright. No arm is simultaneously high-recall AND low-false-
-alarm on this corrected 11-case set; that tradeoff, not a single "best" arm, is this run's headline.
+with ZERO false positives across all 7 negatives (reviewer 3/7, RAG 3/7, T46 cascade 1/7 post-fix), but T53's own
+true-positive recall is still the worst of the four (0.500 vs reviewer's 1.000, RAG's 0.750, T46 cascade's
+0.250 post-fix) -- it misses 2 of 4 real violations outright, while T46 cascade (post-fix) misses 3 of 4.
+No arm is simultaneously high-recall AND low-false-alarm on this corrected 11-case set; that tradeoff, not
+a single "best" arm, is this run's headline.
 
 T53's 2 misses replicate v1's EXACT pattern even with the corrected (now-really-violating) diffs: h2v2-bs-
 17875-prefix is a ROUTING miss (routing=[adr004, adr006, adr011, adr014] -- the TARGET adr003 never
@@ -36,14 +74,16 @@ VIOLATES even though the author incorporated the exact fix the SAME maintainer a
 the decision text + a diff, claude-sonnet-5 cannot reliably tell "this still has the problem" from "this
 part of the diff still touches the same area, but the problem is gone."
 
-T46 cascade (NEW this task, zero-LLM at check time) matches reviewer's 4/4 recall exactly (the SAME 2
-compiled match: patterns -- a wildcard-export regex for adr004, a default-export regex for adr003 --
-happen to re-fire on 3 of the 4 fixed diffs too, because the pattern only checks "is this syntax present
-ANYWHERE in the added lines," not "is the SPECIFIC flagged location still using it"): h2v2-bs-17875-fixed
-and h2v2-bs-6882-fixed both still contain SOME added line matching the compiled regex (not the originally
-flagged one), so the deterministic check cannot distinguish them from the real violations either --
-compile-at-capture buys zero-cost checking, not more semantic precision than the LLM arms it's compared
-against here.
+T46 cascade (NEW this task, zero-LLM at check time; CORRECTED 2026-11-08, see correction note at top) now
+matches reviewer's RECALL only incidentally before the fix -- POST-FIX it catches just 1 of 4 real
+violations (h2v2-bs-17875-prefix, adr003's `^export default\b` pattern, correctly scoped), and misses the
+other 3 (h2v2-bs-18540-prefix, h2v2-bs-20007-prefix, h2v2-bs-6882-prefix) because adr004's compiled
+`in: "**/!(index).{ts,tsx}"` pattern never legitimately fires once scoped (the compiled glob uses `!(...)`
+extglob negation syntax Mole's own `globToRegExp` does not support, so it matches no real path at all --
+a separate limitation, not this task's scoping bug). It has exactly ONE false positive, h2v2-bs-17875-fixed
+(the same adr003 pattern legitimately matching an unrelated `export default {` elsewhere in that diff) --
+the other 2 originally-reported false positives (h2v2-bs-18540-fixed, h2v2-bs-6882-fixed) were themselves
+artifacts of the file-scope bug and are now correct true negatives.
 ```
 
 ## Case set (11: 4 positive / 7 negative -- see `protocol_v2.md` for the full defect fix + search log)
@@ -65,8 +105,10 @@ arm                          recall (95% CI)         false-alarm (95% CI)     TP
 T53 Mole (semantic-routed)   0.500 (0.150-0.850)     0.000 (0.000-0.354)      2   2   0   7
 reviewer (given decision)    1.000 (0.510-1.000)     0.429 (0.158-0.750)      4   0   3   4
 RAG (reads all live ADRs)    0.750 (0.301-0.954)     0.429 (0.158-0.750)      3   1   3   4
-T46 cascade (compile+check)  1.000 (0.510-1.000)     0.429 (0.158-0.750)      4   0   3   4
+T46 cascade (compile+check)  0.250 (0.046-0.699)     0.143 (0.026-0.513)      1   3   1   6
 ```
+T46 cascade row CORRECTED 2026-11-08 (see correction note at top) -- was TP=4 FN=0 FP=3 TN=4 before the
+`checkStep()` file-scope fix; `scored_v2.json` and `arm_t46_cascade_v2.json` both updated in place.
 
 (source: `scored_v2.json`, computed via `evals/inspect/dcbench_eval/stats.py`'s `wilson()`; raw predictions
 in `arm_t53_v2.json`, `arm_reviewer_v2.json`, `arm_rag_v2.json`, `arm_t46_cascade_v2.json`.)
@@ -77,8 +119,11 @@ in `arm_t53_v2.json`, `arm_reviewer_v2.json`, `arm_rag_v2.json`, `arm_t46_cascad
 pair                   b10 (T53-only-right)  b01 (other-only-right)  n_discordant  exact binomial p
 T53 vs reviewer         3                     2                       5             1.0000
 T53 vs RAG              4                     2                       6             0.6875
-T53 vs T46 cascade      3                     2                       5             1.0000
+T53 vs T46 cascade      3                     1                       4             0.6250
 ```
+T53 vs T46 cascade row CORRECTED 2026-11-08 (was b10=3, b01=2, n_discordant=5, p=1.0000 before the
+file-scope fix; recomputed by `run/rescore_t46_filescope_fix.py`) -- conclusion (not significant) is
+unchanged, only the underlying counts are.
 
 Per the pre-registered decision rule (protocol_v2.md / v1's power note, unchanged): n=11 is ~2.6% of the
 ~415-440 target for 80% power at this effect size. These p-values are reported because they ARE computable
@@ -90,15 +135,15 @@ looks like.
 ## Per-case table
 
 ```notes
-id                      label      T53 pred  T53 routing hit its OWN target adr_id?  reviewer pred  RAG pred (picked)          T46 cascade pred
-h2v2-bs-18540-prefix    violate    True (right, crisp)        adr004: yes             True (right)   False (wrong, NONE)        True (right)
-h2v2-bs-18540-fixed     compliant  False (right*)              adr004: NO (not routed) True (WRONG)   True (WRONG, adr004)       True (WRONG)
-h2v2-bs-20007-prefix    violate    False (WRONG, escalation)  adr004: yes             True (right)   True (right, adr004)       True (right)
+id                      label      T53 pred  T53 routing hit its OWN target adr_id?  reviewer pred  RAG pred (picked)          T46 cascade pred (CORRECTED 2026-11-08)
+h2v2-bs-18540-prefix    violate    True (right, crisp)        adr004: yes             True (right)   False (wrong, NONE)        False (WRONG, miss -- was True pre-fix)
+h2v2-bs-18540-fixed     compliant  False (right*)              adr004: NO (not routed) True (WRONG)   True (WRONG, adr004)       False (right -- was True/WRONG pre-fix)
+h2v2-bs-20007-prefix    violate    False (WRONG, escalation)  adr004: yes             True (right)   True (right, adr004)       False (WRONG, miss -- was True pre-fix)
 h2v2-bs-20007-fixed     compliant  False (right)               adr004: yes             False (right)  False (right, adr004)      False (right)
 h2v2-bs-17875-prefix    violate    False (WRONG, routing)     adr003: NO (routed adr004 instead)  True (right)  True (right, adr003)  True (right)
-h2v2-bs-17875-fixed     compliant  False (right*)              adr003: NO (routed adr004 instead, not its own target)  True (WRONG)  True (WRONG, adr003)  True (WRONG)
-h2v2-bs-6882-prefix     violate    True (right, crisp)        adr004: yes             True (right)   True (right, adrs-adr004)  True (right)
-h2v2-bs-6882-fixed      compliant  False (right)               adr004: yes             False (right)  False (right, adr014)      True (WRONG)
+h2v2-bs-17875-fixed     compliant  False (right*)              adr003: NO (routed adr004 instead, not its own target)  True (WRONG)  True (WRONG, adr003)  True (WRONG, genuine re-match, not an artifact)
+h2v2-bs-6882-prefix     violate    True (right, crisp)        adr004: yes             True (right)   True (right, adrs-adr004)  False (WRONG, miss -- was True pre-fix)
+h2v2-bs-6882-fixed      compliant  False (right)               adr004: yes             False (right)  False (right, adr014)      False (right -- was True/WRONG pre-fix)
 h2v2-bs-23449-neg       compliant  False (right*)              adr004: NO (not routed) False (right)  False (right, adr004)      False (right)
 h2v2-bs-28578-neg       compliant  False (right)               adr004: yes             True (WRONG)   True (WRONG, adr004)       False (right)
 h2v2-bs-6993-neg        compliant  False (right)               adr004: yes             False (right)  False (right, adr004)      False (right)
@@ -138,10 +183,15 @@ record when it DOES fire against the right decision is 5-for-6 across this whole
 negatives + 1/2 positives it escalated on, h2v2-bs-20007-prefix being its one miss) -- a genuinely mixed
 but more informative number than the raw 0.000 false-alarm headline alone.
 reviewer/RAG/T46 cascade's false positives   all 3 of reviewer's FPs (18540-fixed, 17875-fixed, 28578-neg)
-and all 3 of T46 cascade's FPs (18540-fixed, 17875-fixed, 6882-fixed) are CHECK failures by construction
-(reviewer/T46 cascade have no routing step distinct from the check -- they are TOLD the decision or run a
-decision-specific pattern directly), so 100% of their false positives are "given the right decision, still
-said violates when the human-approved fix made it compliant."
+are CHECK failures by construction (reviewer has no routing step distinct from the check -- it is TOLD the
+decision directly), so 100% of reviewer's false positives are "given the right decision, still said
+violates when the human-approved fix made it compliant." T46 cascade's false positives are CORRECTED
+2026-11-08 (see correction note at top): only 1 of its originally-reported 3 FPs survives the file-scope
+fix (h2v2-bs-17875-fixed, adr003's `^export default\b` pattern, correctly scoped, legitimately still
+matching an unrelated `export default {` elsewhere in that diff -- a genuine "given the right decision,
+still said violates" case). The other 2 (h2v2-bs-18540-fixed, h2v2-bs-6882-fixed) were NEVER real check
+failures: they were the file-scope bug itself (a pattern scoped to non-index files firing on an index.ts
+line), now fixed, and are correct true negatives.
 ```
 
 ## Limits
@@ -168,6 +218,15 @@ T53 recordsRoot reused v1's already-built `.mole` records for backstage's 14 oth
 T46 cascade compile cost   $0.0447 total / $0.0224 per-decision, ONE-TIME (2 unique ADRs here), amortized;
                $0/case at check time (deterministic regex match, no model call), per its own convention
                (tasks/T109-b2-baselines/4 log/scripts/t46_cascade_arm_v3.mjs).
+T46 cascade's `in:` scoping bug (CORRECTED 2026-11-08)   `checkStep()` applied every compiled `match:`
+               pattern to ALL added lines, ignoring the pattern's own `in:` glob scope -- see correction
+               note at top. Fixed by reusing Mole's real `globToRegExp` (not a new implementation);
+               demonstrated in `run/test_file_scope_fix.mjs`. Exposed a SEPARATE, NOT-fixed limitation:
+               the compiled `in: "**/!(index).{ts,tsx}"` pattern for adr004 uses `!(...)` extglob negation
+               syntax `globToRegExp` does not support, so once correctly scoped it matches no real file at
+               all -- 3 of T46 cascade's 4 positives were hit ONLY through this (buggy scoping masked a
+               dead pattern as a working one). Fixing the extglob gap in `globToRegExp` itself, or having
+               the compiler avoid drafting unsupported glob syntax, is NOT this task's scope.
 linter-only (v3's regex baseline) NOT re-run this task (the arm list for this review round names T53,
                reviewer, RAG, T46 cascade, not v3's separate linter_arm_v3.py) -- v1's result (6/7 abstain
                on real ADR prose) stands unmodified and uncontradicted, see v1-failed-attempt/results.md.

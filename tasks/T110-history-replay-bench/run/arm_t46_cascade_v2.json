@@ -15,10 +15,8 @@
    "adr_id": "adr004",
    "label_final": "violate",
    "abstain": false,
-   "predictedViolate": true,
-   "hit_patterns": [
-    "^\\s*export\\s*(\\*|\\{[^}]*\\})\\s*from\\s*['\"]"
-   ],
+   "predictedViolate": false,
+   "hit_patterns": [],
    "n_patterns_drafted": 2
   },
   {
@@ -27,10 +25,8 @@
    "adr_id": "adr004",
    "label_final": "compliant",
    "abstain": false,
-   "predictedViolate": true,
-   "hit_patterns": [
-    "^\\s*export\\s*(\\*|\\{[^}]*\\})\\s*from\\s*['\"]"
-   ],
+   "predictedViolate": false,
+   "hit_patterns": [],
    "n_patterns_drafted": 2
   },
   {
@@ -39,10 +35,8 @@
    "adr_id": "adr004",
    "label_final": "violate",
    "abstain": false,
-   "predictedViolate": true,
-   "hit_patterns": [
-    "^\\s*export\\s*(\\*|\\{[^}]*\\})\\s*from\\s*['\"]"
-   ],
+   "predictedViolate": false,
+   "hit_patterns": [],
    "n_patterns_drafted": 2
   },
   {
@@ -85,10 +79,8 @@
    "adr_id": "adr004",
    "label_final": "violate",
    "abstain": false,
-   "predictedViolate": true,
-   "hit_patterns": [
-    "^\\s*export\\s*(\\*|\\{[^}]*\\})\\s*from\\s*['\"]"
-   ],
+   "predictedViolate": false,
+   "hit_patterns": [],
    "n_patterns_drafted": 2
   },
   {
@@ -97,10 +89,8 @@
    "adr_id": "adr004",
    "label_final": "compliant",
    "abstain": false,
-   "predictedViolate": true,
-   "hit_patterns": [
-    "^\\s*export\\s*(\\*|\\{[^}]*\\})\\s*from\\s*['\"]"
-   ],
+   "predictedViolate": false,
+   "hit_patterns": [],
    "n_patterns_drafted": 2
   },
   {
