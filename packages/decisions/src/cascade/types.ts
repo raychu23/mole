@@ -56,6 +56,23 @@ export interface SemanticRouteOptions {
   /** stage 2's model call; can be the same LlmClient as CascadeOptions.llm, or a cheaper one -- the router's own
    *  budget is independent of the escalation tier's. Omit to run the BM25-only tier. */
   llm?: LlmClient;
+  /** T120c: opt-in (default false/undefined, off). When true AND `embedder` is given, cascadeCheck computes an
+   *  embedding for the change text and for every routing candidate's own index text (ONE batched embedder.embed
+   *  call, never one call per candidate), then passes embedBoost+changeEmbedding through to routeDecisions --
+   *  the wiring route.ts's own embedBoost signal (T120, route/types.ts RouteOptions.embedBoost) needed to ever
+   *  run on a real check (B2 Q13 NEW-repo eval review: previously unreachable, nothing called it). */
+  embedBoost?: boolean;
+  /** T120c: injectable embedding call (see Embedder doc below) -- same posture as `llm?: LlmClient` (cascade.ts
+   *  has no model/network dependency of its own). Required together with embedBoost; embedBoost with no
+   *  embedder is a no-op (same no-op fallback as route.ts's own embedBoost/changeEmbedding absence contract). */
+  embedder?: Embedder;
+}
+
+/** T120c: injectable text-embedding call for embedBoost. Defined in core (cascade/types.ts) so the interface
+ *  has no runtime dependency of its own; a real implementation (e.g. embedder-minilm.ts's local transformers.js
+ *  adapter) lives in a SEPARATE, never-statically-imported module -- see bundle-size.md. */
+export interface Embedder {
+  embed(texts: string[]): Promise<number[][]>;
 }
 
 export interface CascadeResult {

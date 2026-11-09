@@ -5,3 +5,7 @@ export { cascadeCheck, decisionTextFromRecords, type CascadeOptions } from './ca
 export { cascadeCheckCli, formatCascade, SEMANTIC_ROUTE_DEFAULTS } from './cli.js';
 export { semanticRouteDocs } from './semantic-docs.js';
 export { snapshotWorktree, type WorktreeSnapshot } from './worktree.js';
+// T120c: NOT exported here on purpose -- createMiniLmEmbedder (embedder-minilm.ts) must stay reachable only by
+// its own explicit import path ('@mole/decisions/dist/src/cascade/embedder-minilm.js') or cli.ts's dynamic
+// import, never via this package's main entrypoint, so requiring it never forces @xenova/transformers to
+// resolve for every consumer of @mole/decisions (see bundle-size.md).

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "t120r-none4-1",
+    "label": "no_decision",
+    "pred": "VIOLATES",
+    "response": "VERDICT: VIOLATES\n\nCreates a new OkHttpClient instance per class instead of reusing a shared singleton or dependency-injected instance, wasting resources and breaking connection pooling\u2014standard Android practice is to inject or use a single shared client."
+  },
+  {
+    "id": "t120r-none4-2",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo architectural decision is evident from the diff alone \u2014 in-memory Room databases are a standard Android pattern, and the code's scope (autocomplete cache, no persistence, no financial data) suggests it's appropriately scoped, but team conventions about cache strategy, database inst"
+  },
+  {
+    "id": "t120r-none4-3",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo architectural rule evident from the diff itself\u2014it's a straightforward test double with minimal surface area; whether it fits the team's testing patterns depends on context outside this code (test structure conventions, mock/stub preferences, integration test design)."
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "t120r-none3-1",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThe diff introduces a new class with basic vector search stubs; without seeing the broader online store architecture, retrieval patterns, or naming conventions already in use, there's no way to know if this violates an unstated decision."
+  },
+  {
+    "id": "t120r-none3-2",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThis is a straightforward example file for on-demand feature views with no architectural constraints evident from the code alone."
+  },
+  {
+    "id": "t120r-none3-3",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThis is a new example file with standard logging setup and basic FeatureService instantiation; without seeing team conventions for examples/ organization, feature naming, or logging patterns in similar files, there's no way to assess compliance against unstated decisions."
+  },
+  {
+    "id": "t120r-none3-4",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThe diff shows a straightforward implementation of an OnlineStore subclass with basic read/write stubs \u2014 no apparent architectural red flags, but without seeing existing store implementations or design docs, there's no way to know if this follows or breaks team patterns."
+  },
+  {
+    "id": "t120r-none3-5",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo architectural pattern is evident from this diff alone\u2014it's a simple wrapper adding in-memory caching to a session manager, which is a common utility and doesn't signal violation of or compliance with any specific team decision."
+  },
+  {
+    "id": "t120r-none3-7",
+    "label": "no_decision",
+    "pred": "VIOLATES",
+    "response": "VERDICT: VIOLATES\n\nViewModel should not directly call API layers; this bypasses the repository pattern present in the codebase (data layer should be abstracted behind repositories, not exposed to presentation)."
+  },
+  {
+    "id": "t120r-none3-8",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo pattern in the diff itself signals a violation; adding a KSP dependency for Moshi codegen is a standard annotation processor pattern with no apparent constraint."
+  },
+  {
+    "id": "t120r-none3-6b",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo architectural decision is evident from the diff alone \u2014 it's a straightforward Room database setup with a migration, and without access to team docs/ADRs there's no way to know if there are conventions about migration naming, database builder patterns, or entity structure that this"
+  }
+]

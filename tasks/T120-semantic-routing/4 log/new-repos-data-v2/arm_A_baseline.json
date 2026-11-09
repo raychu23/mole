@@ -1,0 +1,542 @@
+[
+  {
+    "id": "t120r-fs-adr0003-violate",
+    "repo": "feast",
+    "adr_id": "adr0003",
+    "label_final": "violate",
+    "predictedViolate": true,
+    "routedCorrectly": true,
+    "routing": [
+      "adr0003"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0076265,
+    "routeCostUsd": 0.001449,
+    "totalCostUsd": 0.0090755,
+    "wallMs": 18578
+  },
+  {
+    "id": "t120r-fs-adr0003-compliant",
+    "repo": "feast",
+    "adr_id": "adr0003",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routedCorrectly": true,
+    "routing": [
+      "adr0003"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.011069,
+    "routeCostUsd": 0.001446,
+    "totalCostUsd": 0.012515,
+    "wallMs": 14709
+  },
+  {
+    "id": "t120r-fs-adr0004-violate",
+    "repo": "feast",
+    "adr_id": "adr0004",
+    "label_final": "violate",
+    "predictedViolate": true,
+    "routedCorrectly": true,
+    "routing": [
+      "adr0004",
+      "adr0001"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0110415,
+    "routeCostUsd": 0.00161,
+    "totalCostUsd": 0.0126515,
+    "wallMs": 12056
+  },
+  {
+    "id": "t120r-fs-adr0004-compliant",
+    "repo": "feast",
+    "adr_id": "adr0004",
+    "label_final": "compliant",
+    "predictedViolate": true,
+    "routedCorrectly": true,
+    "routing": [
+      "adr0004",
+      "adr0001"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0134165,
+    "routeCostUsd": 0.001658,
+    "totalCostUsd": 0.0150745,
+    "wallMs": 15278
+  },
+  {
+    "id": "t120r-fs-adr0007-violate",
+    "repo": "feast",
+    "adr_id": "adr0007",
+    "label_final": "violate",
+    "predictedViolate": true,
+    "routedCorrectly": true,
+    "routing": [
+      "adr0007"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.008414,
+    "routeCostUsd": 0.001389,
+    "totalCostUsd": 0.009803,
+    "wallMs": 13998
+  },
+  {
+    "id": "t120r-fs-adr0007-compliant",
+    "repo": "feast",
+    "adr_id": "adr0007",
+    "label_final": "compliant",
+    "predictedViolate": true,
+    "routedCorrectly": true,
+    "routing": [
+      "adr0007"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0127515,
+    "routeCostUsd": 0.001367,
+    "totalCostUsd": 0.0141185,
+    "wallMs": 14625
+  },
+  {
+    "id": "t120r-fs-adr0009-violate",
+    "repo": "feast",
+    "adr_id": "adr0009",
+    "label_final": "violate",
+    "predictedViolate": false,
+    "routedCorrectly": false,
+    "routing": [],
+    "llmCallCount": 0,
+    "escalateCostUsd": 0,
+    "routeCostUsd": 0.001812,
+    "totalCostUsd": 0.001812,
+    "wallMs": 8597
+  },
+  {
+    "id": "t120r-fs-adr0009-compliant",
+    "repo": "feast",
+    "adr_id": "adr0009",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routedCorrectly": false,
+    "routing": [],
+    "llmCallCount": 0,
+    "escalateCostUsd": 0,
+    "routeCostUsd": 0.001445,
+    "totalCostUsd": 0.001445,
+    "wallMs": 5894
+  },
+  {
+    "id": "t120r-fs-adr0010-violate",
+    "repo": "feast",
+    "adr_id": "adr0010",
+    "label_final": "violate",
+    "predictedViolate": true,
+    "routedCorrectly": true,
+    "routing": [
+      "adr0010",
+      "adr0009"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0119215,
+    "routeCostUsd": 0.001407,
+    "totalCostUsd": 0.0133285,
+    "wallMs": 13933
+  },
+  {
+    "id": "t120r-fs-adr0010-compliant",
+    "repo": "feast",
+    "adr_id": "adr0010",
+    "label_final": "compliant",
+    "predictedViolate": true,
+    "routedCorrectly": true,
+    "routing": [
+      "adr0010",
+      "adr0009"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0124915,
+    "routeCostUsd": 0.001419,
+    "totalCostUsd": 0.013910500000000001,
+    "wallMs": 14672
+  },
+  {
+    "id": "t120r-fs-adr0001-violate",
+    "repo": "feast",
+    "adr_id": "adr0001",
+    "label_final": "violate",
+    "predictedViolate": true,
+    "routedCorrectly": true,
+    "routing": [
+      "adr0001"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.006674,
+    "routeCostUsd": 0.001909,
+    "totalCostUsd": 0.008583,
+    "wallMs": 18415
+  },
+  {
+    "id": "t120r-fs-adr0001-compliant",
+    "repo": "feast",
+    "adr_id": "adr0001",
+    "label_final": "compliant",
+    "predictedViolate": true,
+    "routedCorrectly": true,
+    "routing": [
+      "adr0001"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0070565,
+    "routeCostUsd": 0.001437,
+    "totalCostUsd": 0.008493500000000001,
+    "wallMs": 13706
+  },
+  {
+    "id": "t120r-pg-004-violate",
+    "repo": "pledger-android",
+    "adr_id": "004",
+    "label_final": "violate",
+    "predictedViolate": true,
+    "routedCorrectly": true,
+    "routing": [
+      "004",
+      "011"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0108315,
+    "routeCostUsd": 0.001465,
+    "totalCostUsd": 0.0122965,
+    "wallMs": 19777
+  },
+  {
+    "id": "t120r-pg-004-compliant",
+    "repo": "pledger-android",
+    "adr_id": "004",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routedCorrectly": true,
+    "routing": [
+      "004",
+      "011"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0105765,
+    "routeCostUsd": 0.001432,
+    "totalCostUsd": 0.0120085,
+    "wallMs": 17655
+  },
+  {
+    "id": "t120r-pg-006-violate",
+    "repo": "pledger-android",
+    "adr_id": "006",
+    "label_final": "violate",
+    "predictedViolate": true,
+    "routedCorrectly": true,
+    "routing": [
+      "006"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0063465,
+    "routeCostUsd": 0.001446,
+    "totalCostUsd": 0.0077925,
+    "wallMs": 10729
+  },
+  {
+    "id": "t120r-pg-006-compliant",
+    "repo": "pledger-android",
+    "adr_id": "006",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routedCorrectly": true,
+    "routing": [
+      "006"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0072815,
+    "routeCostUsd": 0.00145,
+    "totalCostUsd": 0.0087315,
+    "wallMs": 13411
+  },
+  {
+    "id": "t120r-pg-005-violate",
+    "repo": "pledger-android",
+    "adr_id": "005",
+    "label_final": "violate",
+    "predictedViolate": false,
+    "routedCorrectly": false,
+    "routing": [
+      "011",
+      "019"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0098615,
+    "routeCostUsd": 0.001423,
+    "totalCostUsd": 0.011284500000000001,
+    "wallMs": 9777
+  },
+  {
+    "id": "t120r-pg-005-compliant",
+    "repo": "pledger-android",
+    "adr_id": "005",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routedCorrectly": true,
+    "routing": [
+      "005",
+      "022"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0130165,
+    "routeCostUsd": 0.001516,
+    "totalCostUsd": 0.0145325,
+    "wallMs": 11755
+  },
+  {
+    "id": "t120r-pg-011-violate",
+    "repo": "pledger-android",
+    "adr_id": "011",
+    "label_final": "violate",
+    "predictedViolate": true,
+    "routedCorrectly": true,
+    "routing": [
+      "011",
+      "022"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.011044,
+    "routeCostUsd": 0.001399,
+    "totalCostUsd": 0.012443,
+    "wallMs": 12792
+  },
+  {
+    "id": "t120r-pg-011-compliant",
+    "repo": "pledger-android",
+    "adr_id": "011",
+    "label_final": "compliant",
+    "predictedViolate": true,
+    "routedCorrectly": true,
+    "routing": [
+      "022",
+      "011"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.021019,
+    "routeCostUsd": 0.001376,
+    "totalCostUsd": 0.022394999999999998,
+    "wallMs": 21629
+  },
+  {
+    "id": "t120r-pg-013-violate",
+    "repo": "pledger-android",
+    "adr_id": "013",
+    "label_final": "violate",
+    "predictedViolate": true,
+    "routedCorrectly": true,
+    "routing": [
+      "013",
+      "014"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0085415,
+    "routeCostUsd": 0.001277,
+    "totalCostUsd": 0.0098185,
+    "wallMs": 9871
+  },
+  {
+    "id": "t120r-pg-013-compliant",
+    "repo": "pledger-android",
+    "adr_id": "013",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routedCorrectly": true,
+    "routing": [
+      "013"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.006204,
+    "routeCostUsd": 0.001282,
+    "totalCostUsd": 0.0074860000000000005,
+    "wallMs": 11218
+  },
+  {
+    "id": "t120r-pg-003-violate",
+    "repo": "pledger-android",
+    "adr_id": "003",
+    "label_final": "violate",
+    "predictedViolate": false,
+    "routedCorrectly": false,
+    "routing": [
+      "004",
+      "006",
+      "011"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.015354,
+    "routeCostUsd": 0.001962,
+    "totalCostUsd": 0.017315999999999998,
+    "wallMs": 14030
+  },
+  {
+    "id": "t120r-pg-003-compliant",
+    "repo": "pledger-android",
+    "adr_id": "003",
+    "label_final": "compliant",
+    "predictedViolate": false,
+    "routedCorrectly": false,
+    "routing": [
+      "013",
+      "022",
+      "011"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0150915,
+    "routeCostUsd": 0.00145,
+    "totalCostUsd": 0.0165415,
+    "wallMs": 11059
+  },
+  {
+    "id": "t120r-none3-2",
+    "repo": "feast",
+    "adr_id": "none",
+    "label_final": "no_decision",
+    "predictedViolate": false,
+    "routedCorrectly": false,
+    "routing": [
+      "adr0003"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.011424,
+    "routeCostUsd": 0.001466,
+    "totalCostUsd": 0.01289,
+    "wallMs": 15302
+  },
+  {
+    "id": "t120r-none3-3",
+    "repo": "feast",
+    "adr_id": "none",
+    "label_final": "no_decision",
+    "predictedViolate": false,
+    "routedCorrectly": false,
+    "routing": [
+      "adr0001"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0067965,
+    "routeCostUsd": 0.001357,
+    "totalCostUsd": 0.0081535,
+    "wallMs": 11342
+  },
+  {
+    "id": "t120r-none3-4",
+    "repo": "feast",
+    "adr_id": "none",
+    "label_final": "no_decision",
+    "predictedViolate": false,
+    "routedCorrectly": true,
+    "routing": [],
+    "llmCallCount": 0,
+    "escalateCostUsd": 0,
+    "routeCostUsd": 0.001483,
+    "totalCostUsd": 0.001483,
+    "wallMs": 4549
+  },
+  {
+    "id": "t120r-none3-5",
+    "repo": "pledger-android",
+    "adr_id": "none",
+    "label_final": "no_decision",
+    "predictedViolate": true,
+    "routedCorrectly": false,
+    "routing": [
+      "022",
+      "011"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.011044,
+    "routeCostUsd": 0.001445,
+    "totalCostUsd": 0.012489,
+    "wallMs": 9846
+  },
+  {
+    "id": "t120r-none3-7",
+    "repo": "pledger-android",
+    "adr_id": "none",
+    "label_final": "no_decision",
+    "predictedViolate": true,
+    "routedCorrectly": false,
+    "routing": [
+      "007",
+      "022"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.011839,
+    "routeCostUsd": 0.001509,
+    "totalCostUsd": 0.013348,
+    "wallMs": 10928
+  },
+  {
+    "id": "t120r-none3-6b",
+    "repo": "pledger-android",
+    "adr_id": "none",
+    "label_final": "no_decision",
+    "predictedViolate": true,
+    "routedCorrectly": false,
+    "routing": [
+      "005",
+      "022"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0132415,
+    "routeCostUsd": 0.001539,
+    "totalCostUsd": 0.0147805,
+    "wallMs": 12552
+  },
+  {
+    "id": "t120r-none4-1",
+    "repo": "pledger-android",
+    "adr_id": "none",
+    "label_final": "no_decision",
+    "predictedViolate": true,
+    "routedCorrectly": false,
+    "routing": [
+      "004",
+      "011"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0113165,
+    "routeCostUsd": 0.001486,
+    "totalCostUsd": 0.0128025,
+    "wallMs": 11267
+  },
+  {
+    "id": "t120r-none4-2",
+    "repo": "pledger-android",
+    "adr_id": "none",
+    "label_final": "no_decision",
+    "predictedViolate": false,
+    "routedCorrectly": false,
+    "routing": [
+      "011",
+      "005"
+    ],
+    "llmCallCount": 1,
+    "escalateCostUsd": 0.0114665,
+    "routeCostUsd": 0.001488,
+    "totalCostUsd": 0.012954499999999999,
+    "wallMs": 11273
+  },
+  {
+    "id": "t120r-none4-3",
+    "repo": "feast",
+    "adr_id": "none",
+    "label_final": "no_decision",
+    "predictedViolate": false,
+    "routedCorrectly": true,
+    "routing": [],
+    "llmCallCount": 0,
+    "escalateCostUsd": 0,
+    "routeCostUsd": 0.001424,
+    "totalCostUsd": 0.001424,
+    "wallMs": 4910
+  }
+]

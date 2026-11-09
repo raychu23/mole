@@ -1,0 +1,50 @@
+[
+  {
+    "id": "t120r-none2-2",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo clear architecture decision governs whether scratch notes files belong in the examples/ directory; this looks like ad-hoc working notes rather than a pattern the codebase has standardized on."
+  },
+  {
+    "id": "t120r-none2-3",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo architecture decision visible\u2014this is a minimal documentation file pointing to an example, with no structural pattern or convention to evaluate against from the diff alone."
+  },
+  {
+    "id": "t120r-none2-4",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo architectural decision is evident from a single README file addition documenting a directory's purpose."
+  },
+  {
+    "id": "t120r-none2-6",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo clear architecture decision can be inferred from the diff alone \u2014 it's a documentation note with no active schema migrations, which is a reasonable intermediate state but depends on unstated team conventions about storing loose design notes in code."
+  },
+  {
+    "id": "t120r-none2-7",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThis is a future-work note file with no code that could violate architectural decisions; whether exposing progress as StateFlow is appropriate depends on team patterns not evident in the repo structure alone."
+  },
+  {
+    "id": "t120r-none2-1b",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nAdding a comment to document method signature contracts across store implementations is a documentation choice with no standard architectural pattern to violate or comply with."
+  },
+  {
+    "id": "t120r-none2-5b",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nA design note documenting SessionManager's ownership scope is a documentation artifact\u2014no architectural rule is being tested or enforced by its creation alone."
+  },
+  {
+    "id": "t120r-none2-8b",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThis is a new documentation file explaining build configuration; without seeing team policies or architecture decisions, there's no basis to assess compliance."
+  }
+]

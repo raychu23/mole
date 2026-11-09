@@ -1,0 +1,94 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T120c-wire-embed
+
+stdout | packages/decisions/test/cascade-cli-embed-route.test.ts > cascadeCheckCli: --embed-route flag (T120c, off by default) > without --embed-route, a plain check (no decisions governed) still runs clean, no embedder touched
+{
+  "base": "f1c28b21f02ae1f997aec5b1bac95a50513ae8bc",
+  "head": "f8a65407abccc4c99003201c0c57068a9c2f3243",
+  "verdicts": [],
+  "files": [
+    "src/a.ts"
+  ],
+  "routing": [],
+  "ms": 224
+}
+
+stdout | packages/decisions/test/cascade-cli-embed-route.test.ts > cascadeCheckCli: --embed-route flag (T120c, off by default) > --embed-route with no decisions in the repo is a no-op (nothing to embed, never throws)
+{
+  "base": "f1c28b21f02ae1f997aec5b1bac95a50513ae8bc",
+  "head": "f8a65407abccc4c99003201c0c57068a9c2f3243",
+  "verdicts": [],
+  "files": [
+    "src/a.ts"
+  ],
+  "routing": [],
+  "ms": 211
+}
+
+stdout | packages/decisions/test/cascade-cli-embed-route.test.ts > cascadeCheckCli: --embed-route flag (T120c, off by default) > --no-route and --embed-route together: --no-route wins (semanticRoute, and so embedBoost, never runs)
+{
+  "base": "f1c28b21f02ae1f997aec5b1bac95a50513ae8bc",
+  "head": "f8a65407abccc4c99003201c0c57068a9c2f3243",
+  "verdicts": [],
+  "files": [
+    "src/a.ts"
+  ],
+  "routing": [],
+  "ms": 195
+}
+
+ ✓ packages/decisions/test/cascade-cli-embed-route.test.ts (3 tests) 838ms
+ ❯ packages/decisions/test/cascade-embed-route.test.ts (4 tests | 1 failed) 1068ms
+   ✓ cascadeCheck: embedBoost wiring (T120c) > without embedBoost/embedder, a lexically-dissimilar true decision is still unrouted (documents the gap this fixes) 239ms
+   ✓ cascadeCheck: embedBoost wiring (T120c) > embedBoost:true with no embedder given is a no-op (same as without, never throws) 210ms
+   × cascadeCheck: embedBoost wiring (T120c) > embedBoost + embedder: cascadeCheck computes embeddings and passes them through, recovering the decision 214ms
+     → expected [] to deeply equal [ 'adr-singleton' ]
+   ✓ cascadeCheck: embedBoost wiring (T120c) > embedBoost never calls the embedder when there are zero routing candidates left to embed 224ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/decisions/test/embedder-minilm.test.ts [ packages/decisions/test/embedder-minilm.test.ts ]
+Error: Cannot find module '../src/cascade/embedder-minilm.js' imported from '/Users/a1/Desktop/CS Code/Project/Mole-worktrees/T120c-wire-embed/packages/decisions/test/embedder-minilm.test.ts'
+ ❯ packages/decisions/test/embedder-minilm.test.ts:7:1
+      5| // in THIS environment: a clear, actionable error instead of a silent …
+      6| import { describe, expect, it } from 'vitest';
+      7| import { createMiniLmEmbedder } from '../src/cascade/embedder-minilm.j…
+       | ^
+      8| 
+      9| describe('createMiniLmEmbedder (T120c)', () => {
+
+Caused by: Error: Failed to load url ../src/cascade/embedder-minilm.js (resolved id: ../src/cascade/embedder-minilm.js) in /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T120c-wire-embed/packages/decisions/test/embedder-minilm.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../../CS%20Code/Project/Mole-worktrees/T120c-wire-embed/node_modules/vite/dist/node/chunks/config.js:22907:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/decisions/test/cascade-embed-route.test.ts > cascadeCheck: embedBoost wiring (T120c) > embedBoost + embedder: cascadeCheck computes embeddings and passes them through, recovering the decision
+AssertionError: expected [] to deeply equal [ 'adr-singleton' ]
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [[39m
+[32m-   "adr-singleton",[39m
+[32m- ][39m
+[31m+ [][39m
+
+ ❯ packages/decisions/test/cascade-embed-route.test.ts:79:46
+     77|     const { embedder, calls } = stubEmbedder(vectorFor);
+     78|     const r = await cascadeCheck({ root, base, head, semanticRoute: { …
+     79|     expect(r.routing.map((x) => x.decision)).toEqual(['adr-singleton']…
+       |                                              ^
+     80|     expect(r.routing[0]!.hitKinds).toEqual(['semantic']);
+     81|     // ONE batched embed() call (every candidate's text + the change t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 1 passed (3)
+      Tests  1 failed | 6 passed (7)
+   Start at  01:44:33
+   Duration  2.27s (transform 401ms, setup 0ms, collect 1.92s, tests 1.91s, environment 0ms, prepare 200ms)
+
