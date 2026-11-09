@@ -1,21 +1,21 @@
 ---
-state: proposed
-owner:
+state: ready
+owner: unclaimed
 repo: /Users/a1/Desktop/CS Code/Project/Mole
 branch:
 worktree:
 base:
 reviewer:
 updated: 2026-11-08 23:54
-status: ledger proposed
-next: fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+status: ledger ready
+next: worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
 ---
 ```notes
 T120-semantic-routing      ledger task (rules.md §3 code features)      project tasks
     goal                    raise T53 router recall@1/3/5 on real ADR corpora (B2 v4.3: semantic-kernel 0.375, 17/19 pooled misses = routing) via embeddings/governs-summary doc expansion, behind an opt-in flag; measure cost+latency and the none-case false-alarm rate
     done-when               tests-first red->green for the new flag(s) in packages/decisions; recall@1/3/5 measured per repo on DEV = v3 dev + v4.1 dev + v4.2/v4.3 (labeled seen); a frozen pre-registered protocol for >=2 NEW never-used repos exists (leak-gated per constructed-benchmark-leak-gates) with a code hash, NOT run
-    status                  2026-11-08 proposed
-    next                    fill owner + done-when + boundary + checks + non-goals + proof + stop → ledger move <task> ready
+    status                  2026-11-08 ready      owner unclaimed
+    next                    worker claims it → ledger move <task> running --orca | --git-worktree | --worktree PATH
     pinned
     mode                    one worker
     boundary               packages/decisions only (route/bm25/types/mentions); no edits to frozen benchmark keys/held-out labels; prior-art.md before code; repos fetched via GitHub contents API or throwaway shallow clones under scratch, never main
