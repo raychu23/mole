@@ -1,0 +1,390 @@
+[
+  {
+    "name": "bm25-baseline",
+    "perRepo": {
+      "log4brains": {
+        "n": 4,
+        "hits1": 4,
+        "hits3": 4,
+        "hits5": 4,
+        "nNone": 2,
+        "falseAlarms": 2,
+        "ms": 7
+      },
+      "python-tuf": {
+        "n": 2,
+        "hits1": 2,
+        "hits3": 2,
+        "hits5": 2,
+        "nNone": 1,
+        "falseAlarms": 1,
+        "ms": 3
+      },
+      "powertools-python": {
+        "n": 6,
+        "hits1": 3,
+        "hits3": 5,
+        "hits5": 5,
+        "nNone": 3,
+        "falseAlarms": 3,
+        "ms": 6
+      },
+      "easi-app": {
+        "n": 28,
+        "hits1": 21,
+        "hits3": 25,
+        "hits5": 25,
+        "nNone": 15,
+        "falseAlarms": 15,
+        "ms": 171
+      },
+      "merino-py": {
+        "n": 8,
+        "hits1": 7,
+        "hits3": 8,
+        "hits5": 8,
+        "nNone": 2,
+        "falseAlarms": 2,
+        "ms": 13
+      },
+      "hmrc-frontend": {
+        "n": 12,
+        "hits1": 11,
+        "hits3": 12,
+        "hits5": 12,
+        "nNone": 10,
+        "falseAlarms": 10,
+        "ms": 21
+      },
+      "semantic-kernel": {
+        "n": 16,
+        "hits1": 6,
+        "hits3": 10,
+        "hits5": 11,
+        "nNone": 13,
+        "falseAlarms": 13,
+        "ms": 292
+      },
+      "jaeger": {
+        "n": 14,
+        "hits1": 13,
+        "hits3": 14,
+        "hits5": 14,
+        "nNone": 12,
+        "falseAlarms": 12,
+        "ms": 54
+      },
+      "content-publisher": {
+        "n": 28,
+        "hits1": 13,
+        "hits3": 21,
+        "hits5": 23,
+        "nNone": 16,
+        "falseAlarms": 16,
+        "ms": 76
+      },
+      "email-alert-api": {
+        "n": 10,
+        "hits1": 6,
+        "hits3": 8,
+        "hits5": 9,
+        "nNone": 15,
+        "falseAlarms": 15,
+        "ms": 30
+      }
+    },
+    "llmCalls": 0,
+    "llmCostUsd": 0
+  },
+  {
+    "name": "bm25+embedBoost",
+    "perRepo": {
+      "log4brains": {
+        "n": 4,
+        "hits1": 4,
+        "hits3": 4,
+        "hits5": 4,
+        "nNone": 2,
+        "falseAlarms": 2,
+        "ms": 5
+      },
+      "python-tuf": {
+        "n": 2,
+        "hits1": 2,
+        "hits3": 2,
+        "hits5": 2,
+        "nNone": 1,
+        "falseAlarms": 1,
+        "ms": 2
+      },
+      "powertools-python": {
+        "n": 6,
+        "hits1": 3,
+        "hits3": 5,
+        "hits5": 5,
+        "nNone": 3,
+        "falseAlarms": 3,
+        "ms": 5
+      },
+      "easi-app": {
+        "n": 28,
+        "hits1": 25,
+        "hits3": 27,
+        "hits5": 27,
+        "nNone": 15,
+        "falseAlarms": 15,
+        "ms": 171
+      },
+      "merino-py": {
+        "n": 8,
+        "hits1": 8,
+        "hits3": 8,
+        "hits5": 8,
+        "nNone": 2,
+        "falseAlarms": 2,
+        "ms": 14
+      },
+      "hmrc-frontend": {
+        "n": 12,
+        "hits1": 11,
+        "hits3": 12,
+        "hits5": 12,
+        "nNone": 10,
+        "falseAlarms": 10,
+        "ms": 20
+      },
+      "semantic-kernel": {
+        "n": 16,
+        "hits1": 7,
+        "hits3": 14,
+        "hits5": 14,
+        "nNone": 13,
+        "falseAlarms": 13,
+        "ms": 292
+      },
+      "jaeger": {
+        "n": 14,
+        "hits1": 12,
+        "hits3": 14,
+        "hits5": 14,
+        "nNone": 12,
+        "falseAlarms": 12,
+        "ms": 54
+      },
+      "content-publisher": {
+        "n": 28,
+        "hits1": 13,
+        "hits3": 21,
+        "hits5": 24,
+        "nNone": 16,
+        "falseAlarms": 16,
+        "ms": 76
+      },
+      "email-alert-api": {
+        "n": 10,
+        "hits1": 4,
+        "hits3": 10,
+        "hits5": 10,
+        "nNone": 15,
+        "falseAlarms": 15,
+        "ms": 32
+      }
+    },
+    "llmCalls": 0,
+    "llmCostUsd": 0
+  },
+  {
+    "name": "bm25+useGovernsSummary(FIXED)",
+    "perRepo": {
+      "log4brains": {
+        "n": 4,
+        "hits1": 4,
+        "hits3": 4,
+        "hits5": 4,
+        "nNone": 2,
+        "falseAlarms": 2,
+        "ms": 4
+      },
+      "python-tuf": {
+        "n": 2,
+        "hits1": 2,
+        "hits3": 2,
+        "hits5": 2,
+        "nNone": 1,
+        "falseAlarms": 1,
+        "ms": 2
+      },
+      "powertools-python": {
+        "n": 6,
+        "hits1": 3,
+        "hits3": 5,
+        "hits5": 5,
+        "nNone": 3,
+        "falseAlarms": 3,
+        "ms": 5
+      },
+      "easi-app": {
+        "n": 28,
+        "hits1": 24,
+        "hits3": 26,
+        "hits5": 26,
+        "nNone": 15,
+        "falseAlarms": 15,
+        "ms": 171
+      },
+      "merino-py": {
+        "n": 8,
+        "hits1": 7,
+        "hits3": 8,
+        "hits5": 8,
+        "nNone": 2,
+        "falseAlarms": 2,
+        "ms": 14
+      },
+      "hmrc-frontend": {
+        "n": 12,
+        "hits1": 11,
+        "hits3": 12,
+        "hits5": 12,
+        "nNone": 10,
+        "falseAlarms": 10,
+        "ms": 21
+      },
+      "semantic-kernel": {
+        "n": 16,
+        "hits1": 6,
+        "hits3": 10,
+        "hits5": 11,
+        "nNone": 13,
+        "falseAlarms": 13,
+        "ms": 298
+      },
+      "jaeger": {
+        "n": 14,
+        "hits1": 13,
+        "hits3": 14,
+        "hits5": 14,
+        "nNone": 12,
+        "falseAlarms": 12,
+        "ms": 56
+      },
+      "content-publisher": {
+        "n": 28,
+        "hits1": 14,
+        "hits3": 21,
+        "hits5": 23,
+        "nNone": 16,
+        "falseAlarms": 16,
+        "ms": 77
+      },
+      "email-alert-api": {
+        "n": 10,
+        "hits1": 6,
+        "hits3": 8,
+        "hits5": 10,
+        "nNone": 15,
+        "falseAlarms": 15,
+        "ms": 33
+      }
+    },
+    "llmCalls": 0,
+    "llmCostUsd": 0
+  },
+  {
+    "name": "bm25+embedBoost+useGovernsSummary(FIXED)",
+    "perRepo": {
+      "log4brains": {
+        "n": 4,
+        "hits1": 4,
+        "hits3": 4,
+        "hits5": 4,
+        "nNone": 2,
+        "falseAlarms": 2,
+        "ms": 4
+      },
+      "python-tuf": {
+        "n": 2,
+        "hits1": 2,
+        "hits3": 2,
+        "hits5": 2,
+        "nNone": 1,
+        "falseAlarms": 1,
+        "ms": 2
+      },
+      "powertools-python": {
+        "n": 6,
+        "hits1": 3,
+        "hits3": 5,
+        "hits5": 5,
+        "nNone": 3,
+        "falseAlarms": 3,
+        "ms": 5
+      },
+      "easi-app": {
+        "n": 28,
+        "hits1": 26,
+        "hits3": 28,
+        "hits5": 28,
+        "nNone": 15,
+        "falseAlarms": 15,
+        "ms": 177
+      },
+      "merino-py": {
+        "n": 8,
+        "hits1": 8,
+        "hits3": 8,
+        "hits5": 8,
+        "nNone": 2,
+        "falseAlarms": 2,
+        "ms": 13
+      },
+      "hmrc-frontend": {
+        "n": 12,
+        "hits1": 11,
+        "hits3": 12,
+        "hits5": 12,
+        "nNone": 10,
+        "falseAlarms": 10,
+        "ms": 22
+      },
+      "semantic-kernel": {
+        "n": 16,
+        "hits1": 7,
+        "hits3": 14,
+        "hits5": 14,
+        "nNone": 13,
+        "falseAlarms": 13,
+        "ms": 299
+      },
+      "jaeger": {
+        "n": 14,
+        "hits1": 12,
+        "hits3": 14,
+        "hits5": 14,
+        "nNone": 12,
+        "falseAlarms": 12,
+        "ms": 56
+      },
+      "content-publisher": {
+        "n": 28,
+        "hits1": 13,
+        "hits3": 21,
+        "hits5": 24,
+        "nNone": 16,
+        "falseAlarms": 16,
+        "ms": 77
+      },
+      "email-alert-api": {
+        "n": 10,
+        "hits1": 4,
+        "hits3": 10,
+        "hits5": 10,
+        "nNone": 15,
+        "falseAlarms": 15,
+        "ms": 33
+      }
+    },
+    "llmCalls": 0,
+    "llmCostUsd": 0
+  }
+]

@@ -1,0 +1,149 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T120-semantic-routing/packages/decisions
+
+ ❯ test/route-embed-governs.test.ts (10 tests | 5 failed) 14ms
+   × routeDecisions: embedBoost (T120) > with no embeddings/flag, a lexically-dissimilar true decision is still unrouted (documents the gap this fixes) 7ms
+     → expected [ { id: 'adr-singleton', …(2) } ] to deeply equal []
+   × routeDecisions: embedBoost (T120) > embedBoost off by default: passing embeddings without the flag changes nothing 1ms
+     → expected [ { id: 'adr-singleton', …(2) } ] to deeply equal []
+   ✓ routeDecisions: embedBoost (T120) > embedBoost on: a cosine-similar decision surfaces even with zero BM25 lexical overlap 0ms
+   ✓ routeDecisions: embedBoost (T120) > embedBoost never excludes or ranks a zero-embedding-similarity candidate below its own BM25 rank (recall-ceiling rule) 0ms
+   ✓ routeDecisions: embedBoost (T120) > a candidate with no embedding at all is never penalized below its BM25 rank (partial-coverage corpora) 0ms
+   × routeDecisions: embedBoost (T120) > embedBoost is a no-op with no changeEmbedding (falls back to plain BM25 order, never throws) 1ms
+     → expected [ { id: 'adr-singleton', …(2) } ] to deeply equal []
+   × routeDecisions: useGovernsSummary doc-expansion (T120) > useGovernsSummary off by default: the field has no effect on BM25 scoring 1ms
+     → expected [ { id: 'adr-queue', …(2) } ] to deeply equal []
+   × routeDecisions: useGovernsSummary doc-expansion (T120) > useGovernsSummary on: a decision whose governsSummary shares vocabulary with the diff is now found 1ms
+     → expected [ 'adr-queue' ] to deeply equal [ 'adr-queue-2' ]
+   ✓ routeDecisions: useGovernsSummary doc-expansion (T120) > a decision with no governsSummary is unaffected (never penalized) when the flag is on 0ms
+   ✓ routeDecisions: embedBoost + useGovernsSummary combine with existing scopeBoost/mentionBoost (T120) > all four RRF signals can be active at once without throwing or dropping a candidate 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/route-embed-governs.test.ts > routeDecisions: embedBoost (T120) > with no embeddings/flag, a lexically-dissimilar true decision is still unrouted (documents the gap this fixes)
+AssertionError: expected [ { id: 'adr-singleton', …(2) } ] to deeply equal []
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [][39m
+[31m+ [[39m
+[31m+   {[39m
+[31m+     "bm25Score": 0.8538153929094886,[39m
+[31m+     "id": "adr-singleton",[39m
+[31m+     "title": "Avoid the Singleton Pattern for Service Clients",[39m
+[31m+   },[39m
+[31m+ ][39m
+
+ ❯ test/route-embed-governs.test.ts:54:22
+     52|   it('with no embeddings/flag, a lexically-dissimilar true decision is…
+     53|     const r = await routeDecisions({ changeText: DIFF_TEXT, decisions:…
+     54|     expect(r.routed).toEqual([]);
+       |                      ^
+     55|     expect(r.bm25Candidates).toEqual([]); // zero BM25 score for every…
+     56|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  test/route-embed-governs.test.ts > routeDecisions: embedBoost (T120) > embedBoost off by default: passing embeddings without the flag changes nothing
+AssertionError: expected [ { id: 'adr-singleton', …(2) } ] to deeply equal []
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [][39m
+[31m+ [[39m
+[31m+   {[39m
+[31m+     "bm25Score": 0.8538153929094886,[39m
+[31m+     "id": "adr-singleton",[39m
+[31m+     "title": "Avoid the Singleton Pattern for Service Clients",[39m
+[31m+   },[39m
+[31m+ ][39m
+
+ ❯ test/route-embed-governs.test.ts:60:22
+     58|   it('embedBoost off by default: passing embeddings without the flag c…
+     59|     const r = await routeDecisions({ changeText: DIFF_TEXT, decisions:…
+     60|     expect(r.routed).toEqual([]);
+       |                      ^
+     61|   });
+     62| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  test/route-embed-governs.test.ts > routeDecisions: embedBoost (T120) > embedBoost is a no-op with no changeEmbedding (falls back to plain BM25 order, never throws)
+AssertionError: expected [ { id: 'adr-singleton', …(2) } ] to deeply equal []
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [][39m
+[31m+ [[39m
+[31m+   {[39m
+[31m+     "bm25Score": 0.6464764227666324,[39m
+[31m+     "id": "adr-singleton",[39m
+[31m+     "title": "Avoid the Singleton Pattern for Service Clients",[39m
+[31m+   },[39m
+[31m+ ][39m
+
+ ❯ test/route-embed-governs.test.ts:103:22
+    101|   it('embedBoost is a no-op with no changeEmbedding (falls back to pla…
+    102|     const r = await routeDecisions({ changeText: DIFF_TEXT, decisions:…
+    103|     expect(r.routed).toEqual([]);
+       |                      ^
+    104|   });
+    105| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  test/route-embed-governs.test.ts > routeDecisions: useGovernsSummary doc-expansion (T120) > useGovernsSummary off by default: the field has no effect on BM25 scoring
+AssertionError: expected [ { id: 'adr-queue', …(2) } ] to deeply equal []
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [][39m
+[31m+ [[39m
+[31m+   {[39m
+[31m+     "bm25Score": 0.1823215567939546,[39m
+[31m+     "id": "adr-queue",[39m
+[31m+     "title": "Outbox Pattern for Async Jobs",[39m
+[31m+   },[39m
+[31m+ ][39m
+
+ ❯ test/route-embed-governs.test.ts:125:22
+    123|     const changeText = 'POST /webhooks route calls sendEmail directly …
+    124|     const r = await routeDecisions({ changeText, decisions: [DOC_NO_SU…
+    125|     expect(r.routed).toEqual([]); // neither decision's indexed `text`…
+       |                      ^
+    126|   });
+    127| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  test/route-embed-governs.test.ts > routeDecisions: useGovernsSummary doc-expansion (T120) > useGovernsSummary on: a decision whose governsSummary shares vocabulary with the diff is now found
+AssertionError: expected [ 'adr-queue' ] to deeply equal [ 'adr-queue-2' ]
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[32m-   "adr-queue-2",[39m
+[31m+   "adr-queue",[39m
+[2m  ][22m
+
+ ❯ test/route-embed-governs.test.ts:131:39
+    129|     const changeText = 'POST /webhooks route calls sendEmail directly …
+    130|     const r = await routeDecisions({ changeText, decisions: [DOC_NO_SU…
+    131|     expect(r.routed.map((c) => c.id)).toEqual(['adr-queue-2']);
+       |                                       ^
+    132|   });
+    133| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 5 passed (10)
+   Start at  23:56:50
+   Duration  281ms (transform 44ms, setup 0ms, collect 51ms, tests 14ms, environment 0ms, prepare 56ms)
+

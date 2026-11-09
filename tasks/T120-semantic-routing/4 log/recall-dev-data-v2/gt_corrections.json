@@ -1,0 +1,86 @@
+[
+  {
+    "case": "v43-sk-0039-violate",
+    "repo": "semantic-kernel",
+    "adr_id": "sk-0039",
+    "old_gt_file": "0001-madr-architecture-decisions.md",
+    "new_gt_file": "0039-set-plugin-name-in-metadata.md"
+  },
+  {
+    "case": "v43-sk-0039-compliant",
+    "repo": "semantic-kernel",
+    "adr_id": "sk-0039",
+    "old_gt_file": "0001-madr-architecture-decisions.md",
+    "new_gt_file": "0039-set-plugin-name-in-metadata.md"
+  },
+  {
+    "case": "v43-sk-0009-violate",
+    "repo": "semantic-kernel",
+    "adr_id": "sk-0009",
+    "old_gt_file": "0001-madr-architecture-decisions.md",
+    "new_gt_file": "0009-support-multiple-named-args-in-template-function-calls.md"
+  },
+  {
+    "case": "v43-sk-0009-compliant",
+    "repo": "semantic-kernel",
+    "adr_id": "sk-0009",
+    "old_gt_file": "0001-madr-architecture-decisions.md",
+    "new_gt_file": "0009-support-multiple-named-args-in-template-function-calls.md"
+  },
+  {
+    "case": "v43-sk-0026-violate",
+    "repo": "semantic-kernel",
+    "adr_id": "sk-0026",
+    "old_gt_file": "0022-skfunction.md",
+    "new_gt_file": "0026-file-service.md"
+  },
+  {
+    "case": "v43-sk-0026-compliant",
+    "repo": "semantic-kernel",
+    "adr_id": "sk-0026",
+    "old_gt_file": "0022-skfunction.md",
+    "new_gt_file": "0026-file-service.md"
+  },
+  {
+    "case": "v43-sk-0043-violate",
+    "repo": "semantic-kernel",
+    "adr_id": "sk-0043",
+    "old_gt_file": "0001-madr-architecture-decisions.md",
+    "new_gt_file": "0043-filters-exception-handling.md"
+  },
+  {
+    "case": "v43-sk-0043-compliant",
+    "repo": "semantic-kernel",
+    "adr_id": "sk-0043",
+    "old_gt_file": "0001-madr-architecture-decisions.md",
+    "new_gt_file": "0043-filters-exception-handling.md"
+  },
+  {
+    "case": "v43-sk-0033-violate",
+    "repo": "semantic-kernel",
+    "adr_id": "sk-0033",
+    "old_gt_file": "0001-madr-architecture-decisions.md",
+    "new_gt_file": "0033-kernel-filters.md"
+  },
+  {
+    "case": "v43-sk-0033-compliant",
+    "repo": "semantic-kernel",
+    "adr_id": "sk-0033",
+    "old_gt_file": "0001-madr-architecture-decisions.md",
+    "new_gt_file": "0033-kernel-filters.md"
+  },
+  {
+    "case": "v43-sk-0011-violate",
+    "repo": "semantic-kernel",
+    "adr_id": "sk-0011",
+    "old_gt_file": "0001-madr-architecture-decisions.md",
+    "new_gt_file": "0011-function-and-kernel-result-types.md"
+  },
+  {
+    "case": "v43-sk-0011-compliant",
+    "repo": "semantic-kernel",
+    "adr_id": "sk-0011",
+    "old_gt_file": "0001-madr-architecture-decisions.md",
+    "new_gt_file": "0011-function-and-kernel-result-types.md"
+  }
+]

@@ -24,6 +24,20 @@ export interface RouteDoc {
    *  route/mentions.ts's extractMentionedIdentifiers. Matched against changeText itself (not just changedFiles)
    *  -- an identifier can appear in a diff hunk without the file path matching exactly. */
   mentionIdentifiers?: string[];
+  /** T120: a precomputed embedding vector for this decision (title+summary+text, or whatever text the caller
+   *  chose to encode), used ONLY as an optional ranking signal (embedBoost) -- never a pre-filter, same
+   *  recall-ceiling-preserving posture as scopeGlobs/mentionPaths. route.ts has NO model/network dependency of
+   *  its own: computing this vector (and opts.changeEmbedding) is entirely the caller's job -- same injection
+   *  posture as `llm?: LlmClient`. Prior art: B2 v4.3's real-ADR routing misses are lexically-dissimilar-but-
+   *  semantically-related cases that a cosine-similarity signal over a small local embedding model (all-MiniLM,
+   *  see prior-art.md) can recover where BM25 alone returns zero candidates. */
+  embedding?: number[];
+  /** T120: an optional, capture-time-generated ("once per decision, not once per route call") short summary of
+   *  WHAT CODE this decision governs, written in diff/code vocabulary (file/module/call-site terms) rather than
+   *  the ADR's own prose register -- a doc2query-style document-expansion signal (Nogueira 2019; Gospodinov et
+   *  al. 2023, arXiv:2301.03266). Folded into the BM25 index text ONLY when `useGovernsSummary` is set (opt-in,
+   *  never changes the plain `text` field's own meaning or any other caller of RouteDoc). */
+  governsSummary?: string;
 }
 
 export interface RouteCandidate {
@@ -82,4 +96,20 @@ export interface RouteOptions {
    *  route/mentions.ts). Same recall-ceiling-preserving contract as scopeBoost: a decision with no mentions or
    *  no match is never excluded or penalized below its BM25 rank alone. */
   mentionBoost?: boolean;
+  /** T120: the change's own precomputed embedding vector (same embedding space as RouteDoc.embedding), caller-
+   *  computed -- route.ts never calls a model or the network itself. Required (with embedBoost) for the signal
+   *  to do anything; with no changeEmbedding, embedBoost is a no-op (falls back to plain BM25 order), same
+   *  posture as scopeBoost/mentionBoost's own no-op fallbacks. */
+  changeEmbedding?: number[];
+  /** T120: opt-in (default false/undefined, independent of every other flag -- all may be set at once and fuse
+   *  in the same RRF sum). Re-ranks bm25Candidates by RRF of the plain BM25 rank and a cosine-similarity rank
+   *  (opts.changeEmbedding vs. each candidate's RouteDoc.embedding). A candidate with no embedding, or when
+   *  changeEmbedding is absent, gets NO boost from this signal -- never excluded or penalized below its BM25
+   *  rank's own contribution (T49's recall-ceiling rule, same as scopeBoost/mentionBoost). */
+  embedBoost?: boolean;
+  /** T120: opt-in (default false/undefined). When true, BM25 scoring for each candidate ALSO considers its
+   *  RouteDoc.governsSummary (if present) folded into the query-matchable text, as a doc2query-style document
+   *  expansion -- does NOT mutate RouteDoc.text or any other field, and a decision with no governsSummary scores
+   *  exactly as it would with the flag off. */
+  useGovernsSummary?: boolean;
 }

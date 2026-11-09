@@ -1,0 +1,8 @@
+commit=4fdb3e5e7a30c84c6269948206ff5c7d71c1a234
+route.ts  sha256=0be478f25ba28acae475166f5d8cf2e4252c69236e80fcfc4391143a8d3582f4
+types.ts  sha256=818a9b9f05a470f3a89b0ac485c243d80d29da992c1172864404523f3dc5f1e9
+frozen: 2026-11-08
+scope: packages/decisions/src/route/route.ts + types.ts as of this commit (embedBoost +
+useGovernsSummary RRF signals, T120). Any further edit to these two files after this commit
+invalidates the freeze for protocol-new-repos.md -- re-verify the sha256 lines above before
+running that protocol against a later commit.
