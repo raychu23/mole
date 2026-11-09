@@ -1,5 +1,50 @@
 # T110 (Q4) v2 results -- H2-style real-history benchmark, v2 case set (11 cases), run once
 
+## T117 follow-up (2026-11-08): the `!(index)` dead rule DEFECT_V2_FILESCOPE.md flagged is now FIXED;
+## adr004 fires again, recall 0.250 -> 0.500
+
+`DEFECT_V2_FILESCOPE.md`'s "a real, separate, NOT-fixed finding" (below) reported that adr004's
+`in: "**/!(index).{ts,tsx}"` content-anchor pattern used Bash extglob negation syntax
+(`!(pattern)` = "not pattern") that Mole's hand-rolled `globToRegExp`
+(`packages/decisions/src/check/options.ts`) did not implement -- it compiled the glob as the literal,
+regex-escaped string `!(index)`, matching no real file, a dead rule. T117 (`tasks/T117-glob-negation/`)
+replaced `globToRegExp`'s hand-rolled engine with `picomatch` (already a transitive dependency via
+`dependency-cruiser`, `@mole/decisions`'s own direct dependency, pinned 4.0.7, zero deps of its own, 116 KB
+on disk -- no bundle-size cost per T101; `picomatch.makeRe('**/!(index).{ts,tsx}')` matches `a/foo.ts` and
+correctly rejects `a/index.ts`) and added `deadInGlobProblems()`, a compile-time check that warns when a
+`match: in:` glob matches zero files in the repo.
+
+Re-run (CHECK-ONLY, same posture as the file-scope fix above): `compiled_adrs_v2.json` reused unchanged
+(the 2 real compiled ADRs, no recompile, no model call); `run/run_t46_cascade_v2.mjs` run unmodified except
+for its two `dist/` import paths, pointed at the T117 worktree's own build
+(`Mole-worktrees/T117-glob-negation/packages/decisions/dist/`, built via `npx tsc -b packages/decisions`
+in that worktree) instead of main's dist, output written to a new file
+(`run/arm_t46_cascade_v2_T117.json`, main's `arm_t46_cascade_v2.json` left untouched) so this does not
+overwrite the file-scope-fix's own frozen numbers. Full output: `tasks/T117-glob-negation/4 log/t46_rerun_output.txt`.
+
+**adr004 DOES now fire**, on `h2v2-bs-18540-prefix` (label `violate`): the hit is via the exact
+previously-dead pattern, `^\s*export\s*(\*|\{[^}]*\})\s*from\s*['"]` scoped `in: "**/!(index).{ts,tsx}"`
+(confirmed from `arm_t46_cascade_v2_T117.json`'s `hit_patterns`, cross-checked against
+`compiled_adrs_v2.json`'s match list -- this is adr004's SECOND pattern, the one DEFECT_V2_FILESCOPE.md
+named as dead, not the first `**/index.{ts,tsx}`-scoped one). The other 2 previously-masked cases
+(`h2v2-bs-20007-prefix`, `h2v2-bs-6882-prefix`) still predict `false`: inspected their real diffs
+(`cases_h2_v2.json`) -- neither touches a non-index `.ts`/`.tsx` file with a re-export line matching
+adr004's drafted regex at all (one is a changeset/README/api-report-only diff, the other a changeset/docs
+diff), so these two are genuine compiler-drafted-pattern misses, not a glob-engine artifact; the T117 fix
+only recovers cases where the ENGINE was the problem, not every one DEFECT_V2_FILESCOPE.md's framing might
+have suggested.
+
+Recomputed T46 cascade confusion matrix (11 cases, same confusion-matrix method as the file-scope-fix
+correction below): TP=2 FN=2 FP=1 TN=6 (was TP=1 FN=3 FP=1 TN=6 before this fix). **Recall 0.250 (1/4) ->
+0.500 (2/4)**, 95% Wilson CI 0.150-0.850 (computed this task, `tasks/T117-glob-negation/4 log/`).
+False-alarm unchanged at 0.143 (1/7, 95% CI 0.026-0.513) -- the fix recovered a true positive, it did not
+touch any negative case's prediction. T53/reviewer/RAG numbers are UNCHANGED (not part of this task,
+not re-run). `scored_v2.json` / the frozen `arm_t46_cascade_v2.json` are intentionally NOT overwritten by
+this follow-up (T117 is its own ledger task/branch, not a rescoring of the merged file-scope-fix arm); a
+future task can fold `arm_t46_cascade_v2_T117.json`'s numbers in if this fix merges to main.
+
+---
+
 ## CORRECTION (2026-11-08, v2 review FAIL #2 -- see `run/test_file_scope_fix.mjs`, `DEFECT_V2_FILESCOPE.md`)
 
 `run/run_t46_cascade_v2.mjs`'s `checkStep()` applied every compiled `match:` pattern to ALL of a case's

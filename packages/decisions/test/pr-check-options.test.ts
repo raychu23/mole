@@ -17,7 +17,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { globToRegExp, isVersionOnlyHunk, prCheck } from '../src/index.js';
+import { deadInGlobProblems, globToRegExp, isVersionOnlyHunk, prCheck } from '../src/index.js';
 
 const git = (root: string, ...args: string[]) =>
   execFileSync('git', ['-C', root, '-c', 'user.name=T', '-c', 'user.email=t@example.com', '-c', 'commit.gpgsign=false', ...args], { encoding: 'utf8' }).trim();
@@ -131,6 +131,36 @@ describe('globToRegExp', () => {
     expect(globToRegExp('**/*.test.{ts,tsx}').test('c.test.ts')).toBe(true);
     expect(globToRegExp('terraform/**').test('terraform/a/b.tf')).toBe(true);
     expect(globToRegExp('terraform/**').test('other/terraform/b.tf')).toBe(false);
+  });
+  // T117 (red first): Backstage adr004's real-world pattern, the T110 v2 side finding -- extglob negation
+  // `!(pattern)` (picomatch/micromatch/minimatch bash-extglob syntax, prior-art.md #1-2) matches a segment that
+  // is NOT `pattern`. The pre-fix hand-rolled engine compiled `!(index)` as a literal string (regex-escaped
+  // parens), so it never matched a real file at all -- this is the dead rule DEFECT_V2_FILESCOPE.md reports.
+  it('handles extglob negation !(pattern): matches a non-index file, not index itself', () => {
+    expect(globToRegExp('**/!(index).{ts,tsx}').test('a/foo.ts')).toBe(true);
+    expect(globToRegExp('**/!(index).{ts,tsx}').test('a/index.ts')).toBe(false);
+    expect(globToRegExp('**/!(index).{ts,tsx}').test('foo.tsx')).toBe(true);
+    expect(globToRegExp('**/!(index).{ts,tsx}').test('index.tsx')).toBe(false);
+  });
+});
+
+describe('deadInGlobProblems (T117): compile-time warning when a match: in: glob matches zero repo files', () => {
+  it('warns when the glob matches no file in the repo (a dead rule, e.g. unsupported syntax or a typo)', () => {
+    const anchors = [{ pattern: 'x', re: /x/, in: 'nonexistent-dir-xyz/**', inRe: globToRegExp('nonexistent-dir-xyz/**'), file: '.mole/decisions/d.md', line: 3 }];
+    const problems = deadInGlobProblems(root, anchors);
+    expect(problems).toEqual([{ file: '.mole/decisions/d.md', line: 3, message: expect.stringContaining('nonexistent-dir-xyz/**') }]);
+  });
+  it('does not warn when the glob matches a real file', () => {
+    const anchors = [{ pattern: 'x', re: /x/, in: 'infra/**', inRe: globToRegExp('infra/**'), file: '.mole/decisions/d.md', line: 3 }];
+    expect(deadInGlobProblems(root, anchors)).toEqual([]);
+  });
+  it('is a no-op for anchors with no in: glob', () => {
+    const anchors = [{ pattern: 'x', re: /x/, file: '.mole/decisions/d.md', line: 3 }];
+    expect(deadInGlobProblems(root, anchors)).toEqual([]);
+  });
+  it('now correctly reports the fixed adr004-shaped pattern as NOT dead (it matches real non-index files)', () => {
+    const anchors = [{ pattern: 'x', re: /x/, in: '**/!(index).{ts,tsx}', inRe: globToRegExp('**/!(index).{ts,tsx}'), file: '.mole/decisions/d.md', line: 3 }];
+    expect(deadInGlobProblems(root, anchors)).toEqual([]); // pkg/src/lib.ts, pkg/src/a.ts etc. are real non-index .ts files in the fixture repo
   });
 });
 

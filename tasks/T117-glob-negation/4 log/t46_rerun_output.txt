@@ -1,0 +1,3 @@
+decisions: 2, abstained 0
+cases: 11, abstained 0
+wrote /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T117-glob-negation/tasks/T110-history-replay-bench/run/arm_t46_cascade_v2_T117.json
