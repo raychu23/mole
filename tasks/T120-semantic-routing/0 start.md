@@ -7,8 +7,8 @@ worktree: /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T120-semantic-routing
 base: 9c0ec45
 reviewer:
 updated: 2026-11-08 23:55
-status: ledger running
-next: worker finishes → ledger move <task> submitted --report … (ledger runs the checks row)
+status: ledger running — tests-first embedBoost+useGovernsSummary implemented (594/594 pass); DEV recall@1/3/5 measured (4 log/recall-dev.md); NEW-repo protocol frozen, NOT run
+next: submit with --report citing 4 log/{prior-art.md,red.txt,recall-dev.md,protocol-new-repos.md,frozen.sha256}
 claimed: 2026-11-08 23:55
 ---
 ```notes
