@@ -1,0 +1,194 @@
+[
+  {
+    "id": "t120r-fs-adr0003-violate",
+    "label": "violate",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThis is a new example file with no architectural constraints evident from the diff itself \u2014 it's a standalone demonstration of on-demand feature views and doesn't conflict with any detectable pattern or convention in the codebase shown."
+  },
+  {
+    "id": "t120r-fs-adr0003-compliant",
+    "label": "compliant",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo architectural pattern or convention is evident from a single 10-line example file; it's too minimal to violate or confirm adherence to unstated team decisions."
+  },
+  {
+    "id": "t120r-fs-adr0004-violate",
+    "label": "violate",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThe diff adds a new example file with basic feature service setup; no established pattern or constraint in the codebase is evidenced by this change alone."
+  },
+  {
+    "id": "t120r-fs-adr0004-compliant",
+    "label": "compliant",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo specific architecture decision is evident from a single file addition with an empty FeatureService and a comment about join key handling."
+  },
+  {
+    "id": "t120r-fs-adr0007-violate",
+    "label": "violate",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNew class in a feature-flag-ready structure with a stub method is a standard pattern; no architectural constraint evident from the diff alone."
+  },
+  {
+    "id": "t120r-fs-adr0007-compliant",
+    "label": "compliant",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThe diff introduces a new transform function with valid Feast APIs, but without access to the codebase structure, existing patterns, or team guidelines, there's no way to determine if it violates architectural decisions around feature transformations, schema design, or module organiza"
+  },
+  {
+    "id": "t120r-fs-adr0009-violate",
+    "label": "violate",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThe diff introduces a minimal online store implementation with no obvious architectural violations, but without access to the repo's design patterns, interface contracts, or configuration requirements, there's no basis to evaluate compliance against unstated decisions."
+  },
+  {
+    "id": "t120r-fs-adr0009-compliant",
+    "label": "compliant",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThe diff adds a basic OnlineStore implementation following the expected interface pattern, but without seeing existing OnlineStore subclasses in the repo, team conventions for stub implementations, or docstring/type-hint requirements, there's no evident architectural decision this vio"
+  },
+  {
+    "id": "t120r-fs-adr0010-violate",
+    "label": "violate",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThe diff adds a new utility class for pgvector search with no obvious architectural violation, but without seeing the repo's conventions for online store integrations, feature store extension patterns, or whether this should be a mixin/interface instead of a standalone class, there's "
+  },
+  {
+    "id": "t120r-fs-adr0010-compliant",
+    "label": "compliant",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo architecture rules are evident from the diff alone \u2014 this is a stub implementation of a pgvector search class, and without seeing the codebase structure, existing online store patterns, or team standards, there's no way to know if it violates or complies with unstated decisions."
+  },
+  {
+    "id": "t120r-fs-adr0001-violate",
+    "label": "violate",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo architectural pattern is evident from the diff itself\u2014it's a straightforward feature retrieval function with no obvious violation of common practices (naming, structure, API usage all look standard for a Feast example)."
+  },
+  {
+    "id": "t120r-fs-adr0001-compliant",
+    "label": "compliant",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo architectural pattern or constraint is evident from the code itself\u2014it's a straightforward example of feature service definition and retrieval, and without team docs/ADRs this is ungovernble."
+  },
+  {
+    "id": "t120r-pg-004-violate",
+    "label": "violate",
+    "pred": "VIOLATES",
+    "response": "VERDICT: VIOLATES\n\nDirectly instantiating OkHttpClient inside a helper class instead of injecting a singleton instance violates standard Android dependency injection patterns (likely Hilt/Dagger in this codebase) and creates unnecessary overhead."
+  },
+  {
+    "id": "t120r-pg-004-compliant",
+    "label": "compliant",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThe diff creates a standard Retrofit API interface for CSV export; no architectural pattern or constraint is evident from the code alone that would govern whether this specific endpoint definition is allowed or forbidden."
+  },
+  {
+    "id": "t120r-pg-006-violate",
+    "label": "violate",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo clear architectural pattern is established from this diff alone \u2014 it's a straightforward SharedPreferences wrapper, but without seeing existing session/cache patterns in the codebase, there's no way to know if this duplicates infrastructure, violates a chosen abstraction layer, or "
+  },
+  {
+    "id": "t120r-pg-006-compliant",
+    "label": "compliant",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo architectural pattern is evident from this diff alone\u2014it's a straightforward wrapper around SessionManager, and without seeing the codebase's layering conventions or whether session caching has been previously standardized, there's no way to know if this design violates or complies"
+  },
+  {
+    "id": "t120r-pg-005-violate",
+    "label": "violate",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo architectural pattern is evident from the diff alone \u2014 this is a straightforward Room database setup that could fit multiple valid approaches (factory function, builder pattern, DI container injection)."
+  },
+  {
+    "id": "t120r-pg-005-compliant",
+    "label": "compliant",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo architectural pattern is evident from the diff alone \u2014 it's a standard Room database setup with a migration, and without team conventions or prior code to compare against, there's no basis to judge compliance or violation."
+  },
+  {
+    "id": "t120r-pg-011-violate",
+    "label": "violate",
+    "pred": "VIOLATES",
+    "response": "VERDICT: VIOLATES\n\nDomain logic imports and depends directly on a data-layer DTO (BudgetDto), breaking the layered architecture boundary where domain should be independent of data concerns."
+  },
+  {
+    "id": "t120r-pg-011-compliant",
+    "label": "compliant",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNew validator class in a domain layer with a single stateless method\u2014no architecture signal present that would constrain this choice."
+  },
+  {
+    "id": "t120r-pg-013-violate",
+    "label": "violate",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nAdding a Glide compiler dependency is a standard Android build configuration choice; without access to the repo's architectural decisions or constraints, there's no basis to judge it against any unstated rule."
+  },
+  {
+    "id": "t120r-pg-013-compliant",
+    "label": "compliant",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThis is a snippet file (not integrated into the actual build), adding a standard KSP compiler dependency for Glide \u2014 no architectural pattern is apparent from the diff alone to judge against."
+  },
+  {
+    "id": "t120r-pg-003-violate",
+    "label": "violate",
+    "pred": "VIOLATES",
+    "response": "VERDICT: VIOLATES\n\nViewModel should not instantiate Retrofit directly; dependency injection (likely Hilt or similar, standard in Android) should provide it, keeping presentation logic decoupled from HTTP client setup."
+  },
+  {
+    "id": "t120r-pg-003-compliant",
+    "label": "compliant",
+    "pred": "VIOLATES",
+    "response": "VERDICT: VIOLATES\n\nViewModel is injecting a remote API directly instead of using a repository layer, which violates clean architecture separation\u2014presentation should depend on domain/repository abstractions, not data layer details."
+  },
+  {
+    "id": "t120r-none-1",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo architectural decision is evident from a minimal README addition to an examples directory; this is standard documentation scaffolding."
+  },
+  {
+    "id": "t120r-none-2",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNew utility module with a single string formatting function; no architectural pattern or convention evident from the diff alone that would constrain it."
+  },
+  {
+    "id": "t120r-none-3",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo standard architectural decision governs whether changelog entries belong in a dedicated Python file versus other formats (markdown, toml, etc.) or locations\u2014this appears to be a project-specific choice with no visible violation."
+  },
+  {
+    "id": "t120r-none-4",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThis is a new example file with a simple color constant; there's no architectural pattern visible in just this diff that would suggest a pre-existing team decision about where/how to define design tokens or examples."
+  },
+  {
+    "id": "t120r-none-5",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThe diff introduces a new utility function with no visible pattern conflict; without seeing the repo's existing currency formatting strategy (whether centralized, library-based, or locale-aware), there's no basis to judge it against an unstated rule."
+  },
+  {
+    "id": "t120r-none-6",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo architectural decision is evident from the diff itself\u2014it's a new contributor guide file with a standard pre-PR testing instruction, which most teams adopt without formal documentation."
+  },
+  {
+    "id": "t120r-none-7",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nNo architectural pattern or structure is apparent from a three-line enum definition alone; whether this belongs in `util/` or follows naming conventions depends on unstated project conventions not evident in the diff."
+  },
+  {
+    "id": "t120r-none-8",
+    "label": "no_decision",
+    "pred": "NONE",
+    "response": "VERDICT: NONE\n\nThe diff adds a minimal unit test for a currency formatting utility; without access to the repo's architecture docs, test conventions, or naming standards, there's no way to know if this violates an unstated decision."
+  }
+]
