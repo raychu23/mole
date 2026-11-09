@@ -1,0 +1,50 @@
+
+=== v3_dev (n=62 total cases) ===
+n_with_target=40 n_recall@1_misses=10 n_none=22
+misses with zeroCandidates (no decision routes at all): 0
+none-cases with zeroCandidates: 0
+  threshold 0.55: misses_triggered=10/10  none_triggered(FA risk)=15/22  correct_picks_also_triggered(extra cost only)=6/30
+  threshold 0.6: misses_triggered=10/10  none_triggered(FA risk)=17/22  correct_picks_also_triggered(extra cost only)=10/30
+  threshold 0.65: misses_triggered=10/10  none_triggered(FA risk)=19/22  correct_picks_also_triggered(extra cost only)=14/30
+  threshold 0.7: misses_triggered=10/10  none_triggered(FA risk)=22/22  correct_picks_also_triggered(extra cost only)=20/30
+  threshold 0.75: misses_triggered=10/10  none_triggered(FA risk)=22/22  correct_picks_also_triggered(extra cost only)=25/30
+
+=== v4_1_dev (n=40 total cases) ===
+n_with_target=32 n_recall@1_misses=8 n_none=8
+misses with zeroCandidates (no decision routes at all): 0
+none-cases with zeroCandidates: 0
+  threshold 0.55: misses_triggered=4/8  none_triggered(FA risk)=2/8  correct_picks_also_triggered(extra cost only)=4/24
+  threshold 0.6: misses_triggered=6/8  none_triggered(FA risk)=2/8  correct_picks_also_triggered(extra cost only)=7/24
+  threshold 0.65: misses_triggered=7/8  none_triggered(FA risk)=4/8  correct_picks_also_triggered(extra cost only)=11/24
+  threshold 0.7: misses_triggered=8/8  none_triggered(FA risk)=5/8  correct_picks_also_triggered(extra cost only)=18/24
+  threshold 0.75: misses_triggered=8/8  none_triggered(FA risk)=8/8  correct_picks_also_triggered(extra cost only)=21/24
+
+=== POOLED dev (v3_dev + v4_1_dev) ===
+n_with_target=72 n_recall@1_misses=18 n_none=30
+misses with zeroCandidates (no decision routes at all): 0
+none-cases with zeroCandidates: 0
+  threshold 0.55: misses_triggered=14/18  none_triggered(FA risk)=17/30  correct_picks_also_triggered(extra cost only)=10/54
+  threshold 0.6: misses_triggered=16/18  none_triggered(FA risk)=19/30  correct_picks_also_triggered(extra cost only)=17/54
+  threshold 0.65: misses_triggered=17/18  none_triggered(FA risk)=23/30  correct_picks_also_triggered(extra cost only)=25/54
+  threshold 0.7: misses_triggered=18/18  none_triggered(FA risk)=27/30  correct_picks_also_triggered(extra cost only)=38/54
+  threshold 0.75: misses_triggered=18/18  none_triggered(FA risk)=30/30  correct_picks_also_triggered(extra cost only)=46/54
+
+--- miss detail (pooled) ---
+{"id":"v3-l4b-slugid-violate","split":"v3_dev","margin":0.5018,"zeroCandidates":false,"rank":3,"candidateCount":8}
+{"id":"v3-l4b-slugid-compliant","split":"v3_dev","margin":0.5003,"zeroCandidates":false,"rank":2,"candidateCount":8}
+{"id":"v3-pt-millisecond-compliant","split":"v3_dev","margin":0.5056,"zeroCandidates":false,"rank":6,"candidateCount":7}
+{"id":"v3-pt-pyversions-compliant","split":"v3_dev","margin":0.5056,"zeroCandidates":false,"rank":2,"candidateCount":7}
+{"id":"v3-easi-golang-violate","split":"v3_dev","margin":0.5037,"zeroCandidates":false,"rank":3,"candidateCount":35}
+{"id":"v3-easi-golang-compliant","split":"v3_dev","margin":0.5037,"zeroCandidates":false,"rank":3,"candidateCount":35}
+{"id":"v3-easi-typescript-violate","split":"v3_dev","margin":0.5487,"zeroCandidates":false,"rank":20,"candidateCount":35}
+{"id":"v3-easi-typescript-compliant","split":"v3_dev","margin":0.5018,"zeroCandidates":false,"rank":19,"candidateCount":35}
+{"id":"v3-easi-cra-compliant","split":"v3_dev","margin":0.5397,"zeroCandidates":false,"rank":26,"candidateCount":35}
+{"id":"v3-easi-logging-compliant","split":"v3_dev","margin":0.5217,"zeroCandidates":false,"rank":2,"candidateCount":35}
+{"id":"v4-claw-0014-violate","split":"v4_1_dev","margin":0.6247,"zeroCandidates":false,"rank":4,"candidateCount":13}
+{"id":"v4-hb-0001-violate","split":"v4_1_dev","margin":0.5705,"zeroCandidates":false,"rank":6,"candidateCount":10}
+{"id":"v4-hb-0001-compliant","split":"v4_1_dev","margin":0.5239,"zeroCandidates":false,"rank":4,"candidateCount":9}
+{"id":"v4-hb-0010-violate","split":"v4_1_dev","margin":0.5518,"zeroCandidates":false,"rank":2,"candidateCount":8}
+{"id":"v4-hb-0010-compliant","split":"v4_1_dev","margin":0.5486,"zeroCandidates":false,"rank":2,"candidateCount":10}
+{"id":"v4-mp-0001-violate","split":"v4_1_dev","margin":0.5243,"zeroCandidates":false,"rank":2,"candidateCount":10}
+{"id":"v4-mp-0010-violate","split":"v4_1_dev","margin":0.6916,"zeroCandidates":false,"rank":5,"candidateCount":8}
+{"id":"v4-hf-0008-compliant","split":"v4_1_dev","margin":0.5078,"zeroCandidates":false,"rank":2,"candidateCount":7}
