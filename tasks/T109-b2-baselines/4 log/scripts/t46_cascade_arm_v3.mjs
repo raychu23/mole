@@ -26,10 +26,21 @@
 //     "zero-LLM checks at check time" for this arm specifically, so a decision whose drafted match pattern finds
 //     no hit is reported predictedViolate=false (compliant), not escalated -- this is a deliberate scope
 //     difference from Mole's shipped cascade (which WOULD escalate there), stated here, not hidden.
+// FIX (2026-11-08, found during T110 v2 review FAIL #2 -- see
+// tasks/T110-history-replay-bench/DEFECT_V2_FILESCOPE.md for the full writeup): checkStep() applied every
+// compiled match: pattern to ALL added lines, ignoring the pattern's own `in:` glob scope entirely. Real
+// Mole (packages/decisions/src/check/pr-check.ts:318) scopes a content anchor to files its `in:` glob
+// covers BEFORE testing the pattern:
+//   if (f.newPath === null || (c.inRe && !c.inRe.test(f.newPath))) continue;
+// Fixed by mirroring that line exactly, file-by-file, reusing Mole's own glob->regex helper
+// (packages/decisions/src/check/options.ts's globToRegExp, exported via check/index.js) instead of
+// writing a new one. Re-run was CHECK-ONLY: compiled_adrs_v3.json's 31 already-compiled ADRs were reused
+// as-is, no model call, no recompile.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { draftChecksFor, hermesLlmClient } from '../../../../../../../packages/decisions/dist/src/compile/index.js';
+import { globToRegExp } from '../../../../../../../packages/decisions/dist/src/check/index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const V3 = resolve(here, '..');
@@ -50,6 +61,31 @@ function addedLines(diff) {
     if (line.startsWith('+')) out.push(line.slice(1));
   }
   return out;
+}
+
+// Parses a unified diff into per-file added-line blocks (`newPath` null for a deletion, i.e.
+// `+++ /dev/null`), the same unit pr-check.ts's `changed` (ParsedFile[]) scopes a content anchor
+// against -- mirrors pr-check.ts:318's scoping, not a new diff parser design.
+function filesWithAddedLines(diff) {
+  const files = [];
+  let current = null;
+  for (const line of diff.split('\n')) {
+    if (line.startsWith('diff --git ')) {
+      current = { newPath: null, lines: [] };
+      files.push(current);
+      continue;
+    }
+    if (line.startsWith('+++ ')) {
+      if (!current) continue;
+      const p = line.slice(4).trim();
+      current.newPath = p === '/dev/null' ? null : p.replace(/^b\//, '');
+      continue;
+    }
+    if (line.startsWith('+') && current) {
+      current.lines.push(line.slice(1));
+    }
+  }
+  return files;
 }
 
 async function compileStep() {
@@ -100,23 +136,31 @@ function checkStep(compiled) {
       continue;
     }
     const d = byId.get(c.adr_id);
-    const patterns = (d?.match ?? []).filter((m) => {
-      try {
-        new RegExp(m.pattern);
-        return true;
-      } catch {
-        return false; // invalid regex: not applied, same as contentAnchorsOf's own skip
-      }
-    });
+    const patterns = (d?.match ?? [])
+      .filter((m) => {
+        try {
+          new RegExp(m.pattern);
+          return true;
+        } catch {
+          return false; // invalid regex: not applied, same as contentAnchorsOf's own skip
+        }
+      })
+      .map((m) => ({ pattern: m.pattern, in: m.in, inRe: m.in ? globToRegExp(m.in) : undefined }));
     if (!patterns.length) {
       rows.push({ id: c.id, repo: c.repo, adr_id: c.adr_id, label_final: c.label_final, split: 'heldout', abstain: true, reason: d?.error ? `compile failed: ${d.error}` : 'compiler drafted no match: pattern for this ADR', predictedViolate: null });
       continue;
     }
-    const lines = addedLines(c.diff).filter((l) => l.length <= MAX_MATCH_LINE);
+    const files = filesWithAddedLines(c.diff);
     const hitPatterns = [];
     for (const p of patterns) {
       const re = new RegExp(p.pattern);
-      if (lines.some((l) => re.test(l))) hitPatterns.push(p.pattern);
+      // pr-check.ts:318 scoping, mirrored exactly: a file with no newPath (deletion) or one the
+      // pattern's `in:` glob does not cover is never tested against this pattern.
+      const matched = files.some((f) => {
+        if (f.newPath === null || (p.inRe && !p.inRe.test(f.newPath))) return false;
+        return f.lines.some((l) => l.length <= MAX_MATCH_LINE && re.test(l));
+      });
+      if (matched) hitPatterns.push(p.pattern);
     }
     rows.push({
       id: c.id, repo: c.repo, adr_id: c.adr_id, label_final: c.label_final, split: 'heldout',
@@ -128,7 +172,10 @@ function checkStep(compiled) {
 }
 
 async function main() {
-  const compiled = await compileStep();
+  // REUSE, do not recompile: compiled_adrs_v3.json already has the 31 real compiled ADRs from the
+  // original run (frozen patterns, no model call here) -- this re-run is a deterministic checkStep() fix
+  // only (2026-11-08, T110 v2 review FAIL #2 -- see tasks/T110-history-replay-bench/DEFECT_V2_FILESCOPE.md).
+  const compiled = JSON.parse(readFileSync(join(V3, 'baselines', 'compiled_adrs_v3.json'), 'utf8')).compiled;
   const rows = checkStep(compiled);
   const nDecisions = compiled.length;
   const nDecisionsAbstained = compiled.filter((d) => !(d.match ?? []).length).length;

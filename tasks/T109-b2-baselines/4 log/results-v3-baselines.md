@@ -12,6 +12,33 @@ existing 89 held-out cases, same held-out split v3's T53/reviewer/RAG numbers (`
 Per `queue/brief.md`'s "Benchmark facts": this is a descriptive addition reported after the fact, not a new
 "better than" claim (that needs a new pre-registered set, see Q6/T112).
 
+## CORRECTION (2026-11-08, found during T110 v2 review FAIL #2 -- see
+`tasks/T110-history-replay-bench/DEFECT_V2_FILESCOPE.md` for the full writeup)
+
+`baselines/t46_cascade_arm_v3.mjs`'s `checkStep()` had the SAME defect found and fixed in T110's v2 T46
+cascade arm: it applied every compiled `match:` pattern to ALL of a case's diff added lines, ignoring the
+pattern's own `in:` glob scope entirely. Real Mole (`packages/decisions/src/check/pr-check.ts:318`) scopes
+a content anchor to files its `in:` glob covers BEFORE testing the pattern. Fixed the same way (mirrored
+pr-check.ts:318's `continue` condition exactly, file-by-file, reusing Mole's own `globToRegExp` helper, not
+a new one). Re-run was CHECK-ONLY: `compiled_adrs_v3.json`'s 31 already-compiled ADRs were reused as-is, no
+model call, no recompile; `score_baselines_v3.py` was then re-run unchanged, which is deterministic and
+recomputes EVERY arm's numbers from its own raw JSON from scratch -- confirmed only the `t46_cascade_*`
+blocks differ from the pre-fix `results-v3-baselines.json` (diffed directly, not asserted).
+
+Net effect: exactly 1 of 89 held-out cases flips (`v3-easi-rtl-violate`, true->false). T46 cascade's
+recall drops slightly (scored subset 0.2143->0.1786, 6->5 TP out of 28 scored positives;
+abstain-as-compliant 0.2069->0.1724, 6->5 TP out of 29 positives), precision drops slightly
+(0.8571->0.8333, same 1 FP, one fewer TP), false-alarm rate is UNCHANGED (0.0345 scored / 0.0167
+abstain-as-compliant -- the 1 FP case itself was not affected by this bug). McNemar vs T53 is STILL
+significant in T53's favor both views (scored subset p=0.0005->0.0003, abstain-as-compliant
+p=0.0003->0.0002) -- the fix makes T46 cascade's own real answer to "why not a linter?" slightly WEAKER,
+not stronger, and does not change this doc's "Reading this plainly" conclusion. Old numbers and raw output
+kept for the diff: `arm_cascade_heldout_v3.json.PRE_FILESCOPE_FIX.bak`,
+`results-v3-baselines.json.PRE_FILESCOPE_FIX.bak` (both in `context/.../v3/baselines/`, gitignored, not
+committed). All numbers below are the CORRECTED (post-fix) ones.
+
+---
+
 Scripts: `baselines/linter_arm_v3.py` ("naive zero-model grep substitute"), `baselines/run_guidelines_arm_v3.py`,
 `baselines/run_judge_arm_v3.py`, `baselines/t46_cascade_arm_v3.mjs` (Mole's own T46 compile-at-capture +
 cascade, via the real `packages/decisions/src/compile/draft.ts` + `src/cascade/cascade.ts` code, not
@@ -45,18 +72,19 @@ SIGNIFICANT, in T53's favor      wrong, linter right 2x where T53 wrong), full n
                                  the B2 line (v1/v2/v3's own T53-vs-RAG-vs-reviewer McNemar all came back
                                  non-significant, p=0.18-0.69) -- but it is a comparison against a baseline
                                  with 49-63% abstention, not against another always-answers model arm.
-T46 cascade still SIGNIFICANTLY  Mole's OWN compile-at-capture + zero-LLM cascade (F1 fix, baseline d):
-WORSE than T53, even at full     recall 20.7-21.4% (scored subset n=57/89, abstain-as-compliant n=89) and
-decision coverage                precision 85.7%, false-alarm 1.7-3.4% -- a real improvement over the naive
-                                 grep substitute's 3.5-5.9% recall (roughly 4-6x), with 100% decision
+T46 cascade still SIGNIFICANTLY  Mole's OWN compile-at-capture + zero-LLM cascade (F1 fix, baseline d;
+WORSE than T53, even at full     CORRECTED 2026-11-08, see correction note at top): recall 17.2-17.9%
+decision coverage                (scored subset n=57/89, abstain-as-compliant n=89) and precision 83.3%,
+                                 false-alarm 1.7-3.4% -- a real improvement over the naive
+                                 grep substitute's 3.5-5.9% recall (roughly 3-5x), with 100% decision
                                  coverage (every one of the 31 real held-out ADRs got at least one compiled
                                  match: pattern, vs the grep substitute's 49% decision-abstain rate) and a
                                  bounded one-time cost ($0.7125 total / $0.023 mean per ADR, amortized across
                                  however many future checks use it, then $0/check forever). But it still only
-                                 catches ~1 in 5 real violations T53 catches ~19 in 20 of, and McNemar vs T53
-                                 is SIGNIFICANT in T53's favor both views (scored-subset p=0.0005, n=89
-                                 abstain-as-compliant p=0.0003) -- a crisp content-anchor hit decides
-                                 confidently (85.7% precision) but a compiled regex still misses most prose
+                                 catches less than 1 in 5 real violations T53 catches ~19 in 20 of, and McNemar vs T53
+                                 is SIGNIFICANT in T53's favor both views (scored-subset p=0.0003, n=89
+                                 abstain-as-compliant p=0.0002) -- a crisp content-anchor hit decides
+                                 confidently (83.3% precision) but a compiled regex still misses most prose
                                  policy violations a semantic reader catches, the same fundamental limit the
                                  naive grep substitute hit, just less severely. This is Mole's own best
                                  zero-model-at-check-time design, honestly still well short of T53.
@@ -163,9 +191,11 @@ naive grep substitute (abst=c)    0.035 (0.006-0.172)   1.000 (0.207-1.000)   0.
 reviewer + guidelines (CR-style)  1.000 (0.883-1.000)   0.659 (0.511-0.781)   0.250 (0.158-0.372)    $0.0816    18.9s / 64.2s    89
 two-sided judge (scored subset)   0.828 (0.655-0.924)   0.889 (0.719-0.962)   0.071 (0.025-0.190)    $0.0298    35.8s / 79.7s    71 (coverage 80%)
 two-sided judge (abstain=compl.)  0.828 (0.655-0.924)   0.889 (0.719-0.962)   0.050 (0.017-0.137)    $0.0298    35.8s / 79.7s    89
-T46 cascade (scored subset)       0.214 (0.102-0.395)   0.857 (0.487-0.974)   0.034 (0.006-0.172)    $0 check   n/a (no calls)   57 (coverage 64%)
-T46 cascade (abstain=compliant)   0.207 (0.099-0.384)   0.857 (0.487-0.974)   0.017 (0.003-0.089)    $0 check   n/a (no calls)   89
+T46 cascade (scored subset)       0.179 (0.079-0.356)   0.833 (0.437-0.970)   0.034 (0.006-0.172)    $0 check   n/a (no calls)   57 (coverage 64%)
+T46 cascade (abstain=compliant)   0.172 (0.076-0.346)   0.833 (0.437-0.970)   0.017 (0.003-0.089)    $0 check   n/a (no calls)   89
 ```
+T46 cascade rows CORRECTED 2026-11-08 (were 0.214/0.857/0.034 scored and 0.207/0.857/0.017
+abstain=compliant before the `checkStep()` file-scope fix; see correction note at top).
 T46 cascade cost is a split, not a single number: $0.7125 total / $0.0230 mean, ONE-TIME across the 31
 compiled ADRs (amortized -- independent of how many future cases/checks reuse them), then literally $0 per
 check thereafter (zero model calls at check time) -- `compiled_adrs_v3.json`, `arm_cascade_heldout_v3.json`.
@@ -179,9 +209,12 @@ naive grep substitute (abst=c)    89   57           27               4          
 reviewer + guidelines             89   73           11               1                4            12           0.0063  SIGNIFICANT (T53)
 two-sided judge (scored subset)   71   60           6                3                2            9            0.5078  not significant
 two-sided judge (abstain=compl.)  89   78           6                3                2            9            0.5078  not significant
-T46 cascade (scored subset)       57   30           22               4                1            26           0.0005  SIGNIFICANT (T53)
-T46 cascade (abstain=compliant)   89   61           23               4                1            27           0.0003  SIGNIFICANT (T53)
+T46 cascade (scored subset)       57   29           23               4                1            27           0.0003  SIGNIFICANT (T53)
+T46 cascade (abstain=compliant)   89   60           24               4                1            28           0.0002  SIGNIFICANT (T53)
 ```
+T46 cascade rows CORRECTED 2026-11-08 (were both-right=30/t53-only=22/n_discordant=26/p=0.0005 scored and
+both-right=61/t53-only=23/n_discordant=27/p=0.0003 abstain=compliant before the fix; see correction note
+at top) -- still SIGNIFICANT in T53's favor both views, same conclusion as before.
 
 Context: v3's own 3 pairwise McNemar tests (T53 vs RAG p=0.344, T53 vs reviewer p=0.688, RAG vs reviewer
 p=0.625, `results.md`) were ALL non-significant. Three of the four NEW comparisons here (grep substitute,
@@ -199,8 +232,9 @@ beats a fundamentally different class of system.
 A naive, hand-written grep rule linter, compiled honestly from these 51 real ADRs' prose text with zero
 model calls, catches almost nothing (3-6% recall) because these decisions are policy judgments, not
 import-graph rules. Mole's OWN zero-model-at-check-time design -- compile-at-capture (one real model call
-per ADR, offline, amortized) feeding a zero-LLM content-anchor cascade -- does meaningfully better (21%
-recall, 86% precision, 100% decision coverage vs the naive substitute's 51%) at a bounded one-time cost
+per ADR, offline, amortized) feeding a zero-LLM content-anchor cascade -- does meaningfully better (17-18%
+recall, 83% precision, 100% decision coverage vs the naive substitute's 51%, CORRECTED 2026-11-08) at a
+bounded one-time cost
 ($0.71 total / $0.023 per ADR, then $0/check), but is STILL significantly worse than T53 (p<0.001 both
 views): this is the honest, full answer to D92's "why not a linter?" -- even Mole's own best non-model
 design, not a strawman one, falls well short of a semantic reader. A CodeRabbit-style "all decisions are
@@ -236,6 +270,16 @@ match: applied             rules: items (17/31 ADRs) and the LLM escalation tier
                             measured the full cascade (incl. escalation) on Backstage's OWN ADRs and found
                             a similar pattern (recall improves a lot, false-alarm rate does not, on a held-
                             out, text-only draft).
+T46 cascade's `in:`     CORRECTED 2026-11-08: checkStep() originally ignored each compiled pattern's `in:`
+scope bug, now fixed      glob scope, applying it to every added line in a case's diff regardless of file
+                            (found during T110 v2 review; see correction note at top and
+                            DEFECT_V2_FILESCOPE.md). Fixed by reusing Mole's real globToRegExp, mirroring
+                            pr-check.ts:318's own scoping exactly. This is a SEPARATE issue from a glob
+                            syntax gap it exposed but did NOT fix: some compiled `in:` globs use `!(...)`
+                            extglob negation syntax globToRegExp does not implement (treated as a literal
+                            string instead), so a handful of compiled patterns match no real file at all
+                            once correctly scoped -- fixing that gap (in globToRegExp itself, or in the
+                            compiler's prompt) is real future work, not this correction's scope.
 guidelines arm framing   only ONE guideline framing was tried (CodeRabbit's "standing guidelines,
                             always-on"); other CodeRabbit features (path_instructions scoping, severity
                             tiers) were not reproduced.
