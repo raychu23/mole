@@ -1,0 +1,86 @@
+[
+  {
+    "decision": "adr007",
+    "recordFile": ".mole/decisions/adr007.md",
+    "draftedAt": "2026-11-02T02:28:26.442Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"scope\": [\"src/**/*.test.{ts,tsx}\", \"src/**/*.e2e.{ts,tsx}\", \"**/__tests__/**\", \"src/setupTests.ts\"],\n  \"match\": [\n    {\"pattern\": \"\\\\bnock\\\\s*\\\\(\", \"in\": \"**/*.{ts,tsx}\", \"why\": \"any `fetch` or `XMLHTTPRequest` that happens, should be mocked by using `msw`\"},\n    {\"pattern\": \"from\\\\s+['\\\"]nock['\\\"]\", \"in\": \"**/*.{ts,tsx}\", \"why\": \"should be mocked by using `msw`\"},\n    {\"pattern\": \"require\\\\(\\\\s*['\\\"]nock['\\\"]\\\\s*\\\\)\", \"in\": \"**/*.{ts,tsx}\", \"why\": \"should be mocked by using `msw`\"},\n    {\"pattern\": \"from\\\\s+['\\\"]fetch-mock['\\\"]\", \"in\": \"**/*.{ts,tsx}\", \"why\": \"should be mocked by using `msw`\"},\n    {\"pattern\": \"from\\\\s+['\\\"]jest-fetch-mock['\\\"]\", \"in\": \"**/*.{ts,tsx}\", \"why\": \"should be mocked by using `msw`\"},\n    {\"pattern\": \"(global|window)\\\\.fetch\\\\s*=\\\\s*jest\\\\.fn\\\\s*\\\\(\", \"in\": \"**/*.{ts,tsx}\", \"why\": \"any `fetch` ... that happens, should be mocked by using `msw`\"},\n    {\"pattern\": \"(global|window)\\\\.XMLHttpRequest\\\\s*=\\\\s*jest\\\\.fn\\\\s*\\\\(\", \"in\": \"**/*.{ts,tsx}\", \"why\": \"any `fetch` or `XMLHTTPRequest` that happens, should be mocked by using `msw`\"},\n    {\"pattern\": \"jest\\\\.mock\\\\(\\\\s*['\\\"]node-fetch['\\\"]\", \"in\": \"**/*.{ts,tsx}\", \"why\": \"should be mocked by using `msw`\"},\n    {\"pattern\": \"sinon\\\\.(stub|fake)\\\\([^)]*,\\\\s*['\\\"]fetch['\\\"]\\\\s*\\\\)\", \"in\": \"**/*.{ts,tsx}\", \"why\": \"any `fetch` ... should be mocked by using `msw`\"}\n  ],\n  \"rules\": [\n    {\"forbid\": \"import\", \"from\": \"**/*.{ts,tsx}\", \"to\": [\"nock\", \"fetch-mock\", \"jest-fetch-mock\"], \"except\": [\"src/setupTests.ts\"], \"why\": \"any `fetch` or `XMLHTTPRequest` that happens, should be mocked by using `msw`\"}\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 2383,
+      "outputTokens": 1727,
+      "costUsd": 0.0208713
+    },
+    "scope": [
+      "src/**/*.test.{ts,tsx}",
+      "src/**/*.e2e.{ts,tsx}",
+      "**/__tests__/**",
+      "src/setupTests.ts"
+    ],
+    "match": [
+      {
+        "pattern": "\\bnock\\s*\\(",
+        "in": "**/*.{ts,tsx}",
+        "why": "any `fetch` or `XMLHTTPRequest` that happens, should be mocked by using `msw`"
+      },
+      {
+        "pattern": "from\\s+['\"]nock['\"]",
+        "in": "**/*.{ts,tsx}",
+        "why": "should be mocked by using `msw`"
+      },
+      {
+        "pattern": "require\\(\\s*['\"]nock['\"]\\s*\\)",
+        "in": "**/*.{ts,tsx}",
+        "why": "should be mocked by using `msw`"
+      },
+      {
+        "pattern": "from\\s+['\"]fetch-mock['\"]",
+        "in": "**/*.{ts,tsx}",
+        "why": "should be mocked by using `msw`"
+      },
+      {
+        "pattern": "from\\s+['\"]jest-fetch-mock['\"]",
+        "in": "**/*.{ts,tsx}",
+        "why": "should be mocked by using `msw`"
+      },
+      {
+        "pattern": "(global|window)\\.fetch\\s*=\\s*jest\\.fn\\s*\\(",
+        "in": "**/*.{ts,tsx}",
+        "why": "any `fetch` ... that happens, should be mocked by using `msw`"
+      },
+      {
+        "pattern": "(global|window)\\.XMLHttpRequest\\s*=\\s*jest\\.fn\\s*\\(",
+        "in": "**/*.{ts,tsx}",
+        "why": "any `fetch` or `XMLHTTPRequest` that happens, should be mocked by using `msw`"
+      },
+      {
+        "pattern": "jest\\.mock\\(\\s*['\"]node-fetch['\"]",
+        "in": "**/*.{ts,tsx}",
+        "why": "should be mocked by using `msw`"
+      },
+      {
+        "pattern": "sinon\\.(stub|fake)\\([^)]*,\\s*['\"]fetch['\"]\\s*\\)",
+        "in": "**/*.{ts,tsx}",
+        "why": "any `fetch` ... should be mocked by using `msw`"
+      }
+    ],
+    "rules": [
+      {
+        "forbid": "import",
+        "from": "**/*.{ts,tsx}",
+        "to": [
+          "nock",
+          "fetch-mock",
+          "jest-fetch-mock"
+        ],
+        "except": [
+          "src/setupTests.ts"
+        ],
+        "why": "any `fetch` or `XMLHTTPRequest` that happens, should be mocked by using `msw`"
+      }
+    ],
+    "guardTests": [],
+    "version": 1,
+    "approvedBy": "m2v2-automated-one-shot (ADR text only, no human edit)",
+    "approvedAt": "2026-11-02T02:28:26.444Z"
+  }
+]

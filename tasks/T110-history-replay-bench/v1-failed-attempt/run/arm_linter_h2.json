@@ -1,0 +1,67 @@
+{
+ "n_decisions": 2,
+ "n_cases": 7,
+ "n_abstain": 6,
+ "rows": [
+  {
+   "id": "h2-bs-18540",
+   "adr_id": "adr004",
+   "label_final": "violate",
+   "abstain": true,
+   "reason": "no extractable reject-term via the compilation patterns",
+   "predictedViolate": null
+  },
+  {
+   "id": "h2-bs-20007",
+   "adr_id": "adr004",
+   "label_final": "violate",
+   "abstain": true,
+   "reason": "no extractable reject-term via the compilation patterns",
+   "predictedViolate": null
+  },
+  {
+   "id": "h2-bs-17875",
+   "adr_id": "adr003",
+   "label_final": "violate",
+   "abstain": false,
+   "predictedViolate": false,
+   "hit_terms": [],
+   "rule_terms": [
+    "default exports",
+    "default`"
+   ]
+  },
+  {
+   "id": "h2-bs-6882",
+   "adr_id": "adr004",
+   "label_final": "violate",
+   "abstain": true,
+   "reason": "no extractable reject-term via the compilation patterns",
+   "predictedViolate": null
+  },
+  {
+   "id": "h2-bs-23449-neg",
+   "adr_id": "adr004",
+   "label_final": "compliant",
+   "abstain": true,
+   "reason": "no extractable reject-term via the compilation patterns",
+   "predictedViolate": null
+  },
+  {
+   "id": "h2-bs-28578-neg",
+   "adr_id": "adr004",
+   "label_final": "compliant",
+   "abstain": true,
+   "reason": "no extractable reject-term via the compilation patterns",
+   "predictedViolate": null
+  },
+  {
+   "id": "h2-bs-6993-neg",
+   "adr_id": "adr004",
+   "label_final": "compliant",
+   "abstain": true,
+   "reason": "no extractable reject-term via the compilation patterns",
+   "predictedViolate": null
+  }
+ ]
+}

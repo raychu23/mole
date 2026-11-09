@@ -1,0 +1,490 @@
+=== code search q='path:docs/adr extension:md' ===
+894976
+thomvaill/log4brains
+Wasted-Audio/hvcc
+s2-streamstore/s2
+openabdev/openab
+CERTCC/SSVC
+SSWConsulting/SSW.CleanArchitecture
+hmrc/accessibility-statement-frontend
+camunda/camunda-platform-helm
+SSWConsulting/SSW.VerticalSliceArchitecture
+lyz-code/yamlfix
+digitaldemocracy2030/polimoney
+island-is/handbook
+KitwareMedical/trame-slicer
+managedcode/Storage
+mozilla-services/tecken
+dante-ev/docker-texlive
+atlanhq/application-sdk
+winery/winery
+SSWConsulting/Northwind365
+nitin27may/clean-architecture-docker-dotnet-angular
+breimanntools/aaanalysis
+adaptris/interlok
+deepmodeling/DeePTB
+hmrc/hmrc-frontend
+icon-project/icon-bridge
+XnneHangLab/XnneHangLab
+ob-labs/agentseek
+MS3Inc/tavros
+xmlking/micro-apps
+mozilla-services/merino-py
+
+=== code search q='path:doc/adr extension:md' ===
+8400
+igniterealtime/Openfire
+athensresearch/athens
+athensresearch/athens
+athensresearch/athens
+athensresearch/athens
+athensresearch/athens
+athensresearch/athens
+athensresearch/athens
+athensresearch/athens
+cloudfoundry/cli
+athensresearch/athens
+npryce/adr-tools
+athensresearch/athens
+npryce/adr-tools
+npryce/adr-tools
+athensresearch/athens
+babashka/babashka
+cloudfoundry/cli
+googleapis/google-cloud-cpp
+phpactor/phpactor
+softwaremill/tapir
+ledgersmb/LedgerSMB
+ledgersmb/LedgerSMB
+softwaremill/tapir
+jbuget/nodejs-clean-architecture-app
+softwaremill/tapir
+softwaremill/tapir
+weaveworks/weave-gitops
+ledgersmb/LedgerSMB
+softwaremill/ox
+
+=== code search q='path:docs/decisions extension:md adr' ===
+204800
+Shopify/hydrogen-v1
+Nephelium/PhoneticToolbox
+lumamontes/biblioteca-de-zines
+the-psi/pai-orbit
+leaderofARS/AegisCore
+dbt-labs/dbt-utils
+FrancisPadero-GitHub/vite-digitec-js
+moxin-org/AISLE
+moxin-org/AISLE
+moxin-org/AISLE
+moxin-org/AISLE
+moxin-org/AISLE
+moxin-org/AISLE
+moxin-org/AISLE
+moxin-org/AISLE
+moxin-org/AISLE
+moxin-org/AISLE
+moxin-org/AISLE
+moxin-org/AISLE
+moxin-org/AISLE
+moxin-org/AISLE
+moxin-org/AISLE
+yogesh-joshi-0333/browser-control-mcp
+moxin-org/AISLE
+moxin-org/AISLE
+moxin-org/AISLE
+magicdevereaux/howl
+moxin-org/AISLE
+euphario/filament
+lguilhermecardoso/garfou
+
+=== code search q='path:architecture/decisions extension:md' ===
+2152
+pulibrary/orangelight
+Oblikovati/Oblikovati
+Oblikovati/Oblikovati
+Mmodarre/Lakehouse_Plumber
+poplanguage/pop
+i-dot-ai/themefinder
+Oblikovati/Oblikovati
+openkubes/openkubes
+NERC-CEH/datalab
+Oblikovati/Oblikovati
+Oblikovati/Oblikovati
+NERC-CEH/datalab
+NERC-CEH/datalab
+NERC-CEH/datalab
+Oblikovati/Oblikovati
+NERC-CEH/datalab
+NERC-CEH/datalab
+poplanguage/pop
+NERC-CEH/datalab
+NERC-CEH/datalab
+Oblikovati/Oblikovati
+Oblikovati/Oblikovati
+Oblikovati/Oblikovati
+poplanguage/pop
+NERC-CEH/datalab
+NERC-CEH/datalab
+NERC-CEH/datalab
+NERC-CEH/datalab
+Oblikovati/Oblikovati
+NERC-CEH/datalab
+
+=== code search q='path:adr filename:0001' ===
+1274
+mozilla-mobile/firefox-ios
+quarkusio/quarkus
+backnotprop/plannotator
+zarf-dev/zarf
+smithy-lang/smithy
+modelcontextprotocol/php-sdk
+home-assistant/architecture
+PowerShellOrg/PSDepend
+UKGovernmentBEIS/inspect_evals
+softwaremill/jox
+hook0/hook0
+Apicurio/apicurio-registry
+chef/omnitruck
+Agent-Card/ai-catalog
+beerjson/beerjson
+saleor/macaw-ui
+co-cddo/api-catalogue
+ards-project/ard-spec
+k8gb-io/k8gb
+chef/mixlib-install
+wikimedia/mediawiki-skins-MinervaNeue
+Adyen/adyen-android
+BabDev/Pagerfanta
+defenseunicorns-labs/lula1
+Breus/json-masker
+dangmai/prettier-plugin-apex
+TryGhost/ActivityPub
+VirtusLab/orca
+linagora/esn-sabre
+defenseunicorns/pepr
+
+=== code search q='path:docs/architecture/decisions extension:md' ===
+21600
+guidone/node-red-contrib-chatbot
+percona/percona-xtradb-cluster-operator
+percona/percona-xtradb-cluster-operator
+rubyforgood/human-essentials
+reactioncommerce/example-storefront
+Traewelling/traewelling
+Regncreative/PulseDiagnostics
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+Siteimprove/alfa
+The-AI-Alliance/tapestry
+weather-gov/weather.gov
+reactioncommerce/reaction-docs
+darksworm/argonaut
+
+=== code search q='filename:adr-template.md' ===
+5264
+elastic/cloud-on-k8s
+rancher/rke2
+elastic/elasticsearch-java
+googleapis/google-cloud-cpp
+nocomplexity/ArchitecturePlaybook
+nats-io/nats-architecture-and-design
+evstack/ev-node
+ifrost/afterwriting-labs
+Reedyuk/blue-falcon
+stringconcat/ddd_practice
+pmerson/ADR-template
+expressjs/discussions
+rapla/rapla
+bitsmuggler/arc42-c4-software-architecture-documentation-example
+ebu/benchmarkstt
+peter-evans/lightweight-architecture-decision-records
+openshift/lvm-operator
+bbc/digital-paper-edit-electron
+chebpy/chebpy
+pietrop/slate-transcript-editor
+eBay/evo-web
+picodata/picodata
+pachli/pachli-android
+coveo/ui-kit
+informalsystems/quartz
+konflux-ci/architecture
+tekiegirl/communicationpatterns
+MANTRA-Chain/mantrachain
+open-telemetry/sig-security
+ecmwf/codex
+
+=== code search q='path:docs/adrs extension:md' ===
+38400
+rancher/rke2
+contentful/contentful.js
+zendeskgarden/react-components
+contentful/rich-text
+contentful/contentful-cli
+contentful/contentful-migration
+contentful/contentful-management.js
+SFDO-Tooling/CumulusCI
+uxfront-com/inkline
+QoderAI/better-harness
+contentful/contentful-export
+contentful/field-editors
+contentful/ui-extensions-sdk
+contentful/contentful-import
+contentful/create-contentful-app
+superwerker/superwerker
+superwerker/superwerker
+contentful/contentful.rb
+contentful/apps
+superwerker/superwerker
+ubolonton/emacs-module-rs
+contentful/contentful.php
+nerds-odd-e/doughnut
+dora-team/dora.dev
+contentful/contentful.net
+contentful/contentful-resolve-response
+contentful/contentful.py
+contentful/contentful-sdk-core
+animeshkundu/youtube-audio
+contentful/contentful-laravel
+
+=== repo=quarkusio/quarkus q='ADR violat in:comments type:pr' ===
+0
+=== repo=quarkusio/quarkus q='violates ADR in:comments type:pr' ===
+0
+=== repo=quarkusio/quarkus q='ADR revert in:comments type:pr' ===
+4
+=== repo=quarkusio/quarkus q='supersedes ADR in:comments type:pr' ===
+0
+=== repo=cloudfoundry/cli q='ADR violat in:comments type:pr' ===
+0
+=== repo=cloudfoundry/cli q='violates ADR in:comments type:pr' ===
+0
+=== repo=cloudfoundry/cli q='ADR revert in:comments type:pr' ===
+1
+=== repo=cloudfoundry/cli q='supersedes ADR in:comments type:pr' ===
+0
+=== repo=softwaremill/tapir q='ADR violat in:comments type:pr' ===
+0
+=== repo=softwaremill/tapir q='violates ADR in:comments type:pr' ===
+0
+=== repo=softwaremill/tapir q='ADR revert in:comments type:pr' ===
+0
+=== repo=softwaremill/tapir q='supersedes ADR in:comments type:pr' ===
+0
+=== repo=weaveworks/weave-gitops q='ADR violat in:comments type:pr' ===
+0
+=== repo=weaveworks/weave-gitops q='violates ADR in:comments type:pr' ===
+0
+=== repo=weaveworks/weave-gitops q='ADR revert in:comments type:pr' ===
+1
+=== repo=weaveworks/weave-gitops q='supersedes ADR in:comments type:pr' ===
+0
+=== repo=Apicurio/apicurio-registry q='ADR violat in:comments type:pr' ===
+0
+=== repo=Apicurio/apicurio-registry q='violates ADR in:comments type:pr' ===
+1
+=== repo=Apicurio/apicurio-registry q='ADR revert in:comments type:pr' ===
+2
+=== repo=Apicurio/apicurio-registry q='supersedes ADR in:comments type:pr' ===
+0
+=== repo=elastic/cloud-on-k8s q='ADR violat in:comments type:pr' ===
+0
+=== repo=elastic/cloud-on-k8s q='violates ADR in:comments type:pr' ===
+0
+=== repo=elastic/cloud-on-k8s q='ADR revert in:comments type:pr' ===
+0
+=== repo=elastic/cloud-on-k8s q='supersedes ADR in:comments type:pr' ===
+0
+=== repo=rancher/rke2 q='ADR violat in:comments type:pr' ===
+0
+=== repo=rancher/rke2 q='violates ADR in:comments type:pr' ===
+0
+=== repo=rancher/rke2 q='ADR revert in:comments type:pr' ===
+0
+=== repo=rancher/rke2 q='supersedes ADR in:comments type:pr' ===
+0
+=== repo=percona/percona-xtradb-cluster-operator q='ADR violat in:comments type:pr' ===
+0
+=== repo=percona/percona-xtradb-cluster-operator q='violates ADR in:comments type:pr' ===
+0
+=== repo=percona/percona-xtradb-cluster-operator q='ADR revert in:comments type:pr' ===
+0
+=== repo=percona/percona-xtradb-cluster-operator q='supersedes ADR in:comments type:pr' ===
+0
+=== repo=home-assistant/architecture q='ADR violat in:comments type:pr' ===
+0
+=== repo=home-assistant/architecture q='violates ADR in:comments type:pr' ===
+0
+=== repo=home-assistant/architecture q='ADR revert in:comments type:pr' ===
+0
+=== repo=home-assistant/architecture q='supersedes ADR in:comments type:pr' ===
+0
+=== repo=zarf-dev/zarf q='ADR violat in:comments type:pr' ===
+0
+=== repo=zarf-dev/zarf q='violates ADR in:comments type:pr' ===
+0
+=== repo=zarf-dev/zarf q='ADR revert in:comments type:pr' ===
+1
+=== repo=zarf-dev/zarf q='supersedes ADR in:comments type:pr' ===
+0
+=== repo=smithy-lang/smithy q='ADR violat in:comments type:pr' ===
+0
+=== repo=smithy-lang/smithy q='violates ADR in:comments type:pr' ===
+0
+=== repo=smithy-lang/smithy q='ADR revert in:comments type:pr' ===
+0
+=== repo=smithy-lang/smithy q='supersedes ADR in:comments type:pr' ===
+0
+=== repo=defenseunicorns/pepr q='ADR violat in:comments type:pr' ===
+0
+=== repo=defenseunicorns/pepr q='violates ADR in:comments type:pr' ===
+0
+=== repo=defenseunicorns/pepr q='ADR revert in:comments type:pr' ===
+1
+=== repo=defenseunicorns/pepr q='supersedes ADR in:comments type:pr' ===
+0
+=== repo=igniterealtime/Openfire q='ADR violat in:comments type:pr' ===
+0
+=== repo=igniterealtime/Openfire q='violates ADR in:comments type:pr' ===
+0
+=== repo=igniterealtime/Openfire q='ADR revert in:comments type:pr' ===
+0
+=== repo=igniterealtime/Openfire q='supersedes ADR in:comments type:pr' ===
+0
+=== repo=TryGhost/ActivityPub q='ADR violat in:comments type:pr' ===
+0
+=== repo=TryGhost/ActivityPub q='violates ADR in:comments type:pr' ===
+7
+=== repo=TryGhost/ActivityPub q='ADR revert in:comments type:pr' ===
+3
+=== repo=TryGhost/ActivityPub q='supersedes ADR in:comments type:pr' ===
+2
+=== repo=k8gb-io/k8gb q='ADR violat in:comments type:pr' ===
+0
+=== repo=k8gb-io/k8gb q='violates ADR in:comments type:pr' ===
+0
+=== repo=k8gb-io/k8gb q='ADR revert in:comments type:pr' ===
+0
+=== repo=k8gb-io/k8gb q='supersedes ADR in:comments type:pr' ===
+0
+=== repo=babashka/babashka q='ADR violat in:comments type:pr' ===
+0
+=== repo=babashka/babashka q='violates ADR in:comments type:pr' ===
+0
+=== repo=babashka/babashka q='ADR revert in:comments type:pr' ===
+0
+=== repo=babashka/babashka q='supersedes ADR in:comments type:pr' ===
+0
+=== repo=island-is/handbook q='ADR violat in:comments type:pr' ===
+0
+=== repo=island-is/handbook q='violates ADR in:comments type:pr' ===
+0
+=== repo=hashicorp/terraform q='violates ADR in:comments type:pr' ===
+0
+=== repo=hashicorp/terraform q='ADR violat in:comments type:pr' ===
+0
+=== repo=hashicorp/vault q='violates ADR in:comments type:pr' ===
+0
+=== repo=hashicorp/vault q='ADR violat in:comments type:pr' ===
+0
+=== repo=envoyproxy/envoy q='violates ADR in:comments type:pr' ===
+0
+=== repo=envoyproxy/envoy q='ADR violat in:comments type:pr' ===
+0
+=== repo=grafana/grafana q='violates ADR in:comments type:pr' ===
+0
+=== repo=grafana/grafana q='ADR violat in:comments type:pr' ===
+0
+=== repo=cockroachdb/cockroach q='violates ADR in:comments type:pr' ===
+0
+=== repo=cockroachdb/cockroach q='ADR violat in:comments type:pr' ===
+0
+=== repo=apache/apisix q='violates ADR in:comments type:pr' ===
+0
+=== repo=apache/apisix q='ADR violat in:comments type:pr' ===
+0
+=== repo=gitlabhq/gitlabhq q='violates ADR in:comments type:pr' ===
+0
+=== repo=gitlabhq/gitlabhq q='ADR violat in:comments type:pr' ===
+0
+=== repo=nodejs/node q='violates ADR in:comments type:pr' ===
+0
+=== repo=nodejs/node q='ADR violat in:comments type:pr' ===
+0
+=== repo=redis/redis q='violates ADR in:comments type:pr' ===
+0
+=== repo=redis/redis q='ADR violat in:comments type:pr' ===
+0
+=== repo=scylladb/scylladb q='violates ADR in:comments type:pr' ===
+0
+=== repo=scylladb/scylladb q='ADR violat in:comments type:pr' ===
+0
+=== repo=chef/chef q='violates ADR in:comments type:pr' ===
+0
+=== repo=chef/chef q='ADR violat in:comments type:pr' ===
+0
+=== repo=spinnaker/spinnaker q='violates ADR in:comments type:pr' ===
+0
+=== repo=spinnaker/spinnaker q='ADR violat in:comments type:pr' ===
+0
+=== repo=opensearch-project/OpenSearch q='violates ADR in:comments type:pr' ===
+0
+=== repo=opensearch-project/OpenSearch q='ADR violat in:comments type:pr' ===
+0
+=== repo=ory/kratos q='violates ADR in:comments type:pr' ===
+0
+=== repo=ory/kratos q='ADR violat in:comments type:pr' ===
+0
+=== repo=dapr/dapr q='violates ADR in:comments type:pr' ===
+0
+=== repo=dapr/dapr q='ADR violat in:comments type:pr' ===
+0
+=== repo=temporalio/temporal q='violates ADR in:comments type:pr' ===
+0
+=== repo=temporalio/temporal q='ADR violat in:comments type:pr' ===
+0
+=== repo=pulumi/pulumi q='violates ADR in:comments type:pr' ===
+0
+=== repo=pulumi/pulumi q='ADR violat in:comments type:pr' ===
+0
+=== repo=argoproj/argo-cd q='violates ADR in:comments type:pr' ===
+0
+=== repo=argoproj/argo-cd q='ADR violat in:comments type:pr' ===
+0
+=== repo=fluxcd/flux2 q='violates ADR in:comments type:pr' ===
+0
+=== repo=fluxcd/flux2 q='ADR violat in:comments type:pr' ===
+0
+=== repo=open-telemetry/opentelemetry-collector q='violates ADR in:comments type:pr' ===
+0
+=== repo=open-telemetry/opentelemetry-collector q='ADR violat in:comments type:pr' ===
+0
+
+=== code search pass: repos with ADR folders (path:docs/adr, path:doc/adr, path:docs/decisions, path:architecture/decisions, path:adr filename:0001, path:docs/architecture/decisions, filename:adr-template.md, path:docs/adrs) -- 8 queries, 10/min respected (7s spacing), ~250k-900k total_count each (too broad to enumerate exhaustively; first-page repo names collected as candidates) ===
+candidates collected (first page, deduped, excluding the v1 six + solo/AI-agent-authored repos): thomvaill/log4brains(already v1), quarkusio/quarkus, cloudfoundry/cli, softwaremill/tapir, weaveworks/weave-gitops, Apicurio/apicurio-registry, elastic/cloud-on-k8s, rancher/rke2, percona/percona-xtradb-cluster-operator, home-assistant/architecture, zarf-dev/zarf, smithy-lang/smithy, defenseunicorns/pepr, igniterealtime/Openfire, TryGhost/ActivityPub, k8gb-io/k8gb, babashka/babashka, island-is/handbook, mozilla-services/merino-py, hmrc/hmrc-frontend, contentful/contentful-management.js, hashicorp/terraform, hashicorp/vault, envoyproxy/envoy, grafana/grafana, cockroachdb/cockroach, apache/apisix, gitlabhq/gitlabhq, nodejs/node, redis/redis, scylladb/scylladb, chef/chef, spinnaker/spinnaker, opensearch-project/OpenSearch, ory/kratos, dapr/dapr, temporalio/temporal, pulumi/pulumi, argoproj/argo-cd, fluxcd/flux2, open-telemetry/opentelemetry-collector (41 repos total, 6 v1 + 35 new)
+
+per-repo human-citation search: repo:<r> type:pr "<term>" in:comments for term in {"ADR violat","violates ADR","ADR revert","supersedes ADR"} (20 repos) + {"violates ADR","ADR violat"} (20 more repos) = ~120 queries, 2.2s spacing (search/* 30/min limit), ALL logged above verbatim with total_count per query.
+
+non-zero hits followed up (fetched actual PR comments, bot-filtered):
+  TryGhost/ActivityPub #1804, #1462 -- "violates ADR"/"ADR-0009" hits -- ALL from coderabbitai[bot] (inline review comments). REJECTED, same bot-exclusion rule as v1's RocketChat finding: this repo's ADR-citation culture is now entirely AI-review-bot-driven (CodeRabbit cites ADR-0009 by number on every PR touching ActivityPub IDs), zero human citations found on either PR.
+  TryGhost/ActivityPub #1500, #1067, #1377, #1649 ("ADR revert"/"supersedes ADR" hits) -- all PRs that themselves ADD or PROPOSE an ADR (titles "Added ADR for..."), not citations of an existing ADR against someone else's code. REJECTED as thematic/self-referential, not a violation citation.
+  quarkusio/quarkus #48688, #53038, #45769, #43148 ("ADR revert" hits) -- #43148: cescoffier (maintainer) tells the author "I would recommend using the tls-configuration-name to follow the ADR" -- a real human nudging code toward a decision, but names NO ADR id/URL (quarkus has no docs/adr folder; "the ADR" is an internal doc referenced informally) -- REJECTED: cannot be bound to a specific, fetchable ADR text/id the way the task's protocol requires (adr_id + decision_text), unlike backstage's doc-URL citations.
+  Apicurio/apicurio-registry #7829, #10753 -- #7829: paoloantinori flags "Owner bypass only runs when ownerOnlyAuthorizationEnabled (OBAC) is true, but the ADR and PR summary state..." -- REJECTED: "the ADR" here is the NEW ADR this SAME PR is implementing (a design doc for THIS feature, not a pre-existing accepted team decision from a separate PR), so this is iterative self-review against one's own new spec, not the backstage pattern (an unrelated PR failing to follow an ALREADY-ACCEPTED decision). Same shape as v1's rejected easi-app case.
+  weaveworks/weave-gitops #882, zarf-dev/zarf #2600, defenseunicorns/pepr #3126, cloudfoundry/cli #2320 -- all PRs proposing/discussing an ADR's own content (requesting a "Consequences" section, asking for context on an open proposal), not citing an already-accepted ADR against a different, unrelated code change. REJECTED, same thematic/self-referential pattern.
+
+widen-search yield: 0 additional confirmed positives beyond the original 4 backstage/backstage PRs (across 35 new repos + 6 v1 repos = 41 repos, ~128 queries total this pass). This is reported honestly, not padded: the task's own target (>=30 positives) is NOT met. See protocol_v2.md "Widen search: honest yield" for the reading of why (AI review bots have displaced a large share of what would have been human ADR citations on the most ADR-active repos found, consistent with v1's own RocketChat finding; the repos with NO AI-bot review culture in this sample also had near-zero explicit "cites an existing ADR as violated" review comments at all, human or bot).

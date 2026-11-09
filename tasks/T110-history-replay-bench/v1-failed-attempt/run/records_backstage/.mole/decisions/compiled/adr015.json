@@ -1,0 +1,60 @@
+[
+  {
+    "decision": "adr015",
+    "recordFile": ".mole/decisions/adr015.md",
+    "draftedAt": "2026-11-02T02:31:40.786Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"scope\": [\n    \"packages/frontend-*/src/**\",\n    \"packages/frontend-*/src/index.ts\"\n  ],\n  \"match\": [\n    {\n      \"pattern\": \"\\\\belement\\\\s*:\\\\s*\\\\([^)]*\\\\)\\\\s*=>\\\\s*JSX\\\\.Element\",\n      \"in\": \"packages/frontend-*/src/**/*.ts{,x}\",\n      \"why\": \"{ element: JSX.Element; } -- element option must be a value, not a function/component signature\"\n    },\n    {\n      \"pattern\": \"\\\\bcomponent\\\\s*:\\\\s*JSX\\\\.Element\\\\b\",\n      \"in\": \"packages/frontend-*/src/**/*.ts{,x}\",\n      \"why\": \"{ component: (props: { ... }) => JSX.Element | null } -- component option must be a function type, not a plain element value\"\n    },\n    {\n      \"pattern\": \"\\\\belement\\\\s*:\\\\s*\\\\(\\\\)\\\\s*=>\\\\s*Promise<\",\n      \"in\": \"packages/frontend-*/src/**/*.ts{,x}\",\n      \"why\": \"async shapes must use the 'loader' property name, not 'element'\"\n    },\n    {\n      \"pattern\": \"\\\\bcomponent\\\\s*:\\\\s*\\\\(\\\\)\\\\s*=>\\\\s*Promise<\",\n      \"in\": \"packages/frontend-*/src/**/*.ts{,x}\",\n      \"why\": \"async shapes must use the 'loader' property name, not 'component'\"\n    },\n    {\n      \"pattern\": \"\\\\bloader\\\\s*:\\\\s*\\\\(\\\\)\\\\s*=>\\\\s*JSX\\\\.Element\\\\b\",\n      \"in\": \"packages/frontend-*/src/**/*.ts{,x}\",\n      \"why\": \"loader must return Promise<JSX.Element> (async element loader), a sync 'loader' returning JSX.Element directly is not one of the defined shapes\"\n    },\n    {\n      \"pattern\": \"\\\\bcomponentLoader\\\\s*:\",\n      \"in\": \"packages/frontend-*/src/**/*.ts{,x}\",\n      \"why\": \"property name must be exactly 'loader', not a custom name like componentLoader\"\n    },\n    {\n      \"pattern\": \"\\\\belementLoader\\\\s*:\",\n      \"in\": \"packages/frontend-*/src/**/*.ts{,x}\",\n      \"why\": \"property name must be exactly 'loader', not a custom name like elementLoader\"\n    }\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 2658,
+      "outputTokens": 4474,
+      "costUsd": 0.0490288
+    },
+    "scope": [
+      "packages/frontend-*/src/**",
+      "packages/frontend-*/src/index.ts"
+    ],
+    "match": [
+      {
+        "pattern": "\\belement\\s*:\\s*\\([^)]*\\)\\s*=>\\s*JSX\\.Element",
+        "in": "packages/frontend-*/src/**/*.ts{,x}",
+        "why": "{ element: JSX.Element; } -- element option must be a value, not a function/component signature"
+      },
+      {
+        "pattern": "\\bcomponent\\s*:\\s*JSX\\.Element\\b",
+        "in": "packages/frontend-*/src/**/*.ts{,x}",
+        "why": "{ component: (props: { ... }) => JSX.Element | null } -- component option must be a function type, not a plain element value"
+      },
+      {
+        "pattern": "\\belement\\s*:\\s*\\(\\)\\s*=>\\s*Promise<",
+        "in": "packages/frontend-*/src/**/*.ts{,x}",
+        "why": "async shapes must use the 'loader' property name, not 'element'"
+      },
+      {
+        "pattern": "\\bcomponent\\s*:\\s*\\(\\)\\s*=>\\s*Promise<",
+        "in": "packages/frontend-*/src/**/*.ts{,x}",
+        "why": "async shapes must use the 'loader' property name, not 'component'"
+      },
+      {
+        "pattern": "\\bloader\\s*:\\s*\\(\\)\\s*=>\\s*JSX\\.Element\\b",
+        "in": "packages/frontend-*/src/**/*.ts{,x}",
+        "why": "loader must return Promise<JSX.Element> (async element loader), a sync 'loader' returning JSX.Element directly is not one of the defined shapes"
+      },
+      {
+        "pattern": "\\bcomponentLoader\\s*:",
+        "in": "packages/frontend-*/src/**/*.ts{,x}",
+        "why": "property name must be exactly 'loader', not a custom name like componentLoader"
+      },
+      {
+        "pattern": "\\belementLoader\\s*:",
+        "in": "packages/frontend-*/src/**/*.ts{,x}",
+        "why": "property name must be exactly 'loader', not a custom name like elementLoader"
+      }
+    ],
+    "rules": [],
+    "guardTests": [],
+    "version": 1,
+    "approvedBy": "m2v2-automated-one-shot (ADR text only, no human edit)",
+    "approvedAt": "2026-11-02T02:31:40.792Z"
+  }
+]

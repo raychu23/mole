@@ -1,0 +1,29 @@
+[
+  {
+    "decision": "adr008",
+    "recordFile": ".mole/decisions/adr008.md",
+    "draftedAt": "2026-11-02T17:21:13.444Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"scope\": [\"packages/catalog-model/src/constants.ts\"],\n  \"match\": [\n    {\n      \"pattern\": \"CATALOG_FILENAME\\\\s*=\\\\s*['\\\"](?!catalog-info\\\\.yaml['\\\"])[^'\\\"]*['\\\"]\",\n      \"in\": \"packages/catalog-model/src/constants.ts\",\n      \"why\": \"The catalog file should be named catalog-info.yaml\"\n    }\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 1987,
+      "outputTokens": 1397,
+      "costUsd": 0.0189365
+    },
+    "scope": [
+      "packages/catalog-model/src/constants.ts"
+    ],
+    "match": [
+      {
+        "pattern": "CATALOG_FILENAME\\s*=\\s*['\"](?!catalog-info\\.yaml['\"])[^'\"]*['\"]",
+        "in": "packages/catalog-model/src/constants.ts",
+        "why": "The catalog file should be named catalog-info.yaml"
+      }
+    ],
+    "rules": [],
+    "guardTests": [],
+    "version": 1,
+    "approvedBy": "m2v3-automated-one-shot (ADR text only, no human edit)",
+    "approvedAt": "2026-11-02T17:21:13.485Z"
+  }
+]

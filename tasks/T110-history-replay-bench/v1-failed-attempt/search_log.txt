@@ -1,0 +1,322 @@
+=== repo=backstage/backstage q='ADR violat' ===
+0
+=== repo=backstage/backstage q='ADR revert' ===
+19
+=== repo=backstage/backstage q='supersedes ADR' ===
+0
+=== repo=backstage/backstage q='violates ADR' ===
+1
+=== repo=thoughtworks/log4brains q='ADR violat' ===
+gh: Validation Failed (HTTP 422)
+{"message":"Validation Failed","errors":[{"message":"The listed users and repositories cannot be searched either because the resources do not exist or you do not have permission to view them.","resource":"Search","field":"q","code":"invalid"}],"documentation_url":"https://docs.github.com/v3/search/","status":"422"}=== repo=thoughtworks/log4brains q='ADR revert' ===
+{"message":"Validation Failed","errors":[{"message":"The listed users and repositories cannot be searched either because the resources do not exist or you do not have permission to view them.","resource":"Search","field":"q","code":"invalid"}],"documentation_url":"https://docs.github.com/v3/search/","status":"422"}gh: Validation Failed (HTTP 422)
+=== repo=thoughtworks/log4brains q='supersedes ADR' ===
+gh: Validation Failed (HTTP 422)
+{"message":"Validation Failed","errors":[{"message":"The listed users and repositories cannot be searched either because the resources do not exist or you do not have permission to view them.","resource":"Search","field":"q","code":"invalid"}],"documentation_url":"https://docs.github.com/v3/search/","status":"422"}=== repo=thoughtworks/log4brains q='violates ADR' ===
+gh: Validation Failed (HTTP 422)
+{"message":"Validation Failed","errors":[{"message":"The listed users and repositories cannot be searched either because the resources do not exist or you do not have permission to view them.","resource":"Search","field":"q","code":"invalid"}],"documentation_url":"https://docs.github.com/v3/search/","status":"422"}=== repo=theupdateframework/python-tuf q='ADR violat' ===
+0
+=== repo=theupdateframework/python-tuf q='ADR revert' ===
+2
+=== repo=theupdateframework/python-tuf q='supersedes ADR' ===
+0
+=== repo=theupdateframework/python-tuf q='violates ADR' ===
+0
+=== repo=cms-enterprise/easi-app q='ADR violat' ===
+0
+=== repo=cms-enterprise/easi-app q='ADR revert' ===
+2
+=== repo=cms-enterprise/easi-app q='supersedes ADR' ===
+0
+=== repo=cms-enterprise/easi-app q='violates ADR' ===
+0
+=== repo=aws-powertools/powertools-lambda-python q='ADR violat' ===
+0
+=== repo=aws-powertools/powertools-lambda-python q='ADR revert' ===
+0
+=== repo=aws-powertools/powertools-lambda-python q='supersedes ADR' ===
+0
+=== repo=aws-powertools/powertools-lambda-python q='violates ADR' ===
+0
+repo=backstage/backstage q='architecture decision in:body,comments' -> 117
+repo=backstage/backstage q='against ADR in:body,comments' -> 19
+repo=backstage/backstage q='breaks ADR in:body,comments' -> 10
+repo=backstage/backstage q='goes against the decision in:body,comments' -> 12
+repo=backstage/backstage q='superseded by ADR in:body,comments' -> 1
+repo=thomvaill/log4brains q='architecture decision in:body,comments' -> 0
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EE9F:1F10E8:1936F0D:52A847B:6AF0FBD1 and timestamp 2026-11-08 22:46:41 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=thomvaill/log4brains q='against ADR in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EE9F:1F10E8:1936F0D:52A847B:6AF0FBD1 and timestamp 2026-11-08 22:46:41 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA0:D0ED2:18C67C0:514C7BC:6AF0FBD2 and timestamp 2026-11-08 22:46:42 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=thomvaill/log4brains q='breaks ADR in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA0:D0ED2:18C67C0:514C7BC:6AF0FBD2 and timestamp 2026-11-08 22:46:42 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA1:946CB:199F37C:53E2DB6:6AF0FBD2 and timestamp 2026-11-08 22:46:42 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=thomvaill/log4brains q='goes against the decision in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA1:946CB:199F37C:53E2DB6:6AF0FBD2 and timestamp 2026-11-08 22:46:42 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA2:1CB7F0:199E297:541CA03:6AF0FBD2 and timestamp 2026-11-08 22:46:42 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=thomvaill/log4brains q='superseded by ADR in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA2:1CB7F0:199E297:541CA03:6AF0FBD2 and timestamp 2026-11-08 22:46:42 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA3:946CB:199F634:53E3691:6AF0FBD2 and timestamp 2026-11-08 22:46:42 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=theupdateframework/python-tuf q='architecture decision in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA3:946CB:199F634:53E3691:6AF0FBD2 and timestamp 2026-11-08 22:46:42 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA4:1D19FA:1842617:4F84662:6AF0FBD3 and timestamp 2026-11-08 22:46:43 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=theupdateframework/python-tuf q='against ADR in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA4:1D19FA:1842617:4F84662:6AF0FBD3 and timestamp 2026-11-08 22:46:43 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA6:1F10E8:19376EF:52A9E6C:6AF0FBD3 and timestamp 2026-11-08 22:46:43 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=theupdateframework/python-tuf q='breaks ADR in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA6:1F10E8:19376EF:52A9E6C:6AF0FBD3 and timestamp 2026-11-08 22:46:43 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA7:1F6B:ECF4CF:311847E:6AF0FBD3 and timestamp 2026-11-08 22:46:43 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=theupdateframework/python-tuf q='goes against the decision in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA7:1F6B:ECF4CF:311847E:6AF0FBD3 and timestamp 2026-11-08 22:46:43 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA8:3A10E8:195A9AD:5325716:6AF0FBD3 and timestamp 2026-11-08 22:46:44 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=theupdateframework/python-tuf q='superseded by ADR in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA8:3A10E8:195A9AD:5325716:6AF0FBD3 and timestamp 2026-11-08 22:46:44 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA9:234BDD:195BD6C:537FE64:6AF0FBD4 and timestamp 2026-11-08 22:46:44 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=cms-enterprise/easi-app q='architecture decision in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEA9:234BDD:195BD6C:537FE64:6AF0FBD4 and timestamp 2026-11-08 22:46:44 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEAA:1D19FA:1842C56:4F85B3C:6AF0FBD4 and timestamp 2026-11-08 22:46:44 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=cms-enterprise/easi-app q='against ADR in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEAA:1D19FA:1842C56:4F85B3C:6AF0FBD4 and timestamp 2026-11-08 22:46:44 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEAB:3E260D:19E3AB6:54EBCE3:6AF0FBD4 and timestamp 2026-11-08 22:46:44 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=cms-enterprise/easi-app q='breaks ADR in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEAB:3E260D:19E3AB6:54EBCE3:6AF0FBD4 and timestamp 2026-11-08 22:46:44 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEAC:13F07:196728A:53549BA:6AF0FBD5 and timestamp 2026-11-08 22:46:45 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=cms-enterprise/easi-app q='goes against the decision in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEAC:13F07:196728A:53549BA:6AF0FBD5 and timestamp 2026-11-08 22:46:45 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEAD:29877A:19DC849:55027E6:6AF0FBD5 and timestamp 2026-11-08 22:46:45 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=cms-enterprise/easi-app q='superseded by ADR in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEAD:29877A:19DC849:55027E6:6AF0FBD5 and timestamp 2026-11-08 22:46:45 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEAE:2E5889:18FE874:51F308B:6AF0FBD5 and timestamp 2026-11-08 22:46:45 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=aws-powertools/powertools-lambda-python q='architecture decision in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEAE:2E5889:18FE874:51F308B:6AF0FBD5 and timestamp 2026-11-08 22:46:45 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB1:39E8FC:1AB83D0:5780975:6AF0FBD5 and timestamp 2026-11-08 22:46:45 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=aws-powertools/powertools-lambda-python q='against ADR in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB1:39E8FC:1AB83D0:5780975:6AF0FBD5 and timestamp 2026-11-08 22:46:45 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB2:27E931:18BAA8F:513D25A:6AF0FBD6 and timestamp 2026-11-08 22:46:46 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=aws-powertools/powertools-lambda-python q='breaks ADR in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB2:27E931:18BAA8F:513D25A:6AF0FBD6 and timestamp 2026-11-08 22:46:46 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB3:43E52:180C60B:4EE4C0E:6AF0FBD6 and timestamp 2026-11-08 22:46:46 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=aws-powertools/powertools-lambda-python q='goes against the decision in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB3:43E52:180C60B:4EE4C0E:6AF0FBD6 and timestamp 2026-11-08 22:46:46 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB4:2CB6A3:19B57EA:5448B07:6AF0FBD6 and timestamp 2026-11-08 22:46:46 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+repo=aws-powertools/powertools-lambda-python q='superseded by ADR in:body,comments' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB4:2CB6A3:19B57EA:5448B07:6AF0FBD6 and timestamp 2026-11-08 22:46:46 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB5:1D19FA:1843758:4F87F32:6AF0FBD6 and timestamp 2026-11-08 22:46:46 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+commits repo=backstage/backstage 'revert ADR' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB5:1D19FA:1843758:4F87F32:6AF0FBD6 and timestamp 2026-11-08 22:46:46 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB6:8B202:19E4FCB:54D2F91:6AF0FBD7 and timestamp 2026-11-08 22:46:47 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+commits repo=thomvaill/log4brains 'revert ADR' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB6:8B202:19E4FCB:54D2F91:6AF0FBD7 and timestamp 2026-11-08 22:46:47 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB7:3A10E8:195BA5B:5328DDB:6AF0FBD7 and timestamp 2026-11-08 22:46:47 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+commits repo=theupdateframework/python-tuf 'revert ADR' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB7:3A10E8:195BA5B:5328DDB:6AF0FBD7 and timestamp 2026-11-08 22:46:47 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB8:A4C87:1A38A9F:55EFCC0:6AF0FBD7 and timestamp 2026-11-08 22:46:47 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+commits repo=cms-enterprise/easi-app 'revert ADR' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB8:A4C87:1A38A9F:55EFCC0:6AF0FBD7 and timestamp 2026-11-08 22:46:47 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+gh: API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB9:8DA20:1864F0D:5026234:6AF0FBD7 and timestamp 2026-11-08 22:46:48 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) (HTTP 403)
+commits repo=aws-powertools/powertools-lambda-python 'revert ADR' -> {
+	"message": "API rate limit exceeded for user ID 98297631. If you reach out to GitHub Support for help, please include the request ID EEB9:8DA20:1864F0D:5026234:6AF0FBD7 and timestamp 2026-11-08 22:46:48 UTC. For more on scraping GitHub and how it may affect your rights, please review our Terms of Service (https:\/\/docs.github.com\/en\/site-policy\/github-terms\/github-terms-of-service)",
+	"documentation_url": "https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#rate-limiting",
+	"status": "403"
+}
+repo=thomvaill/log4brains q='architecture decision in:body,comments' -> 0
+repo=thomvaill/log4brains q='against ADR in:body,comments' -> 0
+repo=thomvaill/log4brains q='breaks ADR in:body,comments' -> 0
+repo=thomvaill/log4brains q='superseded by ADR in:body,comments' -> 0
+repo=theupdateframework/python-tuf q='architecture decision in:body,comments' -> 4
+repo=theupdateframework/python-tuf q='against ADR in:body,comments' -> 5
+repo=theupdateframework/python-tuf q='breaks ADR in:body,comments' -> 0
+repo=theupdateframework/python-tuf q='superseded by ADR in:body,comments' -> 1
+repo=cms-enterprise/easi-app q='architecture decision in:body,comments' -> 0
+repo=cms-enterprise/easi-app q='against ADR in:body,comments' -> 0
+repo=cms-enterprise/easi-app q='breaks ADR in:body,comments' -> 2
+repo=cms-enterprise/easi-app q='superseded by ADR in:body,comments' -> 1
+repo=aws-powertools/powertools-lambda-python q='architecture decision in:body,comments' -> 3
+repo=aws-powertools/powertools-lambda-python q='against ADR in:body,comments' -> 5
+repo=aws-powertools/powertools-lambda-python q='breaks ADR in:body,comments' -> 0
+repo=aws-powertools/powertools-lambda-python q='superseded by ADR in:body,comments' -> 0
+=== quoted phrase searches ===
+repo=backstage/backstage q="violates adr" in:body,comments -> 0
+repo=backstage/backstage q="supersedes adr" in:body,comments -> 0
+repo=backstage/backstage q="against adr" in:body,comments -> 0
+repo=thomvaill/log4brains q="violates adr" in:body,comments -> 0
+repo=thomvaill/log4brains q="supersedes adr" in:body,comments -> 0
+repo=thomvaill/log4brains q="against adr" in:body,comments -> 0
+repo=theupdateframework/python-tuf q="violates adr" in:body,comments -> 0
+repo=theupdateframework/python-tuf q="supersedes adr" in:body,comments -> 0
+repo=theupdateframework/python-tuf q="against adr" in:body,comments -> 0
+repo=cms-enterprise/easi-app q="violates adr" in:body,comments -> 0
+repo=cms-enterprise/easi-app q="supersedes adr" in:body,comments -> 0
+repo=cms-enterprise/easi-app q="against adr" in:body,comments -> 0
+repo=aws-powertools/powertools-lambda-python q="violates adr" in:body,comments -> 0
+repo=aws-powertools/powertools-lambda-python q="supersedes adr" in:body,comments -> 0
+repo=aws-powertools/powertools-lambda-python q="against adr" in:body,comments -> 0
+repo=RocketChat/Rocket.Chat q="violates adr" in:body,comments -> 1
+repo=RocketChat/Rocket.Chat q="supersedes adr" in:body,comments -> 1
+repo=RocketChat/Rocket.Chat q="against adr" in:body,comments -> 3
+=== GLOBAL search (no repo restriction) ===
+--- q="violates adr" in:body,comments type:pr is:merged ---
+2903
+{"html_url":"https://github.com/marcovillar-consultoria/openfathom-agent/pull/89","number":89,"repo":"https://api.github.com/repos/marcovillar-consultoria/openfathom-agent","title":"chore(sync): merge upstream/main@9c9c7af5b6 into cloudrun"}
+{"html_url":"https://github.com/MBehtemam/Montagent/pull/1055","number":1055,"repo":"https://api.github.com/repos/MBehtemam/Montagent","title":"docs(adr): Resolve annotation overlap validation seam in ADR-0208 (fixes #1035)"}
+{"html_url":"https://github.com/marcovillar-consultoria/openfathom-agent/pull/88","number":88,"repo":"https://api.github.com/repos/marcovillar-consultoria/openfathom-agent","title":"chore(sync): merge upstream/main@05d7b5af1c into cloudrun"}
+{"html_url":"https://github.com/leonapivato/ai-assistant/pull/3534","number":3534,"repo":"https://api.github.com/repos/leonapivato/ai-assistant","title":"feat(orchestration): planning's exchange, P2 (ADR-0356)"}
+{"html_url":"https://github.com/kneave/climate-scheduler/pull/205","number":205,"repo":"https://api.github.com/repos/kneave/climate-scheduler","title":"Fix card picker registration at module load"}
+{"html_url":"https://github.com/leonapivato/ai-assistant/pull/3554","number":3554,"repo":"https://api.github.com/repos/leonapivato/ai-assistant","title":"feat(orchestration): what each call showed, and the episode look-ups, M2 (ADR-0358)"}
+{"html_url":"https://github.com/leonapivato/ai-assistant/pull/3212","number":3212,"repo":"https://api.github.com/repos/leonapivato/ai-assistant","title":"feat(app): wire the observer and turn candidates on"}
+{"html_url":"https://github.com/smartsolutionslab/software-fabric/pull/130","number":130,"repo":"https://api.github.com/repos/smartsolutionslab/software-fabric","title":"feat(packs): backend.mcp client, external MCP servers declared in the AppHost"}
+{"html_url":"https://github.com/marcovillar-consultoria/openfathom-agent/pull/81","number":81,"repo":"https://api.github.com/repos/marcovillar-consultoria/openfathom-agent","title":"chore(sync): merge upstream/main@2ddbd66ac6 into cloudrun"}
+{"html_url":"https://github.com/mulgadc/spinifex/pull/1523","number":1523,"repo":"https://api.github.com/repos/mulgadc/spinifex","title":"fix: refuse DetachInternetGateway with DependencyViolation while an elastic IP is mapped in the VPC"}
+{"html_url":"https://github.com/leonapivato/ai-assistant/pull/3458","number":3458,"repo":"https://api.github.com/repos/leonapivato/ai-assistant","title":"feat(orchestration): no place holds a message back (ADR-0349 step 3)"}
+{"html_url":"https://github.com/leonapivato/ai-assistant/pull/3566","number":3566,"repo":"https://api.github.com/repos/leonapivato/ai-assistant","title":"feat(orchestration): approvals by card, the tools, the sensor and the join (ADR-0361 AP2)"}
+{"html_url":"https://github.com/lawkitt/mdoc/pull/717","number":717,"repo":"https://api.github.com/repos/lawkitt/mdoc","title":"iOS: Identities gestures and drag-to-merge (ADR 0106)"}
+{"html_url":"https://github.com/marcovillar-consultoria/openfathom-agent/pull/79","number":79,"repo":"https://api.github.com/repos/marcovillar-consultoria/openfathom-agent","title":"chore(sync): merge upstream/main@a62979dc36 into cloudrun"}
+{"html_url":"https://github.com/ThorStarlord/sensemaking-skills/pull/661","number":661,"repo":"https://api.github.com/repos/ThorStarlord/sensemaking-skills","title":"docs(using-sensemaking): re-warrant recorded next steps; separate warrant from authority"}
+{"html_url":"https://github.com/leonapivato/ai-assistant/pull/3486","number":3486,"repo":"https://api.github.com/repos/leonapivato/ai-assistant","title":"feat(models): StructuredCompleter triad with its pydantic-ai implementation (ADR-0354 S1)"}
+{"html_url":"https://github.com/leonapivato/ai-assistant/pull/3444","number":3444,"repo":"https://api.github.com/repos/leonapivato/ai-assistant","title":"feat(core)!: one matter, one activation: the contract (ADR-0349 step 1)"}
+{"html_url":"https://github.com/leonapivato/ai-assistant/pull/3078","number":3078,"repo":"https://api.github.com/repos/leonapivato/ai-assistant","title":"feat(orchestration): a reply may approve several questions, and questions are marked (ADR-0322)"}
+{"html_url":"https://github.com/leonapivato/ai-assistant/pull/3432","number":3432,"repo":"https://api.github.com/repos/leonapivato/ai-assistant","title":"feat(orchestration): the Task Scheduler, its sensor, capabilities and Task Manager (TS2)"}
+{"html_url":"https://github.com/leonapivato/ai-assistant/pull/3199","number":3199,"repo":"https://api.github.com/repos/leonapivato/ai-assistant","title":"feat(orchestration): the observer stage, unwired (ADR-0329 §§7–17)"}
+{"html_url":"https://github.com/leonapivato/ai-assistant/pull/3390","number":3390,"repo":"https://api.github.com/repos/leonapivato/ai-assistant","title":"feat(core)!: ADR-0345's memory record — holders, the placed write, labels, marks, people"}
+{"html_url":"https://github.com/davidjesus516/cemurm/pull/403","number":403,"repo":"https://api.github.com/repos/davidjesus516/cemurm","title":"docs(backlog): record the dependency register and its adoption triggers"}
+{"html_url":"https://github.com/leonapivato/ai-assistant/pull/3388","number":3388,"repo":"https://api.github.com/repos/leonapivato/ai-assistant","title":"docs(adr): ADR-0347, a story keeps every summary it has had (Proposed)"}
+{"html_url":"https://github.com/wanggang316/zmx/pull/5","number":5,"repo":"https://api.github.com/repos/wanggang316/zmx","title":"fix(daemon): keep the last non-empty title across an empty title"}
+{"html_url":"https://github.com/leonapivato/ai-assistant/pull/3472","number":3472,"repo":"https://api.github.com/repos/leonapivato/ai-assistant","title":"feat(orchestration)!: a deliberate stop, what it leaves live, and what a hand-over shows (ADR-0352 step 3)"}
+{"html_url":"https://github.com/marcovillar-consultoria/openfathom-agent/pull/73","number":73,"repo":"https://api.github.com/repos/marcovillar-consultoria/openfathom-agent","title":"chore(sync): merge upstream/main@7157422022 into cloudrun"}
+{"html_url":"https://github.com/leonapivato/ai-assistant/pull/3128","number":3128,"repo":"https://api.github.com/repos/leonapivato/ai-assistant","title":"feat(orchestration): the Telegram line's reader and writer, switched on (T3, milestone 12)"}
+{"html_url":"https://github.com/99linesofcode/obsidian-project-management/pull/114","number":114,"repo":"https://api.github.com/repos/99linesofcode/obsidian-project-management","title":"refactor(shell): dispatch on setup capability, not provider name"}
+{"html_url":"https://github.com/lawkitt/mdoc/pull/318","number":318,"repo":"https://api.github.com/repos/lawkitt/mdoc","title":"Android: Restore with mdoc, Open in mdoc, Settings (ADR 0089, item 4 part 3)"}
+{"html_url":"https://github.com/leonapivato/ai-assistant/pull/3439","number":3439,"repo":"https://api.github.com/repos/leonapivato/ai-assistant","title":"feat(orchestration): tasks the person sets: local times, rules, the read-back and the person's zone"}
+--- q="against our adr" in:body,comments type:pr is:merged ---
+123
+{"html_url":"https://github.com/ZeleMate/DeepSeek-demo-implementation/pull/79","number":79,"repo":"https://api.github.com/repos/ZeleMate/DeepSeek-demo-implementation","title":"docs: ADR 0013 (control plane: model proposes, policy decides)"}
+{"html_url":"https://github.com/gzilavyss2025/brewprospects/pull/11","number":11,"repo":"https://api.github.com/repos/gzilavyss2025/brewprospects","title":"Add the glossary, API notes and doc checks (roadmap 0.9)"}
+{"html_url":"https://github.com/Marllow-git/eeasy-logistics/pull/149","number":149,"repo":"https://api.github.com/repos/Marllow-git/eeasy-logistics","title":"Research: ShipHero and eight KSA platform teardowns (last-mile and WMS)"}
+{"html_url":"https://github.com/Julian-B-Smith/horde/pull/520","number":520,"repo":"https://api.github.com/repos/Julian-B-Smith/horde","title":"autonomous notice-001 at intake: frozen ids reaffirmed, brand adoption deferred, B98 (ADR-154)"}
+{"html_url":"https://github.com/patchcaster-app/patchcaster/pull/11","number":11,"repo":"https://api.github.com/repos/patchcaster-app/patchcaster","title":"test: check the e2e fake Mattermost's requests against the published API"}
+{"html_url":"https://github.com/dgrauet/mlx-arsenal/pull/122","number":122,"repo":"https://api.github.com/repos/dgrauet/mlx-arsenal","title":"fix(attention): chunk dense block-sparse masks under 2^31 elements"}
+{"html_url":"https://github.com/DatMoshu/GodotUO/pull/116","number":116,"repo":"https://api.github.com/repos/DatMoshu/GodotUO","title":"docs: HD-2D lighting review and three follow-ups (LIGHTS-07)"}
+{"html_url":"https://github.com/NicoviGH/manchego-stars/pull/453","number":453,"repo":"https://api.github.com/repos/NicoviGH/manchego-stars","title":"Role check reads both forces against our party; lock ch00 and ch03 (#430)"}
+{"html_url":"https://github.com/Marllow-git/eeasy-logistics/pull/74","number":74,"repo":"https://api.github.com/repos/Marllow-git/eeasy-logistics","title":"Research: eeasynew whatsapp-engine teardown"}
+{"html_url":"https://github.com/vaam-apps/vpay/pull/350","number":350,"repo":"https://api.github.com/repos/vaam-apps/vpay","title":"docs(notchpay): measure the sandbox for the two-step split, the per-network channels and a webhook"}
+{"html_url":"https://github.com/YassSoliman/idleon-forge/pull/51","number":51,"repo":"https://api.github.com/repos/YassSoliman/idleon-forge","title":"spec: M7 Spend Plan"}
+{"html_url":"https://github.com/mathiramilo/football-club-management/pull/1","number":1,"repo":"https://api.github.com/repos/mathiramilo/football-club-management","title":"docs: add v0.1 specs and Claude Code setup"}
+{"html_url":"https://github.com/EmVeeNL/talent-stroom/pull/340","number":340,"repo":"https://api.github.com/repos/EmVeeNL/talent-stroom","title":"ADR 0006: identity with Better Auth"}
+{"html_url":"https://github.com/enes-alatas/spool/pull/1162","number":1162,"repo":"https://api.github.com/repos/enes-alatas/spool","title":"feat(loop): plan usage is kept per Claude login"}
+{"html_url":"https://github.com/ollaya-dev/ollaya/pull/52","number":52,"repo":"https://api.github.com/repos/ollaya-dev/ollaya","title":"Add opt-in Winnow E4B image decisions through libmtmd"}
+{"html_url":"https://github.com/NCodeGroup/Identity/pull/382","number":382,"repo":"https://api.github.com/repos/NCodeGroup/Identity","title":"refactor: give audit records a CloudTrail-shaped JSON envelope"}
+{"html_url":"https://github.com/shemaobt/internalization-room/pull/505","number":505,"repo":"https://api.github.com/repos/shemaobt/internalization-room","title":"refactor(sala): a leave holds no take, so the way back has nothing to lay down"}
+{"html_url":"https://github.com/jliguori1312/agent-orchestrator/pull/21","number":21,"repo":"https://api.github.com/repos/jliguori1312/agent-orchestrator","title":"ADR-0006: evaluate and reject dsh-superagent (read-only reference)"}
+{"html_url":"https://github.com/shanepreater/gajufreight/pull/179","number":179,"repo":"https://api.github.com/repos/shanepreater/gajufreight","title":"docs: record public Gajumaru nodes and QPQ's node-code news"}
+{"html_url":"https://github.com/Formicaria/SOVRGNnet.cc/pull/33","number":33,"repo":"https://api.github.com/repos/Formicaria/SOVRGNnet.cc","title":"E2E: count the boots — vitals for a homeserver that discards what it accepts"}
+{"html_url":"https://github.com/brunoarueira/xlq/pull/110","number":110,"repo":"https://api.github.com/repos/brunoarueira/xlq","title":"Bump excelize pin, fixing GHSA-mx22-3794-2vpv"}
+{"html_url":"https://github.com/darshana-opticals-osms/backend/pull/85","number":85,"repo":"https://api.github.com/repos/darshana-opticals-osms/backend","title":"feat(audit): implement secure immutable audit trail for critical inventory, financial, and clinical operations (#57)"}
+{"html_url":"https://github.com/jj-guild/botforge/pull/39","number":39,"repo":"https://api.github.com/repos/jj-guild/botforge","title":"docs(adr-0010): Redis hosting - Redis Cloud free tier for prod"}
+{"html_url":"https://github.com/euro-oss/klopt/pull/1","number":1,"repo":"https://api.github.com/repos/euro-oss/klopt","title":"Klopt 0.1.0 — a Dutch bookkeeping system, M0 through M6"}
+{"html_url":"https://github.com/IQVO/wes-work-planning/pull/94","number":94,"repo":"https://api.github.com/repos/IQVO/wes-work-planning","title":"docs: propose ADR-0019 (labor-plan reconciliation) and ADR-0020 (FlowFed throughput signal)"}
+{"html_url":"https://github.com/vinnie357/claude-skills/pull/259","number":259,"repo":"https://api.github.com/repos/vinnie357/claude-skills","title":"docs(core): drop citation requirement for standing-principle skills"}
+{"html_url":"https://github.com/Autonomous-Robotics-Carleton/arc-monorepo/pull/128","number":128,"repo":"https://api.github.com/repos/Autonomous-Robotics-Carleton/arc-monorepo","title":"docs(systems): design our own corners; component envelopes"}
+{"html_url":"https://github.com/will-ness-ai/ballest/pull/397","number":397,"repo":"https://api.github.com/repos/will-ness-ai/ballest","title":"Prefabs from the game: Steam ticket sign-in, paged list, thumbnails"}
+{"html_url":"https://github.com/elementalcollision/leibniz-daemon/pull/250","number":250,"repo":"https://api.github.com/repos/elementalcollision/leibniz-daemon","title":"F2b brief: apply 8-reviewer witness panel — trust framing fixed, target restated algebraically"}
+{"html_url":"https://github.com/Kigen29/seo-agent-capstone/pull/299","number":299,"repo":"https://api.github.com/repos/Kigen29/seo-agent-capstone","title":"feat: connect a site to Vercel with one button, and find the project from the repository"}
+--- q="this adr is superseded" in:body,comments type:pr is:merged ---
+1088
+{"html_url":"https://github.com/andromarces/agent-loops/pull/936","number":936,"repo":"https://api.github.com/repos/andromarces/agent-loops","title":"docs(adr): correct sentences that keep a partially-superseded ADR accepted"}
+{"html_url":"https://github.com/vipengele/react/pull/158","number":158,"repo":"https://api.github.com/repos/vipengele/react","title":"docs(adr): record the datatable behaviour engine decision"}
+{"html_url":"https://github.com/TerraOI/TerraOI/pull/91","number":91,"repo":"https://api.github.com/repos/TerraOI/TerraOI","title":"docs(decisions): ADR-0005 preserves the T-211 job-API and artifact-home design, answering nothing"}
+{"html_url":"https://github.com/ozand/kb-bootstrap/pull/173","number":173,"repo":"https://api.github.com/repos/ozand/kb-bootstrap","title":"docs(adr): propose precise exact source fidelity"}
+{"html_url":"https://github.com/CloudForge-Platform-Foundation-dev/CloudForge-Platform-Foundation/pull/34","number":34,"repo":"https://api.github.com/repos/CloudForge-Platform-Foundation-dev/CloudForge-Platform-Foundation","title":"docs: propose adr-007 m2m service token issuance policy"}
+{"html_url":"https://github.com/danielnuon/numerology-app/pull/3","number":3,"repo":"https://api.github.com/repos/danielnuon/numerology-app","title":"chore: replace 9-stage agent pipeline with a lean Claude setup"}
+{"html_url":"https://github.com/Fryuni/t3code/pull/56","number":56,"repo":"https://api.github.com/repos/Fryuni/t3code","title":"chore: sync with upstream/main (37eaf5d29)"}
+{"html_url":"https://github.com/fpittelo/coach/pull/83","number":83,"repo":"https://api.github.com/repos/fpittelo/coach","title":"docs(adr): ADR 0001 — local-Docker-only deployment on VIDAR + arc42 §9 bootstrap (#72)"}
+{"html_url":"https://github.com/hivevm/nectar/pull/3","number":3,"repo":"https://api.github.com/repos/hivevm/nectar","title":"Template: NUC v0.6.0 taken up"}
+{"html_url":"https://github.com/ricardoafo/hermes/pull/1283","number":1283,"repo":"https://api.github.com/repos/ricardoafo/hermes","title":"docs(adr): every merge to main deploys with a computed version (ADR-030)"}
+{"html_url":"https://github.com/solid-ai-dev/solid-ai-templates/pull/1939","number":1939,"repo":"https://api.github.com/repos/solid-ai-dev/solid-ai-templates","title":"docs(decisions): what stays upstream, and what each fork carries (#1919)"}
+{"html_url":"https://github.com/ScaleDockHQ/scaledock-skills/pull/9","number":9,"repo":"https://api.github.com/repos/ScaleDockHQ/scaledock-skills","title":"feat(repo-standard): commit lock-managed skills in every repo kind"}
+{"html_url":"https://github.com/RLittlesII/Transporter/pull/118","number":118,"repo":"https://api.github.com/repos/RLittlesII/Transporter","title":"docs(vessel-source): record the design calls and the § 12 review"}
+{"html_url":"https://github.com/Marco-Cricchio/moh/pull/1634","number":1634,"repo":"https://api.github.com/repos/Marco-Cricchio/moh","title":"feat(core,cli): base prompt v3 lean by default; moh init scaffolds code-quality.md (#1633)"}
+{"html_url":"https://github.com/LethaboMH14/V.U.KA--Geekulcha/pull/11","number":11,"repo":"https://api.github.com/repos/LethaboMH14/V.U.KA--Geekulcha","title":"feat(adr): ADR-0027 settles TRL at 4 with ceiling named (P1.4)"}
+{"html_url":"https://github.com/eborden/logseq-mcp-server/pull/473","number":473,"repo":"https://api.github.com/repos/eborden/logseq-mcp-server","title":"Turn ADR-0032's none-yet #335/#336 lines into test: lines"}
+{"html_url":"https://github.com/isoloop/isoloop/pull/25","number":25,"repo":"https://api.github.com/repos/isoloop/isoloop","title":"docs: ADR 0010, our own render bridge (supersedes ADR 0006)"}
+{"html_url":"https://github.com/devosurf/migmate-cli/pull/119","number":119,"repo":"https://api.github.com/repos/devosurf/migmate-cli","title":"docs: provider-pair routes, acting-account pools and capacity-aware partitioning (ADR-0018–0020)"}
+{"html_url":"https://github.com/keiranholloway/biffo-template/pull/2482","number":2482,"repo":"https://api.github.com/repos/keiranholloway/biffo-template","title":"feat: Retire stale #558 / ADR-0018 forward pointers and dangling deploy-app.yml comments"}
+{"html_url":"https://github.com/SukramJ/go-hamqtt/pull/20","number":20,"repo":"https://api.github.com/repos/SukramJ/go-hamqtt","title":"feat!: the four additions Phase 3's measurement asked for"}
+{"html_url":"https://github.com/vahid110/odbcpp/pull/181","number":181,"repo":"https://api.github.com/repos/vahid110/odbcpp","title":"ADR 0002: Phase 1 library layout"}
+{"html_url":"https://github.com/urzuahq/urzua/pull/184","number":184,"repo":"https://api.github.com/repos/urzuahq/urzua","title":"Add claim_retained to a type's status vocabulary"}
+{"html_url":"https://github.com/ZiineZ/olympus/pull/2","number":2,"repo":"https://api.github.com/repos/ZiineZ/olympus","title":"feat(github)!: make the repository public with free security features"}
+{"html_url":"https://github.com/bribeirobr25/ai-creative-skill/pull/33","number":33,"repo":"https://api.github.com/repos/bribeirobr25/ai-creative-skill","title":"docs(decisions): ADR-0005 container decision (c) and ADR-0004 disposition; start benchmark log"}
+{"html_url":"https://github.com/kefyusuf/laravel-bloom-gate/pull/54","number":54,"repo":"https://api.github.com/repos/kefyusuf/laravel-bloom-gate","title":"docs: accept M6 architecture decisions"}
+{"html_url":"https://github.com/jisequilla/j3r3-okf-builder/pull/43","number":43,"repo":"https://api.github.com/repos/jisequilla/j3r3-okf-builder","title":"ADR-0025: an agent records a person's verification from a structured question"}
+{"html_url":"https://github.com/Equipo-03-Proyecto10/retail-segmentation/pull/917","number":917,"repo":"https://api.github.com/repos/Equipo-03-Proyecto10/retail-segmentation","title":"docs(adr): propose ADR-0068 experiment design, frozen plan and verifiable assignment (#832)"}
+{"html_url":"https://github.com/abov/courtconnect-ca/pull/329","number":329,"repo":"https://api.github.com/repos/abov/courtconnect-ca","title":"Docs: finish Snowflake removal (stale doc lines)"}
+{"html_url":"https://github.com/zygote55/sketchyup/pull/465","number":465,"repo":"https://api.github.com/repos/zygote55/sketchyup","title":"R106: DWG import deferred indefinitely (ADR 0180, accepted)"}
+{"html_url":"https://github.com/zingolabs/zingolib/pull/3000","number":3000,"repo":"https://api.github.com/repos/zingolabs/zingolib","title":"test!: remove regtest from zingolib"}

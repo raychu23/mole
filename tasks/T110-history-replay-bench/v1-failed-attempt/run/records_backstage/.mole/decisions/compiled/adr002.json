@@ -1,0 +1,36 @@
+[
+  {
+    "decision": "adr002",
+    "recordFile": ".mole/decisions/adr002.md",
+    "draftedAt": "2026-11-02T02:27:12.322Z",
+    "status": "approved",
+    "raw": "```json\n{\n  \"scope\": [\"**/catalog-info.yaml\", \"**/catalog-info.yml\", \"**/catalog-info.json\"],\n  \"match\": [\n    {\n      \"pattern\": \"^apiVersion:\\\\s*(?!['\\\"]?backstage\\\\.io/)\\\\S\",\n      \"in\": \"**/catalog-info.{yaml,yml}\",\n      \"why\": \"Backstage specific entities have an `apiVersion` that is prefixed with `backstage.io/`\"\n    },\n    {\n      \"pattern\": \"^\\\\s*\\\\{\",\n      \"in\": \"**/catalog-info.json\",\n      \"why\": \"Descriptor files use the YAML format.\"\n    }\n  ]\n}\n```",
+    "usage": {
+      "inputTokens": 4561,
+      "outputTokens": 1815,
+      "costUsd": 0.0271963
+    },
+    "scope": [
+      "**/catalog-info.yaml",
+      "**/catalog-info.yml",
+      "**/catalog-info.json"
+    ],
+    "match": [
+      {
+        "pattern": "^apiVersion:\\s*(?!['\"]?backstage\\.io/)\\S",
+        "in": "**/catalog-info.{yaml,yml}",
+        "why": "Backstage specific entities have an `apiVersion` that is prefixed with `backstage.io/`"
+      },
+      {
+        "pattern": "^\\s*\\{",
+        "in": "**/catalog-info.json",
+        "why": "Descriptor files use the YAML format."
+      }
+    ],
+    "rules": [],
+    "guardTests": [],
+    "version": 1,
+    "approvedBy": "m2v2-automated-one-shot (ADR text only, no human edit)",
+    "approvedAt": "2026-11-02T02:27:12.324Z"
+  }
+]
