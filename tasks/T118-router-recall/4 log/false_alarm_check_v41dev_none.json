@@ -1,0 +1,95 @@
+{
+  "n_none_cases": 8,
+  "routed_set_unchanged": 8,
+  "routed_set_changed": 0,
+  "detail": [
+    {
+      "id": "v4-none-1",
+      "repo": "claw-operator",
+      "without": [
+        "0018"
+      ],
+      "withBoost": [
+        "0018"
+      ],
+      "same": true
+    },
+    {
+      "id": "v4-none-2",
+      "repo": "claw-operator",
+      "without": [
+        "0019"
+      ],
+      "withBoost": [
+        "0019"
+      ],
+      "same": true
+    },
+    {
+      "id": "v4-none-6",
+      "repo": "handbook",
+      "without": [
+        "0002"
+      ],
+      "withBoost": [
+        "0002"
+      ],
+      "same": true
+    },
+    {
+      "id": "v4-none-7",
+      "repo": "handbook",
+      "without": [
+        "0002"
+      ],
+      "withBoost": [
+        "0002"
+      ],
+      "same": true
+    },
+    {
+      "id": "v4-none-10",
+      "repo": "merino-py",
+      "without": [
+        "0001"
+      ],
+      "withBoost": [
+        "0001"
+      ],
+      "same": true
+    },
+    {
+      "id": "v4-none-11",
+      "repo": "merino-py",
+      "without": [
+        "0008"
+      ],
+      "withBoost": [
+        "0008"
+      ],
+      "same": true
+    },
+    {
+      "id": "v4-none-14",
+      "repo": "hmrc-frontend",
+      "without": [
+        "0004"
+      ],
+      "withBoost": [
+        "0004"
+      ],
+      "same": true
+    },
+    {
+      "id": "v4-none-15",
+      "repo": "hmrc-frontend",
+      "without": [
+        "0004"
+      ],
+      "withBoost": [
+        "0004"
+      ],
+      "same": true
+    }
+  ]
+}

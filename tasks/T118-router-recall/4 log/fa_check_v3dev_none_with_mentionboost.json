@@ -1,0 +1,228 @@
+{
+  "n_none_cases": 22,
+  "routed_set_unchanged": 21,
+  "routed_set_changed": 1,
+  "both_routed_nothing": 0,
+  "detail": [
+    {
+      "id": "v3-bs-none-1",
+      "without": [
+        "adr009"
+      ],
+      "withBoost": [
+        "adr009"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-l4b-none-1",
+      "without": [
+        "l4b-mdx-core"
+      ],
+      "withBoost": [
+        "l4b-slug-id"
+      ],
+      "same": false
+    },
+    {
+      "id": "v3-l4b-none-2",
+      "without": [
+        "l4b-global-npm"
+      ],
+      "withBoost": [
+        "l4b-global-npm"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-tuf-none-1",
+      "without": [
+        "tuf-0006"
+      ],
+      "withBoost": [
+        "tuf-0006"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-pt-none-1",
+      "without": [
+        "pt-0001"
+      ],
+      "withBoost": [
+        "pt-0001"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-pt-none-2",
+      "without": [
+        "pt-0005"
+      ],
+      "withBoost": [
+        "pt-0005"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-pt-none-6",
+      "without": [
+        "pt-0001"
+      ],
+      "withBoost": [
+        "pt-0001"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-easi-none-1",
+      "without": [
+        "0029"
+      ],
+      "withBoost": [
+        "0029"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-easi-none-2",
+      "without": [
+        "0029"
+      ],
+      "withBoost": [
+        "0029"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-easi-none-3",
+      "without": [
+        "0024"
+      ],
+      "withBoost": [
+        "0024"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-easi-none-4",
+      "without": [
+        "0020"
+      ],
+      "withBoost": [
+        "0020"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-easi-none-5",
+      "without": [
+        "0030"
+      ],
+      "withBoost": [
+        "0030"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-easi-none-6",
+      "without": [
+        "0037"
+      ],
+      "withBoost": [
+        "0037"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-easi-none-7",
+      "without": [
+        "0029"
+      ],
+      "withBoost": [
+        "0029"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-easi-none-8",
+      "without": [
+        "0037"
+      ],
+      "withBoost": [
+        "0037"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-easi-none-9",
+      "without": [
+        "0020"
+      ],
+      "withBoost": [
+        "0020"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-easi-none-10",
+      "without": [
+        "0029"
+      ],
+      "withBoost": [
+        "0029"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-easi-none-11",
+      "without": [
+        "0042"
+      ],
+      "withBoost": [
+        "0042"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-easi-none-12",
+      "without": [
+        "0042"
+      ],
+      "withBoost": [
+        "0042"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-easi-none-13",
+      "without": [
+        "0037"
+      ],
+      "withBoost": [
+        "0037"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-easi-none-14",
+      "without": [
+        "0037"
+      ],
+      "withBoost": [
+        "0037"
+      ],
+      "same": true
+    },
+    {
+      "id": "v3-easi-none-15",
+      "without": [
+        "0036"
+      ],
+      "withBoost": [
+        "0036"
+      ],
+      "same": true
+    }
+  ]
+}

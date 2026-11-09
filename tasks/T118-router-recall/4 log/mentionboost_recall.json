@@ -1,0 +1,81 @@
+{
+  "v3_dev": {
+    "split": "v3_dev_scope_plus_mentionBoost",
+    "mention_counts_by_repo": {
+      "backstage": {
+        "scoped": 13,
+        "mentionPaths": 0,
+        "mentionIdentifiers": 3
+      },
+      "log4brains": {
+        "scoped": 8,
+        "mentionPaths": 0,
+        "mentionIdentifiers": 0
+      },
+      "python-tuf": {
+        "scoped": 7,
+        "mentionPaths": 0,
+        "mentionIdentifiers": 0
+      },
+      "powertools-python": {
+        "scoped": 7,
+        "mentionPaths": 0,
+        "mentionIdentifiers": 0
+      },
+      "easi-app": {
+        "scoped": 35,
+        "mentionPaths": 0,
+        "mentionIdentifiers": 1
+      }
+    },
+    "n_with_target": 40,
+    "recall_at_1": 0.875,
+    "recall_at_3": 1,
+    "recall_at_5": 1,
+    "miss_detail": []
+  },
+  "v4_1_dev": {
+    "split": "v4_1_dev_scope_plus_mentionBoost",
+    "mention_counts_by_repo": {
+      "claw-operator": {
+        "repoFileCount": 445,
+        "scoped": 0,
+        "mentionPaths": 4,
+        "mentionIdentifiers": 21,
+        "total_decisions": 22
+      },
+      "handbook": {
+        "repoFileCount": 51,
+        "scoped": 0,
+        "mentionPaths": 0,
+        "mentionIdentifiers": 3,
+        "total_decisions": 12
+      },
+      "merino-py": {
+        "repoFileCount": 926,
+        "scoped": 0,
+        "mentionPaths": 1,
+        "mentionIdentifiers": 5,
+        "total_decisions": 10
+      },
+      "hmrc-frontend": {
+        "repoFileCount": 612,
+        "scoped": 0,
+        "mentionPaths": 2,
+        "mentionIdentifiers": 2,
+        "total_decisions": 10
+      }
+    },
+    "n_with_target": 32,
+    "recall_at_1": 0.75,
+    "recall_at_3": 0.875,
+    "recall_at_5": 0.9688,
+    "miss_detail": [
+      {
+        "id": "v4-hb-0001-violate",
+        "rank": 6,
+        "candidateCount": 10
+      }
+    ]
+  }
+}

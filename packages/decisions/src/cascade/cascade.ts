@@ -149,6 +149,7 @@ export async function cascadeCheck(opts: CascadeOptions): Promise<CascadeResult>
       llm: opts.semanticRoute.llm,
       changedFiles: pr.files,
       scopeBoost: opts.semanticRoute.scopeBoost,
+      mentionBoost: opts.semanticRoute.mentionBoost,
     });
     semanticRouteUsage = routed.usage;
     for (const c of routed.routed) {

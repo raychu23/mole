@@ -45,7 +45,7 @@ for (const c of cases) {
   const changeText = c.diff ?? '';
   const changedFiles = filesOfDiff(changeText);
   const without = await routeDecisions({ changeText, decisions: docs, topK: 5, confidenceRatio: 0.75 });
-  const withBoost = await routeDecisions({ changeText, decisions: docs, topK: 5, confidenceRatio: 0.75, changedFiles, scopeBoost: true });
+  const withBoost = await routeDecisions({ changeText, decisions: docs, topK: 5, confidenceRatio: 0.75, changedFiles, scopeBoost: true, mentionBoost: true });
   const a = without.routed.map((x) => x.id).sort();
   const b = withBoost.routed.map((x) => x.id).sort();
   const same = JSON.stringify(a) === JSON.stringify(b);

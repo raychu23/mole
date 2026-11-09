@@ -11,6 +11,37 @@ const DEFAULT_TOP_K = 5;
 const DEFAULT_CONFIDENCE_RATIO = 0.75; // tuned on M2 v2 dev -- see t53-results.md
 const RRF_K = 60; // T118: standard Cormack et al. (2009) RRF smoothing constant, prior-art.md
 
+/** T118: fuses the plain BM25 order with one or more secondary match-rank orderings via Reciprocal Rank Fusion
+ *  (RRF). Each signal in `signalRanks` is its own full ranking (every candidate gets SOME rank, matched
+ *  candidates ranked by match count, UNMATCHED candidates all tied at rank = bm25Candidates.length + 1 -- never
+ *  excluded, so a candidate with zero matches on every active signal keeps exactly its BM25-rank contribution
+ *  and the sort order among such candidates is unchanged, T49's recall-ceiling rule holds for any number of
+ *  fused signals, not just one). */
+function rrfFuse(bm25Candidates: RouteCandidate[], signalRanks: Array<Map<string, number>>): RouteCandidate[] {
+  if (!signalRanks.length) return bm25Candidates;
+  const fused = bm25Candidates.map((c, i) => {
+    const bm25Rank = i + 1;
+    let rrf = 1 / (RRF_K + bm25Rank);
+    for (const ranks of signalRanks) rrf += 1 / (RRF_K + ranks.get(c.id)!);
+    return { ...c, _rrf: rrf };
+  });
+  fused.sort((a, b) => b._rrf - a._rrf);
+  return fused.map(({ _rrf, ...c }) => c);
+}
+
+/** Turns a per-candidate match-count map into a full RRF-ready rank ordering: more matches = better rank; ties
+ *  (including all-zero) keep bm25Candidates' own order (stable sort), and every zero-match candidate is tied at
+ *  the worst rank (bm25Candidates.length + 1) -- never excluded, never distinguished from each other by a
+ *  signal that found nothing for any of them. */
+function rankFromMatchCounts(bm25Candidates: RouteCandidate[], matchCounts: Map<string, number>): Map<string, number> {
+  const order = bm25Candidates
+    .map((c) => ({ id: c.id, matches: matchCounts.get(c.id) ?? 0 }))
+    .sort((a, b) => b.matches - a.matches);
+  const rank = new Map<string, number>();
+  order.forEach((c, i) => rank.set(c.id, c.matches > 0 ? i + 1 : bm25Candidates.length + 1));
+  return rank;
+}
+
 /** T118: literal (non-wildcard) path-segment count of a glob's prefix, e.g. 'pkg/apperrors/**' -> 2,
  *  'pkg/**' -> 1, '**\/*.ts' -> 0. Used as a specificity floor: a catch-all single-segment glob like 'pkg/**'
  *  or 'cmd/**' matches almost everything under a top-level dir and must never win the boost on its own (found
@@ -40,25 +71,54 @@ function scopeMatchCount(scopeGlobs: string[] | undefined, changedFiles: string[
   return n;
 }
 
-/** T118: fuses the plain BM25 order with a scope-glob-match order via Reciprocal Rank Fusion (RRF). Candidates
- *  with zero scope matches get rank = bm25Candidates.length + 1 for signal (b) (last place, never excluded --
- *  they still carry their full signal-(a) contribution, so a decision with no scope is never penalized below
- *  where plain BM25 alone would have put it; T49's recall-ceiling rule). */
-function applyScopeBoost(bm25Candidates: RouteCandidate[], docs: Map<string, RouteDoc>, changedFiles: string[]): RouteCandidate[] {
-  const matchCounts = bm25Candidates.map((c) => scopeMatchCount(docs.get(c.id)?.scopeGlobs, changedFiles));
-  const scopeOrder = bm25Candidates
-    .map((c, i) => ({ id: c.id, matches: matchCounts[i]! }))
-    .sort((a, b) => b.matches - a.matches); // ties keep bm25 order (stable sort) when both are 0
-  const scopeRank = new Map<string, number>();
-  scopeOrder.forEach((c, i) => scopeRank.set(c.id, c.matches > 0 ? i + 1 : bm25Candidates.length + 1));
+/** T118 step B: does any of a decision's TEXT-mentioned paths match a changed file (exact path, or exact
+ *  basename-at-boundary so a repo-relative vs. cwd-relative prefix mismatch still counts), OR do its
+ *  TEXT-mentioned identifiers appear literally in the change text (a diff hunk, not just the file list)? Unlike
+ *  scopeMatchCount, no specificity floor is needed for PATHS -- mentionPaths are already real, specific repo
+ *  file paths (extractMentionedPaths only keeps ones that resolved against the actual repo file list), never a
+ *  glob, so even a single path match is high-confidence evidence.
+ *
+ *  IDENTIFIERS are a weaker, noisier signal than paths: a single shared identifier can be a coincidence -- self-
+ *  review on real v4.1 dev data found a single two-word PascalCase product-name token (`OpenClaw`, the repo's
+ *  own name) mentioned once in an unrelated ADR's prose ALSO appearing, unremarkably, in a totally different
+ *  diff's code comment, and that one coincidental match alone outranked the true decision. A camelCase/
+ *  PascalCase-shape check genuinely cannot distinguish a real symbol name from an ordinary two-word product name
+ *  formatted the same way (both e.g. `ClawCredential` and `OpenClaw` have the identical internal-transition
+ *  shape) -- an honest lexical-heuristic limit, same category every path/identifier-localization tool in the
+ *  prior art accepts as probabilistic, not perfect. The fix applied here: a SINGLE identifier match is never
+ *  enough on its own to count toward the boost (MIN_IDENTIFIER_MATCHES = 2) -- it takes at least two distinct,
+ *  independently-named identifiers from the SAME decision's text appearing in the SAME diff to count as
+ *  corroborating evidence, the identifier-signal analogue of scopeMatchCount's literalPrefixDepth floor. */
+const MIN_IDENTIFIER_MATCHES = 2;
+function mentionMatchCount(doc: RouteDoc | undefined, changedFiles: string[], changeText: string): number {
+  if (!doc) return 0;
+  let pathMatches = 0;
+  for (const p of doc.mentionPaths ?? []) {
+    if (changedFiles.some((f) => f === p || f.endsWith('/' + p) || p.endsWith('/' + f))) pathMatches++;
+  }
+  let identifierMatches = 0;
+  for (const id of doc.mentionIdentifiers ?? []) {
+    if (changeText.includes(id)) identifierMatches++;
+  }
+  return pathMatches + (identifierMatches >= MIN_IDENTIFIER_MATCHES ? identifierMatches : 0);
+}
 
-  const fused = bm25Candidates.map((c, i) => {
-    const bm25Rank = i + 1;
-    const rrf = 1 / (RRF_K + bm25Rank) + 1 / (RRF_K + scopeRank.get(c.id)!);
-    return { ...c, _rrf: rrf };
-  });
-  fused.sort((a, b) => b._rrf - a._rrf);
-  return fused.map(({ _rrf, ...c }) => c);
+/** T118 (+step B): applies whichever of scopeBoost/mentionBoost the caller asked for, fusing every active
+ *  signal into ONE RRF pass over the plain BM25 order (not one RRF pass per signal applied sequentially --
+ *  sequential re-ranking would let an earlier boost's output order bias a later one; a single fused pass treats
+ *  every signal as independent evidence about the SAME original BM25 ranking, per Cormack et al.'s own
+ *  multi-ranking RRF, not just the 2-ranking case). */
+function applyBoosts(bm25Candidates: RouteCandidate[], byId: Map<string, RouteDoc>, opts: RouteOptions): RouteCandidate[] {
+  const signalRanks: Array<Map<string, number>> = [];
+  if (opts.scopeBoost && opts.changedFiles?.length) {
+    const counts = new Map(bm25Candidates.map((c) => [c.id, scopeMatchCount(byId.get(c.id)?.scopeGlobs, opts.changedFiles!)]));
+    signalRanks.push(rankFromMatchCounts(bm25Candidates, counts));
+  }
+  if (opts.mentionBoost) {
+    const counts = new Map(bm25Candidates.map((c) => [c.id, mentionMatchCount(byId.get(c.id), opts.changedFiles ?? [], opts.changeText)]));
+    signalRanks.push(rankFromMatchCounts(bm25Candidates, counts));
+  }
+  return rrfFuse(bm25Candidates, signalRanks);
 }
 
 const LISTWISE_PROMPT = (changeSummary: string, candidates: Array<{ id: string; title: string; summary: string }>): string =>
@@ -100,8 +160,8 @@ export async function routeDecisions(opts: RouteOptions): Promise<RouteResult> {
   const scored = idx.score(opts.changeText).filter((h) => h.score > minScore);
   let bm25Candidates: RouteCandidate[] = scored.map((h) => ({ id: h.id, title: byId.get(h.id)?.title ?? h.id, bm25Score: h.score }));
 
-  if (opts.scopeBoost && opts.changedFiles?.length && bm25Candidates.length > 1) {
-    bm25Candidates = applyScopeBoost(bm25Candidates, byId, opts.changedFiles);
+  if ((opts.scopeBoost || opts.mentionBoost) && bm25Candidates.length > 1) {
+    bm25Candidates = applyBoosts(bm25Candidates, byId, opts);
   }
 
   if (bm25Candidates.length === 0) {

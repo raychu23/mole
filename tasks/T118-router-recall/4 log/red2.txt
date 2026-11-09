@@ -1,0 +1,57 @@
+
+ RUN  v3.2.7 /Users/a1/Desktop/CS Code/Project/Mole-worktrees/T118-router-recall
+
+ ❯ packages/decisions/test/route.test.ts (22 tests | 1 failed) 13ms
+   ✓ routeDecisions: stage 1 only (confident BM25 top pick, no LLM call) > a change whose text clearly overlaps one decision routes to it with zero LLM calls 2ms
+   ✓ routeDecisions: stage 1 only (confident BM25 top pick, no LLM call) > a change with no lexical overlap with any decision routes to nothing 0ms
+   ✓ routeDecisions: stage 1 only (confident BM25 top pick, no LLM call) > with no llm configured, an ambiguous case still returns the BM25 top candidate (never throws) 0ms
+   ✓ routeDecisions: stage 2 (listwise LLM pick) runs only when stage 1 is ambiguous > calls the LLM with candidate SUMMARIES only (never the full decision text) 0ms
+   ✓ routeDecisions: stage 2 (listwise LLM pick) runs only when stage 1 is ambiguous > parses a multi-pick response into several routed candidates 0ms
+   ✓ routeDecisions: stage 2 (listwise LLM pick) runs only when stage 1 is ambiguous > PICK: NONE routes to nothing even though BM25 had candidates 0ms
+   ✓ routeDecisions: stage 2 (listwise LLM pick) runs only when stage 1 is ambiguous > an unparsable LLM response never silently drops everything: falls back to the BM25 top candidate 0ms
+   ✓ routeDecisions: stage 2 (listwise LLM pick) runs only when stage 1 is ambiguous > topK bounds how many BM25 candidates stage 2 ever sees 0ms
+   ✓ route API shape: ids + confidence + cost > RouteResult reports a confidence number and ms always, cost only when the LLM stage ran 0ms
+   ✓ indexTextOf / oneLineSummaryOf: title + summary + rationale key terms, never the whole body > includes the title and the first-paragraph summary 1ms
+   ✓ indexTextOf / oneLineSummaryOf: title + summary + rationale key terms, never the whole body > is bounded well below the full rationale budget (index text is for ranking, not for reading) 0ms
+   ✓ indexTextOf / oneLineSummaryOf: title + summary + rationale key terms, never the whole body > oneLineSummaryOf returns a short single line, falling back to the title when there is no summary 0ms
+   ✓ routeDecisions: scopeBoost (opt-in, RRF of BM25 rank + scope-glob-match rank) > without scopeBoost, a lexically weaker scoped candidate can still rank behind an unscoped one (baseline behavior, unchanged) 0ms
+   ✓ routeDecisions: scopeBoost (opt-in, RRF of BM25 rank + scope-glob-match rank) > with scopeBoost + changedFiles, a scope-glob match promotes the true candidate via RRF even when its raw BM25 score trails 1ms
+   ✓ routeDecisions: scopeBoost (opt-in, RRF of BM25 rank + scope-glob-match rank) > a scope glob that matches nothing never excludes a candidate that BM25 already found (recall-ceiling preserved, T49) 1ms
+   ✓ routeDecisions: scopeBoost (opt-in, RRF of BM25 rank + scope-glob-match rank) > scopeBoost with no changedFiles given is a no-op (falls back to plain BM25 order) 0ms
+   ✓ routeDecisions: scopeBoost (opt-in, RRF of BM25 rank + scope-glob-match rank) > a catch-all single-segment scope glob (e.g. "pkg/**") never wins the boost -- only a narrower, >=2-segment glob does 0ms
+   ✓ routeDecisions: mentionBoost (opt-in, RRF of BM25 rank + ADR-text-mention-match rank) > without mentionBoost, a lexically weaker but path/identifier-matching candidate can still rank behind an unrelated one 0ms
+   × routeDecisions: mentionBoost (opt-in, RRF of BM25 rank + ADR-text-mention-match rank) > with mentionBoost + changedFiles, a path the ADR text itself names promotes the true candidate via RRF 4ms
+     → expected [ 'claw-0017' ] to deeply equal [ 'claw-0018' ]
+   ✓ routeDecisions: mentionBoost (opt-in, RRF of BM25 rank + ADR-text-mention-match rank) > with mentionBoost, an identifier the ADR text names appearing in the diff text also promotes the true candidate 0ms
+   ✓ routeDecisions: mentionBoost (opt-in, RRF of BM25 rank + ADR-text-mention-match rank) > a decision with no mentionPaths/mentionIdentifiers never loses its BM25-alone candidacy (recall-ceiling preserved) 0ms
+   ✓ routeDecisions: mentionBoost (opt-in, RRF of BM25 rank + ADR-text-mention-match rank) > scopeBoost and mentionBoost both on fuse both signals (neither excludes the other) 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/decisions/test/route.test.ts > routeDecisions: mentionBoost (opt-in, RRF of BM25 rank + ADR-text-mention-match rank) > with mentionBoost + changedFiles, a path the ADR text itself names promotes the true candidate via RRF
+AssertionError: expected [ 'claw-0017' ] to deeply equal [ 'claw-0018' ]
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[32m-   "claw-0018",[39m
+[31m+   "claw-0017",[39m
+[2m  ][22m
+
+ ❯ packages/decisions/test/route.test.ts:270:39
+    268|       topK: 1,
+    269|     });
+    270|     expect(r.routed.map((c) => c.id)).toEqual(['claw-0018']);
+       |                                       ^
+    271|   });
+    272| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 21 passed (22)
+   Start at  22:07:00
+   Duration  378ms (transform 107ms, setup 0ms, collect 174ms, tests 13ms, environment 0ms, prepare 38ms)
+

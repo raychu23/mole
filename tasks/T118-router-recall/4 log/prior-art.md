@@ -60,3 +60,52 @@ specifically for an "is this decision governed by this diff" routing problem —
 with the §5-motivated specificity floor) is this task's own synthesis, built and measured against B2 v3/v4.1 DEV
 splits (see `0 start.md` and `measure_scopeboost_recall.mjs` / `false_alarm_check_v3dev_none.mjs` in this log
 dir), not copied from a single paper or tool.
+
+## Step B addendum (2026-11-08): scopeBoost is a no-op on real ADRs (0/54 v4.1 decisions declare `scope:`) —
+## path/identifier MENTION extraction from the ADR's own TEXT, prior art for the specific signal added
+
+Problem restated: B2 v4.2's only 4 real misses were all `routedCorrectly: false`; of those, exactly ONE
+(`v42-claw-0018-violate`) is a case where the ADR's own "Key files" prose names the diff's exact touched file —
+scopeBoost can never fire on it (no author-declared `scope:` field exists in this real, plain-markdown ADR
+corpus). The other 3 misses touch/add files the ADR text never names at all (new, unmentioned files/
+identifiers by construction) — no text-mention signal can fix those; stated plainly in `0 start.md`, not glossed
+over.
+
+7. **Antoniol, Canfora, Casazza, De Lucia, Merlo, "Recovering Traceability Links between Code and Documentation"**
+   (IEEE TSE 28(10), 2002) — the foundational IR-based doc↔code traceability recovery method: links are found
+   from shared VOCABULARY (identifiers, terms) between a design/requirements document and source code, no
+   embedding model, just term overlap. **Used here**: directly motivates `route/mentions.ts` extracting path/
+   identifier mentions from an ADR's own text as its own privileged signal, rather than relying on BM25's
+   whole-text term overlap to surface the same evidence — same "shared vocabulary recovers a link" idea, applied
+   at load time instead of query time.
+
+8. **Yang et al., "SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering"** (NeurIPS 2024,
+   arXiv 2405.15793) — the ACI's `find_file`/`search_file` commands localize by explicit path and string/
+   identifier search over the repo BEFORE any patch is proposed, i.e. an agent-visible, privileged "does this
+   name appear in the repo" signal distinct from free-text retrieval. **Used here**: reinforces Agentless's
+   §3 point (path/identifier-first localization) specifically for an agentic tool's own interface design, not
+   just a benchmark result — route/mentions.ts's `extractMentionedPaths` resolving against the real repo file
+   list (never a guess) mirrors this "ground the mention in something that actually exists" posture.
+
+9. **Saha, Lease, Khurshid, Perry, "Improving Bug Localization using Structured Information Retrieval" (BLUiR)**
+   (ASE 2013) and **Robertson & Zaragoza, "The Probabilistic Relevance Framework: BM25 and Beyond"** (2009, BM25F)
+   — both treat distinct TEXT FIELDS (a bug report's summary vs. description; a stack trace vs. free prose) with
+   different weight/structure rather than concatenating everything into one bag of words, AND BM25's own IDF
+   term already down-weights a word that appears in most documents in a collection (low discriminating power).
+   **Used here, twice**: (a) motivates keeping mentionPaths/mentionIdentifiers as a SEPARATE signal fused via
+   RRF rather than just re-tokenizing mentioned paths/identifiers into the same BM25 index text (they would be
+   drowned out by the rest of the prose, same reasoning scopeGlobs already uses); (b) directly diagnosed and fixed
+   a SELF-REVIEW regression found on real v4.1 dev data: a repo's own product name (`OpenClaw`, PascalCase,
+   passes every code-identifier-shape heuristic) appeared in one ADR's prose and, coincidentally, in an unrelated
+   diff's code comment too, and counting that single match as a privileged signal outranked the TRUE governing
+   decision (v4-claw-0002-violate, recall@1 regression 0.75→0.594 before the fix). `route/mentions.ts`'s
+   `dropCommonMentions` (corpus document-frequency filter) and `route.ts`'s `MIN_IDENTIFIER_MATCHES = 2` floor
+   are this task's own fixes, directly modeled on BM25's own IDF down-weighting and BLUiR's field-weighting
+   logic, not a mechanical copy of either (neither paper's method is invoked at runtime; the PRINCIPLE — a
+   term's cross-document commonness bounds its discriminating power — is what transferred).
+
+**What was actually built, step B**: `route/mentions.ts` (`extractMentionedPaths`, `extractMentionedIdentifiers`,
+`dropCommonMentions`) + `route.ts`'s `mentionBoost` (fused into the SAME RRF pass as `scopeBoost`, see
+`rrfFuse`/`applyBoosts`) is this task's own synthesis of §7–9 above, not a copy of any one paper or tool; the
+corpus-level common-mention filter and the identifier-match floor were found and fixed by this task's own
+self-review against real v3/v4.1 dev data, not by any source cited above predicting the exact failure mode.

@@ -15,6 +15,15 @@ export interface RouteDoc {
    *  no scope, or a scope that matches nothing, must still compete on BM25 alone (T49's recall-ceiling finding:
    *  a decision with no authored anchor never got to compete). */
   scopeGlobs?: string[];
+  /** T118 step B: repo file paths the ADR's own TEXT mentions (e.g. a "Key files" list), resolved against the
+   *  real repo file list at load time by route/mentions.ts's extractMentionedPaths -- NOT an author-declared
+   *  field like scopeGlobs. Exists for real ADR corpora that carry zero scope: anchors (see scopeGlobs doc);
+   *  used ONLY as an optional ranking signal (mentionBoost), same recall-ceiling-preserving posture. */
+  mentionPaths?: string[];
+  /** T118 step B: backtick-coded identifiers (function/type names) the ADR's own text mentions, extracted by
+   *  route/mentions.ts's extractMentionedIdentifiers. Matched against changeText itself (not just changedFiles)
+   *  -- an identifier can appear in a diff hunk without the file path matching exactly. */
+  mentionIdentifiers?: string[];
 }
 
 export interface RouteCandidate {
@@ -66,4 +75,11 @@ export interface RouteOptions {
    *  contribution -- it just gets no boost from signal (b), same recall-ceiling-preserving rule as the base
    *  router (see RouteDoc.scopeGlobs doc). */
   scopeBoost?: boolean;
+  /** T118 step B: opt-in (default false/undefined, independent flag from scopeBoost -- both may be set at once
+   *  and their rank signals simply fuse together in the same RRF sum). Re-ranks bm25Candidates by RRF of the
+   *  plain BM25 rank and a "mention match" rank: a decision's `mentionPaths` matching >=1 changedFiles, or its
+   *  `mentionIdentifiers` appearing in changeText, counts toward the match (see RouteDoc.mentionPaths doc and
+   *  route/mentions.ts). Same recall-ceiling-preserving contract as scopeBoost: a decision with no mentions or
+   *  no match is never excluded or penalized below its BM25 rank alone. */
+  mentionBoost?: boolean;
 }

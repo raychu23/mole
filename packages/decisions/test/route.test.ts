@@ -225,3 +225,94 @@ describe('routeDecisions: scopeBoost (opt-in, RRF of BM25 rank + scope-glob-matc
     expect(r.routed.map((c) => c.id)).toEqual(['0020']); // BM25's own pick, unmoved by the catch-all glob
   });
 });
+
+// T118 step B: real ADR corpora (v4.1/v4.2) carry ZERO scope: anchors (0/54 decisions, see 0 start.md) --
+// scopeBoost is a provable no-op there. mentionBoost is a SEPARATE opt-in signal fed from text the ADR itself
+// mentions (a "Key files" list, a backtick-coded identifier), extracted at load time by route/mentions.ts, not
+// an author-declared field. Modeled directly on B2 v4.2's one miss type this DOES address (claw-0018: the ADR's
+// own "Key files" section names `internal/controller/claw_providers.go`, the diff's exact touched file, but
+// plain BM25 ranked a different, lexically-stronger decision first).
+describe('routeDecisions: mentionBoost (opt-in, RRF of BM25 rank + ADR-text-mention-match rank)', () => {
+  const DOC_MENTIONS_PATH: RouteDoc = {
+    id: 'claw-0018',
+    title: 'Centralized Provider Registry',
+    summary: 'Single knownProviders map replaces four scattered maps.',
+    text: 'provider registry centralized knownProviders buildProviderEntry deployment apply strategy',
+    mentionPaths: ['internal/controller/claw_providers.go', 'internal/controller/claw_models.go'],
+    mentionIdentifiers: ['knownProviders', 'buildProviderEntry'],
+  };
+  const DOC_UNSCOPED_STRONGER_LEXICAL: RouteDoc = {
+    id: 'claw-0017',
+    title: 'Some other decision',
+    // shares more raw tokens with the change text below than DOC_MENTIONS_PATH does, so plain BM25 ranks it
+    // #1 -- the miss shape actually observed (claw-0018 routed to 0017 in the real v4.2 run).
+    summary: 'unrelated',
+    text: 'provider extra header map variable declaration go language registry other',
+  };
+
+  it('without mentionBoost, a lexically weaker but path/identifier-matching candidate can still rank behind an unrelated one', async () => {
+    const r = await routeDecisions({
+      changeText: 'var extraProviderHeaders = map[string]string{"newprovider": "x-new-provider-key"}',
+      decisions: [DOC_UNSCOPED_STRONGER_LEXICAL, DOC_MENTIONS_PATH],
+      topK: 1,
+    });
+    expect(r.routed.map((c) => c.id)).toEqual(['claw-0017']);
+  });
+
+  it('with mentionBoost + changedFiles, a path the ADR text itself names promotes the true candidate via RRF', async () => {
+    const r = await routeDecisions({
+      changeText: 'var extraProviderHeaders = map[string]string{"newprovider": "x-new-provider-key"}',
+      decisions: [DOC_UNSCOPED_STRONGER_LEXICAL, DOC_MENTIONS_PATH],
+      changedFiles: ['internal/controller/claw_providers.go'],
+      mentionBoost: true,
+      topK: 1,
+    });
+    expect(r.routed.map((c) => c.id)).toEqual(['claw-0018']);
+  });
+
+  it('with mentionBoost, two or more identifiers the ADR text names appearing in the diff text also promotes the true candidate (a single identifier match alone is not enough -- see MIN_IDENTIFIER_MATCHES)', async () => {
+    const r = await routeDecisions({
+      changeText: 'knownProviders and buildProviderEntry are both bypassed here: var extraProviderHeaders = map[string]string{"newprovider": "x"}',
+      decisions: [DOC_UNSCOPED_STRONGER_LEXICAL, DOC_MENTIONS_PATH],
+      mentionBoost: true, // no changedFiles at all -- identifier-in-changeText signal alone still fires
+      topK: 1,
+    });
+    expect(r.routed.map((c) => c.id)).toEqual(['claw-0018']);
+  });
+
+  it('a single identifier match alone is not enough evidence to promote a candidate (self-review: a lone shared word/name can be coincidence, e.g. a product name mentioned in unrelated prose)', async () => {
+    const r = await routeDecisions({
+      // the mentioned identifier 'knownProviders' appears only inside an unrelated longer token here
+      // (zzzknownProviderszzz) so it contributes nothing to BM25's own lexical score either -- isolates
+      // mentionMatchCount's identifier-floor behavior from BM25's own scoring.
+      changeText: 'var extraProviderHeaders = map[string]string{"newprovider": "x-new-provider-key"} // zzzknownProviderszzz marker only, not a real token match',
+      decisions: [DOC_UNSCOPED_STRONGER_LEXICAL, DOC_MENTIONS_PATH],
+      mentionBoost: true, // only ONE identifier ('knownProviders', as a substring) appears -- below the floor
+      topK: 1,
+    });
+    expect(r.routed.map((c) => c.id)).toEqual(['claw-0017']); // unchanged from the no-mentionBoost baseline
+  });
+
+  it('a decision with no mentionPaths/mentionIdentifiers never loses its BM25-alone candidacy (recall-ceiling preserved)', async () => {
+    const r = await routeDecisions({
+      changeText: 'provider extra header map variable declaration go language registry other, knownProviders nowhere here',
+      decisions: [DOC_UNSCOPED_STRONGER_LEXICAL, DOC_MENTIONS_PATH],
+      changedFiles: ['some/unrelated/file.go'],
+      mentionBoost: true,
+    });
+    expect(r.bm25Candidates.map((c) => c.id)).toContain('claw-0018'); // still present, just not boosted
+  });
+
+  it('scopeBoost and mentionBoost both on fuse both signals (neither excludes the other)', async () => {
+    const DOC_SCOPED_AND_MENTIONED: RouteDoc = { ...DOC_MENTIONS_PATH, scopeGlobs: ['internal/controller/**'] };
+    const r = await routeDecisions({
+      changeText: 'var extraProviderHeaders = map[string]string{"newprovider": "x-new-provider-key"}',
+      decisions: [DOC_UNSCOPED_STRONGER_LEXICAL, DOC_SCOPED_AND_MENTIONED],
+      changedFiles: ['internal/controller/claw_providers.go'],
+      scopeBoost: true,
+      mentionBoost: true,
+      topK: 1,
+    });
+    expect(r.routed.map((c) => c.id)).toEqual(['claw-0018']);
+  });
+});
