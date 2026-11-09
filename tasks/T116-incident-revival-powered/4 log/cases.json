@@ -1,0 +1,193 @@
+{
+  "frozen": "2026-11-08",
+  "n": 6,
+  "note": "Built for Q5b (T116), fixing T111's arm-A tautology defect: every case has >=3 options (1 winner + >=2 real pre-trigger dissents), so `mole incident suggest --phase before` always faces a candidate set >= 2 (never collapses to 1). Real, dated, documented decision-reversal events only (PEPs, official peps.python.org status/superseded_by field). Ground truth = the option the REAL later PEP actually shipped, never a model's opinion.",
+  "cases": [
+    {
+      "id": "py-finally-controlflow",
+      "domain": "CPython language semantics: finally blocks",
+      "decision_id": "py-finally-silently-swallows",
+      "decision_text": "A return/break/continue inside a finally block silently cancels any in-flight exception, treated as ordinary control flow with no warning (CPython behavior through 2019, re-affirmed by the Steering Council's 2019 rejection of PEP 601).",
+      "options": [
+        {
+          "id": "status-quo-linters",
+          "text": "Keep current semantics: return/break/continue in finally silently cancel exceptions; treat this as a style issue for linters (Pylint/flake8-bugbear) and PEP 8, not a language change.",
+          "source": "PEP 601 Rejection Note (peps.python.org/pep-0601, Steering Council vote 4/4, 2019): Guido van Rossum: \"it seems to me that most languages implement this kind of construct but have style guides and/or linters that reject it. I would support a proposal to add this to PEP 8.\" (dated with PEP 601's rejection, 2019 -- 5 years before the 2024 trigger)"
+        },
+        {
+          "id": "pep601-forbid",
+          "text": "Deprecate then forbid return/break/continue that exit a finally block: emit SyntaxWarning in 3.9/3.10, then turn it into a SyntaxError.",
+          "source": "PEP 601, 'Forbid return/break/continue breaking out of finally' (peps.python.org/pep-0601, created 26-Aug-2019): \"This PEP proposes to forbid return, break and continue statements within a finally suite where they would break out of the finally. Their use in such a location silently cancels any active exception being raised through the finally, leading to unclear code and possible bugs.\" -- rejected 2019, 5 years before the trigger."
+        },
+        {
+          "id": "change-semantics-exception-wins",
+          "text": "Change the semantics instead of forbidding the syntax: keep return/break/continue legal inside finally, but make any in-flight exception always win (propagate) over them.",
+          "source": "PEP 765, 'Rejected Ideas / Change Semantics' (peps.python.org/pep-0765, created 15-Nov-2024): \"It was suggested to change the semantics of control flow instructions in finally such that an in-flight exception takes precedence over them.\" LIMITATION (disclosed, not hidden): unlike the other two options, this idea is recorded in the SAME PEP 765 discourse thread as the 2024 trigger report, not independently dated years earlier -- included only to give the candidate set its required third member (see results.md limits)."
+        }
+      ],
+      "incident": {
+        "id": "inc-katriel-finally-study",
+        "date": "2024-11-09",
+        "text": "Irit Katriel's empirical study of the top 8,000 PyPI packages (120,964,221 lines of code) found 203 real instances of return/break/continue in a finally block, of which 149 (73%) were incorrect and introduced unintended exception-swallowing bugs; of 40 maintainers who responded within two weeks, 35 acknowledged the problem and 15 opened a fix PR. This is the cost/benefit data PEP 601 lacked in 2019.",
+        "source": "PEP 765 Appendix, 'return in finally considered harmful' (peps.python.org/pep-0765), research report posted 2024-11-09"
+      },
+      "ground_truth_winner": "pep601-forbid",
+      "ground_truth_source": "PEP 765, 'Disallow return/break/continue that exit a finally block' (peps.python.org/pep-0765, Status: Final, Python 3.14): ships a SyntaxWarning (leaving open whether it later becomes SyntaxError) -- reviving PEP 601's core 2019 position (forbid the pattern) on the strength of the new empirical evidence, though PEP 765 stops at warning rather than PEP 601's auto-escalation to error (approximate match, disclosed). py-finally-silently-swallows (status-quo-linters) is REVERSED."
+    },
+    {
+      "id": "py-script-deps-format",
+      "domain": "Python packaging: single-file script dependency metadata",
+      "decision_id": "py-script-deps-comment-block",
+      "decision_text": "Python script dependency metadata should be embedded as a simple, line-based comment block with a custom header/footer marker, not a structured data format (PEP 722's chosen design, proposed 2023-07-19).",
+      "options": [
+        {
+          "id": "comment-block",
+          "text": "Use a plain comment block (e.g. a '# Script Dependencies:' header and footer line, one requirement per line) -- readable without a parser, no quoting rules.",
+          "source": "PEP 722 Specification (peps.python.org/pep-0722, created 19-Jul-2023)"
+        },
+        {
+          "id": "toml-block",
+          "text": "Embed a TOML-formatted metadata block instead of a plain comment block, reusing pyproject.toml's own data format for consistency with the rest of Python packaging.",
+          "source": "PEP 722 Rejected Ideas, 'Why not use a more standard data format (e.g., TOML)?' (peps.python.org/pep-0722, created 19-Jul-2023 -- PEP 722's OWN text, written before PEP 723 existed): quotes and rejects the TOML alternative at the time: 'TOML of necessity has a syntax of its own, which distracts from the underlying data... developers who write scripts in Python are often not experienced in Python, or Python packaging.'"
+        },
+        {
+          "id": "embed-pyproject-toml",
+          "text": "Embed an actual (partial) pyproject.toml file inside the script, reusing the existing [project] table instead of inventing any new format.",
+          "source": "PEP 722 Rejected Ideas, 'Why not embed a pyproject.toml file in the script?' (peps.python.org/pep-0722, created 19-Jul-2023): rejected because 'pyproject.toml is currently focused on projects that are to be built into wheels' and embedding only part of it was judged premature."
+        }
+      ],
+      "incident": {
+        "id": "inc-pep722-steering-rejection",
+        "date": "2023-10-21",
+        "text": "The Python Steering Council's PEP delegate (Brett Cannon) rejected PEP 722 in favor of a TOML-based alternative, PEP 723 (authored by Ofek Lev, created 2023-08-04), citing consistency with pyproject.toml's existing TOML-based packaging metadata and the 'common frustration' with inconsistent formats raised in the recent Python Packaging Survey.",
+        "source": "PEP 722 header (peps.python.org/pep-0722): 'Status: Rejected ... Superseded-By: 723 ... Resolution: 21-Oct-2023'; PEP 723 Rationale (peps.python.org/pep-0723, created 04-Aug-2023): 'to provide a familiar experience for users who have experience writing Python projects... we avoid unnecessary inconsistency between packaging tools, a common frustration expressed in the recent packaging survey.'"
+      },
+      "ground_truth_winner": "toml-block",
+      "ground_truth_source": "PEP 723, 'Inline script metadata' (peps.python.org/pep-0723, Status: Final, Resolution 08-Jan-2024): adopts a '# /// script ... # ///' TOML block. py-script-deps-comment-block (PEP 722) is REVERSED/SUPERSEDED, confirming the exact alternative PEP 722 itself had already named and rejected two and a half months earlier."
+    },
+    {
+      "id": "py-subinterpreters",
+      "domain": "CPython stdlib: parallel execution via multiple interpreters",
+      "decision_id": "py-parallel-via-multiprocessing-only",
+      "decision_text": "True parallel execution of Python code uses multiprocessing (separate OS processes), because the GIL serializes all threads within one interpreter; CPython's C-API-only multiple-interpreters feature is not exposed to pure-Python code (status through 2023, reaffirmed by PEP 554's non-acceptance).",
+      "options": [
+        {
+          "id": "multiprocessing-only",
+          "text": "Keep multiprocessing as the only accessible parallel-execution path; CPython's C API multiple-interpreters support stays internal/undocumented for Python-level code.",
+          "source": "PEP 554 Motivation (peps.python.org/pep-0554, created 05-Sep-2017): 'Without a stdlib module, users are limited to the C API, which restricts how much they can try out and take advantage of multiple interpreters.' (PEP 554's own framing of the status quo it argues against)"
+        },
+        {
+          "id": "interpreters-stdlib-module",
+          "text": "Add a stdlib 'interpreters' module exposing subinterpreters plus a channel-based communication API directly to pure-Python code.",
+          "source": "PEP 554 Abstract (peps.python.org/pep-0554, created 05-Sep-2017): proposes 'a new interpreters module... to expose the existing multiple-interpreter functionality of CPython' to Python code."
+        },
+        {
+          "id": "pipes-based-comm-api",
+          "text": "If a stdlib module is added at all, communicate between interpreters via raw OS pipes directly, instead of a higher-level channel/queue abstraction.",
+          "source": "PEP 554, Rejected Ideas, 'Add an API based on pipes' (peps.python.org/pep-0554, created 05-Sep-2017): a real alternative communication-API design considered and rejected in the same original 2017 PEP, 6 years before the trigger."
+        }
+      ],
+      "incident": {
+        "id": "inc-gil-removal-pep703",
+        "date": "2023 (PEP 703 accepted; PEP 684 per-interpreter GIL shipped)",
+        "text": "PEP 703 ('Making the Global Interpreter Lock Optional in CPython') was accepted and PEP 684 (a per-interpreter GIL) shipped, making genuine multi-core parallelism inside one process newly practical and renewing demand for a stdlib-level way to create and use multiple interpreters without the C API.",
+        "source": "PEP 734 Motivation (peps.python.org/pep-0734, created 06-Nov-2023): 'This is particularly relevant now that CPython has a per-interpreter GIL (PEP 684) and people are more interested in using multiple interpreters.'"
+      },
+      "ground_truth_winner": "interpreters-stdlib-module",
+      "ground_truth_source": "PEP 734, 'Multiple Interpreters in the Stdlib' (peps.python.org/pep-0734, Status: Final, Resolution 05-Jun-2025, Python 3.14): ships the concurrent.interpreters stdlib module -- written by the same author (Eric Snow) as PEP 554, reinstating PEP 554's core proposal with a refined, minimal API. py-parallel-via-multiprocessing-only is SUPERSEDED."
+    },
+    {
+      "id": "py-lockfile-format",
+      "domain": "Python packaging: dependency lock files",
+      "decision_id": "py-lockfiles-per-tool-adhoc",
+      "decision_text": "No standard lock-file format exists; each tool (pip freeze, pip-tools, Poetry, PDM) defines and reads its own incompatible lock-file format (status through 2022, after PEP 665's non-acceptance).",
+      "options": [
+        {
+          "id": "status-quo-per-tool",
+          "text": "Keep the status quo: no cross-tool standard; each tool's own lock format stays authoritative for that tool.",
+          "source": "PEP 665 review record (peps.python.org/pep-0665, created 29-Jul-2023): Poetry's own maintainers stated during PEP 665's review that they 'would not support the PEP as-is because \"Poetry supports sdists files, directory and VCS dependencies which are not supported\"' and that file-level recording 'is contradictory to the design of Poetry' -- a real, dated (2022, during PEP 665's own review, 2-3 years before the trigger) objection that contributed to PEP 665's rejection and kept the per-tool status quo in place."
+        },
+        {
+          "id": "standard-lockfile-format",
+          "text": "Define one standard, tool-agnostic lock-file format so any installer can consume a lock file regardless of which tool generated it.",
+          "source": "PEP 665 Abstract (peps.python.org/pep-0665, created 29-Jul-2023): proposes exactly this -- a single standard lock-file format for reproducible installs across tools."
+        },
+        {
+          "id": "adopt-poetry-lock-as-standard",
+          "text": "Rather than invent a new format, standardize on Poetry's existing poetry.lock format, already in wide use.",
+          "source": "Poetry project's own poetry.lock format (in production use since Poetry's creation, ~2018, years before both PEP 665 and the trigger); named as one of the real competing formats in PEP 751 Motivation (peps.python.org/pep-0751): 'there are at least five well-known solutions to this problem in the community (PDM, pip freeze, pip-tools, Poetry, and uv)'."
+        }
+      ],
+      "incident": {
+        "id": "inc-lockfile-fragmentation-pain",
+        "date": "2023-2025",
+        "text": "Continued fragmentation across 5+ incompatible lock-file formats left tooling (Dependabot, cloud dependency installers) unable to support users uniformly, and the lack of secure defaults (hash pinning is opt-in-only in most formats) left installs exposed to dependency-substitution supply-chain attacks.",
+        "source": "PEP 751 Motivation (peps.python.org/pep-0751, created 15-Jan-2025): 'There's also concerns around the lack of secure defaults in the face of supply chain attacks by some tools (e.g. including hashes for files)... Much of the motivation from PEP 665 also applies to this PEP.'"
+      },
+      "ground_truth_winner": "standard-lockfile-format",
+      "ground_truth_source": "PEP 751, 'pylock.toml' (peps.python.org/pep-0751, Status: Final, Resolution 31-Mar-2025): ships a new standard lock-file format, explicitly building on PEP 665's rejected motivation rather than standardizing on any single existing tool's format. py-lockfiles-per-tool-adhoc is SUPERSEDED."
+    },
+    {
+      "id": "py-annotations-eval",
+      "domain": "CPython language semantics: annotation evaluation timing",
+      "decision_id": "py-annotations-stringized",
+      "decision_text": "Function/class/module annotations are automatically converted to strings at compile time and left unevaluated ('stringized annotations', PEP 563's design, accepted 2017, status quo through 2022).",
+      "options": [
+        {
+          "id": "stringized-annotations",
+          "text": "Keep annotations as compiler-generated strings (PEP 563); solves forward-reference problems for static type checkers by never evaluating annotation expressions at runtime at all.",
+          "source": "PEP 563, 'Postponed Evaluation of Annotations' (peps.python.org/pep-0563, created 08-Sep-2017, accepted): the status quo later challenged."
+        },
+        {
+          "id": "deferred-eval-function",
+          "text": "Delay evaluation of annotation expressions by compiling them into a hidden per-object function (an 'implicit lambda expression') that is only called when annotations are actually requested, instead of stringizing them.",
+          "source": "PEP 649, 'Mistaken Rejection Of This Approach In November 2017' (peps.python.org/pep-0649; quotes a Nov-2017 comp.lang.python-dev thread, mail.python.org/pipermail/python-dev/2017-November/150109.html): Guido van Rossum, replying to this exact idea in November 2017 -- BEFORE PEP 563 was even accepted -- wrote: 'IMO the inability of referencing class-level definitions from annotations on methods pretty much kills this idea.' The idea was 'quickly rejected' at the time, 4-5 years before the trigger."
+        },
+        {
+          "id": "store-strings-lazily",
+          "text": "Keep storing annotation strings (as PEP 563 does) but make retrieval lazy/opt-in via a new accessor function, without compiling a hidden per-object function.",
+          "source": "PEP 649, Rejected Ideas, '\"Just store the strings\"' (peps.python.org/pep-0649, created 2021): a real alternative considered and rejected in the SAME PEP as the eventual winner. LIMITATION (disclosed): dated to PEP 649's own 2021 creation, not independently years before the trigger like the other two options -- included to give the candidate set its required third member (see results.md limits)."
+        }
+      ],
+      "incident": {
+        "id": "inc-stringized-annotations-runtime-pain",
+        "date": "2017-2022 (chronic; crystallized in PEP 649's Oct-2021 proposal)",
+        "text": "Stringized annotations (PEP 563) caused chronic problems for runtime users of annotations (dataclasses, Pydantic, attrs, and similar libraries that read __annotations__ at runtime): they had to eval() the strings in a reconstructed namespace, which is slow, can fail on forward references to genuinely out-of-scope names, and loses non-literal annotation values.",
+        "source": "PEP 649 Abstract (peps.python.org/pep-0649): 'stringized annotations in turn caused chronic problems for runtime users of annotations.'"
+      },
+      "ground_truth_winner": "deferred-eval-function",
+      "ground_truth_source": "PEP 649 as refined by PEP 749, 'Deferred evaluation of annotations using descriptors' (peps.python.org/pep-0649, Status: Final, Resolution 08-May-2023; peps.python.org/pep-0749, 2025): ships the __annotate__ lazy-function mechanism as the new default in Python 3.14 -- literally the 'implicit lambda expression' idea Guido rejected in November 2017. py-annotations-stringized (PEP 563) is SUPERSEDED."
+    },
+    {
+      "id": "py-enum-type",
+      "domain": "Python stdlib: enumeration type",
+      "decision_id": "py-enum-via-int-constants",
+      "decision_text": "Python has no dedicated enumeration type; code represents a fixed set of named values with plain int or str module-level constants (status quo through 2013, reaffirmed by PEP 354's 2005 rejection).",
+      "options": [
+        {
+          "id": "int-constants",
+          "text": "Keep using plain int/str constants for enumerations; add no new stdlib type.",
+          "source": "PEP 435 Motivation (peps.python.org/pep-0435, created 23-Feb-2013), describing the long-standing status quo it argues against."
+        },
+        {
+          "id": "pep354-functional-enum",
+          "text": "Add a functional enum(*names) constructor returning an opaque enumeration object, with no class syntax.",
+          "source": "PEP 354, 'Enumerations in Python' (peps.python.org/pep-0354, created 20-Dec-2005, Rejection Notice): 'This doesn't slot nicely into any of the existing modules... Also, the PEP has generated no widespread interest.' -- rejected 2005, 8 years before the 2013 trigger."
+        },
+        {
+          "id": "flufl-style-class-enum",
+          "text": "Add a class-based Enum type (subclass Enum, define members as class attributes), based on Barry Warsaw's flufl.enum third-party package.",
+          "source": "PEP 435, 'Status of discussions' (peps.python.org/pep-0435): 'Guido proposed adding flufl.enum to the standard library' -- flufl.enum itself (Barry Warsaw's package) predates this 2013 discussion by years, already in production use (e.g. in email.message)."
+        }
+      ],
+      "incident": {
+        "id": "inc-python-ideas-2013-enum-thread",
+        "date": "Jan-Feb 2013",
+        "text": "A new python-ideas mailing-list discussion on adding an enum type to the standard library reopened the question PEP 354 had closed in 2005, driven by continued real-world pain from magic integer constants in standard-library APIs (e.g. socket.AF_INET) that lacked friendly string representations.",
+        "source": "PEP 435, 'Status of discussions' (peps.python.org/pep-0435): 'Recently a new set of discussions was initiated on the python-ideas mailing list. Many new ideas were proposed in several threads.'"
+      },
+      "ground_truth_winner": "flufl-style-class-enum",
+      "ground_truth_source": "PEP 435, 'Adding an Enum type to the Python standard library' (peps.python.org/pep-0435, Status: Final, accepted 10-May-2013, Python 3.4): ships a class-based Enum type directly descended from flufl.enum, NOT PEP 354's functional design. py-enum-via-int-constants is SUPERSEDED. MEMORIZATION CAVEAT (disclosed, see results.md): PEP 354/435/Enum is extremely well-known Python history, almost certainly in any LLM's training data."
+    }
+  ]
+}
