@@ -18,6 +18,14 @@ kappa 0.81), 8 disputed cases blind-reaudited (1 flip), frozen, all 4 arms (T53/
 run once on all 124, standalone + 2 pooled McNemar readings computed, per-repo breakdown and T53
 miss-mechanism reported. Full write-up: `4 log/results-v4.3.md`.
 
+**CORRECTION 2026-11-08:** loss #2's T53 harness id-matching bug (email-alert-api only, 10/10
+adr-bearing cases match-impossible) audited across all 13 repos ever scored (only email-alert-api
+affected; semantic-kernel's separate 0.375 recall confirmed a routing issue, not this bug) and
+fixed (`run/adr_id_normalize.mjs` + 15 unit tests), then re-scored on just the 10 affected cases
+with frozen params. email-alert-api T53 recall 0.000 -> 0.857; overall T53 recall 0.513 -> 0.667;
+neither pooled McNemar significance verdict flips. Original numbers kept, not overwritten; see
+`4 log/results-v4.3.md`'s dated CORRECTION section and `4 log/id-matching-audit.md`.
+
 ## Headline result (losses first -- see `4 log/results-v4.3.md` for full detail)
 
 - Standalone v4.3 primary (McNemar, FA, T53 vs RAG, this round's 124 cases only) is **NOT

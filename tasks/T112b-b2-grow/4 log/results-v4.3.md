@@ -208,3 +208,154 @@ finding the governing decision at all (17/19 misses) rather than a judgment erro
 one repo (`email-alert-api`) additionally confounded by a harness id-normalization gap this round
 did not fix. Power remains short of the pre-registered conservative target (128 of ~340) and
 comfortably over the optimistic one (128 of ~40-50) -- both stated, neither hidden.
+
+---
+
+## CORRECTION (dated 2026-11-08) -- T53 harness id-matching bug (loss #2) audited and fixed
+
+**This section is an addition, not a replacement.** All numbers above (section 1-9, "Honest
+summary") are the ORIGINAL run's numbers, unedited, kept for the record. This section reports what
+was found on audit and the CORRECTED numbers side by side, per task instruction. Full audit:
+`tasks/T112b-b2-grow/4 log/id-matching-audit.md`. Unit tests: `run/adr_id_normalize.test.mjs` (15
+tests, all pass, covering every repo's id forms across v3/v4.2/v4.3 -- 13 repos).
+
+### What was wrong
+
+Loss #2 (above) correctly named the bug but did not fix it: `run_t53_semantic_route_v4_3.mjs`'s
+`ourAdrNum = adr_id.split('-').pop()` never equals `email-alert-api`'s `loadGraph`-derived id
+(`adrNNN`, no dash) for any of its 10 cases, because that repo's id convention (`eaa-NNNN` on the
+case side) doesn't fit either assumption the old matcher silently relied on. This is confirmed a
+**SCORING bug** (how the harness reads an already-computed verdict), not a re-tuned hyperparameter
+-- `cascadeCheck`'s escalation tier ran normally and had the right verdict in its `verdicts` array
+the whole time; the harness's lookup into that array just never found it.
+
+### Audit scope and result (part 1 of the task)
+
+Audited id-matching for all 13 repos ever scored by T53 (v4.3's 4, v4.2's 3 scored + merino-py's 0
+disclosed, v3's 5). **email-alert-api is the only repo affected** (10/10 of its adr-bearing cases
+were match-impossible under the old matcher, 0/10 under the fix). 9 cases across 4 other repos
+(semantic-kernel x4, claw-operator x2, log4brains x2, easi-app x1) are ALSO "impossible" under
+both matchers -- confirmed (per-case) to be genuine ROUTING failures (the router's own top-K never
+contains the right decision for any case referencing it), not a second id-format bug; the
+normalizer changes zero cases there. Zero regressions anywhere (verified case-by-case, not just by
+count, across all 13 repos): nothing the old matcher got right becomes wrong under the fix. RAG,
+Reviewer, and Judge score purely by regexing `VERDICT: VIOLATES/COMPLIANT` out of free text -- they
+have no id-matching step and are **not affected** by this bug at all. Full detail, repo-by-repo
+table: `id-matching-audit.md`.
+
+**semantic-kernel's 0.375 T53 recall, asked explicitly:** a ROUTING issue, not an id/format issue.
+All 5 of its false negatives have `routedCorrectly=False` under both the old AND new matcher (the
+router's top-5 never contains the true decision for those 5 cases) -- confirmed unchanged by the
+fix.
+
+### The fix
+
+`run/adr_id_normalize.mjs`: `normalizeAdrId(s)` strips a leading run of lowercase
+letters/dashes/underscores, then leading zeros (keeping >=1 digit), on BOTH the case's `adr_id` and
+the loaded `verdict.decision`/`routing[].decision` id before comparing. `sameAdrId(a, b)` wraps the
+comparison. 15 unit tests in `adr_id_normalize.test.mjs` (`node --test`, all pass) cover every
+repo's id forms (including non-numeric log4brains slugs, prefix-kept-both-sides python-tuf/
+powertools-python, no-prefix-at-all easi-app) with explicit MUST_MATCH and MUST_NOT_MATCH fixtures
+(guarding specifically against the old bug's OWN failure mode -- `.split('-').pop()` would have
+collapsed `l4b-slug-id` and `l4b-number-id` to the same tail `'id'`; the normalizer does not, since
+it only strips a leading prefix, never trims from the end).
+
+### Was the escalation verdict computed, or skipped? (part 3)
+
+**Computed, not skipped.** `cascadeCheck()`'s escalation tier ran normally for every case; its
+`verdicts` array had the right answer in it the whole time. The bug is entirely in the runner's
+post-hoc lookup into that array. However, the original run only persisted the DERIVED summary row
+to disk (`predictedViolate`, `decidingTier`, `routing` ids) -- not the raw `verdicts` array -- so
+there was no way to re-score from the already-saved JSON. Re-ran T53 ONLY on the 10 affected
+email-alert-api cases, same frozen params (k5 m0 c1.01, claude-haiku-4-5 router), fixed id-match
+step only. Required re-cloning `email-alert-api` (`--depth 1`, 4.6MB; the Part B clone had been
+deleted per disk discipline before this correction task started) and re-reconstructing the 10
+cases' head commits (`reconstruct_commits_v4_3_CORRECTION_eaa.py`, same method as the original
+`reconstruct_commits_v4_3.py`: checkout the verified-identical `base` SHA, re-apply each case's own
+frozen `diff`, commit -- the resulting tree is byte-identical, only the commit SHA differs, same
+disclosed substitution as loss #5 above). Verified repo HEAD == recorded `base` SHA before
+touching anything. Run log: `run/t53_v4_3_CORRECTION_eaa.log`. Raw output (NEW file, original NOT
+overwritten): `run/runtime_correction_t53_v4_3_email-alert-api_FIXED.json` (includes both the new
+AND the old-matcher prediction per case, for a direct before/after diff per case).
+
+### Corrected numbers, side by side with the original (part 4) -- source: `analysis_v4_3_CORRECTION.json`
+
+**email-alert-api, standalone:**
+
+| | tp | fp | tn | fn | recall | FA rate | accuracy |
+|---|---|---|---|---|---|---|---|
+| ORIGINAL (bug) | 0 | 0 | 18 | 7 | 0.000 [0, 0.354] | 0.000 [0, 0.176] | 0.720 [0.524, 0.857] |
+| CORRECTED | 6 | 1 | 17 | 1 | **0.857** [0.487, 0.974] | 0.056 [0.010, 0.258] | **0.920** [0.750, 0.978] |
+
+6 of the 7 previously-"missed" true-violate cases flip to correctly caught; 1 compliant case flips
+to a new false positive (`v43-eaa-0004-compliant`); 1 true-violate case (`v43-eaa-0007-violate`)
+remains a genuine miss even with the id fixed (`routedCorrectly=false` -- a real routing miss on
+that one case, not an id issue).
+
+**Overall (all 124 cases), T53 arm:**
+
+| | tp | fp | tn | fn | recall | FA rate | accuracy |
+|---|---|---|---|---|---|---|---|
+| ORIGINAL | 20 | 8 | 77 | 19 | 0.513 [0.362, 0.661] | 0.094 [0.049, 0.175] | 0.782 [0.702, 0.846] |
+| CORRECTED | 26 | 9 | 76 | 13 | **0.667** [0.510, 0.794] | 0.106 [0.057, 0.189] | 0.823 [0.746, 0.880] |
+
+T53's overall recall rises materially (0.513 -> 0.667); its false-alarm rate also rises slightly
+(0.094 -> 0.106, one new FP from the single eaa compliant-case flip) -- both reported plainly, not
+just the favorable one.
+
+**Per-repo (unaffected repos repeated for context, unchanged):**
+
+| repo | T53 recall (orig) | T53 recall (corrected) |
+|---|---|---|
+| semantic-kernel | 0.375 [0.137, 0.694] | 0.375 [0.137, 0.694] (unchanged -- routing issue, see above) |
+| jaeger | 0.889 [0.565, 0.980] | 0.889 [0.565, 0.980] (unchanged) |
+| content-publisher | 0.600 [0.358, 0.802] | 0.600 [0.358, 0.802] (unchanged) |
+| email-alert-api | 0.000 [0, 0.354] | **0.857 [0.487, 0.974]** |
+
+**Primary: McNemar (exact, two-sided) on false alarms, T53 vs RAG:**
+
+| reading | n_nonviolate | b (T53-only FA) | c (RAG-only FA) | p (orig) | p (corrected) | significant? |
+|---|---|---|---|---|---|---|
+| STANDALONE v4.3 | 85 | 5 | 12 -> 11 | 0.1435 | **0.2101** | NOT sig., either way |
+| POOLED, v4.2 ORIGINAL labels | 128 | 5 | 20 -> 19 | 0.00408 | **0.00661** | sig. both ways (a=.05) |
+| POOLED, v4.2a REAUDITED labels (B') | 125 | 5 | 18 -> 17 | 0.01062 | **0.01690** | sig. both ways (a=.05) |
+
+The standalone reading was already NOT significant and stays NOT significant after the fix (it
+moves further from the threshold, not closer -- the fix added one new T53-false-alarm/RAG-both-hit
+case that reduces RAG's unique-FA advantage slightly less than it reduces T53's recall deficit).
+Both pooled readings stay significant after the fix. **Bottom line: the fix does not flip any
+significance verdict** -- the standalone-vs-pooled disagreement (the central finding of section 5
+above) is unchanged in kind, only the exact p-values shift.
+
+**Co-primary: paired recall test (T53 vs RAG, true-violate cases only, n=39):**
+
+| | b (T53 hit, RAG miss) | c (RAG hit, T53 miss) | p_exact | significant? |
+|---|---|---|---|---|
+| ORIGINAL | 1 | 19 | 0.00004 | significant |
+| CORRECTED | 1 | 13 | **0.00183** | still significant |
+
+RAG's recall advantage over T53 narrows (19 -> 13 RAG-only hits among true-violate cases) but
+remains large and remains significant at a=.05.
+
+### What does NOT change
+
+- v4.2, v4.2a, and v3's own frozen numbers are untouched (none of their repos' cases were affected
+  by this bug -- confirmed by the audit above, not merely asserted).
+- The original frozen files (`run/t53_semantic_route_v4_3_heldout_claude-haiku-4-5_k5_m0_c1.01.json`,
+  `arm_metrics_v4_3.json`, `analysis_v4_3.json`, `frozen_run_v4_3.sha256`) are NOT overwritten.
+  New files hold the correction: `run/runtime_correction_t53_v4_3_email-alert-api_FIXED.json`,
+  `run/t53_semantic_route_v4_3_heldout_claude-haiku-4-5_k5_m0_c1.01_CORRECTED.json` (full merged
+  124-row set), `analysis_v4_3_CORRECTION.json`.
+- Section 9's power conclusion is unchanged (the correction does not touch n_nonviolate in any
+  reading -- only the b/c discordant counts shift slightly within an unchanged n).
+
+### Honest summary of the correction
+
+The id-matching bug was real, scoped to exactly one repo (email-alert-api) out of 13 ever scored,
+and is now fixed with a disclosed normalizer + unit tests, not a silent patch. The corrected
+numbers tell a MATERIALLY DIFFERENT per-repo story for email-alert-api (T53 recall 0.000 ->
+0.857 -- most of its apparent total routing failure there was actually a scoring artifact) but a
+materially SIMILAR aggregate story: the standalone-vs-pooled McNemar disagreement persists, the
+paired recall gap persists (narrower, still significant), and the power shortfall against the
+conservative target is unchanged. semantic-kernel's separately-low recall (0.375) is independently
+confirmed to be a genuine routing issue, unrelated to this bug and unchanged by its fix.
